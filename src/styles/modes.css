@@ -10,3 +10,11 @@
 [data-sui-mode="dark"] {
   color-scheme: dark;
 }
+
+/* color and font-family inherit as computed values, so a subtree that switches theme or mode has to set them again. */
+[data-sui-theme],
+[data-sui-mode] {
+  background-color: var(--sui-color-background);
+  color: var(--sui-color-text);
+  font-family: var(--sui-font-body);
+}

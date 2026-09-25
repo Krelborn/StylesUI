@@ -1,10 +1,7 @@
 import type { JSX } from "react";
-import { clsx } from "clsx";
 
 import type { BoxElement, BoxProps } from "../Box";
 import { Box } from "../Box";
-
-import styles from "./Theme.module.css";
 
 /**
  * Names of the themes shipped in `styles.css`
@@ -23,7 +20,7 @@ interface ThemeOwnProps<E extends BoxElement> {
   as?: E;
 
   /**
-   * Class names merged with the Theme base class
+   * Class names passed through to the rendered element
    */
   className?: string;
 
@@ -44,8 +41,9 @@ interface ThemeOwnProps<E extends BoxElement> {
 export type ThemeProps<E extends BoxElement = "div"> = ThemeOwnProps<E> & Omit<BoxProps<E>, keyof ThemeOwnProps<E>>;
 
 /**
- * Applies a theme and colour mode to its subtree and paints the theme's background, text colour and font.
- * Needs `@krelborn/stylesui/styles.css` imported once by the app.
+ * Sets the theme and colour mode attributes for its subtree. `styles.css` paints the background,
+ * text colour and font of any element that carries these attributes, so this needs
+ * `@krelborn/stylesui/styles.css` imported once by the app.
  *
  * @example
  * <Theme mode="dark" name="playful">...</Theme>
@@ -61,12 +59,6 @@ export function Theme<E extends BoxElement = "div">({
   const boxProps = rest as BoxProps<"div">;
 
   return (
-    <Box
-      {...boxProps}
-      as={(as ?? "div") as "div"}
-      className={clsx(styles.theme, className)}
-      data-sui-mode={mode}
-      data-sui-theme={name}
-    />
+    <Box {...boxProps} as={(as ?? "div") as "div"} className={className} data-sui-mode={mode} data-sui-theme={name} />
   );
 }
