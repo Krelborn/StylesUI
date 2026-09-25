@@ -20,6 +20,13 @@ export type BoxProps<E extends BoxElement = "div"> = BoxOwnProps<E> &
   Omit<ComponentPropsWithRef<E>, keyof BoxOwnProps<E>>;
 
 /**
+ * Props for a polymorphic component built on `Box`: `OwnProps` plus every prop `Box` accepts for
+ * the element given in `as`, minus any name `OwnProps` already declares.
+ */
+export type PolymorphicProps<E extends BoxElement, OwnProps extends object> = OwnProps &
+  Omit<BoxProps<E>, keyof OwnProps>;
+
+/**
  * Polymorphic primitive that renders the DOM element given in `as` and forwards all of its props.
  * Foundation for other StylesUI components.
  *

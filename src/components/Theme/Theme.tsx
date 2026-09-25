@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
 import { Box } from "../Box";
 
 /**
@@ -13,17 +13,7 @@ export type ThemeName = "default" | "playful";
  */
 export type ThemeMode = "dark" | "light" | "system";
 
-interface ThemeOwnProps<E extends BoxElement> {
-  /**
-   * DOM element to render. Defaults to `div`.
-   */
-  as?: E;
-
-  /**
-   * Class names passed through to the rendered element
-   */
-  className?: string;
-
+interface ThemeOwnProps {
   /**
    * Colour mode for this subtree. Inherited from the nearest ancestor when omitted.
    */
@@ -38,7 +28,7 @@ interface ThemeOwnProps<E extends BoxElement> {
 /**
  * Props for `Theme`: its own props plus every prop supported by the element given in `as`
  */
-export type ThemeProps<E extends BoxElement = "div"> = ThemeOwnProps<E> & Omit<BoxProps<E>, keyof ThemeOwnProps<E>>;
+export type ThemeProps<E extends BoxElement = "div"> = PolymorphicProps<E, ThemeOwnProps>;
 
 /**
  * Sets the theme and colour mode attributes for its subtree. `styles.css` paints the background,
@@ -58,7 +48,5 @@ export function Theme<E extends BoxElement = "div">({
   // Widened as in Box: ThemeProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
-  return (
-    <Box {...boxProps} as={(as ?? "div") as "div"} className={className} data-sui-mode={mode} data-sui-theme={theme} />
-  );
+  return <Box {...boxProps} as={as as "div"} className={className} data-sui-mode={mode} data-sui-theme={theme} />;
 }

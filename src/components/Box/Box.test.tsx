@@ -2,6 +2,7 @@ import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import type { PolymorphicProps } from "./Box";
 import { Box } from "./Box";
 
 describe("Box", () => {
@@ -58,5 +59,14 @@ describe("Box", () => {
   it("rejects props the element does not support", () => {
     // @ts-expect-error href is not a valid div prop
     render(<Box href="https://example.com">Content</Box>);
+  });
+
+  it("accepts props valid for the element and rejects an unsupported own-prop value in PolymorphicProps", () => {
+    const acceptsLinkProps = (props: PolymorphicProps<"a", { tone?: "x" }>): string | undefined => props.href;
+
+    expect(acceptsLinkProps({ href: "https://example.com", tone: "x" })).toBe("https://example.com");
+
+    // @ts-expect-error "y" is not assignable to tone
+    acceptsLinkProps({ tone: "y" });
   });
 });
