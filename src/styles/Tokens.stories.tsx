@@ -1,0 +1,135 @@
+import type { JSX } from "react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
+import { Box } from "../components/Box";
+import { Heading } from "../components/Heading";
+import { Text } from "../components/Text";
+
+const hues = ["gray", "red", "orange", "yellow", "green", "blue", "indigo", "violet"] as const;
+const steps = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+const semanticColours = [
+  "primary",
+  "primary-hover",
+  "primary-subtle",
+  "on-primary",
+  "secondary",
+  "secondary-hover",
+  "secondary-subtle",
+  "on-secondary",
+  "background",
+  "surface",
+  "border",
+  "text",
+  "text-muted",
+  "focus-ring",
+  "success",
+  "warning",
+  "danger",
+  "info",
+] as const;
+const radii = ["sm", "md", "lg", "full"] as const;
+const spaces = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+const fontSizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] as const;
+
+interface SwatchProps {
+  /**
+   * Token name shown under the swatch
+   */
+  label: string;
+
+  /**
+   * CSS colour value painted in the swatch
+   */
+  value: string;
+}
+
+function Swatch({ label, value }: SwatchProps): JSX.Element {
+  return (
+    <Box style={{ display: "grid", gap: "0.25rem" }}>
+      <Box
+        style={{
+          background: value,
+          border: "1px solid var(--sui-color-border)",
+          borderRadius: "var(--sui-radius-sm)",
+          height: "2.5rem",
+        }}
+      />
+      <Text size="xs" tone="muted">
+        {label}
+      </Text>
+    </Box>
+  );
+}
+
+const meta = {
+  title: "Foundations/Tokens",
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Palette: Story = {
+  render: () => (
+    <Box style={{ display: "grid", gap: "1rem" }}>
+      {hues.map((hue) => (
+        <Box key={hue} style={{ display: "grid", gap: "0.5rem", gridTemplateColumns: "repeat(9, 1fr)" }}>
+          {steps.map((step) => (
+            <Swatch key={step} label={`${hue}-${step}`} value={`var(--sui-${hue}-${step})`} />
+          ))}
+        </Box>
+      ))}
+    </Box>
+  ),
+};
+
+export const SemanticColours: Story = {
+  render: () => (
+    <Box style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fill, minmax(8rem, 1fr))" }}>
+      {semanticColours.map((name) => (
+        <Swatch key={name} label={name} value={`var(--sui-color-${name})`} />
+      ))}
+    </Box>
+  ),
+};
+
+export const ShapeSpaceType: Story = {
+  render: () => (
+    <Box style={{ display: "grid", gap: "2rem" }}>
+      <Heading level={3}>Radius</Heading>
+      <Box style={{ display: "flex", gap: "1rem" }}>
+        {radii.map((radius) => (
+          <Box
+            key={radius}
+            style={{
+              background: "var(--sui-color-primary-subtle)",
+              border: "1px solid var(--sui-color-primary)",
+              borderRadius: `var(--sui-radius-${radius})`,
+              height: "4rem",
+              width: "4rem",
+            }}
+          >
+            <Text size="xs">{radius}</Text>
+          </Box>
+        ))}
+      </Box>
+      <Heading level={3}>Space</Heading>
+      <Box style={{ display: "grid", gap: "0.5rem" }}>
+        {spaces.map((space) => (
+          <Box key={space} style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+            <Text size="xs" style={{ width: "4rem" }} tone="muted">{`space-${space}`}</Text>
+            <Box
+              style={{ background: "var(--sui-color-primary)", height: "0.75rem", width: `var(--sui-space-${space})` }}
+            />
+          </Box>
+        ))}
+      </Box>
+      <Heading level={3}>Type scale</Heading>
+      <Box style={{ display: "grid", gap: "0.5rem" }}>
+        {fontSizes.map((size) => (
+          <Heading key={size} level={4} size={size}>{`${size}: The quick brown fox`}</Heading>
+        ))}
+      </Box>
+    </Box>
+  ),
+};
