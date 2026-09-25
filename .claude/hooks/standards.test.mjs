@@ -74,6 +74,15 @@ function appendCompactBoundary(filePath) {
   fs.appendFileSync(filePath, `${JSON.stringify({ type: "system", subtype: "compact_boundary" })}\n`);
 }
 
+function appendAssistantMessage(filePath, messageId, toolUseIds) {
+  const content = toolUseIds.map((toolUseId) => ({ type: "tool_use", id: toolUseId, name: "Read", input: {} }));
+  fs.appendFileSync(filePath, `${JSON.stringify({ type: "assistant", message: { id: messageId, content } })}\n`);
+}
+
+function mainStatePath() {
+  return path.join(temporaryDirectory, "claude-standards", "session", "main.json");
+}
+
 function stripHeaders(text) {
   return text.replace(/Project coding standard \S+( \(part \d+ of \d+\))?, which applies to [^\n]* files\. Its full text:\n\n/g, "");
 }
@@ -127,8 +136,13 @@ describe("standards hook", () => {
   describe("on Write and Edit", () => {
     for (const toolName of ["Write", "Edit"]) {
       it(`denies a ${toolName} made before its standards were in context and allows the retry`, async () => {
-        const first = await runAllSlots("pre", toolInput(toolName, "src/format.test.ts"));
-        const retry = await runAllSlots("pre", toolInput(toolName, "src/format.test.ts"));
+        const firstInput = toolInput(toolName, "src/format.test.ts");
+        const retryInput = toolInput(toolName, "src/format.test.ts");
+        appendAssistantMessage(transcriptPath, "message-1", [firstInput.tool_use_id]);
+        appendAssistantMessage(transcriptPath, "message-2", [retryInput.tool_use_id]);
+
+        const first = await runAllSlots("pre", firstInput);
+        const retry = await runAllSlots("pre", retryInput);
 
         assert.equal(first[0].output.hookSpecificOutput.permissionDecision, "deny");
         assert.ok(first.slice(1).every((result) => result.output?.hookSpecificOutput.permissionDecision === undefined));
@@ -136,6 +150,48 @@ describe("standards hook", () => {
         assert.ok(retry.every((result) => result.output === undefined));
       });
     }
+
+    it("denies a Write composed in the same assistant message as the Read that loaded its standards", async () => {
+      const read = toolInput("Read", "src/A.tsx");
+      const write = toolInput("Write", "src/B.tsx");
+      appendAssistantMessage(transcriptPath, "message-1", [read.tool_use_id]);
+      appendAssistantMessage(transcriptPath, "message-1", [write.tool_use_id]);
+      await runAllSlots("pre", read);
+
+      const results = await runAllSlots("pre", write);
+
+      assert.equal(results[0].output.hookSpecificOutput.permissionDecision, "deny");
+      assert.equal(results[0].output.hookSpecificOutput.additionalContext, undefined);
+      assert.ok(results.slice(1).every((result) => result.output === undefined));
+    });
+
+    it("allows a Write composed in a later assistant message than the Read that loaded its standards", async () => {
+      const read = toolInput("Read", "src/A.tsx");
+      const write = toolInput("Write", "src/B.tsx");
+      appendAssistantMessage(transcriptPath, "message-1", [read.tool_use_id]);
+      appendAssistantMessage(transcriptPath, "message-2", [write.tool_use_id]);
+      await runAllSlots("pre", read);
+
+      assert.ok((await runAllSlots("pre", write)).every((result) => result.output === undefined));
+    });
+
+    it("denies a Write missing from the transcript just after its standards were loaded", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/A.tsx"));
+
+      const results = await runAllSlots("pre", toolInput("Write", "src/B.tsx"));
+
+      assert.equal(results[0].output.hookSpecificOutput.permissionDecision, "deny");
+      assert.ok(results.slice(1).every((result) => result.output === undefined));
+    });
+
+    it("allows a Write missing from the transcript when its standards were loaded 10 seconds ago", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/A.tsx"));
+      const state = JSON.parse(fs.readFileSync(mainStatePath(), "utf8"));
+      const loaded = state.loaded.map((entry) => ({ ...entry, loadedAt: Date.now() - 10000 }));
+      fs.writeFileSync(mainStatePath(), JSON.stringify({ ...state, loaded }));
+
+      assert.ok((await runAllSlots("pre", toolInput("Write", "src/B.tsx"))).every((result) => result.output === undefined));
+    });
   });
 
   describe("on Bash", () => {
@@ -213,6 +269,18 @@ describe("standards hook", () => {
       assert.deepEqual(contexts(await runAllSlots("post", bashInput("cat src/format.ts", compactedDiff))), []);
     });
 
+    it("denies an Edit composed in the same assistant message as a git diff that loaded its standards", async () => {
+      const diff = bashInput("git diff", rawDiff);
+      const edit = toolInput("Edit", "src/Button.tsx");
+      appendAssistantMessage(transcriptPath, "message-1", [diff.tool_use_id, edit.tool_use_id]);
+      await runAllSlots("post", diff);
+
+      const results = await runAllSlots("pre", edit);
+
+      assert.equal(results[0].output.hookSpecificOutput.permissionDecision, "deny");
+      assert.ok(results.slice(1).every((result) => result.output === undefined));
+    });
+
     it("never denies the command", async () => {
       const results = await runAllSlots("post", bashInput("git diff", rawDiff));
 
@@ -270,6 +338,14 @@ describe("standards hook", () => {
 
       assert.deepEqual(injectedDocuments(restored), [commentsDocument, typescriptDocument]);
       assert.deepEqual(contexts(nextRead), []);
+    });
+
+    it("allows a Write straight after the main session compacts", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/format.ts"));
+      appendCompactBoundary(transcriptPath);
+      await runAllSlots("session", sessionStartInput("compact"));
+
+      assert.ok((await runAllSlots("pre", toolInput("Write", "src/other.ts"))).every((result) => result.output === undefined));
     });
 
     it("reuses the compaction plan when a transcript line only resembles the marker", async () => {

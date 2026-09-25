@@ -15,6 +15,8 @@ import path from "node:path";
 const messageCharacterLimit = 9500;
 const lockTimeoutMilliseconds = 3000;
 const staleFileMilliseconds = 10 * 60 * 1000;
+const transcriptTailBytes = 1024 * 1024;
+const sameStepWindowMilliseconds = 3000;
 const writeTools = new Set(["Write", "Edit"]);
 const gitGlobalOption = "(?:-C\\s+\\S+|-c\\s+\\S+|--[\\w-]+(?:=\\S+)?)";
 const changeShowingCommand = new RegExp(
@@ -169,16 +171,20 @@ function transcriptPath(input) {
   return path.join(input.transcript_path.replace(/\.jsonl$/, ""), "subagents", `${agentFileName}.jsonl`);
 }
 
+function parseJsonLine(line) {
+  try {
+    return JSON.parse(line);
+  } catch {
+    return undefined;
+  }
+}
+
 function isCompactBoundary(line) {
   if (!line.includes("compact_boundary")) {
     return false;
   }
-  try {
-    const entry = JSON.parse(line);
-    return entry.type === "system" && entry.subtype === "compact_boundary";
-  } catch {
-    return false;
-  }
+  const entry = parseJsonLine(line);
+  return entry?.type === "system" && entry.subtype === "compact_boundary";
 }
 
 function readFrom(filePath, offset) {
@@ -240,6 +246,58 @@ function countCompactBoundaries(filePath) {
     count += 1;
   }
   return count;
+}
+
+/**
+ * Finds the assistant messages that issued some tool calls, from the end of a transcript
+ *
+ * @param filePath the transcript file; a missing file counts as empty
+ * @param toolUseIds the tool use IDs to look up
+ * @returns a map from each tool use ID found to the ID of the assistant message holding it
+ */
+function assistantMessageIds(filePath, toolUseIds) {
+  const size = fs.statSync(filePath, { throwIfNoEntry: false })?.size ?? 0;
+  const lines = readFrom(filePath, Math.max(0, size - transcriptTailBytes)).toString("utf8").split("\n");
+  const found = new Map();
+  for (const line of lines.filter((candidate) => toolUseIds.some((toolUseId) => candidate.includes(toolUseId)))) {
+    const entry = parseJsonLine(line);
+    if (entry?.type !== "assistant" || !Array.isArray(entry.message?.content)) {
+      continue;
+    }
+    for (const item of entry.message.content) {
+      if (item?.type === "tool_use" && toolUseIds.includes(item.id)) {
+        found.set(item.id, entry.message.id);
+      }
+    }
+  }
+  return found;
+}
+
+/**
+ * Tells whether a Write or Edit was composed before some of its standards reached context,
+ * because another tool call in the same assistant message loaded them
+ *
+ * @param input the hook input for the Write or Edit
+ * @param documents the standards documents the file requires
+ * @returns true when any of the documents was loaded by a tool call in the same step
+ */
+function composedBeforeStandards(input, documents) {
+  const entries = readState(input).loaded.filter(
+    (entry) => documents.includes(entry.document) && entry.toolUseId !== null && entry.toolUseId !== input.tool_use_id,
+  );
+  if (entries.length === 0) {
+    return false;
+  }
+  const toolUseIds = [input.tool_use_id, ...entries.map((entry) => entry.toolUseId)];
+  const messageIds = assistantMessageIds(transcriptPath(input), toolUseIds);
+  const writeMessageId = messageIds.get(input.tool_use_id);
+  return entries.some((entry) => {
+    const loaderMessageId = messageIds.get(entry.toolUseId);
+    if (writeMessageId === undefined || loaderMessageId === undefined) {
+      return Date.now() - entry.loadedAt < sameStepWindowMilliseconds;
+    }
+    return writeMessageId === loaderMessageId;
+  });
 }
 
 /**
@@ -414,26 +472,35 @@ function emit(hookEventName, fields) {
   process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName, ...fields } }));
 }
 
+function requiredDocuments(filePaths) {
+  const documents = new Set(filePaths.flatMap(applicableRules).map((rule) => rule.document));
+  return configuration.rules.map((rule) => rule.document).filter((document) => documents.has(document));
+}
+
+function loadedEntries(documents, toolUseId) {
+  const loadedAt = Date.now();
+  return documents.map((document) => ({ document, toolUseId, loadedAt }));
+}
+
 /**
- * Returns this slot's share of the standards documents matching some files that the agent's
- * context does not hold yet, recording them as held
+ * Returns this slot's share of some standards documents that the agent's context does not hold
+ * yet, recording them as held and loaded by the tool call
  *
  * @param input the hook input
  * @param key identifies the hook event across its parallel slot processes
- * @param filePaths the files the tool call concerns
+ * @param documents the standards documents the tool call concerns, in configuration order
  * @param slot the slot being run
  * @returns the slot's message, or undefined when it has nothing to add
  */
-function messageForFiles(input, key, filePaths, slot) {
-  const documents = new Set(filePaths.flatMap(applicableRules).map((rule) => rule.document));
-  if (documents.size === 0) {
+function messageForDocuments(input, key, documents, slot) {
+  if (documents.length === 0) {
     return undefined;
   }
-  const ordered = configuration.rules.map((rule) => rule.document).filter((document) => documents.has(document));
   const messages = sharedPlan(input, key, () => {
     const state = refreshForCompaction(readState(input), input);
-    const missing = ordered.filter((document) => !state.loaded.includes(document));
-    writeJsonAtomically(statePath(input), { ...state, loaded: [...state.loaded, ...missing] });
+    const missing = documents.filter((document) => !state.loaded.some((entry) => entry.document === document));
+    const loaded = [...state.loaded, ...loadedEntries(missing, input.tool_use_id)];
+    writeJsonAtomically(statePath(input), { ...state, loaded });
     return missing.length === 0 ? [] : buildMessages(missing);
   });
   return messages[slot];
@@ -479,25 +546,33 @@ function pathsInChangeLine(line) {
 
 function handlePostToolUse(input, slot) {
   const files = filesInChangeOutput(input.tool_input?.command ?? "", input.tool_response?.stdout ?? "");
-  const message = messageForFiles(input, `post-${input.tool_use_id}`, files, slot);
+  const message = messageForDocuments(input, `post-${input.tool_use_id}`, requiredDocuments(files), slot);
   if (message !== undefined) {
     emit("PostToolUse", { additionalContext: message });
   }
 }
 
 function handlePreToolUse(input, slot) {
-  const message = messageForFiles(input, input.tool_use_id, [input.tool_input?.file_path ?? ""], slot);
+  const documents = requiredDocuments([input.tool_input?.file_path ?? ""]);
+  const message = messageForDocuments(input, input.tool_use_id, documents, slot);
+  const decidesWrite = slot === 0 && writeTools.has(input.tool_name);
   if (message === undefined) {
+    if (decidesWrite && documents.length > 0 && composedBeforeStandards(input, documents)) {
+      emit("PreToolUse", {
+        permissionDecision: "deny",
+        permissionDecisionReason:
+          "This file type's project coding standards reach context alongside another tool result from the same step, after this change was written, so it was not applied. The change can be made again following them.",
+      });
+    }
     return;
   }
-  const denial =
-    slot === 0 && writeTools.has(input.tool_name)
-      ? {
-          permissionDecision: "deny",
-          permissionDecisionReason:
-            "This file type's project coding standards were not in context when this change was written, so it was not applied. They are now in context alongside this result, and the change can be made again following them.",
-        }
-      : {};
+  const denial = decidesWrite
+    ? {
+        permissionDecision: "deny",
+        permissionDecisionReason:
+          "This file type's project coding standards were not in context when this change was written, so it was not applied. They are now in context alongside this result, and the change can be made again following them.",
+      }
+    : {};
   emit("PreToolUse", { ...denial, additionalContext: message });
 }
 
@@ -515,8 +590,9 @@ function handleSessionStart(input, slot) {
   const messages = sharedPlan(input, `compact-${compactions}`, () => {
     const state = readState(input);
     const scan = scanTranscript(input.transcript_path, state.transcriptOffset);
-    writeJsonAtomically(statePath(input), { loaded: state.loaded, transcriptOffset: scan.offset });
-    return state.loaded.length === 0 ? [] : buildMessages(state.loaded);
+    const documents = state.loaded.map((entry) => entry.document);
+    writeJsonAtomically(statePath(input), { loaded: loadedEntries(documents, null), transcriptOffset: scan.offset });
+    return documents.length === 0 ? [] : buildMessages(documents);
   });
   if (messages[slot] !== undefined) {
     emit("SessionStart", { additionalContext: messages[slot] });
