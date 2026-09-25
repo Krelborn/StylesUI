@@ -1,0 +1,33 @@
+.heading {
+  font-family: var(--sui-font-heading, system-ui, sans-serif);
+  font-weight: var(--sui-font-weight-bold, 700);
+  line-height: var(--sui-line-height-tight, 1.25);
+}
+
+.heading[data-size="xs"] {
+  font-size: var(--sui-font-size-xs, 0.75rem);
+}
+
+.heading[data-size="sm"] {
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.heading[data-size="md"] {
+  font-size: var(--sui-font-size-md, 1rem);
+}
+
+.heading[data-size="lg"] {
+  font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+.heading[data-size="xl"] {
+  font-size: var(--sui-font-size-xl, 1.25rem);
+}
+
+.heading[data-size="2xl"] {
+  font-size: var(--sui-font-size-2xl, 1.5rem);
+}
+
+.heading[data-size="3xl"] {
+  font-size: var(--sui-font-size-3xl, 1.875rem);
+}
