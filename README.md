@@ -1,35 +1,40 @@
-# React + TypeScript + Vite
+# StylesUI
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A tree-shakable React component library styled with CSS modules and CSS custom properties.
 
-Currently, two official plugins are available:
+## Usage
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```tsx
+import { Box } from 'stylesui'
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+<Box as="button" onClick={() => console.log('Clicked')}>Click Me</Box>
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`Box` renders the DOM element given in `as` (default `div`) and accepts every prop that element supports, including `ref`.
+
+### CSS
+
+Each component's compiled JS imports its own CSS file, so only styles for components you use end up in your bundle. Your bundler must handle CSS imports from `node_modules` (Vite, Next.js and webpack do by default).
+
+Components read CSS custom properties with fallbacks, so themes are applied by overriding variables.
+
+## Requirements
+
+- React 19
+
+## Development
+
+| Script | Description |
+| --- | --- |
+| `pnpm storybook` | Run Storybook on port 6006 |
+| `pnpm build-storybook` | Build a static Storybook to `storybook-static/` |
+| `pnpm build` | Build the library to `dist/` (ESM + type declarations) |
+| `pnpm test` | Run tests once (`pnpm test:watch` to watch) |
+| `pnpm typecheck` | Type-check the project |
+| `pnpm lint` | Lint with oxlint |
+
+### Adding a component
+
+Create `src/components/<Name>/` with `<Name>.tsx`, `<Name>.module.css`, `<Name>.test.tsx`, `<Name>.stories.tsx` and an `index.ts`, then export it from `src/index.ts`. Build on `Box` where possible.
+
+Tree-shaking relies on the build preserving one output module per source module and on `"sideEffects": ["**/*.css"]` in `package.json`. Avoid top-level side effects in component modules.

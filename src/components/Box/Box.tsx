@@ -1,0 +1,30 @@
+import type { ComponentPropsWithRef, ElementType, JSX } from 'react'
+import styles from './Box.module.css'
+
+type BoxElement = keyof JSX.IntrinsicElements
+
+type BoxOwnProps<E extends BoxElement> = {
+  /** DOM element to render. Defaults to `div`. */
+  as?: E
+  /** Class names merged with the Box base class. */
+  className?: string
+}
+
+/** Props for `Box`: its own props plus every prop supported by the element given in `as`. */
+export type BoxProps<E extends BoxElement = 'div'> = BoxOwnProps<E> &
+  Omit<ComponentPropsWithRef<E>, keyof BoxOwnProps<E>>
+
+/**
+ * Polymorphic primitive that renders the DOM element given in `as` and forwards all of its props.
+ * Foundation for other StylesUI components.
+ *
+ * @example
+ * <Box as="button" onClick={() => console.log('Clicked')}>Click Me</Box>
+ */
+export function Box<E extends BoxElement = 'div'>({ as, className, ...rest }: BoxProps<E>) {
+  // Widened so TS does not intersect every intrinsic element's ref type; BoxProps<E> already guarantees props match `as`
+  const Component = (as ?? 'div') as ElementType
+  const classes = className ? `${styles.box} ${className}` : styles.box
+
+  return <Component className={classes} {...rest} />
+}
