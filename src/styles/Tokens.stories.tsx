@@ -4,34 +4,12 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Box } from "../components/Box";
 import { Heading } from "../components/Heading";
 import { Text } from "../components/Text";
+import defaultThemeCss from "./themes/default.css?raw";
+import { declaredTokens, hues, steps } from "./tokenSource";
 
-const hues = ["gray", "red", "orange", "yellow", "green", "blue", "indigo", "violet"] as const;
-const steps = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
-// Mirrors every --sui-color-* token declared in src/styles/themes/default.css, excluding --sui-color-shadow
-const semanticColours = [
-  "primary",
-  "primary-hover",
-  "primary-subtle",
-  "on-primary",
-  "secondary",
-  "secondary-hover",
-  "secondary-subtle",
-  "on-secondary",
-  "background",
-  "surface",
-  "border",
-  "text",
-  "text-muted",
-  "focus-ring",
-  "success",
-  "on-success",
-  "warning",
-  "on-warning",
-  "danger",
-  "on-danger",
-  "info",
-  "on-info",
-] as const;
+const semanticColours = [...declaredTokens(defaultThemeCss).keys()]
+  .filter((name) => name.startsWith("--sui-color-") && name !== "--sui-color-shadow")
+  .map((name) => name.replace("--sui-color-", ""));
 const radii = ["sm", "md", "lg", "full"] as const;
 const spaces = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const fontSizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] as const;

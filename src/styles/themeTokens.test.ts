@@ -3,17 +3,7 @@ import { describe, expect, it } from "vitest";
 import paletteCss from "./palette.css?raw";
 import defaultThemeCss from "./themes/default.css?raw";
 import playfulThemeCss from "./themes/playful.css?raw";
-
-const hues = ["gray", "red", "orange", "yellow", "green", "blue", "indigo", "violet"] as const;
-const steps = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
-
-function declaredTokens(css: string): Map<string, string> {
-  const tokens = new Map<string, string>();
-  for (const match of css.matchAll(/(--sui-[\w-]+):\s*([^;]+);/g)) {
-    tokens.set(match[1], match[2].trim());
-  }
-  return tokens;
-}
+import { declaredTokens, hues, steps } from "./tokenSource";
 
 function splitTopLevelCommaSeparatedValues(value: string): string[] {
   const values: string[] = [];
@@ -47,7 +37,8 @@ function lightDarkValues(value: string): [light: string, dark: string] {
   return [light, dark];
 }
 
-// Deliberate per the design spec: these tokens keep the same value in both colour schemes.
+// Playful's orange-400 secondary and every theme's yellow warning are mid-tone fills that
+// dark (gray-900) text reads on in both schemes, so they and their on-* text don't flip.
 const sameInBothModes: Record<string, readonly string[]> = {
   default: ["--sui-color-on-warning"],
   playful: ["--sui-color-secondary", "--sui-color-on-secondary", "--sui-color-on-warning"],
