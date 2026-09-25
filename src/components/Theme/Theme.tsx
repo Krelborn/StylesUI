@@ -38,15 +38,9 @@ export type ThemeProps<E extends BoxElement = "div"> = PolymorphicProps<E, Theme
  * @example
  * <Theme mode="dark" theme="playful">...</Theme>
  */
-export function Theme<E extends BoxElement = "div">({
-  as,
-  className,
-  mode,
-  theme,
-  ...rest
-}: ThemeProps<E>): JSX.Element {
+export function Theme<E extends BoxElement = "div">({ as, mode, theme, ...rest }: ThemeProps<E>): JSX.Element {
   // Widened as in Box: ThemeProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
-  return <Box {...boxProps} as={as as "div"} className={className} data-sui-mode={mode} data-sui-theme={theme} />;
+  return <Box {...boxProps} as={as as "div"} data-sui-mode={mode} data-sui-theme={theme} />;
 }

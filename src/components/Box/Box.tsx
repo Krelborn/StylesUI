@@ -9,9 +9,14 @@ import styles from "./Box.module.css";
 export type BoxElement = keyof JSX.IntrinsicElements;
 
 type BoxOwnProps<E extends BoxElement> = {
-  /** DOM element to render. Defaults to `div`. */
+  /**
+   * DOM element to render. Defaults to the component's default element (`div` for Box).
+   */
   as?: E;
-  /** Class names merged with the Box base class. */
+
+  /**
+   * Class names merged with the component's base class.
+   */
   className?: string;
 };
 

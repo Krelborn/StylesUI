@@ -11,9 +11,12 @@
   color-scheme: dark;
 }
 
-/* color and font-family inherit as computed values, so a subtree that switches theme or mode has to set them again. */
-[data-sui-theme],
-[data-sui-mode] {
+/*
+ * color and font-family inherit as computed values, so a subtree that switches theme or mode has
+ * to set them again. Wrapped in :where() to keep this rule's specificity at zero, so a component's
+ * own class or a consumer's className always wins the same background/text/font declarations.
+ */
+:where([data-sui-theme], [data-sui-mode]) {
   background-color: var(--sui-color-background);
   color: var(--sui-color-text);
   font-family: var(--sui-font-body);

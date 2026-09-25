@@ -10,8 +10,8 @@ interface ThemeRootProps {
 }
 
 /**
- * Sets `data-sui-mode`/`data-sui-theme` on `document.documentElement` from the toolbar globals,
- * so `styles.css` paints the whole Storybook canvas rather than a wrapper element.
+ * Sets `data-sui-mode`/`data-sui-theme` on `document.documentElement`, so `styles.css` paints the
+ * whole Storybook canvas rather than a wrapper element.
  */
 export function ThemeRoot({ children, mode, theme }: ThemeRootProps): JSX.Element {
   useLayoutEffect(() => {
