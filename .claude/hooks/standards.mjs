@@ -16,6 +16,10 @@ const messageCharacterLimit = 9500;
 const lockTimeoutMilliseconds = 3000;
 const staleFileMilliseconds = 10 * 60 * 1000;
 const writeTools = new Set(["Write", "Edit"]);
+const gitGlobalOption = "(?:-C\\s+\\S+|-c\\s+\\S+|--[\\w-]+(?:=\\S+)?)";
+const changeShowingCommand = new RegExp(
+  `\\bgit\\s+(?:${gitGlobalOption}\\s+)*(?:diff|show|log)\\b|\\bgh\\s+pr\\s+diff\\b`,
+);
 
 const projectDirectory = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
 let configuration;
@@ -215,6 +219,27 @@ function scanTranscript(filePath, offset) {
     compactions: lines.filter(isCompactBoundary).length,
     offset: offset + lastNewline + 1,
   };
+}
+
+const compactBoundaryMarker = Buffer.from('"subtype":"compact_boundary"');
+
+/**
+ * Counts compactions recorded anywhere in a transcript file, without decoding its bytes to text
+ *
+ * @param filePath the transcript file; a missing file counts as having none
+ * @returns the number of times the compaction marker appears in the raw bytes
+ */
+function countCompactBoundaries(filePath) {
+  const contents = readFrom(filePath, 0);
+  let count = 0;
+  for (
+    let index = contents.indexOf(compactBoundaryMarker);
+    index !== -1;
+    index = contents.indexOf(compactBoundaryMarker, index + compactBoundaryMarker.length)
+  ) {
+    count += 1;
+  }
+  return count;
 }
 
 /**
@@ -423,7 +448,7 @@ function messageForFiles(input, key, filePaths, slot) {
  *   name; empty when the command does not show changes
  */
 function filesInChangeOutput(command, output) {
-  if (!/\b(git\s+(diff|show|log)|gh\s+pr\s+diff)\b/.test(command)) {
+  if (!changeShowingCommand.test(command)) {
     return [];
   }
   const candidates = new Set(output.split("\n").flatMap(pathsInChangeLine));
@@ -486,7 +511,7 @@ function handleSessionStart(input, slot) {
   if (input.source !== "compact") {
     return;
   }
-  const compactions = scanTranscript(input.transcript_path, 0).compactions;
+  const compactions = countCompactBoundaries(input.transcript_path);
   const messages = sharedPlan(input, `compact-${compactions}`, () => {
     const state = readState(input);
     const scan = scanTranscript(input.transcript_path, state.transcriptOffset);

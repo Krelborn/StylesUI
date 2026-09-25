@@ -184,6 +184,18 @@ describe("standards hook", () => {
       assert.ok(injectedDocuments(await runAllSlots("post", bashInput("gh pr diff 12", rawDiff))).length > 0);
     });
 
+    it("injects the standards for a git diff run with --no-pager", async () => {
+      assert.ok(injectedDocuments(await runAllSlots("post", bashInput("git --no-pager diff", rawDiff))).length > 0);
+    });
+
+    it("injects the standards for a git diff run with -C", async () => {
+      assert.ok(injectedDocuments(await runAllSlots("post", bashInput("git -C . diff", rawDiff))).length > 0);
+    });
+
+    it("ignores a non-change command with global options", async () => {
+      assert.deepEqual(contexts(await runAllSlots("post", bashInput("git --no-pager status", rawDiff))), []);
+    });
+
     it("ignores files mentioned only in the changed text", async () => {
       const prose = [
         "diff --git a/README.md b/README.md",
@@ -239,6 +251,14 @@ describe("standards hook", () => {
         commentsDocument,
         typescriptDocument,
       ]);
+    });
+
+    it("does not treat an escaped compaction marker in transcript content as a compaction", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/format.ts"));
+      const escapedLine = JSON.stringify({ type: "user", message: { content: '"subtype":"compact_boundary"' } });
+      fs.appendFileSync(transcriptPath, `${escapedLine}\n`);
+
+      assert.deepEqual(contexts(await runAllSlots("pre", toolInput("Read", "src/format.ts"))), []);
     });
 
     it("restores loaded standards when the main session compacts", async () => {
