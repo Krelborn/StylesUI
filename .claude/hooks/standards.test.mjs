@@ -7,9 +7,7 @@ import assert from "node:assert/strict";
 
 const repositoryDirectory = path.resolve(import.meta.dirname, "..", "..");
 const scriptPath = path.join(import.meta.dirname, "standards.mjs");
-const configuration = JSON.parse(
-  fs.readFileSync(path.join(repositoryDirectory, ".claude", "standards.json"), "utf8"),
-);
+const configuration = JSON.parse(fs.readFileSync(path.join(repositoryDirectory, ".claude", "standards.json"), "utf8"));
 const commentsDocument = "docs/standards/comments.md";
 const reactDocument = "docs/standards/react.md";
 const typescriptDocument = "docs/standards/typescript.md";
@@ -34,7 +32,9 @@ function runHook(mode, slot, input) {
       stderr += chunk;
     });
     child.on("error", reject);
-    child.on("close", (exitCode) => resolve({ exitCode, stderr, output: stdout === "" ? undefined : JSON.parse(stdout) }));
+    child.on("close", (exitCode) =>
+      resolve({ exitCode, stderr, output: stdout === "" ? undefined : JSON.parse(stdout) })
+    );
     child.stdin.end(typeof input === "string" ? input : JSON.stringify(input));
   });
 }
@@ -57,7 +57,12 @@ function toolInput(toolName, filePath, extra = {}) {
 }
 
 function sessionStartInput(source) {
-  return { session_id: "session", transcript_path: transcriptPath, hook_event_name: "SessionStart", source };
+  return {
+    session_id: "session",
+    transcript_path: transcriptPath,
+    hook_event_name: "SessionStart",
+    source,
+  };
 }
 
 function contexts(results) {
@@ -75,7 +80,12 @@ function appendCompactBoundary(filePath) {
 }
 
 function appendAssistantMessage(filePath, messageId, toolUseIds) {
-  const content = toolUseIds.map((toolUseId) => ({ type: "tool_use", id: toolUseId, name: "Read", input: {} }));
+  const content = toolUseIds.map((toolUseId) => ({
+    type: "tool_use",
+    id: toolUseId,
+    name: "Read",
+    input: {},
+  }));
   fs.appendFileSync(filePath, `${JSON.stringify({ type: "assistant", message: { id: messageId, content } })}\n`);
 }
 
@@ -89,15 +99,23 @@ function seedOldFormatState(documents) {
 }
 
 function stripHeaders(text) {
-  return text.replace(/Project coding standard \S+( \(part \d+ of \d+\))?, which applies to [^\n]* files\. Its full text:\n\n/g, "");
+  return text.replace(
+    /Project coding standard \S+( \(part \d+ of \d+\))?, which applies to [^\n]* files\. Its full text:\n\n/g,
+    ""
+  );
 }
 
 beforeEach(() => {
   temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), "standards-hook-"));
   projectDirectory = path.join(temporaryDirectory, "project");
   fs.mkdirSync(path.join(projectDirectory, ".claude"), { recursive: true });
-  fs.cpSync(path.join(repositoryDirectory, ".claude", "standards.json"), path.join(projectDirectory, ".claude", "standards.json"));
-  fs.cpSync(path.join(repositoryDirectory, "docs"), path.join(projectDirectory, "docs"), { recursive: true });
+  fs.cpSync(
+    path.join(repositoryDirectory, ".claude", "standards.json"),
+    path.join(projectDirectory, ".claude", "standards.json")
+  );
+  fs.cpSync(path.join(repositoryDirectory, "docs"), path.join(projectDirectory, "docs"), {
+    recursive: true,
+  });
   transcriptPath = path.join(temporaryDirectory, "session.jsonl");
   fs.writeFileSync(transcriptPath, "");
 });
@@ -113,7 +131,9 @@ describe("standards hook", () => {
         commentsDocument,
         typescriptDocument,
       ]);
-      assert.deepEqual(injectedDocuments(await runAllSlots("pre", toolInput("Read", "src/Button.tsx"))), [reactDocument]);
+      assert.deepEqual(injectedDocuments(await runAllSlots("pre", toolInput("Read", "src/Button.tsx"))), [
+        reactDocument,
+      ]);
       assert.deepEqual(injectedDocuments(await runAllSlots("pre", toolInput("Read", "src/Button.test.tsx"))), [
         vitestDocument,
       ]);
@@ -195,7 +215,9 @@ describe("standards hook", () => {
       const loaded = state.loaded.map((entry) => ({ ...entry, loadedAt: Date.now() - 10000 }));
       fs.writeFileSync(mainStatePath(), JSON.stringify({ ...state, loaded }));
 
-      assert.ok((await runAllSlots("pre", toolInput("Write", "src/B.tsx"))).every((result) => result.output === undefined));
+      assert.ok(
+        (await runAllSlots("pre", toolInput("Write", "src/B.tsx"))).every((result) => result.output === undefined)
+      );
     });
   });
 
@@ -207,9 +229,13 @@ describe("standards hook", () => {
       "@@ -1 +1 @@",
       "+export {}",
     ].join("\n");
-    const compactedDiff = ["src/format.ts | 1 +", " 1 file changed, 1 insertion(+)", "", "src/format.ts", "  @@ -1 +1 @@"].join(
-      "\n",
-    );
+    const compactedDiff = [
+      "src/format.ts | 1 +",
+      " 1 file changed, 1 insertion(+)",
+      "",
+      "src/format.ts",
+      "  @@ -1 +1 @@",
+    ].join("\n");
 
     function bashInput(command, stdout) {
       return {
@@ -237,7 +263,7 @@ describe("standards hook", () => {
     it("injects the standards for files in compacted git output", async () => {
       assert.deepEqual(
         injectedDocuments(await runAllSlots("post", bashInput("rtk git show HEAD -- src/format.ts", compactedDiff))),
-        [commentsDocument, typescriptDocument],
+        [commentsDocument, typescriptDocument]
       );
     });
 
@@ -315,7 +341,10 @@ describe("standards hook", () => {
       const messages = contexts(await runAllSlots("pre", toolInput("Read", "src/Button.test.tsx")));
 
       assert.equal(new Set(messages).size, messages.length);
-      assert.equal(injectedDocuments([{ output: { hookSpecificOutput: { additionalContext: messages.join("\n") } } }]).length, 4);
+      assert.equal(
+        injectedDocuments([{ output: { hookSpecificOutput: { additionalContext: messages.join("\n") } } }]).length,
+        4
+      );
     });
   });
 
@@ -332,7 +361,10 @@ describe("standards hook", () => {
 
     it("does not treat an escaped compaction marker in transcript content as a compaction", async () => {
       await runAllSlots("pre", toolInput("Read", "src/format.ts"));
-      const escapedLine = JSON.stringify({ type: "user", message: { content: '"subtype":"compact_boundary"' } });
+      const escapedLine = JSON.stringify({
+        type: "user",
+        message: { content: '"subtype":"compact_boundary"' },
+      });
       fs.appendFileSync(transcriptPath, `${escapedLine}\n`);
 
       assert.deepEqual(contexts(await runAllSlots("pre", toolInput("Read", "src/format.ts"))), []);
@@ -354,7 +386,9 @@ describe("standards hook", () => {
       appendCompactBoundary(transcriptPath);
       await runAllSlots("session", sessionStartInput("compact"));
 
-      assert.ok((await runAllSlots("pre", toolInput("Write", "src/other.ts"))).every((result) => result.output === undefined));
+      assert.ok(
+        (await runAllSlots("pre", toolInput("Write", "src/other.ts"))).every((result) => result.output === undefined)
+      );
     });
 
     it("restores standards recorded in the older state format", async () => {
@@ -373,7 +407,10 @@ describe("standards hook", () => {
       const firstRestore = await runAllSlots("session", sessionStartInput("compact"));
 
       await runAllSlots("pre", toolInput("Read", "src/Button.tsx"));
-      const escapedLine = JSON.stringify({ type: "user", message: { content: '"subtype":"compact_boundary"' } });
+      const escapedLine = JSON.stringify({
+        type: "user",
+        message: { content: '"subtype":"compact_boundary"' },
+      });
       fs.appendFileSync(transcriptPath, `${escapedLine}\n`);
       const secondRestore = await runAllSlots("session", sessionStartInput("compact"));
 
@@ -413,7 +450,9 @@ describe("standards hook", () => {
     it("allows a Write without treating its documents as loaded in the same step", async () => {
       seedOldFormatState([commentsDocument, typescriptDocument]);
 
-      assert.ok((await runAllSlots("pre", toolInput("Write", "src/format.ts"))).every((result) => result.output === undefined));
+      assert.ok(
+        (await runAllSlots("pre", toolInput("Write", "src/format.ts"))).every((result) => result.output === undefined)
+      );
     });
   });
 
@@ -500,7 +539,7 @@ describe("standards hook", () => {
       const expected = Array.from({ length: configuration.slotCount }, (_, slot) => `standards.mjs" ${mode} ${slot}`);
       assert.deepEqual(
         commands.map((command) => command.slice(command.indexOf("standards.mjs"))),
-        expected,
+        expected
       );
     }
   });

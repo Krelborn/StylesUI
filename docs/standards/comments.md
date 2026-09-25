@@ -46,7 +46,7 @@ function formatTimeLeft(msLeft: number): string { ... }
 says? If a sentence only makes sense with the body in view, it belongs in the body.
 
 The trap is the plausible middle paragraph — the one explaining what the mechanism does not
-handle. Split it. The *effect on the caller* is contract; the mechanism producing that effect
+handle. Split it. The _effect on the caller_ is contract; the mechanism producing that effect
 is not.
 
 ```ts
