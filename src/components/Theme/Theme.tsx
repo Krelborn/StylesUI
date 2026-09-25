@@ -32,7 +32,7 @@ interface ThemeOwnProps<E extends BoxElement> {
   /**
    * Theme for this subtree. Inherited from the nearest ancestor when omitted.
    */
-  name?: ThemeName;
+  theme?: ThemeName;
 }
 
 /**
@@ -46,19 +46,19 @@ export type ThemeProps<E extends BoxElement = "div"> = ThemeOwnProps<E> & Omit<B
  * `@krelborn/stylesui/styles.css` imported once by the app.
  *
  * @example
- * <Theme mode="dark" name="playful">...</Theme>
+ * <Theme mode="dark" theme="playful">...</Theme>
  */
 export function Theme<E extends BoxElement = "div">({
   as,
   className,
   mode,
-  name,
+  theme,
   ...rest
 }: ThemeProps<E>): JSX.Element {
   // Widened as in Box: ThemeProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
   return (
-    <Box {...boxProps} as={(as ?? "div") as "div"} className={className} data-sui-mode={mode} data-sui-theme={name} />
+    <Box {...boxProps} as={(as ?? "div") as "div"} className={className} data-sui-mode={mode} data-sui-theme={theme} />
   );
 }

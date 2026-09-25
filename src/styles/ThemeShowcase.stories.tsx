@@ -9,11 +9,11 @@ import { Text } from "../components/Text";
 import type { ThemeMode, ThemeName } from "../components/Theme";
 import { Theme } from "../components/Theme";
 
-const combinations: ReadonlyArray<{ mode: ThemeMode; name: ThemeName }> = [
-  { mode: "light", name: "default" },
-  { mode: "dark", name: "default" },
-  { mode: "light", name: "playful" },
-  { mode: "dark", name: "playful" },
+const combinations: ReadonlyArray<{ mode: ThemeMode; theme: ThemeName }> = [
+  { mode: "light", theme: "default" },
+  { mode: "dark", theme: "default" },
+  { mode: "light", theme: "playful" },
+  { mode: "dark", theme: "playful" },
 ];
 
 function SampleCard(): JSX.Element {
@@ -43,10 +43,10 @@ type Story = StoryObj<typeof meta>;
 export const AllCombinations: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(20rem, 1fr))" }}>
-      {combinations.map(({ mode, name }) => (
-        <Theme key={`${name}-${mode}`} mode={mode} name={name} style={{ padding: "1rem" }}>
+      {combinations.map(({ mode, theme }) => (
+        <Theme key={`${theme}-${mode}`} mode={mode} style={{ padding: "1rem" }} theme={theme}>
           <Text size="sm" style={{ display: "block", marginBottom: "0.5rem" }} tone="muted" weight="medium">
-            {`${name} / ${mode}`}
+            {`${theme} / ${mode}`}
           </Text>
           <SampleCard />
         </Theme>

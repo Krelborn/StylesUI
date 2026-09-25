@@ -11,19 +11,19 @@ describe("Theme", () => {
     expect(screen.getByText("Content").tagName).toBe("DIV");
   });
 
-  it("must set the theme and mode attributes when name and mode are given", () => {
-    render(
-      <Theme mode="dark" name="playful">
-        Content
-      </Theme>
-    );
+  it("must set data-sui-theme when theme is given", () => {
+    render(<Theme theme="playful">Content</Theme>);
 
-    const theme = screen.getByText("Content");
-    expect(theme).toHaveAttribute("data-sui-theme", "playful");
-    expect(theme).toHaveAttribute("data-sui-mode", "dark");
+    expect(screen.getByText("Content")).toHaveAttribute("data-sui-theme", "playful");
   });
 
-  it("must omit the theme and mode attributes when name and mode are omitted", () => {
+  it("must set data-sui-mode when mode is given", () => {
+    render(<Theme mode="dark">Content</Theme>);
+
+    expect(screen.getByText("Content")).toHaveAttribute("data-sui-mode", "dark");
+  });
+
+  it("must omit the theme and mode attributes when theme and mode are omitted", () => {
     render(<Theme>Content</Theme>);
 
     const theme = screen.getByText("Content");
@@ -59,9 +59,22 @@ describe("Theme", () => {
     expect(ref.current).toBe(screen.getByText("Content"));
   });
 
+  it("must forward name to the element when as is form", () => {
+    render(
+      <Theme as="form" name="checkout">
+        Content
+      </Theme>
+    );
+
+    const form = screen.getByText("Content");
+    expect(form.tagName).toBe("FORM");
+    expect(form).toHaveAttribute("name", "checkout");
+    expect(form).not.toHaveAttribute("data-sui-theme");
+  });
+
   it("must reject a theme name when it is not shipped", () => {
     // @ts-expect-error "ocean" is not a ThemeName
-    render(<Theme name="ocean">Content</Theme>);
+    render(<Theme theme="ocean">Content</Theme>);
   });
 
   it("must reject a mode when it is not supported", () => {

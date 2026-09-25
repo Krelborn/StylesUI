@@ -48,7 +48,7 @@ The `default` theme applies to the whole page, and colour mode follows the OS. U
 ```tsx
 import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 
-<Theme mode="dark" name="playful">
+<Theme mode="dark" theme="playful">
   <Card>
     <Heading level={2}>Hello</Heading>
     <Button>Get started</Button>
