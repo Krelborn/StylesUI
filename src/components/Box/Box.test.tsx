@@ -61,7 +61,7 @@ describe("Box", () => {
     render(<Box href="https://example.com">Content</Box>);
   });
 
-  it("accepts props valid for the element and rejects an unsupported own-prop value in PolymorphicProps", () => {
+  it("must accept element props and reject invalid own-prop values when typed with PolymorphicProps", () => {
     const acceptsLinkProps = (props: PolymorphicProps<"a", { tone?: "x" }>): string | undefined => props.href;
 
     expect(acceptsLinkProps({ href: "https://example.com", tone: "x" })).toBe("https://example.com");
