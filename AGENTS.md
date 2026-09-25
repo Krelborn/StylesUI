@@ -19,6 +19,8 @@ StylesUI is a React 19 component library built with Vite 8 (rolldown), TypeScrip
 
 A Husky pre-commit hook (`.husky/pre-commit`) runs lint-staged (`.lintstagedrc.json`): `oxlint --fix` then `oxfmt` on staged JS/TS files, `oxfmt` on everything else. `pnpm install` sets it up via the `prepare` script.
 
+Publishing: `.github/workflows/publish.yml` lints, typechecks, tests, builds and publishes `@krelborn/stylesui` to GitHub Packages when a GitHub Release is published. Bump `version` in `package.json` first (`pnpm version patch|minor|major`); a published version can't be republished.
+
 Install dependencies via `pnpm add` without hand-written versions so the latest release is resolved.
 
 ## Architecture
