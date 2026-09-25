@@ -1,0 +1,12 @@
+:root,
+[data-sui-mode="system"] {
+  color-scheme: light dark;
+}
+
+[data-sui-mode="light"] {
+  color-scheme: light;
+}
+
+[data-sui-mode="dark"] {
+  color-scheme: dark;
+}

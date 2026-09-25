@@ -19,9 +19,11 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: "src/index.ts",
+      entry: { index: "src/index.ts", styles: "src/styles/index.css" },
       formats: ["es"],
     },
+    // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
+    cssTarget: ["chrome123", "edge123", "firefox120", "safari17.5"],
     cssCodeSplit: true,
     copyPublicDir: false,
     rolldownOptions: {
@@ -41,5 +43,10 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["src/test/setup.ts"],
+    // Vitest otherwise stubs ?raw CSS imports to an empty string, since it assumes
+    // CSS content isn't needed unless it's a CSS module
+    css: {
+      include: [/\.css\?raw$/],
+    },
   },
 });
