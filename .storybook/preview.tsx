@@ -1,9 +1,10 @@
 import type { Preview } from "@storybook/react-vite";
 
 import type { ThemeMode, ThemeName } from "../src/components/Theme";
-import { Theme } from "../src/components/Theme";
 
 import "../src/styles/index.css";
+
+import { ThemeRoot } from "./ThemeRoot";
 
 interface ThemeGlobals {
   mode: ThemeMode;
@@ -16,9 +17,9 @@ const preview: Preview = {
       const { mode, theme } = context.globals as ThemeGlobals;
 
       return (
-        <Theme mode={mode} name={theme} style={{ minHeight: "100vh", padding: "1rem" }}>
+        <ThemeRoot mode={mode} theme={theme}>
           <Story />
-        </Theme>
+        </ThemeRoot>
       );
     },
   ],
