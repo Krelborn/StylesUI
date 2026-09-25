@@ -83,6 +83,11 @@ function mainStatePath() {
   return path.join(temporaryDirectory, "claude-standards", "session", "main.json");
 }
 
+function seedOldFormatState(documents) {
+  fs.mkdirSync(path.dirname(mainStatePath()), { recursive: true });
+  fs.writeFileSync(mainStatePath(), JSON.stringify({ loaded: documents, transcriptOffset: 0 }));
+}
+
 function stripHeaders(text) {
   return text.replace(/Project coding standard \S+( \(part \d+ of \d+\))?, which applies to [^\n]* files\. Its full text:\n\n/g, "");
 }
@@ -248,6 +253,10 @@ describe("standards hook", () => {
       assert.ok(injectedDocuments(await runAllSlots("post", bashInput("git -C . diff", rawDiff))).length > 0);
     });
 
+    it("injects the standards for a git diff run with -P", async () => {
+      assert.ok(injectedDocuments(await runAllSlots("post", bashInput("git -P diff", rawDiff))).length > 0);
+    });
+
     it("ignores a non-change command with global options", async () => {
       assert.deepEqual(contexts(await runAllSlots("post", bashInput("git --no-pager status", rawDiff))), []);
     });
@@ -348,6 +357,16 @@ describe("standards hook", () => {
       assert.ok((await runAllSlots("pre", toolInput("Write", "src/other.ts"))).every((result) => result.output === undefined));
     });
 
+    it("restores standards recorded in the older state format", async () => {
+      seedOldFormatState([commentsDocument]);
+      appendCompactBoundary(transcriptPath);
+
+      const restored = await runAllSlots("session", sessionStartInput("compact"));
+
+      assert.deepEqual(injectedDocuments(restored), [commentsDocument]);
+      assert.ok(restored.every((result) => result.stderr === ""));
+    });
+
     it("reuses the compaction plan when a transcript line only resembles the marker", async () => {
       await runAllSlots("pre", toolInput("Read", "src/format.ts"));
       appendCompactBoundary(transcriptPath);
@@ -381,6 +400,20 @@ describe("standards hook", () => {
       await runAllSlots("session", sessionStartInput("clear"));
 
       assert.ok(injectedDocuments(await runAllSlots("pre", toolInput("Read", "src/format.ts"))).length > 0);
+    });
+  });
+
+  describe("with state in the older format", () => {
+    it("treats its documents as already in context for a Read", async () => {
+      seedOldFormatState([commentsDocument, typescriptDocument]);
+
+      assert.deepEqual(contexts(await runAllSlots("pre", toolInput("Read", "src/format.ts"))), []);
+    });
+
+    it("allows a Write without treating its documents as loaded in the same step", async () => {
+      seedOldFormatState([commentsDocument, typescriptDocument]);
+
+      assert.ok((await runAllSlots("pre", toolInput("Write", "src/format.ts"))).every((result) => result.output === undefined));
     });
   });
 

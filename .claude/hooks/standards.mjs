@@ -18,7 +18,7 @@ const staleFileMilliseconds = 10 * 60 * 1000;
 const transcriptTailBytes = 1024 * 1024;
 const sameStepWindowMilliseconds = 3000;
 const writeTools = new Set(["Write", "Edit"]);
-const gitGlobalOption = "(?:-C\\s+\\S+|-c\\s+\\S+|--[\\w-]+(?:=\\S+)?)";
+const gitGlobalOption = "(?:-P|-C\\s+\\S+|-c\\s+\\S+|--[\\w-]+(?:=\\S+)?)";
 const changeShowingCommand = new RegExp(
   `\\bgit\\s+(?:${gitGlobalOption}\\s+)*(?:diff|show|log)\\b|\\bgh\\s+pr\\s+diff\\b`,
 );
@@ -65,8 +65,25 @@ function statePath(input, key = agentKey(input)) {
   return path.join(sessionDirectory(input), `${key}.json`);
 }
 
+/**
+ * Reads an agent's state
+ *
+ * @param input the hook input
+ * @param key the agent's state key; defaults to the agent the input comes from
+ * @returns the state, with every loaded entry in the { document, toolUseId, loadedAt } form;
+ *   a document recorded as a bare path counts as loaded by no tool call, and an entry with no
+ *   document is dropped
+ */
 function readState(input, key) {
-  return readJson(statePath(input, key)) ?? { loaded: [], transcriptOffset: 0 };
+  const state = readJson(statePath(input, key)) ?? { loaded: [], transcriptOffset: 0 };
+  return { ...state, loaded: state.loaded.flatMap(normaliseLoadedEntry) };
+}
+
+function normaliseLoadedEntry(entry) {
+  if (typeof entry === "string") {
+    return [{ document: entry, toolUseId: null, loadedAt: 0 }];
+  }
+  return typeof entry?.document === "string" ? [entry] : [];
 }
 
 /**
@@ -230,10 +247,11 @@ function scanTranscript(filePath, offset) {
 const compactBoundaryMarker = Buffer.from('"subtype":"compact_boundary"');
 
 /**
- * Counts compactions recorded anywhere in a transcript file, without decoding its bytes to text
+ * Counts compactions recorded anywhere in a transcript file
  *
  * @param filePath the transcript file; a missing file counts as having none
- * @returns the number of times the compaction marker appears in the raw bytes
+ * @returns the number of compactions; may over-report when a transcript entry holds an
+ *   unescaped copy of the marker
  */
 function countCompactBoundaries(filePath) {
   const contents = readFrom(filePath, 0);
@@ -253,7 +271,8 @@ function countCompactBoundaries(filePath) {
  *
  * @param filePath the transcript file; a missing file counts as empty
  * @param toolUseIds the tool use IDs to look up
- * @returns a map from each tool use ID found to the ID of the assistant message holding it
+ * @returns a map from each tool use ID found to the ID of the assistant message holding it;
+ *   IDs outside the last 1 MiB of the transcript are absent
  */
 function assistantMessageIds(filePath, toolUseIds) {
   const size = fs.statSync(filePath, { throwIfNoEntry: false })?.size ?? 0;
@@ -279,7 +298,9 @@ function assistantMessageIds(filePath, toolUseIds) {
  *
  * @param input the hook input for the Write or Edit
  * @param documents the standards documents the file requires
- * @returns true when any of the documents was loaded by a tool call in the same step
+ * @returns true when any of the documents was loaded by a tool call in the same step, or was
+ *   loaded under 3 seconds ago while either call is missing from the transcript; may
+ *   over-report
  */
 function composedBeforeStandards(input, documents) {
   const entries = readState(input).loaded.filter(
@@ -387,8 +408,11 @@ function buildMessages(documents) {
   const headerAllowance = 300;
   const segments = documents.flatMap((document) => {
     const rule = configuration.rules.find((candidate) => candidate.document === document);
+    if (rule === undefined) {
+      return [];
+    }
     const documentPath = path.join(projectDirectory, document);
-    if (rule === undefined || !fs.existsSync(documentPath)) {
+    if (!fs.existsSync(documentPath)) {
       return [];
     }
     const parts = splitMarkdown(fs.readFileSync(documentPath, "utf8"), messageCharacterLimit - headerAllowance);
@@ -499,9 +523,10 @@ function messageForDocuments(input, key, documents, slot) {
   const messages = sharedPlan(input, key, () => {
     const state = refreshForCompaction(readState(input), input);
     const missing = documents.filter((document) => !state.loaded.some((entry) => entry.document === document));
+    const messages = missing.length === 0 ? [] : buildMessages(missing);
     const loaded = [...state.loaded, ...loadedEntries(missing, input.tool_use_id)];
     writeJsonAtomically(statePath(input), { ...state, loaded });
-    return missing.length === 0 ? [] : buildMessages(missing);
+    return messages;
   });
   return messages[slot];
 }
@@ -591,8 +616,9 @@ function handleSessionStart(input, slot) {
     const state = readState(input);
     const scan = scanTranscript(input.transcript_path, state.transcriptOffset);
     const documents = state.loaded.map((entry) => entry.document);
+    const messages = documents.length === 0 ? [] : buildMessages(documents);
     writeJsonAtomically(statePath(input), { loaded: loadedEntries(documents, null), transcriptOffset: scan.offset });
-    return documents.length === 0 ? [] : buildMessages(documents);
+    return messages;
   });
   if (messages[slot] !== undefined) {
     emit("SessionStart", { additionalContext: messages[slot] });
