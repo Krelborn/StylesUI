@@ -1,0 +1,40 @@
+.text {
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  line-height: var(--sui-line-height-normal, 1.5);
+}
+
+.text[data-size="xs"] {
+  font-size: var(--sui-font-size-xs, 0.75rem);
+}
+
+.text[data-size="sm"] {
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.text[data-size="md"] {
+  font-size: var(--sui-font-size-md, 1rem);
+}
+
+.text[data-size="lg"] {
+  font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+.text[data-size="xl"] {
+  font-size: var(--sui-font-size-xl, 1.25rem);
+}
+
+.text[data-weight="regular"] {
+  font-weight: var(--sui-font-weight-regular, 400);
+}
+
+.text[data-weight="medium"] {
+  font-weight: var(--sui-font-weight-medium, 500);
+}
+
+.text[data-weight="bold"] {
+  font-weight: var(--sui-font-weight-bold, 700);
+}
+
+.text[data-tone="muted"] {
+  color: var(--sui-color-text-muted, #4b5563);
+}
