@@ -11,7 +11,7 @@ Follow these steps:
 
 1. Use a subagent to run **open-code-review-delegate** skill to review the changes and report by findings. The subagent must be readonly. No edits allowed, do NOT try to fix any issues.
 2. Load the **receiving-code-review** skill and review the reported issues
-3. Plan how you will make any necessary fixes using **subagent-driven-development**
+3. Plan how you will make any necessary fixes using the **subagent-driven-development** skill
 4. If there is an important choice needed by the user before fixing, **stop**, present the findings and ask the user questions to unblock you before proceeding. Skip the approval when trivial changes are required.
 5. Fix the issues following your plan once approved
 
