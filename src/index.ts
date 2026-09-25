@@ -1,5 +1,7 @@
 export { Box } from "./components/Box";
 export type { BoxElement, BoxProps } from "./components/Box";
+export { Button } from "./components/Button";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button";
 export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
 export { Text } from "./components/Text";
