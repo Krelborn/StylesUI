@@ -20,7 +20,7 @@ const sameStepWindowMilliseconds = 3000;
 const writeTools = new Set(["Write", "Edit"]);
 const gitGlobalOption = "(?:-P|-C\\s+\\S+|-c\\s+\\S+|--[\\w-]+(?:=\\S+)?)";
 const changeShowingCommand = new RegExp(
-  `\\bgit\\s+(?:${gitGlobalOption}\\s+)*(?:diff|show|log)\\b|\\bgh\\s+pr\\s+diff\\b`,
+  `\\bgit\\s+(?:${gitGlobalOption}\\s+)*(?:diff|show|log)\\b|\\bgh\\s+pr\\s+diff\\b`
 );
 
 const projectDirectory = process.env.CLAUDE_PROJECT_DIR ?? process.cwd();
@@ -276,7 +276,9 @@ function countCompactBoundaries(filePath) {
  */
 function assistantMessageIds(filePath, toolUseIds) {
   const size = fs.statSync(filePath, { throwIfNoEntry: false })?.size ?? 0;
-  const lines = readFrom(filePath, Math.max(0, size - transcriptTailBytes)).toString("utf8").split("\n");
+  const lines = readFrom(filePath, Math.max(0, size - transcriptTailBytes))
+    .toString("utf8")
+    .split("\n");
   const found = new Map();
   for (const line of lines.filter((candidate) => toolUseIds.some((toolUseId) => candidate.includes(toolUseId)))) {
     const entry = parseJsonLine(line);
@@ -304,7 +306,7 @@ function assistantMessageIds(filePath, toolUseIds) {
  */
 function composedBeforeStandards(input, documents) {
   const entries = readState(input).loaded.filter(
-    (entry) => documents.includes(entry.document) && entry.toolUseId !== null && entry.toolUseId !== input.tool_use_id,
+    (entry) => documents.includes(entry.document) && entry.toolUseId !== null && entry.toolUseId !== input.tool_use_id
   );
   if (entries.length === 0) {
     return false;
@@ -369,7 +371,11 @@ function splitMarkdown(markdown, limit) {
     current += line;
   }
   sections.push(current);
-  return packPieces(sections.flatMap((section) => splitByLines(section, limit)), limit, "");
+  return packPieces(
+    sections.flatMap((section) => splitByLines(section, limit)),
+    limit,
+    ""
+  );
 }
 
 function splitByLines(text, limit) {
@@ -617,7 +623,10 @@ function handleSessionStart(input, slot) {
     const scan = scanTranscript(input.transcript_path, state.transcriptOffset);
     const documents = state.loaded.map((entry) => entry.document);
     const messages = documents.length === 0 ? [] : buildMessages(documents);
-    writeJsonAtomically(statePath(input), { loaded: loadedEntries(documents, null), transcriptOffset: scan.offset });
+    writeJsonAtomically(statePath(input), {
+      loaded: loadedEntries(documents, null),
+      transcriptOffset: scan.offset,
+    });
     return messages;
   });
   if (messages[slot] !== undefined) {
@@ -633,7 +642,10 @@ function handleSubagentStart(input, slot) {
     // A fork's transcript starts with the parent's history, whose compactions are already
     // reflected in the parent's state
     const scan = scanTranscript(transcriptPath(input), 0);
-    writeJsonAtomically(statePath(input), { loaded: readState(input, "main").loaded, transcriptOffset: scan.offset });
+    writeJsonAtomically(statePath(input), {
+      loaded: readState(input, "main").loaded,
+      transcriptOffset: scan.offset,
+    });
   });
 }
 

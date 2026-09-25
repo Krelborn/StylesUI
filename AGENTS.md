@@ -11,10 +11,13 @@ StylesUI is a React 19 component library built with Vite 8 (rolldown), TypeScrip
 - `pnpm build`: `vite build` (JS + CSS to `dist/`) then `tsc -p tsconfig.build.json` (declarations only)
 - `pnpm typecheck`: `tsc -b` over app and node tsconfigs (includes tests, stories, `.storybook`)
 - `pnpm lint`: oxlint
+- `pnpm format`: oxfmt (config in `.oxfmtrc.json`); `pnpm format:check` to check without writing
 - `pnpm test`: Vitest run once over `src/`; `pnpm test:watch` to watch
 - `pnpm test:hooks`: `node:test` tests for the Claude Code hook scripts in `.claude/hooks/`
 - Single test file: `pnpm test src/components/Box/Box.test.tsx`; single test by name: `pnpm test -t "renders a div by default"`
 - `pnpm storybook` (port 6006) / `pnpm build-storybook`
+
+A Husky pre-commit hook (`.husky/pre-commit`) runs lint-staged (`.lintstagedrc.json`): `oxlint --fix` then `oxfmt` on staged JS/TS files, `oxfmt` on everything else. `pnpm install` sets it up via the `prepare` script.
 
 Install dependencies via `pnpm add` without hand-written versions so the latest release is resolved.
 

@@ -10,11 +10,11 @@ Test user behavior, not implementation details. If a user can't observe it, don'
 
 ## Scenario Identification
 
-| Scenario             | Signals                                 | setUpTest variation | Key tools                                |
-| -------------------- | --------------------------------------- | ------------------- | ---------------------------------------- |
-| **React component**  | `.tsx` file, JSX, renders UI            | Deferred render     | `renderBase()`, `userEvent`, role queries |
-| **Utility function** | Pure function, no React imports         | None                | Direct calls, no rendering               |
-| **Async/data layer** | API calls, fetch/axios, cancellation    | Pre-loaded state    | Mocked module boundaries, `waitFor`      |
+| Scenario             | Signals                              | setUpTest variation | Key tools                                 |
+| -------------------- | ------------------------------------ | ------------------- | ----------------------------------------- |
+| **React component**  | `.tsx` file, JSX, renders UI         | Deferred render     | `renderBase()`, `userEvent`, role queries |
+| **Utility function** | Pure function, no React imports      | None                | Direct calls, no rendering                |
+| **Async/data layer** | API calls, fetch/axios, cancellation | Pre-loaded state    | Mocked module boundaries, `waitFor`       |
 
 ## Query Priority
 
@@ -68,6 +68,7 @@ await user.keyboard("{Enter}");
 fireEvent.click(button);
 fireEvent.change(input, { target: { value: "text" } });
 ```
+
 Only use `fireEvent` where `userEvent` doesn't support the interaction you need (e.g., `fireEvent.focus(input)` to trigger focus styles without user interaction). For all user interactions, prefer `userEvent` for more realistic simulation.
 
 ## Async Patterns
@@ -193,6 +194,7 @@ test("must show error message when email is invalid", async () => {
   expect(screen.getByRole("alert")).toHaveTextContent("Invalid email");
 });
 ```
+
 ## setUpTest Pattern
 
 A test setup helper that prepares mocks, stores, and a render function. **It does NOT call render itself.** Tests control rendering explicitly.
@@ -238,7 +240,7 @@ test("must render editor", async () => {
   const { render } = setUpTest();
 
   await render(<MyComponent />);
-  
+
   expect(screen.getByRole("region", { name: "Editor" })).toBeInTheDocument();
 });
 ```
@@ -286,9 +288,7 @@ describe("ComponentName", () => {
 });
 
 // Setup helper — deferred render variation (most common for components)
-function setUpTest({
-  /* option = default */
-} = {}) {
+function setUpTest({/* option = default */} = {}) {
   // Create mocks, test data, and any context values
   const onSave = vi.fn();
 
