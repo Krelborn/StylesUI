@@ -100,7 +100,7 @@ Parse the JSON to list specific files and exports that became unused.
 ```yaml
 - name: Fallow analysis
   run: npx fallow dead-code --ci > fallow.sarif
-  continue-on-error: true # --ci sets --fail-on-issues; continue to upload SARIF even if issues found
+  continue-on-error: true  # --ci sets --fail-on-issues; continue to upload SARIF even if issues found
 
 - name: Upload SARIF
   uses: github/codeql-action/upload-sarif@v3
@@ -126,7 +126,7 @@ Fail a PR only when it introduces new security candidates (or makes existing one
 - uses: fallow-rs/fallow@v3
   with:
     command: security
-    security-gate: new # or newly-reachable (needs a base ref via changed-since or PR auto-scoping)
+    security-gate: new   # or newly-reachable (needs a base ref via changed-since or PR auto-scoping)
 ```
 
 GitLab equivalent: `FALLOW_COMMAND: "security"` with `FALLOW_SECURITY_GATE: "new"`.
@@ -148,7 +148,7 @@ Computes a health score (0-100 with letter grade) in combined mode and enables t
 - uses: fallow-rs/fallow@v3
   with:
     command: audit
-    gate: new-only # default; fails only on findings introduced by this PR
+    gate: new-only        # default; fails only on findings introduced by this PR
     fail-on-issues: true
 ```
 
@@ -179,7 +179,7 @@ The official action supports inline PR annotations via GitHub workflow commands.
     command: dead-code
     changed-since: main
     annotations: true
-    max-annotations: 50 # default: 50, limits annotation count
+    max-annotations: 50   # default: 50, limits annotation count
 ```
 
 Annotations appear as inline warnings on the PR diff. They work with all commands (`dead-code`, `dupes`, `health`, and the default combined mode). The `max-annotations` input prevents annotation flooding on large projects.
@@ -213,7 +213,7 @@ Only reports duplication in files modified by the PR.
 
 ```yaml
 include:
-  - remote: "https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml"
+  - remote: 'https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml'
 
 fallow:
   extends: .fallow
@@ -228,14 +228,14 @@ If runners cannot reach `raw.githubusercontent.com`, run `fallow ci-template git
 
 ```yaml
 include:
-  - local: "ci/gitlab-ci.yml"
+  - local: 'ci/gitlab-ci.yml'
 ```
 
 ### GitLab CI: With MR Summary Comments
 
 ```yaml
 include:
-  - remote: "https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml"
+  - remote: 'https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml'
 
 fallow:
   extends: .fallow
@@ -251,7 +251,7 @@ Posts a summary comment on the MR with issue counts and findings. In MR pipeline
 
 ```yaml
 include:
-  - remote: "https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml"
+  - remote: 'https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml'
 
 fallow:
   extends: .fallow
@@ -266,7 +266,7 @@ Posts inline review comments directly on the MR diff lines where issues were fou
 
 ```yaml
 include:
-  - remote: "https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml"
+  - remote: 'https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml'
 
 fallow:
   extends: .fallow
@@ -285,7 +285,7 @@ Posts both a summary comment and inline review comments on the MR. `FALLOW_SUMMA
 
 ```yaml
 include:
-  - remote: "https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml"
+  - remote: 'https://raw.githubusercontent.com/fallow-rs/fallow/main/ci/gitlab-ci.yml'
 
 fallow:
   extends: .fallow
@@ -441,7 +441,6 @@ fallow migrate
 ```
 
 Creates `.fallowrc.json` with mapped settings:
-
 - knip `rules`/`exclude`/`include` → fallow `rules` (error/warn/off)
 - knip `ignore` → fallow `ignoreFindings` (matching dead-code findings are
   hidden, but matching files remain in the module graph; leading `!` exceptions
@@ -484,7 +483,6 @@ fallow migrate
 ```
 
 Maps jscpd settings:
-
 - `minTokens` → `duplicates.minTokens`
 - `minLines` → `duplicates.minLines`
 - `threshold` → `duplicates.threshold`
@@ -498,12 +496,12 @@ fallow dupes --format json --quiet
 
 ### Detection mode mapping
 
-| jscpd                  | fallow                                     |
-| ---------------------- | ------------------------------------------ |
-| Default (exact tokens) | `strict`                                   |
-| n/a                    | `mild` (fallow default, syntax normalized) |
-| n/a                    | `weak` (literal normalization)             |
-| n/a                    | `semantic` (variable rename detection)     |
+| jscpd | fallow |
+|-------|--------|
+| Default (exact tokens) | `strict` |
+| n/a | `mild` (fallow default, syntax normalized) |
+| n/a | `weak` (literal normalization) |
+| n/a | `semantic` (variable rename detection) |
 
 ---
 
@@ -518,7 +516,6 @@ fallow fix --dry-run --format json --quiet
 ### Step 2: Review each proposed change
 
 Parse the JSON `changes` array. Each entry shows:
-
 - `path`: file to be modified
 - `action`: what will happen (`remove_export`, `remove_dependency`)
 - `name`: the symbol or dependency being removed
@@ -563,20 +560,17 @@ fallow dead-code --format json --quiet --production
 ```
 
 Differences:
-
 - Excludes: `*.test.*`, `*.spec.*`, `*.stories.*`, `__tests__/**`, `__mocks__/**`
 - Only analyzes: `start`, `build`, `serve`, `preview`, `prepare` scripts
 - Skips: unused devDependency detection
 - Adds: type-only production dependency detection
 
 Use production mode for:
-
 - Checking what ships to users
 - Finding dependencies that should be devDependencies
 - CI pipelines focused on production bundle
 
 Use full mode for:
-
 - Complete codebase hygiene
 - Finding unused test utilities
 - Auditing devDependency usage
@@ -624,7 +618,7 @@ The export is genuinely unused. Consider removing it or marking it as intentiona
 
 ```typescript
 // fallow-ignore-next-line unused-export
-export const publicApi = createWidget(); // Used by external consumers
+export const publicApi = createWidget();  // Used by external consumers
 ```
 
 ---
@@ -644,7 +638,6 @@ This adds duplication context to dead code findings, identifying clone instances
 ### Step 2: Prioritize cleanup
 
 Focus on findings that are BOTH dead code and duplicated:
-
 - Unused files containing duplicate code → delete the file entirely
 - Unused exports that are clones of other exports → remove the duplicate
 
@@ -663,9 +656,9 @@ For frameworks not covered by the current built-in registry from `fallow schema.
     {
       "name": "my-framework",
       "enablers": ["my-framework"],
-      "entryPoints": ["src/routes/**/*.ts", "src/middleware/**/*.ts"],
-    },
-  ],
+      "entryPoints": ["src/routes/**/*.ts", "src/middleware/**/*.ts"]
+    }
+  ]
 }
 ```
 
@@ -680,9 +673,9 @@ Create `.fallow/plugins/my-framework.jsonc`:
   "entryPoints": ["src/routes/**/*.ts"],
   "alwaysUsedFiles": ["src/bootstrap.ts"],
   "usedExports": {
-    "src/config.ts": ["default"],
+    "src/config.ts": ["default"]
   },
-  "toolingDependencies": ["my-framework-cli"],
+  "toolingDependencies": ["my-framework-cli"]
 }
 ```
 
@@ -691,7 +684,7 @@ Create `.fallow/plugins/my-framework.jsonc`:
 ```jsonc
 // .fallowrc.json
 {
-  "plugins": ["tools/plugins/"],
+  "plugins": ["tools/plugins/"]
 }
 ```
 
@@ -787,7 +780,6 @@ Manual files:
 Prefer `fallow hooks install --target agent` to install this file. The script is written and maintained by fallow itself; the canonical source is [`crates/cli/src/setup_hooks/fallow-gate.sh`](https://github.com/fallow-rs/fallow/blob/main/crates/cli/src/setup_hooks/fallow-gate.sh).
 
 Behavior you can rely on:
-
 - Runs only when the intercepted command is a `git commit` or `git push`, including invocations that pass git-level options before the subcommand (`git -c user.name=x commit`, `git --no-pager commit`, `git -C dir push`, `git --git-dir=/x push`); anything else exits 0. Set `FALLOW_GATE_DEBUG=1` to log skipped commands to stderr.
 - Resolves `fallow` from PATH first, then `npx --no-install fallow` as a fallback. Skips with a stderr notice if neither is available or if `jq` is missing.
 - Enforces a version floor via `FALLOW_GATE_MIN_VERSION` (default `2.85.0`). Binaries below the floor are blocked with an upgrade hint. Set the env var to the empty string to disable the check.
@@ -814,4 +806,4 @@ Use `--force` to remove a hook script that the user has edited (the marker is no
 
 ### Distinguish from `fallow hooks install --target git`
 
-`fallow hooks install --target git` is a different target: it scaffolds a shell-level Git pre-commit hook under `.git/hooks/` that runs `fallow` on changed files. That is the _human_ enforcement path. `fallow hooks install --target agent` is the _agent_ enforcement path, targeting `.claude/` and `AGENTS.md`. Both can live in the same repo: git hooks catch human commits, the agent gate catches agent commits.
+`fallow hooks install --target git` is a different target: it scaffolds a shell-level Git pre-commit hook under `.git/hooks/` that runs `fallow` on changed files. That is the *human* enforcement path. `fallow hooks install --target agent` is the *agent* enforcement path, targeting `.claude/` and `AGENTS.md`. Both can live in the same repo: git hooks catch human commits, the agent gate catches agent commits.

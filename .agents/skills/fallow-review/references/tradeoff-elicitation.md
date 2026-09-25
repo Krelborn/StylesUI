@@ -204,7 +204,7 @@ A single envelope: the echoed snapshot hash, an `abstained` flag, and the
 - `abstained: true` with `tradeoffs: []` is the terminal "looked, found nothing"
   state; distinguish it from a parse failure (no envelope at all).
 - Render for a human as the anchor, then `observed -> trade-off -> options ->
-question`, with the question LAST so the human lands on the decision they own.
+  question`, with the question LAST so the human lands on the decision they own.
 
 ## What good looks like
 

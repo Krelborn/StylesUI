@@ -164,18 +164,8 @@ The human owns the taste; you only carry the note. fallow validates the ANCHOR (
    {
      "graph_snapshot_hash": "<echo from guide.json>",
      "judgments": [
-       {
-         "signal_id": "<an emitted decision signal>",
-         "framing": "<the human's verdict/note>",
-         "action": "address",
-         "concern": "<optional>"
-       },
-       {
-         "change_anchor": "<an emitted chg: id>",
-         "framing": "<the human's note on this region>",
-         "action": "consider",
-         "concern": "<optional>"
-       }
+       { "signal_id": "<an emitted decision signal>", "framing": "<the human's verdict/note>", "action": "address", "concern": "<optional>" },
+       { "change_anchor": "<an emitted chg: id>", "framing": "<the human's note on this region>", "action": "consider", "concern": "<optional>" }
      ]
    }
    ```
@@ -229,14 +219,14 @@ Merge `hooks/settings.snippet.json` into `.claude/settings.json` (it registers t
 
 ## Rationalizations the loop rejects
 
-| Rationalization                                             | Reality                                                                                                         |
-| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| "I can see dead code in the diff, I'll flag it quickly"     | Subtract already owns it; a second derivation is noise and can be wrong. Relay the brief's count.               |
-| "This `signal_id` looks right"                              | Only `emitted_signal_ids` exist. Anything else is a hallucination fallow rejects as `unanchored-signal-id`.     |
-| "Five trade-offs is the target"                             | Five is the ceiling. `abstained: true` with an empty list is a valid, complete answer.                          |
-| "The question is open, I'll just mention the fix"           | A named fix is a prescription. Reframe to the open decision, or list two or more options with real costs.       |
-| "The tree moved a little, the guide is probably still fine" | It is `stale-snapshot`. Re-fetch the guide and redo the judgments.                                              |
-| "Tests are green, so the change is good"                    | Green is a verification fact, not a verdict on the decision surface. The decisions still need the human's call. |
+| Rationalization | Reality |
+|---|---|
+| "I can see dead code in the diff, I'll flag it quickly" | Subtract already owns it; a second derivation is noise and can be wrong. Relay the brief's count. |
+| "This `signal_id` looks right" | Only `emitted_signal_ids` exist. Anything else is a hallucination fallow rejects as `unanchored-signal-id`. |
+| "Five trade-offs is the target" | Five is the ceiling. `abstained: true` with an empty list is a valid, complete answer. |
+| "The question is open, I'll just mention the fix" | A named fix is a prescription. Reframe to the open decision, or list two or more options with real costs. |
+| "The tree moved a little, the guide is probably still fine" | It is `stale-snapshot`. Re-fetch the guide and redo the judgments. |
+| "Tests are green, so the change is good" | Green is a verification fact, not a verdict on the decision surface. The decisions still need the human's call. |
 
 ## Notes
 
