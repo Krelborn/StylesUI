@@ -1,0 +1,22 @@
+{
+  "slotCount": 6,
+  "excludedDirectories": ["node_modules", "dist", "storybook-static"],
+  "rules": [
+    {
+      "document": "docs/standards/comments.md",
+      "suffixes": [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".css"]
+    },
+    {
+      "document": "docs/standards/typescript.md",
+      "suffixes": [".ts", ".tsx"]
+    },
+    {
+      "document": "docs/standards/react.md",
+      "suffixes": [".tsx", ".jsx", ".module.css"]
+    },
+    {
+      "document": "docs/standards/vitest-unit-testing.md",
+      "suffixes": [".test.ts", ".test.tsx"]
+    }
+  ]
+}
