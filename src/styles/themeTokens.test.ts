@@ -37,8 +37,9 @@ function lightDarkValues(value: string): [light: string, dark: string] {
   return [light, dark];
 }
 
-// Playful's orange-400 secondary and every theme's yellow warning are mid-tone fills that
-// dark (gray-900) text reads on in both schemes, so they and their on-* text don't flip.
+// Playful's secondary fill stays orange-400 in both schemes. That fill and every theme's
+// yellow warning fill are light enough that gray-900 text reads on them in both schemes,
+// so on-secondary and on-warning don't flip.
 const sameInBothModes: Record<string, readonly string[]> = {
   default: ["--sui-color-on-warning"],
   playful: ["--sui-color-secondary", "--sui-color-on-secondary", "--sui-color-on-warning"],
