@@ -272,6 +272,20 @@ describe("standards hook", () => {
       assert.deepEqual(contexts(nextRead), []);
     });
 
+    it("reuses the compaction plan when a transcript line only resembles the marker", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/format.ts"));
+      appendCompactBoundary(transcriptPath);
+      const firstRestore = await runAllSlots("session", sessionStartInput("compact"));
+
+      await runAllSlots("pre", toolInput("Read", "src/Button.tsx"));
+      const escapedLine = JSON.stringify({ type: "user", message: { content: '"subtype":"compact_boundary"' } });
+      fs.appendFileSync(transcriptPath, `${escapedLine}\n`);
+      const secondRestore = await runAllSlots("session", sessionStartInput("compact"));
+
+      assert.deepEqual(injectedDocuments(firstRestore), [commentsDocument, typescriptDocument]);
+      assert.deepEqual(injectedDocuments(secondRestore), [commentsDocument, typescriptDocument]);
+    });
+
     it("restores the standards still configured when a loaded one was removed", async () => {
       await runAllSlots("pre", toolInput("Read", "src/format.ts"));
       const configurationPath = path.join(projectDirectory, ".claude", "standards.json");
