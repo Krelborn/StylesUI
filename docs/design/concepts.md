@@ -4,11 +4,11 @@
 
 Components that have styles have an `[ComponentName].module.css` file that provides the styles.
 
-A base set of styles provides a global CSS reset at the route and defines the base design tokens as CSS variables. Component CSS modules leverage the variables as much as possible. Styles may also be applied via props that override CSS variables for an instance from typescript.
+A base set of styles provides a global CSS reset at the root and defines the base design tokens as CSS variables. Component CSS modules leverage the variables as much as possible. In future, styles may also be applied via props that override CSS variables for an instance from TypeScript.
 
 ### Colours
 
-A colour palette is define in the base styles. The default palette ships with 10 base colours with 9 variations.
+A colour palette is defined in the base styles. The default palette ships with 10 base colours with 9 variations.
 
 Base colours are:
 
@@ -49,4 +49,4 @@ Every semantic colour is defined once with `light-dark()`, so light and dark var
 
 ### Box
 
-The Box component forms the base wrapper for around all DOM elements. Never render DOM elements directly, instead render them using Box or use a pre-existing wrapper component that itself renders a Box.
+The Box component forms the base wrapper around all DOM elements. Never render DOM elements directly, instead render them using Box or use a pre-existing wrapper component that itself renders a Box.
