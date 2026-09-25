@@ -60,6 +60,18 @@ import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 
 Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
 
+### Bundler CSS target
+
+Set your bundler's CSS target to at least Chrome/Edge 123, Firefox 120, Safari 17.5, or colour modes stop nesting: a lower target makes lightningcss rewrite `light-dark()` into fallback variables resolved once at `:root`. With Vite:
+
+```ts
+export default defineConfig({
+  build: { cssTarget: ["chrome123", "edge123", "firefox120", "safari17.5"] },
+});
+```
+
+Other lightningcss-based tools need the equivalent `targets`.
+
 ## Requirements
 
 - React 19

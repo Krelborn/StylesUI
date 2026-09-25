@@ -4,6 +4,11 @@ import babel from "@rolldown/plugin-babel";
 import { defineConfig } from "vite";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
 
+// Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
+// Imported by .storybook/main.ts, which fallow's ignorePatterns excludes from analysis
+// fallow-ignore-next-line unused-export
+export const lightDarkCssTarget = ["chrome123", "edge123", "firefox120", "safari17.5"];
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -22,8 +27,7 @@ export default defineConfig({
       entry: { index: "src/index.ts", styles: "src/styles/index.css" },
       formats: ["es"],
     },
-    // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
-    cssTarget: ["chrome123", "edge123", "firefox120", "safari17.5"],
+    cssTarget: lightDarkCssTarget,
     cssCodeSplit: true,
     copyPublicDir: false,
     rolldownOptions: {
