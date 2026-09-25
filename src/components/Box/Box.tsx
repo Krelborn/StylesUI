@@ -1,7 +1,12 @@
 import type { ComponentPropsWithRef, ElementType, JSX } from "react";
+import { clsx } from "clsx";
+
 import styles from "./Box.module.css";
 
-type BoxElement = keyof JSX.IntrinsicElements;
+/**
+ * Intrinsic element names that `Box` can render
+ */
+export type BoxElement = keyof JSX.IntrinsicElements;
 
 type BoxOwnProps<E extends BoxElement> = {
   /** DOM element to render. Defaults to `div`. */
@@ -21,10 +26,9 @@ export type BoxProps<E extends BoxElement = "div"> = BoxOwnProps<E> &
  * @example
  * <Box as="button" onClick={() => console.log('Clicked')}>Click Me</Box>
  */
-export function Box<E extends BoxElement = "div">({ as, className, ...rest }: BoxProps<E>) {
+export function Box<E extends BoxElement = "div">({ as, className, ...rest }: BoxProps<E>): JSX.Element {
   // Widened so TS does not intersect every intrinsic element's ref type; BoxProps<E> already guarantees props match `as`
   const Component = (as ?? "div") as ElementType;
-  const classes = className ? `${styles.box} ${className}` : styles.box;
 
-  return <Component className={classes} {...rest} />;
+  return <Component className={clsx(styles.box, className)} {...rest} />;
 }

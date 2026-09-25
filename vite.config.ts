@@ -27,7 +27,7 @@ export default defineConfig({
     cssCodeSplit: true,
     copyPublicDir: false,
     rolldownOptions: {
-      external: /^react(-dom)?($|\/)/,
+      external: /^(react(-dom)?|clsx)($|\/)/,
       output: {
         // One output file per source module keeps the library tree-shakable
         preserveModules: true,

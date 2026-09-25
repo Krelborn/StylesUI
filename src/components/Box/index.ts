@@ -1,2 +1,3 @@
 export { Box } from "./Box";
-export type { BoxProps } from "./Box";
+// fallow-ignore-next-line unused-type
+export type { BoxElement, BoxProps } from "./Box";
