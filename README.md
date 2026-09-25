@@ -2,10 +2,25 @@
 
 A tree-shakable React component library styled with CSS modules and CSS custom properties.
 
+## Installation
+
+The package is published to GitHub Packages. Add an `.npmrc` to your project:
+
+```
+@krelborn:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Set `GITHUB_TOKEN` to a classic personal access token with the `read:packages` scope, then install:
+
+```sh
+pnpm add @krelborn/stylesui
+```
+
 ## Usage
 
 ```tsx
-import { Box } from "stylesui";
+import { Box } from "@krelborn/stylesui";
 
 export function App() {
   return (

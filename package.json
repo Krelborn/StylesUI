@@ -1,7 +1,10 @@
 {
-  "name": "stylesui",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@krelborn/stylesui",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Krelborn/StylesUI.git"
+  },
   "files": [
     "dist"
   ],
@@ -16,6 +19,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
@@ -60,5 +66,6 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.18.3"
 }
