@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -35,6 +36,28 @@ describe("Heading", () => {
     );
 
     expect(screen.getByRole("heading", { name: "Title" })).toHaveClass("custom");
+  });
+
+  it("must forward props such as id to the rendered element", () => {
+    render(
+      <Heading id="section-title" level={2}>
+        Title
+      </Heading>
+    );
+
+    expect(screen.getByRole("heading", { name: "Title" })).toHaveAttribute("id", "section-title");
+  });
+
+  it("must forward ref when one is given", () => {
+    const ref = createRef<HTMLHeadingElement>();
+
+    render(
+      <Heading level={2} ref={ref}>
+        Title
+      </Heading>
+    );
+
+    expect(ref.current).toBe(screen.getByRole("heading", { name: "Title" }));
   });
 
   it("must reject rendering when level is missing", () => {

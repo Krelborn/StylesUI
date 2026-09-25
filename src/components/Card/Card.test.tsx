@@ -1,3 +1,4 @@
+import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -30,8 +31,27 @@ describe("Card", () => {
     expect(screen.getByText("Content")).toHaveClass("custom");
   });
 
+  it("must forward props such as id to the rendered element", () => {
+    render(<Card id="summary">Content</Card>);
+
+    expect(screen.getByText("Content")).toHaveAttribute("id", "summary");
+  });
+
+  it("must forward ref when one is given", () => {
+    const ref = createRef<HTMLDivElement>();
+
+    render(<Card ref={ref}>Content</Card>);
+
+    expect(ref.current).toBe(screen.getByText("Content"));
+  });
+
   it("must reject button props when rendered as a div", () => {
     // @ts-expect-error type is not a valid div prop
     render(<Card type="submit">Content</Card>);
+  });
+
+  it("must reject a padding when it is not supported", () => {
+    // @ts-expect-error "xl" is not a CardPadding
+    render(<Card padding="xl">Content</Card>);
   });
 });

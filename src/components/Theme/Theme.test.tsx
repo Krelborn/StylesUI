@@ -33,7 +33,7 @@ describe("Theme", () => {
 
   it("must render the element given in as when as is set", () => {
     render(
-      <Theme aria-label="Island" as="section">
+      <Theme as="section" aria-label="Island">
         Content
       </Theme>
     );
@@ -62,5 +62,10 @@ describe("Theme", () => {
   it("must reject a theme name when it is not shipped", () => {
     // @ts-expect-error "ocean" is not a ThemeName
     render(<Theme name="ocean">Content</Theme>);
+  });
+
+  it("must reject a mode when it is not supported", () => {
+    // @ts-expect-error "auto" is not a ThemeMode
+    render(<Theme mode="auto">Content</Theme>);
   });
 });

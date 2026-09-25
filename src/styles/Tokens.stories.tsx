@@ -7,6 +7,7 @@ import { Text } from "../components/Text";
 
 const hues = ["gray", "red", "orange", "yellow", "green", "blue", "indigo", "violet"] as const;
 const steps = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+// Mirrors every --sui-color-* token declared in src/styles/themes/default.css, excluding --sui-color-shadow
 const semanticColours = [
   "primary",
   "primary-hover",
@@ -23,9 +24,13 @@ const semanticColours = [
   "text-muted",
   "focus-ring",
   "success",
+  "on-success",
   "warning",
+  "on-warning",
   "danger",
+  "on-danger",
   "info",
+  "on-info",
 ] as const;
 const radii = ["sm", "md", "lg", "full"] as const;
 const spaces = [1, 2, 3, 4, 5, 6, 7, 8] as const;
