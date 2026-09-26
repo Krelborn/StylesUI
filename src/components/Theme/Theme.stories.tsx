@@ -20,15 +20,15 @@ type Story = StoryObj<typeof meta>;
 export const PlayfulDark: Story = {
   args: {
     mode: "dark",
-    name: "playful",
+    theme: "playful",
   },
 };
 
 export const NestedIslands: Story = {
   render: () => (
-    <Theme mode="light" name="default" style={{ padding: "1rem" }}>
+    <Theme mode="light" style={{ padding: "1rem" }} theme="default">
       Default light
-      <Theme mode="dark" name="playful" style={{ marginTop: "1rem", padding: "1rem" }}>
+      <Theme mode="dark" style={{ marginTop: "1rem", padding: "1rem" }} theme="playful">
         Playful dark
         <Theme mode="light" style={{ marginTop: "1rem", padding: "1rem" }}>
           <Box as="span">Playful light (inherits theme, overrides mode)</Box>

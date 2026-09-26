@@ -1,10 +1,7 @@
 import type { JSX } from "react";
-import { clsx } from "clsx";
 
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
 import { Box } from "../Box";
-
-import styles from "./Theme.module.css";
 
 /**
  * Names of the themes shipped in `styles.css`
@@ -16,17 +13,7 @@ export type ThemeName = "default" | "playful";
  */
 export type ThemeMode = "dark" | "light" | "system";
 
-interface ThemeOwnProps<E extends BoxElement> {
-  /**
-   * DOM element to render. Defaults to `div`.
-   */
-  as?: E;
-
-  /**
-   * Class names merged with the Theme base class
-   */
-  className?: string;
-
+interface ThemeOwnProps {
   /**
    * Colour mode for this subtree. Inherited from the nearest ancestor when omitted.
    */
@@ -35,38 +22,25 @@ interface ThemeOwnProps<E extends BoxElement> {
   /**
    * Theme for this subtree. Inherited from the nearest ancestor when omitted.
    */
-  name?: ThemeName;
+  theme?: ThemeName;
 }
 
 /**
  * Props for `Theme`: its own props plus every prop supported by the element given in `as`
  */
-export type ThemeProps<E extends BoxElement = "div"> = ThemeOwnProps<E> & Omit<BoxProps<E>, keyof ThemeOwnProps<E>>;
+export type ThemeProps<E extends BoxElement = "div"> = PolymorphicProps<E, ThemeOwnProps>;
 
 /**
- * Applies a theme and colour mode to its subtree and paints the theme's background, text colour and font.
- * Needs `@krelborn/stylesui/styles.css` imported once by the app.
+ * Sets the theme and colour mode attributes for its subtree. `styles.css` paints the background,
+ * text colour and font of any element that carries these attributes, so this needs
+ * `@krelborn/stylesui/styles.css` imported once by the app.
  *
  * @example
- * <Theme mode="dark" name="playful">...</Theme>
+ * <Theme mode="dark" theme="playful">...</Theme>
  */
-export function Theme<E extends BoxElement = "div">({
-  as,
-  className,
-  mode,
-  name,
-  ...rest
-}: ThemeProps<E>): JSX.Element {
+export function Theme<E extends BoxElement = "div">({ as, mode, theme, ...rest }: ThemeProps<E>): JSX.Element {
   // Widened as in Box: ThemeProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
-  return (
-    <Box
-      {...boxProps}
-      as={(as ?? "div") as "div"}
-      className={clsx(styles.theme, className)}
-      data-sui-mode={mode}
-      data-sui-theme={name}
-    />
-  );
+  return <Box {...boxProps} as={as as "div"} data-sui-mode={mode} data-sui-theme={theme} />;
 }

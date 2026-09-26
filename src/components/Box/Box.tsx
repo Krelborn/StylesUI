@@ -9,15 +9,27 @@ import styles from "./Box.module.css";
 export type BoxElement = keyof JSX.IntrinsicElements;
 
 type BoxOwnProps<E extends BoxElement> = {
-  /** DOM element to render. Defaults to `div`. */
+  /**
+   * DOM element to render. Defaults to the component's default element (`div` for Box).
+   */
   as?: E;
-  /** Class names merged with the Box base class. */
+
+  /**
+   * Class names merged with the component's base class.
+   */
   className?: string;
 };
 
 /** Props for `Box`: its own props plus every prop supported by the element given in `as`. */
 export type BoxProps<E extends BoxElement = "div"> = BoxOwnProps<E> &
   Omit<ComponentPropsWithRef<E>, keyof BoxOwnProps<E>>;
+
+/**
+ * Props for a polymorphic component built on `Box`: `OwnProps` plus every prop `Box` accepts for
+ * the element given in `as`, minus any name `OwnProps` already declares.
+ */
+export type PolymorphicProps<E extends BoxElement, OwnProps extends object> = OwnProps &
+  Omit<BoxProps<E>, keyof OwnProps>;
 
 /**
  * Polymorphic primitive that renders the DOM element given in `as` and forwards all of its props.

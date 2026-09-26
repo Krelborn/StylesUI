@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { clsx } from "clsx";
 
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Text.module.css";
@@ -21,17 +21,7 @@ export type TextTone = "default" | "muted";
  */
 export type TextWeight = "bold" | "medium" | "regular";
 
-interface TextOwnProps<E extends BoxElement> {
-  /**
-   * DOM element to render. Defaults to `span`.
-   */
-  as?: E;
-
-  /**
-   * Class names merged with the Text base class
-   */
-  className?: string;
-
+interface TextOwnProps {
   /**
    * Font size. Defaults to `md`.
    */
@@ -51,7 +41,7 @@ interface TextOwnProps<E extends BoxElement> {
 /**
  * Props for `Text`: its own props plus every prop supported by the element given in `as`
  */
-export type TextProps<E extends BoxElement = "span"> = TextOwnProps<E> & Omit<BoxProps<E>, keyof TextOwnProps<E>>;
+export type TextProps<E extends BoxElement = "span"> = PolymorphicProps<E, TextOwnProps>;
 
 /**
  * Body text in the theme's body font

@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { clsx } from "clsx";
 
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Card.module.css";
@@ -11,17 +11,7 @@ import styles from "./Card.module.css";
  */
 export type CardPadding = "sm" | "md" | "lg";
 
-interface CardOwnProps<E extends BoxElement> {
-  /**
-   * DOM element to render. Defaults to `div`.
-   */
-  as?: E;
-
-  /**
-   * Class names merged with the Card base class
-   */
-  className?: string;
-
+interface CardOwnProps {
   /**
    * Inner spacing. Defaults to `md`.
    */
@@ -31,7 +21,7 @@ interface CardOwnProps<E extends BoxElement> {
 /**
  * Props for `Card`: its own props plus every prop supported by the element given in `as`
  */
-export type CardProps<E extends BoxElement = "div"> = CardOwnProps<E> & Omit<BoxProps<E>, keyof CardOwnProps<E>>;
+export type CardProps<E extends BoxElement = "div"> = PolymorphicProps<E, CardOwnProps>;
 
 /**
  * Raised surface that groups related content
@@ -48,7 +38,5 @@ export function Card<E extends BoxElement = "div">({
   // Widened as in Box: CardProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
-  return (
-    <Box {...boxProps} as={(as ?? "div") as "div"} className={clsx(styles.card, className)} data-padding={padding} />
-  );
+  return <Box {...boxProps} as={as as "div"} className={clsx(styles.card, className)} data-padding={padding} />;
 }

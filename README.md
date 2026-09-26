@@ -48,7 +48,7 @@ The `default` theme applies to the whole page, and colour mode follows the OS. U
 ```tsx
 import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 
-<Theme mode="dark" name="playful">
+<Theme mode="dark" theme="playful">
   <Card>
     <Heading level={2}>Hello</Heading>
     <Button>Get started</Button>
@@ -56,9 +56,21 @@ import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 </Theme>;
 ```
 
-`Theme` only sets `data-sui-theme` and `data-sui-mode` attributes, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, palette steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s. The playful theme names the Nunito font first; load it yourself if you want it, otherwise it falls back to the system font.
+`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, palette steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s. The playful theme names the Nunito font first; load it yourself if you want it, otherwise it falls back to the system font.
 
 Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
+
+### Bundler CSS target
+
+Set your bundler's CSS target to at least Chrome/Edge 123, Firefox 120, Safari 17.5, or colour modes stop nesting: a lower target makes lightningcss rewrite `light-dark()` into fallback variables resolved once at `:root`. With Vite:
+
+```ts
+export default defineConfig({
+  build: { cssTarget: ["chrome123", "edge123", "firefox120", "safari17.5"] },
+});
+```
+
+Other lightningcss-based tools need the equivalent `targets`.
 
 ## Requirements
 
