@@ -34,6 +34,9 @@ function SampleCard(): JSX.Element {
 
 const meta = {
   title: "Foundations/Theme showcase",
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta;
 
 export default meta;

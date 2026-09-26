@@ -1,7 +1,10 @@
 [data-sui-theme="playful"] {
   --sui-color-primary: light-dark(var(--sui-violet-600), var(--sui-violet-400));
   --sui-color-primary-hover: light-dark(var(--sui-violet-700), var(--sui-violet-300));
-  --sui-color-primary-subtle: light-dark(var(--sui-violet-100), var(--sui-violet-900));
+  --sui-color-primary-subtle: light-dark(
+    color-mix(in srgb, var(--sui-violet-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-violet-900), var(--sui-gray-900))
+  );
   --sui-color-on-primary: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-secondary: light-dark(var(--sui-orange-400), var(--sui-orange-400));
   --sui-color-secondary-hover: light-dark(var(--sui-orange-500), var(--sui-orange-300));

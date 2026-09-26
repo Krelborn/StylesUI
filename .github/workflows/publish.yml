@@ -24,6 +24,24 @@ jobs:
           scope: "@krelborn"
 
       - run: pnpm install --frozen-lockfile
+
+      - id: playwright-version
+        run: |
+          version="$(pnpm exec playwright --version | awk '{print $2}')"
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+      - if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

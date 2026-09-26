@@ -47,6 +47,9 @@ function Swatch({ label, value }: SwatchProps): JSX.Element {
 
 const meta = {
   title: "Foundations/Tokens",
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta;
 
 export default meta;

@@ -8,6 +8,9 @@ const meta = {
   args: {
     children: "Box content",
   },
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta<typeof Box>;
 
 export default meta;

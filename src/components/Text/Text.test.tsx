@@ -35,6 +35,7 @@ describe("Text", () => {
 
   it("must render the element given in as and forward its props when as is set", () => {
     render(
+      // oxlint-disable-next-line jsx-a11y/anchor-ambiguous-text -- test fixture, not user-facing link text
       <Text as="a" href="https://example.com">
         Link
       </Text>

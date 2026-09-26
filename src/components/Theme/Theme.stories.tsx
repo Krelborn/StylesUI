@@ -11,6 +11,9 @@ const meta = {
     children: "Themed content",
     style: { padding: "1rem" },
   },
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta<typeof Theme>;
 
 export default meta;

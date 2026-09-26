@@ -10,6 +10,9 @@ const meta = {
   args: {
     children: "The quick brown fox jumps over the lazy dog",
   },
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta<typeof Text>;
 
 export default meta;

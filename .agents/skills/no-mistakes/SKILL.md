@@ -9,13 +9,17 @@ description: Conduct a thorough code review and fix issues. Use when the user as
 
 Follow these steps:
 
-1. Use a subagent to run **open-code-review-delegate** skill to review the changes and report by findings. The subagent must be readonly. No edits allowed, do NOT try to fix any issues.
+1. Run a code review of the changes and report by findings
 2. Load the **receiving-code-review** skill and review the reported issues
 3. Plan how you will make any necessary fixes using the **subagent-driven-development** skill
 4. If there is an important choice needed by the user before fixing, **stop**, present the findings and ask the user questions to unblock you before proceeding. Skip the approval when trivial changes are required.
 5. Fix the issues following your plan once approved
 
 On completion summarize the issues found and the fixes made as well as anything that was pushed back on that wasn't fixed or couldn't be.
+
+## The Code Review
+
+Conduct the review at step 1 using the **code-review** skill with **high** effort. No edits allowed, do NOT try to fix any issues.
 
 ## Knowing When Permission Is Needed
 

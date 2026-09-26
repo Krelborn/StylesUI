@@ -2,7 +2,10 @@
 [data-sui-theme="default"] {
   --sui-color-primary: light-dark(var(--sui-blue-600), var(--sui-blue-400));
   --sui-color-primary-hover: light-dark(var(--sui-blue-700), var(--sui-blue-300));
-  --sui-color-primary-subtle: light-dark(var(--sui-blue-100), var(--sui-blue-900));
+  --sui-color-primary-subtle: light-dark(
+    color-mix(in srgb, var(--sui-blue-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-blue-900), var(--sui-gray-900))
+  );
   --sui-color-on-primary: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-secondary: light-dark(var(--sui-gray-200), var(--sui-gray-700));
   --sui-color-secondary-hover: light-dark(var(--sui-gray-300), var(--sui-gray-600));

@@ -13,6 +13,9 @@ const meta = {
   args: {
     children: "Card content",
   },
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta<typeof Card>;
 
 export default meta;
