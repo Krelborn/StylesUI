@@ -28,7 +28,7 @@ function splitTopLevelCommaSeparatedValues(value: string): string[] {
 }
 
 function lightDarkValues(value: string): [light: string, dark: string] {
-  const match = value.match(/^light-dark\((.+)\)$/);
+  const match = value.match(/^light-dark\((.+)\)$/s);
   if (!match) {
     throw new Error(`Expected a light-dark() value, got "${value}"`);
   }

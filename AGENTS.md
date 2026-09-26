@@ -55,7 +55,7 @@ Vitest has a `unit` project (jsdom, `src/**/*.test.{ts,tsx}`) and four `storyboo
 
 - oxlint's `jsx-a11y` plugin is enabled with `Button` mapped to `button` and `as` read as the rendered element, so rules see through the polymorphic components.
 - `.storybook/preview.tsx` sets `a11y.test: "todo"` globally (violations reported, not failing). A story file whose stories have no violations sets `a11y.test: "error"` in its meta, so new violations fail the test run.
-- Interactive components get a `KeyboardInteraction` story whose play function checks tab order, visible focus, keyboard activation and any WAI-ARIA APG keyboard pattern and ARIA state the widget has. Assert `focusRingContrast(element) >= 3` (`src/test/focusRingContrast.ts`, WCAG 1.4.11) on the focused element; the four storybook projects cover every mode and theme.
+- Interactive components get a `KeyboardInteraction` story whose play function checks tab order, visible focus, keyboard activation and any WAI-ARIA APG keyboard pattern and ARIA state the widget has. Assert `focusRingContrast(element) >= 3` (WCAG 1.4.11) on the focused element, and use `textContrast(element, background)` for states axe can't reach, such as hover (WCAG 1.4.3); both live in `src/test/colorContrast.ts`, and the four storybook projects cover every mode and theme.
 
 ## Storybook
 

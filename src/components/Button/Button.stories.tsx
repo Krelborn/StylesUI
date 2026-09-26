@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { focusRingContrast } from "../../test/focusRingContrast";
+import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 
 import { Button } from "./Button";
@@ -50,6 +50,24 @@ export const Sizes: Story = {
       <Button size="lg">Large</Button>
     </Box>
   ),
+};
+
+export const HoverContrast: Story = {
+  render: () => (
+    <Box style={{ display: "flex", gap: "0.5rem" }}>
+      <Button variant="primary">Primary</Button>
+      <Button variant="secondary">Secondary</Button>
+      <Button variant="outline">Outline</Button>
+    </Box>
+  ),
+  // axe only sees the resting state, so the hover background is measured directly
+  play: async ({ canvas }) => {
+    for (const button of canvas.getAllByRole("button")) {
+      const ratio = textContrast(button, "var(--sui-button-bg-hover)");
+
+      await expect(ratio, `${button.textContent} hover text contrast`).toBeGreaterThanOrEqual(4.5);
+    }
+  },
 };
 
 export const KeyboardInteraction: Story = {
