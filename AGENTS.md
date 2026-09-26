@@ -12,7 +12,8 @@ StylesUI is a React 19 component library built with Vite 8 (rolldown), TypeScrip
 - `pnpm typecheck`: `tsc -b` over app and node tsconfigs (includes tests, stories, `.storybook`)
 - `pnpm lint`: oxlint
 - `pnpm format`: oxfmt (config in `.oxfmtrc.json`); `pnpm format:check` to check without writing
-- `pnpm test`: Vitest run once over `src/`; `pnpm test:watch` to watch
+- `pnpm test`: Vitest run once over every project; `pnpm test:unit` (jsdom unit tests) and `pnpm test:storybook` (stories in browser mode) run one side; `pnpm test:watch` to watch
+- `pnpm verify`: lint, format check, typecheck and all tests
 - `pnpm test:hooks`: `node:test` tests for the Claude Code hook scripts in `.claude/hooks/`
 - Single test file: `pnpm test src/components/Box/Box.test.tsx`; single test by name: `pnpm test -t "renders a div by default"`
 - `pnpm storybook` (port 6006) / `pnpm build-storybook`
@@ -47,6 +48,14 @@ To verify tree-shaking after build changes, build a throwaway consumer app that 
 ## Testing
 
 Vitest with jsdom, Testing Library and `@testing-library/jest-dom` matchers. Globals are off (import `describe`/`it`/`expect`/`vi` explicitly), so `src/test/setup.ts` registers Testing Library's `cleanup` in `afterEach`. Type-level expectations use `// @ts-expect-error` inside tests and are enforced by `pnpm typecheck`.
+
+Vitest has a `unit` project (jsdom, `src/**/*.test.{ts,tsx}`) and four `storybook-<mode>-<theme>` projects (defined in `vite.config.ts`) that run every story in headless Chromium through `@storybook/addon-vitest`, once per light/dark mode and default/playful theme. Each run executes the story's play function and an axe check limited to WCAG 2.0/2.1/2.2 A and AA rules. Playwright's Chromium must be installed (`pnpm exec playwright install chromium`).
+
+## Accessibility
+
+- oxlint's `jsx-a11y` plugin is enabled with `Button` mapped to `button` and `as` read as the rendered element, so rules see through the polymorphic components.
+- `.storybook/preview.tsx` sets `a11y.test: "todo"` globally (violations reported, not failing). A story file whose stories have no violations sets `a11y.test: "error"` in its meta, so new violations fail the test run.
+- Interactive components get a `KeyboardInteraction` story whose play function checks tab order, visible focus, keyboard activation and any WAI-ARIA APG keyboard pattern and ARIA state the widget has. Assert `focusRingContrast(element) >= 3` (`src/test/focusRingContrast.ts`, WCAG 1.4.11) on the focused element; the four storybook projects cover every mode and theme.
 
 ## Storybook
 

@@ -1,8 +1,15 @@
 /// <reference types="vitest/config" />
+import path from "node:path";
+
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vite";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
+
+const storybookModes = ["light", "dark"];
+const storybookThemes = ["default", "playful"];
 
 // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
 // Imported by .storybook/main.ts, which fallow's ignorePatterns excludes from analysis
@@ -44,13 +51,43 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.test.{ts,tsx}"],
-    environment: "jsdom",
-    setupFiles: ["src/test/setup.ts"],
-    // Vitest otherwise stubs ?raw CSS imports to an empty string, since it assumes
-    // CSS content isn't needed unless it's a CSS module
-    css: {
-      include: [/\.css\?raw$/],
-    },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["src/**/*.test.{ts,tsx}"],
+          environment: "jsdom",
+          setupFiles: ["src/test/setup.ts"],
+          // Vitest otherwise stubs ?raw CSS imports to an empty string, since it assumes
+          // CSS content isn't needed unless it's a CSS module
+          css: {
+            include: [/\.css\?raw$/],
+          },
+        },
+      },
+      // Every story runs once per mode and theme, so axe checks colour contrast in each
+      ...storybookModes.flatMap((mode) =>
+        storybookThemes.map((theme) => ({
+          extends: true,
+          plugins: [
+            storybookTest({
+              configDir: path.join(import.meta.dirname, ".storybook"),
+              initialGlobals: { mode, theme },
+              storybookScript: "pnpm storybook --no-open",
+            }),
+          ],
+          test: {
+            name: `storybook-${mode}-${theme}`,
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: playwright(),
+              instances: [{ browser: "chromium" as const }],
+            },
+          },
+        }))
+      ),
+    ],
   },
 });

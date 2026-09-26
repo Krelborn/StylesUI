@@ -45,6 +45,14 @@ const preview: Preview = {
     mode: "system",
     theme: "default",
   },
+  parameters: {
+    a11y: {
+      options: {
+        runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] },
+      },
+      test: "todo",
+    },
+  },
 };
 
 export default preview;

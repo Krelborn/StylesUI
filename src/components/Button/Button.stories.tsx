@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 
+import { focusRingContrast } from "../../test/focusRingContrast";
 import { Box } from "../Box";
 
 import { Button } from "./Button";
@@ -11,6 +12,9 @@ const meta = {
   args: {
     children: "Button",
     onClick: fn(),
+  },
+  parameters: {
+    a11y: { test: "error" },
   },
 } satisfies Meta<typeof Button>;
 
@@ -46,4 +50,41 @@ export const Sizes: Story = {
       <Button size="lg">Large</Button>
     </Box>
   ),
+};
+
+export const KeyboardInteraction: Story = {
+  args: {
+    children: "Save",
+  },
+  render: (args) => (
+    <Box style={{ display: "flex", gap: "0.5rem" }}>
+      <Button {...args} />
+      <Button disabled={true}>Delete</Button>
+      <Button variant="secondary">Cancel</Button>
+    </Box>
+  ),
+  play: async ({ args, canvas }) => {
+    const save = canvas.getByRole("button", { name: "Save" });
+    const cancel = canvas.getByRole("button", { name: "Cancel" });
+
+    await userEvent.tab();
+    await expect(save).toHaveFocus();
+    await expect(save.matches(":focus-visible")).toBe(true);
+    await expect(getComputedStyle(save).outlineStyle).toBe("solid");
+    await expect(parseFloat(getComputedStyle(save).outlineWidth)).toBeGreaterThanOrEqual(2);
+    await expect(parseFloat(getComputedStyle(save).outlineOffset)).toBeGreaterThan(0);
+    await expect(focusRingContrast(save)).toBeGreaterThanOrEqual(3);
+
+    await userEvent.tab();
+    await expect(cancel).toHaveFocus();
+
+    await userEvent.tab({ shift: true });
+    await expect(save).toHaveFocus();
+
+    await userEvent.keyboard("{Enter}");
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
+
+    await userEvent.keyboard(" ");
+    await expect(args.onClick).toHaveBeenCalledTimes(2);
+  },
 };

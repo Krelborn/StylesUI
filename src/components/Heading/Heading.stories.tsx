@@ -11,6 +11,9 @@ const meta = {
     children: "Heading",
     level: 2,
   },
+  parameters: {
+    a11y: { test: "error" },
+  },
 } satisfies Meta<typeof Heading>;
 
 export default meta;
