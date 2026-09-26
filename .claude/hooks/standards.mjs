@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -17,6 +18,8 @@ const lockTimeoutMilliseconds = 3000;
 const staleFileMilliseconds = 10 * 60 * 1000;
 const transcriptTailBytes = 1024 * 1024;
 const sameStepWindowMilliseconds = 3000;
+// Leaves slots waiting on the session lock time to read the plan
+const gitTimeoutMilliseconds = 2000;
 const writeTools = new Set(["Write", "Edit"]);
 const gitGlobalOption = "(?:-P|-C\\s+\\S+|-c\\s+\\S+|--[\\w-]+(?:=\\S+)?)";
 const changeShowingCommand = new RegExp(
@@ -266,32 +269,55 @@ function countCompactBoundaries(filePath) {
   return count;
 }
 
-/**
- * Finds the assistant messages that issued some tool calls, from the end of a transcript
- *
- * @param filePath the transcript file; a missing file counts as empty
- * @param toolUseIds the tool use IDs to look up
- * @returns a map from each tool use ID found to the ID of the assistant message holding it;
- *   IDs outside the last 1 MiB of the transcript are absent
- */
-function assistantMessageIds(filePath, toolUseIds) {
+function transcriptTail(filePath) {
   const size = fs.statSync(filePath, { throwIfNoEntry: false })?.size ?? 0;
-  const lines = readFrom(filePath, Math.max(0, size - transcriptTailBytes))
+  return readFrom(filePath, Math.max(0, size - transcriptTailBytes))
     .toString("utf8")
     .split("\n");
+}
+
+function assistantMessage(line) {
+  const entry = parseJsonLine(line);
+  return entry?.type === "assistant" ? entry.message : undefined;
+}
+
+function assistantMessageId(line) {
+  const id = line.includes('"assistant"') ? assistantMessage(line)?.id : undefined;
+  return typeof id === "string" ? id : undefined;
+}
+
+/**
+ * Finds the assistant messages that issued some tool calls
+ *
+ * @param lines the transcript lines to search
+ * @param toolUseIds the tool use IDs to look up
+ * @returns a map from each tool use ID found to the ID of the assistant message holding it
+ */
+function assistantMessageIds(lines, toolUseIds) {
   const found = new Map();
   for (const line of lines.filter((candidate) => toolUseIds.some((toolUseId) => candidate.includes(toolUseId)))) {
-    const entry = parseJsonLine(line);
-    if (entry?.type !== "assistant" || !Array.isArray(entry.message?.content)) {
-      continue;
-    }
-    for (const item of entry.message.content) {
+    const message = assistantMessage(line);
+    for (const item of message?.content ?? []) {
       if (item?.type === "tool_use" && toolUseIds.includes(item.id)) {
-        found.set(item.id, entry.message.id);
+        found.set(item.id, message.id);
       }
     }
   }
   return found;
+}
+
+function lastAssistantMessageId(lines) {
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const id = assistantMessageId(lines[index]);
+    if (id !== undefined) {
+      return id;
+    }
+  }
+  return undefined;
+}
+
+function loadedRecently(entry) {
+  return Date.now() - entry.loadedAt < sameStepWindowMilliseconds;
 }
 
 /**
@@ -301,7 +327,7 @@ function assistantMessageIds(filePath, toolUseIds) {
  * @param input the hook input for the Write or Edit
  * @param documents the standards documents the file requires
  * @returns true when any of the documents was loaded by a tool call in the same step, or was
- *   loaded under 3 seconds ago while either call is missing from the transcript; may
+ *   loaded under 3 seconds ago while it is unknown whether both calls share a step; may
  *   over-report
  */
 function composedBeforeStandards(input, documents) {
@@ -312,14 +338,21 @@ function composedBeforeStandards(input, documents) {
     return false;
   }
   const toolUseIds = [input.tool_use_id, ...entries.map((entry) => entry.toolUseId)];
-  const messageIds = assistantMessageIds(transcriptPath(input), toolUseIds);
-  const writeMessageId = messageIds.get(input.tool_use_id);
+  const lines = transcriptTail(transcriptPath(input));
+  const found = assistantMessageIds(lines, toolUseIds);
+  const writeMessageId = found.get(input.tool_use_id);
+  // A Write not yet in the transcript belongs to the message being written, which is the last
+  // one or a newer one
+  const latestPossibleMessageId = writeMessageId ?? lastAssistantMessageId(lines);
   return entries.some((entry) => {
-    const loaderMessageId = messageIds.get(entry.toolUseId);
-    if (writeMessageId === undefined || loaderMessageId === undefined) {
-      return Date.now() - entry.loadedAt < sameStepWindowMilliseconds;
+    const loaderMessageId = found.get(entry.toolUseId);
+    if (loaderMessageId === undefined) {
+      return loadedRecently(entry);
     }
-    return writeMessageId === loaderMessageId;
+    if (latestPossibleMessageId !== loaderMessageId) {
+      return false;
+    }
+    return writeMessageId !== undefined || loadedRecently(entry);
   });
 }
 
@@ -408,7 +441,8 @@ function documentHeader(rule, part, partCount) {
  *
  * @param documents the document paths, relative to the project directory; any no longer
  *   configured or on disk are skipped
- * @returns one message per hook slot, each within the additionalContext limit
+ * @returns one message per hook slot, each within the additionalContext limit, and the documents
+ *   they deliver in full, apart from one too long for every slot, which is sent cut short
  */
 function buildMessages(documents) {
   const headerAllowance = 300;
@@ -428,7 +462,7 @@ function buildMessages(documents) {
       text: documentHeader(rule, index + 1, parts.length) + part,
     }));
   });
-  return fitToSlots(packSegments(segments));
+  return fitToSlots(segments);
 }
 
 function packSegments(segments) {
@@ -436,29 +470,48 @@ function packSegments(segments) {
   const messages = [];
   for (const segment of segments) {
     const last = messages.at(-1);
-    if (last !== undefined && last.text.length + separator.length + segment.text.length <= messageCharacterLimit) {
-      last.text += separator + segment.text;
-      last.segments.push(segment);
+    if (last !== undefined && last.length + separator.length + segment.text.length <= messageCharacterLimit) {
+      messages[messages.length - 1] = last + separator + segment.text;
     } else {
-      messages.push({ text: segment.text, segments: [segment] });
+      messages.push(segment.text);
     }
   }
   return messages;
 }
 
-function fitToSlots(messages) {
-  if (messages.length <= configuration.slotCount) {
-    return messages.map((message) => message.text);
+function omissionNote(documents) {
+  return `These project coding standards did not fit in context automatically, in whole or in part, and are available to read in full: ${documents.join(", ")}`;
+}
+
+function wholeDocumentsThatFit(documentCount, packFirst) {
+  // Leaving any document out takes one slot for the note naming it
+  const slotsFor = (count) => (count === documentCount ? configuration.slotCount : configuration.slotCount - 1);
+  let count = documentCount;
+  while (count > 0 && packFirst(count).length > slotsFor(count)) {
+    count -= 1;
   }
-  const kept = messages.slice(0, configuration.slotCount - 1);
-  const keptSegments = kept.flatMap((message) => message.segments);
-  const documents = new Set(messages.flatMap((message) => message.segments).map((segment) => segment.document));
-  const omitted = [...documents].filter((document) => {
-    const keptParts = keptSegments.filter((segment) => segment.document === document);
-    return keptParts.length === 0 || keptParts.length < keptParts[0].partCount;
-  });
-  const note = `These project coding standards did not fit in context automatically, in whole or in part, and are available to read in full: ${omitted.join(", ")}`;
-  return [...kept.map((message) => message.text), note];
+  return count;
+}
+
+/**
+ * Packs document segments into the hook's slots, sending whole documents in order and leaving
+ * the rest for a later call
+ *
+ * @param segments every part of every document, in document order
+ * @returns the messages, and the documents they deliver; when the first document alone needs
+ *   more than every slot, it is sent cut short and counts as delivered
+ */
+function fitToSlots(segments) {
+  const documents = [...new Set(segments.map((segment) => segment.document))];
+  const packFirst = (count) => packSegments(segments.filter((segment) => documents.indexOf(segment.document) < count));
+  const count = wholeDocumentsThatFit(documents.length, packFirst);
+  const delivered = documents.slice(0, Math.max(count, 1));
+  const omitted = documents.slice(count);
+  const messages = packFirst(delivered.length);
+  if (omitted.length === 0 || messages.length === configuration.slotCount) {
+    return { messages, delivered };
+  }
+  return { messages: [...messages.slice(0, configuration.slotCount - 1), omissionNote(omitted)], delivered };
 }
 
 function removeStalePlans(plansDirectory) {
@@ -514,23 +567,22 @@ function loadedEntries(documents, toolUseId) {
 
 /**
  * Returns this slot's share of some standards documents that the agent's context does not hold
- * yet, recording them as held and loaded by the tool call
+ * yet, recording the ones delivered as held and loaded by the tool call
  *
  * @param input the hook input
  * @param key identifies the hook event across its parallel slot processes
- * @param documents the standards documents the tool call concerns, in configuration order
  * @param slot the slot being run
+ * @param findDocuments returns the standards documents the tool call concerns, in configuration
+ *   order; runs at most once per key
  * @returns the slot's message, or undefined when it has nothing to add
  */
-function messageForDocuments(input, key, documents, slot) {
-  if (documents.length === 0) {
-    return undefined;
-  }
+function messageForDocuments(input, key, slot, findDocuments) {
   const messages = sharedPlan(input, key, () => {
+    const documents = findDocuments();
     const state = refreshForCompaction(readState(input), input);
     const missing = documents.filter((document) => !state.loaded.some((entry) => entry.document === document));
-    const messages = missing.length === 0 ? [] : buildMessages(missing);
-    const loaded = [...state.loaded, ...loadedEntries(missing, input.tool_use_id)];
+    const { messages, delivered } = buildMessages(missing);
+    const loaded = [...state.loaded, ...loadedEntries(delivered, input.tool_use_id)];
     writeJsonAtomically(statePath(input), { ...state, loaded });
     return messages;
   });
@@ -540,16 +592,12 @@ function messageForDocuments(input, key, documents, slot) {
 /**
  * Finds project files named in the output of a command that shows changes
  *
- * @param command the Bash command that ran
  * @param output the command's standard output
  * @returns the paths of existing project files that the output's file headers or stat lines
- *   name; empty when the command does not show changes
+ *   name
  */
-function filesInChangeOutput(command, output) {
-  if (!changeShowingCommand.test(command)) {
-    return [];
-  }
-  const candidates = new Set(output.split("\n").flatMap(pathsInChangeLine));
+function filesInChangeOutput(output) {
+  const candidates = new Set(output.split("\n").flatMap(pathsInChangeLine).flatMap(resolveShortenedPath));
   return [...candidates].filter((candidate) => {
     if (applicableRules(candidate).length === 0) {
       return false;
@@ -567,17 +615,71 @@ function pathsInChangeLine(line) {
   if (fileMarker !== null) {
     return [fileMarker[1]];
   }
-  const statLine = /^\s*(\S+)\s+\|\s+(?:\d+|Bin)/.exec(line);
+  const statLine = /^\s*(\S.*?)\s+\|\s+(?:\d+|Bin)/.exec(line);
   if (statLine !== null) {
-    return [statLine[1]];
+    return renamedPaths(statLine[1]);
   }
   const barePath = /^(\S+)$/.exec(line);
   return barePath === null ? [] : [barePath[1]];
 }
 
+/**
+ * Expands a path from git's stat output that may record a rename
+ *
+ * @param statPath the path as printed, e.g. `src/{old => new}/x.ts` or `old.ts => new.ts`
+ * @returns the path before and after the rename, or the path itself when it records none
+ */
+function renamedPaths(statPath) {
+  const braced = /^(.*)\{(.*) => (.*)\}(.*)$/.exec(statPath);
+  if (braced !== null) {
+    const [, prefix, before, after, suffix] = braced;
+    return [before, after].map((middle) => `${prefix}${middle}${suffix}`.replace(/\/{2,}/g, "/"));
+  }
+  return statPath.split(" => ");
+}
+
+let projectFiles;
+
+function listProjectFiles() {
+  try {
+    return execFileSync("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], {
+      cwd: projectDirectory,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: gitTimeoutMilliseconds,
+    })
+      .split("\0")
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Resolves a path git shortened to fit the terminal, such as `.../Button/Button.tsx` or
+ * `...ton.tsx`
+ *
+ * @param candidate a path from change output
+ * @returns the candidate itself when git did not shorten it; otherwise the one project file it
+ *   ends, or nothing when it ends none or several
+ */
+function resolveShortenedPath(candidate) {
+  if (!candidate.startsWith("...")) {
+    return [candidate];
+  }
+  projectFiles ??= listProjectFiles();
+  const ending = candidate.slice(3);
+  const matches = projectFiles.filter((file) => file.endsWith(ending));
+  return matches.length === 1 ? matches : [];
+}
+
 function handlePostToolUse(input, slot) {
-  const files = filesInChangeOutput(input.tool_input?.command ?? "", input.tool_response?.stdout ?? "");
-  const message = messageForDocuments(input, `post-${input.tool_use_id}`, requiredDocuments(files), slot);
+  if (!changeShowingCommand.test(input.tool_input?.command ?? "")) {
+    return;
+  }
+  const message = messageForDocuments(input, `post-${input.tool_use_id}`, slot, () =>
+    requiredDocuments(filesInChangeOutput(input.tool_response?.stdout ?? ""))
+  );
   if (message !== undefined) {
     emit("PostToolUse", { additionalContext: message });
   }
@@ -585,14 +687,15 @@ function handlePostToolUse(input, slot) {
 
 function handlePreToolUse(input, slot) {
   const documents = requiredDocuments([input.tool_input?.file_path ?? ""]);
-  const message = messageForDocuments(input, input.tool_use_id, documents, slot);
+  const message =
+    documents.length === 0 ? undefined : messageForDocuments(input, input.tool_use_id, slot, () => documents);
   const decidesWrite = slot === 0 && writeTools.has(input.tool_name);
   if (message === undefined) {
     if (decidesWrite && documents.length > 0 && composedBeforeStandards(input, documents)) {
       emit("PreToolUse", {
         permissionDecision: "deny",
         permissionDecisionReason:
-          "This file type's project coding standards reach context alongside another tool result from the same step, after this change was written, so it was not applied. The change can be made again following them.",
+          "This change may have been written in the same step as the tool call that brought this file type's project coding standards into context, before they reached it, so it was not applied. They are in context now, and the change can be made again following them.",
       });
     }
     return;
@@ -621,10 +724,9 @@ function handleSessionStart(input, slot) {
   const messages = sharedPlan(input, `compact-${compactions}`, () => {
     const state = readState(input);
     const scan = scanTranscript(input.transcript_path, state.transcriptOffset);
-    const documents = state.loaded.map((entry) => entry.document);
-    const messages = documents.length === 0 ? [] : buildMessages(documents);
+    const { messages, delivered } = buildMessages(state.loaded.map((entry) => entry.document));
     writeJsonAtomically(statePath(input), {
-      loaded: loadedEntries(documents, null),
+      loaded: loadedEntries(delivered, null),
       transcriptOffset: scan.offset,
     });
     return messages;

@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -86,6 +86,11 @@ function appendAssistantMessage(filePath, messageId, toolUseIds) {
     name: "Read",
     input: {},
   }));
+  fs.appendFileSync(filePath, `${JSON.stringify({ type: "assistant", message: { id: messageId, content } })}\n`);
+}
+
+function appendThinking(filePath, messageId) {
+  const content = [{ type: "thinking", thinking: "" }];
   fs.appendFileSync(filePath, `${JSON.stringify({ type: "assistant", message: { id: messageId, content } })}\n`);
 }
 
@@ -209,6 +214,38 @@ describe("standards hook", () => {
       assert.ok(results.slice(1).every((result) => result.output === undefined));
     });
 
+    it("allows a retried Write missing from the transcript once a later assistant message has started", async () => {
+      const first = toolInput("Write", "src/A.tsx");
+      appendAssistantMessage(transcriptPath, "message-1", [first.tool_use_id]);
+      await runAllSlots("pre", first);
+      appendThinking(transcriptPath, "message-2");
+
+      assert.ok(
+        (await runAllSlots("pre", toolInput("Write", "src/A.tsx"))).every((result) => result.output === undefined)
+      );
+    });
+
+    it("denies a Write missing from the transcript when only an assistant entry with no message ID follows", async () => {
+      const first = toolInput("Write", "src/A.tsx");
+      appendAssistantMessage(transcriptPath, "message-1", [first.tool_use_id]);
+      await runAllSlots("pre", first);
+      fs.appendFileSync(transcriptPath, `${JSON.stringify({ type: "assistant", message: { content: [] } })}\n`);
+
+      const results = await runAllSlots("pre", toolInput("Write", "src/B.tsx"));
+
+      assert.equal(results[0].output.hookSpecificOutput.permissionDecision, "deny");
+    });
+
+    it("denies a second Write missing from the transcript when no later assistant message has started", async () => {
+      const first = toolInput("Write", "src/A.tsx");
+      appendAssistantMessage(transcriptPath, "message-1", [first.tool_use_id]);
+      await runAllSlots("pre", first);
+
+      const results = await runAllSlots("pre", toolInput("Write", "src/B.tsx"));
+
+      assert.equal(results[0].output.hookSpecificOutput.permissionDecision, "deny");
+    });
+
     it("allows a Write missing from the transcript when its standards were loaded 10 seconds ago", async () => {
       await runAllSlots("pre", toolInput("Read", "src/A.tsx"));
       const state = JSON.parse(fs.readFileSync(mainStatePath(), "utf8"));
@@ -237,9 +274,9 @@ describe("standards hook", () => {
       "  @@ -1 +1 @@",
     ].join("\n");
 
-    function bashInput(command, stdout) {
+    function bashInput(command, stdout, extra = {}) {
       return {
-        ...toolInput("Bash", "unused"),
+        ...toolInput("Bash", "unused", extra),
         hook_event_name: "PostToolUse",
         tool_input: { command },
         tool_response: { stdout, stderr: "", interrupted: false, isImage: false },
@@ -285,6 +322,57 @@ describe("standards hook", () => {
 
     it("ignores a non-change command with global options", async () => {
       assert.deepEqual(contexts(await runAllSlots("post", bashInput("git --no-pager status", rawDiff))), []);
+    });
+
+    it("injects the standards for a stat path git shortened", async () => {
+      const directory = path.join(projectDirectory, "src", "components", "ThemeSwitcher");
+      fs.mkdirSync(directory, { recursive: true });
+      fs.writeFileSync(path.join(directory, "ThemeSwitcher.module.css"), "");
+      execFileSync("git", ["init", "--quiet"], { cwd: projectDirectory });
+      const stat = " .../ThemeSwitcher/ThemeSwitcher.module.css | 5 +\n 1 file changed, 5 insertions(+)";
+
+      assert.deepEqual(injectedDocuments(await runAllSlots("post", bashInput("git diff --stat", stat))), [
+        commentsDocument,
+        reactDocument,
+      ]);
+    });
+
+    it("injects the standards for a stat path git shortened inside its file name", async () => {
+      fs.writeFileSync(path.join(projectDirectory, "src", "averylongfilename.ts"), "");
+      execFileSync("git", ["init", "--quiet"], { cwd: projectDirectory });
+
+      assert.deepEqual(
+        injectedDocuments(await runAllSlots("post", bashInput("git show --stat=20", " ...gfilename.ts | 1 +"))),
+        [commentsDocument, typescriptDocument]
+      );
+    });
+
+    it("ignores a shortened stat path that matches more than one file", async () => {
+      for (const directory of ["one", "two"]) {
+        fs.mkdirSync(path.join(projectDirectory, "src", directory), { recursive: true });
+        fs.writeFileSync(path.join(projectDirectory, "src", directory, "Same.tsx"), "");
+      }
+      execFileSync("git", ["init", "--quiet"], { cwd: projectDirectory });
+
+      assert.deepEqual(contexts(await runAllSlots("post", bashInput("git diff --stat", " .../Same.tsx | 1 +"))), []);
+    });
+
+    it("injects the standards for a renamed path in stat output", async () => {
+      fs.mkdirSync(path.join(projectDirectory, "src", "next"), { recursive: true });
+      fs.writeFileSync(path.join(projectDirectory, "src", "next", "Card.tsx"), "");
+
+      assert.deepEqual(
+        injectedDocuments(
+          await runAllSlots("post", bashInput("git diff --stat", " src/{old => next}/Card.tsx | 2 +-"))
+        ),
+        [commentsDocument, typescriptDocument, reactDocument]
+      );
+      assert.deepEqual(
+        injectedDocuments(
+          await runAllSlots("post", bashInput("git diff --stat", " notes.md => src/format.ts | 0", { agent_id: "x" }))
+        ),
+        [commentsDocument, typescriptDocument]
+      );
     });
 
     it("ignores files mentioned only in the changed text", async () => {
@@ -457,14 +545,84 @@ describe("standards hook", () => {
   });
 
   describe("when standards outgrow the slots", () => {
-    it("lists every document it could not deliver in full", async () => {
+    beforeEach(() => {
       const configurationPath = path.join(projectDirectory, ".claude", "standards.json");
       fs.writeFileSync(configurationPath, JSON.stringify({ ...configuration, slotCount: 2 }));
+    });
 
+    function configureDocuments(slotCount, lengths) {
+      const rules = Object.entries(lengths).map(([name, length]) => {
+        const document = `docs/standards/${name}.md`;
+        fs.writeFileSync(path.join(projectDirectory, document), `${name} line\n`.repeat(length / (name.length + 6)));
+        return { document, suffixes: [".x"] };
+      });
+      const configurationPath = path.join(projectDirectory, ".claude", "standards.json");
+      fs.writeFileSync(configurationPath, JSON.stringify({ ...configuration, slotCount, rules }));
+    }
+
+    function sentParts(results, name) {
+      return contexts(results)
+        .join("\n")
+        .split("Project coding standard ")
+        .filter((piece) => piece.startsWith(`docs/standards/${name}.md`)).length;
+    }
+
+    it("makes progress when the first document needs every slot", async () => {
+      configureDocuments(2, { big: 12000, small: 9000 });
+
+      const first = await runAllSlots("pre", toolInput("Read", "src/a.x"));
+      const second = await runAllSlots("pre", toolInput("Read", "src/b.x"));
+
+      assert.equal(sentParts(first, "big"), 2);
+      assert.equal(sentParts(second, "small"), 1);
+    });
+
+    it("sends a document with more parts than slots on its own call", async () => {
+      configureDocuments(3, { small: 1000, huge: 45000 });
+
+      const first = await runAllSlots("pre", toolInput("Read", "src/a.x"));
+      const second = await runAllSlots("pre", toolInput("Read", "src/b.x"));
+
+      assert.equal(sentParts(first, "huge"), 0);
+      assert.equal(sentParts(second, "huge"), 2);
+      assert.match(contexts(second).at(-1), /available to read in full: docs\/standards\/huge\.md/);
+    });
+
+    it("lists every document it could not deliver in full", async () => {
       const messages = contexts(await runAllSlots("pre", toolInput("Read", "src/Button.test.tsx")));
 
       assert.equal(messages.length, 2);
       assert.match(messages[1], /available to read in full: .*docs\/standards\/vitest-unit-testing\.md/);
+    });
+
+    it("delivers the rest on later calls for the same file type", async () => {
+      const delivered = [];
+      for (let attempt = 0; attempt < 4; attempt += 1) {
+        delivered.push(...injectedDocuments(await runAllSlots("pre", toolInput("Read", "src/Button.test.tsx"))));
+      }
+
+      assert.deepEqual(delivered.toSorted(), [commentsDocument, reactDocument, typescriptDocument, vitestDocument]);
+    });
+
+    it("denies a Write with the standards it has not delivered yet attached", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/Button.test.tsx"));
+
+      const results = await runAllSlots("pre", toolInput("Write", "src/Other.test.tsx"));
+
+      assert.equal(results[0].output.hookSpecificOutput.permissionDecision, "deny");
+      assert.ok(injectedDocuments(results).length > 0);
+    });
+
+    it("delivers on the next call what a compaction could not restore", async () => {
+      await runAllSlots("pre", toolInput("Read", "src/format.ts"));
+      await runAllSlots("pre", toolInput("Read", "src/Button.tsx"));
+      appendCompactBoundary(transcriptPath);
+      const restored = await runAllSlots("session", sessionStartInput("compact"));
+
+      assert.deepEqual(injectedDocuments(restored), [commentsDocument]);
+      assert.deepEqual(injectedDocuments(await runAllSlots("pre", toolInput("Read", "src/format.ts"))), [
+        typescriptDocument,
+      ]);
     });
   });
 

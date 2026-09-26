@@ -37,7 +37,7 @@
     "test:hooks": "node --test \".claude/hooks/*.test.mjs\"",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test",
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm test:hooks",
     "prepare": "husky"
   },
   "dependencies": {
