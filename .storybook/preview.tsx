@@ -48,7 +48,10 @@ const preview: Preview = {
   parameters: {
     a11y: {
       options: {
-        runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"] },
+        runOnly: {
+          type: "tag",
+          values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22a", "wcag22aa"],
+        },
       },
       test: "todo",
     },

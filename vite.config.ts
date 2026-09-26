@@ -66,27 +66,34 @@ export default defineConfig({
           },
         },
       },
-      // Every story runs once per mode and theme, so axe checks colour contrast in each
-      ...storybookModes.flatMap((mode) =>
-        storybookThemes.map((theme) => ({
-          extends: true,
-          plugins: [
-            storybookTest({
-              configDir: path.join(import.meta.dirname, ".storybook"),
-              initialGlobals: { mode, theme },
-              storybookScript: "pnpm storybook --no-open",
-            }),
-          ],
-          test: {
-            name: `storybook-${mode}-${theme}`,
-            browser: {
-              enabled: true,
-              headless: true,
-              provider: playwright(),
-              instances: [{ browser: "chromium" as const }],
+      // Every story runs once per mode and theme, so axe checks colour contrast in each.
+      // Only the first project starts Storybook: the addon's global setup tracks the
+      // watch-mode process in a single module-level variable, so passing storybookScript
+      // to more than one project races.
+      ...storybookModes.flatMap((mode, modeIndex) =>
+        storybookThemes.map((theme, themeIndex) => {
+          const isFirstProject = modeIndex === 0 && themeIndex === 0;
+
+          return {
+            extends: true,
+            plugins: [
+              storybookTest({
+                configDir: path.join(import.meta.dirname, ".storybook"),
+                initialGlobals: { mode, theme },
+                ...(isFirstProject ? { storybookScript: "pnpm storybook --no-open" } : {}),
+              }),
+            ],
+            test: {
+              name: `storybook-${mode}-${theme}`,
+              browser: {
+                enabled: true,
+                headless: true,
+                provider: playwright(),
+                instances: [{ browser: "chromium" as const }],
+              },
             },
-          },
-        }))
+          };
+        })
       ),
     ],
   },
