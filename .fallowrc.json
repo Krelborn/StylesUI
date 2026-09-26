@@ -3,12 +3,15 @@
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
   "entry": [
     "src/index.{ts,tsx,js,jsx}",
+    // Storybook docs pages, loaded by the stories glob in .storybook/main.ts
+    "src/**/*.mdx",
     // Claude Code hook scripts, run from .claude/settings.json commands
     ".claude/hooks/*.mjs"
   ],
   "ignorePatterns": [".storybook/**"],
-  // Registered only in .storybook/main.ts, which ignorePatterns hides
-  "ignoreDependencies": ["@storybook/addon-a11y"],
+  // Registered only in .storybook/main.ts, which ignorePatterns hides; addon-docs is also imported by
+  // the MDX docs pages, which the entries above make look like production code
+  "ignoreDependencies": ["@storybook/addon-a11y", "@storybook/addon-docs"],
   "duplicates": {
     // Hide pair-only clones; focus on widespread copy-paste
     // worth refactoring. Lower to 2 to report every duplicate pair.

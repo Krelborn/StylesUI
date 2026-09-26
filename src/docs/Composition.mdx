@@ -1,0 +1,59 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as BoxStories from "../components/Box/Box.stories";
+import * as CardStories from "../components/Card/Card.stories";
+
+<Meta title="Guides/Composition" />
+
+# Composition
+
+## Box and the `as` prop
+
+`Box` is the primitive every StylesUI component is built on. It renders the element given in `as`
+(`div` by default) and accepts every prop that element supports, including `ref`. The props are
+type-checked against the chosen element, so `href` is accepted with `as="a"` and rejected with
+`as="span"`.
+
+<Canvas of={BoxStories.AsLink} />
+
+`Card`, `Text` and `Theme` are polymorphic in the same way, so pick the element that fits the
+content:
+
+<Canvas of={CardStories.WithContent} />
+
+`Button` always renders a `button` and `Heading` renders the `h1`–`h6` element matching its
+`level`. Both accept every prop of that element.
+
+## Class names and styles
+
+Every component accepts `className` and `style` and merges `className` with its own class. To
+restyle a component, prefer overriding the `--sui-*` tokens it reads, as described in
+[Theming](?path=/docs/guides-theming--docs).
+
+## Building your own components
+
+Build on `Box` rather than rendering DOM elements directly. `PolymorphicProps` combines your own
+props with every prop of the element given in `as`:
+
+```tsx
+import type { JSX } from "react";
+import type { BoxElement, BoxProps, PolymorphicProps } from "@krelborn/stylesui";
+import { Box } from "@krelborn/stylesui";
+
+interface BadgeOwnProps {
+  tone?: "info" | "success";
+}
+
+type BadgeProps<E extends BoxElement = "span"> = PolymorphicProps<E, BadgeOwnProps>;
+
+export function Badge<E extends BoxElement = "span">({ as, tone = "info", ...rest }: BadgeProps<E>): JSX.Element {
+  // BadgeProps<E> already guarantees the props match `as`
+  const boxProps = rest as BoxProps<"span">;
+
+  return <Box {...boxProps} as={(as ?? "span") as "span"} data-tone={tone} />;
+}
+
+<Badge as="a" href="/changelog" tone="success">
+  Released
+</Badge>;
+```

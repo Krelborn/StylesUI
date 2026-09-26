@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { childrenArgType } from "../../docs/argTypes";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 
@@ -13,6 +14,20 @@ const meta = {
     children: "Button",
     onClick: fn(),
   },
+  argTypes: {
+    children: childrenArgType,
+    disabled: {
+      control: "boolean",
+      description: "Prevents interaction and dims the button",
+      table: { type: { summary: "boolean" } },
+    },
+    type: {
+      control: "select",
+      description: "Native button type",
+      options: ["button", "submit", "reset"],
+      table: { type: { summary: '"button" | "submit" | "reset"' } },
+    },
+  },
   parameters: {
     a11y: { test: "error" },
   },
@@ -22,26 +37,41 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * The default filled button, for the main action in a view
+ */
 export const Primary: Story = {};
 
+/**
+ * Filled in the secondary colour, for actions alongside the primary one
+ */
 export const Secondary: Story = {
   args: {
     variant: "secondary",
   },
 };
 
+/**
+ * Primary-coloured outline, for lower-emphasis actions
+ */
 export const Outline: Story = {
   args: {
     variant: "outline",
   },
 };
 
+/**
+ * A disabled button is skipped by the keyboard and ignores clicks
+ */
 export const Disabled: Story = {
   args: {
     disabled: true,
   },
 };
 
+/**
+ * `size` scales padding and font size
+ */
 export const Sizes: Story = {
   render: () => (
     <Box style={{ alignItems: "center", display: "flex", gap: "0.5rem" }}>
@@ -52,6 +82,9 @@ export const Sizes: Story = {
   ),
 };
 
+/**
+ * Every variant keeps at least 4.5:1 text contrast when hovered
+ */
 export const HoverContrast: Story = {
   render: () => (
     <Box style={{ display: "flex", gap: "0.5rem" }}>
@@ -70,6 +103,9 @@ export const HoverContrast: Story = {
   },
 };
 
+/**
+ * Tab moves focus between enabled buttons and shows a focus ring; Enter and Space activate the focused button
+ */
 export const KeyboardInteraction: Story = {
   args: {
     children: "Save",

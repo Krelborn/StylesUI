@@ -43,6 +43,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * The same card in every theme and mode
+ */
 export const AllCombinations: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(20rem, 1fr))" }}>

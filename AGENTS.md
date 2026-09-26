@@ -59,7 +59,16 @@ Vitest has a `unit` project (jsdom, `src/**/*.test.{ts,tsx}`) and four `storyboo
 
 ## Storybook
 
-Storybook 10 with `@storybook/react-vite`, configured manually in `.storybook/` (stories glob `src/**/*.stories.tsx`). Import `Meta`/`StoryObj` from `@storybook/react-vite` and `fn` from `storybook/test`.
+Storybook 10 with `@storybook/react-vite`, configured manually in `.storybook/` (globs `src/**/*.mdx` and `src/**/*.stories.tsx`). Import `Meta`/`StoryObj` from `@storybook/react-vite` and `fn` from `storybook/test`.
+
+### Docs
+
+`@storybook/addon-docs` generates a Docs page for every story file (`tags: ["autodocs"]` in `.storybook/preview.tsx`):
+
+- The component's JSDoc is the page description; `src/docs/componentDescription.ts` renders its `@example` tags as code blocks. Prop JSDoc and defaults fill the prop table, and each story export's JSDoc is shown above that story, so give every story one.
+- Prop tables come from react-docgen, since the TypeScript-based extractors need the TypeScript JS API that TypeScript 7 lacks. It can't see props inherited from `Box` or substitute generic type parameters, so polymorphic components spell out `OwnProps & Omit<BoxProps<E>, keyof OwnProps>` instead of `PolymorphicProps<E, OwnProps>`, and stories add `argTypes` for inherited props they document (`asArgType`/`childrenArgType` in `src/docs/argTypes.ts`).
+- Guides are standalone MDX pages in `src/docs/` (`<Meta title="Guides/..." />`), with sidebar order set by `options.storySort`. Embed stories with `<Canvas of={...} />` rather than duplicating examples. MDX files and docs pages don't run in the Vitest storybook projects.
+- On a docs page, `ThemeDocsContainer` keeps the document light and default to match Storybook's docs UI, and `ThemeRoot` renders each story in a `Theme` island carrying the toolbar's theme and mode.
 
 ## Coding standards
 

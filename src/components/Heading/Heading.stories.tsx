@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { childrenArgType } from "../../docs/argTypes";
 import { Box } from "../Box";
 
 import { Heading } from "./Heading";
@@ -11,6 +12,9 @@ const meta = {
     children: "Heading",
     level: 2,
   },
+  argTypes: {
+    children: childrenArgType,
+  },
   parameters: {
     a11y: { test: "error" },
   },
@@ -20,8 +24,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * A level 2 heading at its matching `2xl` size
+ */
 export const Default: Story = {};
 
+/**
+ * Each level renders its `h1`–`h6` element with a default size
+ */
 export const Levels: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "0.5rem" }}>
@@ -35,6 +45,9 @@ export const Levels: Story = {
   ),
 };
 
+/**
+ * `size` decouples the visual size from the level, so the document outline stays correct
+ */
 export const SizeOverride: Story = {
   args: {
     children: "Level 1, small size",
