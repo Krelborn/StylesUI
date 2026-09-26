@@ -1,2 +1,12 @@
 export { Box } from "./components/Box";
-export type { BoxProps } from "./components/Box";
+export type { BoxElement, BoxProps, PolymorphicProps } from "./components/Box";
+export { Button } from "./components/Button";
+export type { ButtonProps, ButtonSize, ButtonVariant } from "./components/Button";
+export { Card } from "./components/Card";
+export type { CardPadding, CardProps } from "./components/Card";
+export { Heading } from "./components/Heading";
+export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
+export { Text } from "./components/Text";
+export type { TextProps, TextSize, TextTone, TextWeight } from "./components/Text";
+export { Theme } from "./components/Theme";
+export type { ThemeMode, ThemeName, ThemeProps } from "./components/Theme";

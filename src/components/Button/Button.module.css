@@ -1,0 +1,65 @@
+.button {
+  --sui-button-bg: var(--sui-color-primary, #2563eb);
+  --sui-button-bg-hover: var(--sui-color-primary-hover, #1d4ed8);
+  --sui-button-fg: var(--sui-color-on-primary, #fff);
+  --sui-button-border: transparent;
+  --sui-button-radius: var(--sui-radius-md, 4px);
+  --sui-button-padding-x: var(--sui-space-4, 1rem);
+  --sui-button-padding-y: var(--sui-space-2, 0.5rem);
+  --sui-button-font-size: var(--sui-font-size-md, 1rem);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sui-space-2, 0.5rem);
+  padding: var(--sui-button-padding-y) var(--sui-button-padding-x);
+  border: 1px solid var(--sui-button-border);
+  border-radius: var(--sui-button-radius);
+  background-color: var(--sui-button-bg);
+  color: var(--sui-button-fg);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-button-font-size);
+  font-weight: var(--sui-font-weight-medium, 500);
+  line-height: var(--sui-line-height-tight, 1.25);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.button[data-variant="secondary"] {
+  --sui-button-bg: var(--sui-color-secondary, #e5e7eb);
+  --sui-button-bg-hover: var(--sui-color-secondary-hover, #d1d5db);
+  --sui-button-fg: var(--sui-color-on-secondary, #111827);
+}
+
+.button[data-variant="outline"] {
+  --sui-button-bg: transparent;
+  --sui-button-bg-hover: var(--sui-color-primary-subtle, #dbeafe);
+  --sui-button-fg: var(--sui-color-primary, #2563eb);
+  --sui-button-border: var(--sui-color-primary, #2563eb);
+}
+
+.button[data-size="sm"] {
+  --sui-button-padding-x: var(--sui-space-3, 0.75rem);
+  --sui-button-padding-y: var(--sui-space-1, 0.25rem);
+  --sui-button-font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.button[data-size="lg"] {
+  --sui-button-padding-x: var(--sui-space-6, 1.5rem);
+  --sui-button-padding-y: var(--sui-space-3, 0.75rem);
+  --sui-button-font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--sui-button-bg-hover);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

@@ -4,6 +4,11 @@ import babel from "@rolldown/plugin-babel";
 import { defineConfig } from "vite";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
 
+// Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
+// Imported by .storybook/main.ts, which fallow's ignorePatterns excludes from analysis
+// fallow-ignore-next-line unused-export
+export const lightDarkCssTarget = ["chrome123", "edge123", "firefox120", "safari17.5"];
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -19,13 +24,14 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: "src/index.ts",
+      entry: { index: "src/index.ts", styles: "src/styles/index.css" },
       formats: ["es"],
     },
+    cssTarget: lightDarkCssTarget,
     cssCodeSplit: true,
     copyPublicDir: false,
     rolldownOptions: {
-      external: /^react(-dom)?($|\/)/,
+      external: /^(react(-dom)?|clsx)($|\/)/,
       output: {
         // One output file per source module keeps the library tree-shakable
         preserveModules: true,
@@ -41,5 +47,10 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     setupFiles: ["src/test/setup.ts"],
+    // Vitest otherwise stubs ?raw CSS imports to an empty string, since it assumes
+    // CSS content isn't needed unless it's a CSS module
+    css: {
+      include: [/\.css\?raw$/],
+    },
   },
 });

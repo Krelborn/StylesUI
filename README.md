@@ -33,11 +33,44 @@ export function App() {
 
 `Box` renders the DOM element given in `as` (default `div`) and accepts every prop that element supports, including `ref`.
 
-### CSS
+### CSS and themes
+
+Import the global stylesheet once at your app root. It provides the reset, colour palette, design tokens and themes:
+
+```tsx
+import "@krelborn/stylesui/styles.css";
+```
 
 Each component's compiled JS imports its own CSS file, so only styles for components you use end up in your bundle. Your bundler must handle CSS imports from `node_modules` (Vite, Next.js and webpack do by default).
 
-Components read CSS custom properties with fallbacks, so themes are applied by overriding variables.
+The `default` theme applies to the whole page, and colour mode follows the OS. Use `Theme` to switch the theme or mode for any subtree; themes and modes nest:
+
+```tsx
+import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
+
+<Theme mode="dark" theme="playful">
+  <Card>
+    <Heading level={2}>Hello</Heading>
+    <Button>Get started</Button>
+  </Card>
+</Theme>;
+```
+
+`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, palette steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s. The playful theme names the Nunito font first; load it yourself if you want it, otherwise it falls back to the system font.
+
+Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
+
+### Bundler CSS target
+
+Set your bundler's CSS target to at least Chrome/Edge 123, Firefox 120, Safari 17.5, or colour modes stop nesting: a lower target makes lightningcss rewrite `light-dark()` into fallback variables resolved once at `:root`. With Vite:
+
+```ts
+export default defineConfig({
+  build: { cssTarget: ["chrome123", "edge123", "firefox120", "safari17.5"] },
+});
+```
+
+Other lightningcss-based tools need the equivalent `targets`.
 
 ## Requirements
 

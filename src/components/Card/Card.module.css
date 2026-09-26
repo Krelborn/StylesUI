@@ -1,0 +1,22 @@
+.card {
+  --sui-card-bg: var(--sui-color-surface, #f3f4f6);
+  --sui-card-border: var(--sui-color-border, #d1d5db);
+  --sui-card-radius: var(--sui-radius-lg, 8px);
+  --sui-card-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
+  --sui-card-padding: var(--sui-space-5, 1.25rem);
+
+  padding: var(--sui-card-padding);
+  border: 1px solid var(--sui-card-border);
+  border-radius: var(--sui-card-radius);
+  background-color: var(--sui-card-bg);
+  box-shadow: var(--sui-card-shadow);
+  color: var(--sui-color-text, #111827);
+}
+
+.card[data-padding="sm"] {
+  --sui-card-padding: var(--sui-space-3, 0.75rem);
+}
+
+.card[data-padding="lg"] {
+  --sui-card-padding: var(--sui-space-8, 2rem);
+}
