@@ -38,7 +38,8 @@ export function focusRingContrast(element: HTMLElement): number {
  * Measures the WCAG contrast ratio between an element's text colour and its background. WCAG 1.4.3
  * requires at least 4.5:1 for normal text and 3:1 for large text.
  *
- * Needs a real browser; throws under jsdom.
+ * Needs a real browser; throws under jsdom. Throws if `background` resolves to a fully transparent
+ * colour, such as an undefined custom property.
  *
  * @param element the element whose text is measured
  * @param background a CSS colour to measure against in place of the element's own background, such
@@ -78,7 +79,7 @@ function resolveIn(element: HTMLElement, color: string): Rgba {
   probe.remove();
 
   if (resolved.alpha === 0 && color !== "transparent") {
-    throw new Error(`resolveIn resolved "${color}" to a fully transparent colour`);
+    throw new Error(`textContrast background "${color}" resolved to a fully transparent colour`);
   }
 
   return resolved;

@@ -67,12 +67,12 @@ export default defineConfig({
         },
       },
       // Every story runs once per mode and theme, so axe checks colour contrast in each.
-      // Only the first project starts Storybook: the addon's global setup tracks the
-      // watch-mode process in a single module-level variable, so passing storybookScript
-      // to more than one project races.
+      // The addon reads the script from an env var each storybookTest() call writes, and
+      // starts Storybook from each project given a script, so exactly one project, the
+      // last one created, gets it.
       ...storybookModes.flatMap((mode, modeIndex) =>
         storybookThemes.map((theme, themeIndex) => {
-          const isFirstProject = modeIndex === 0 && themeIndex === 0;
+          const isLastProject = modeIndex === storybookModes.length - 1 && themeIndex === storybookThemes.length - 1;
 
           return {
             extends: true,
@@ -80,7 +80,7 @@ export default defineConfig({
               storybookTest({
                 configDir: path.join(import.meta.dirname, ".storybook"),
                 initialGlobals: { mode, theme },
-                ...(isFirstProject ? { storybookScript: "pnpm storybook --no-open" } : {}),
+                ...(isLastProject ? { storybookScript: "pnpm storybook --no-open" } : {}),
               }),
             ],
             test: {
