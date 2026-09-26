@@ -9,5 +9,12 @@
     "rootDir": "src"
   },
   "include": ["src"],
-  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.stories.tsx", "src/test", "src/styles/tokenSource.ts"]
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.stories.tsx",
+    "src/docs",
+    "src/test",
+    "src/styles/tokenSource.ts"
+  ]
 }

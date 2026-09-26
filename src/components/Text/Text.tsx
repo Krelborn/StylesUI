@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { clsx } from "clsx";
 
-import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
+import type { BoxElement, BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Text.module.css";
@@ -41,7 +41,8 @@ interface TextOwnProps {
 /**
  * Props for `Text`: its own props plus every prop supported by the element given in `as`
  */
-export type TextProps<E extends BoxElement = "span"> = PolymorphicProps<E, TextOwnProps>;
+// Spelled out rather than PolymorphicProps<E, TextOwnProps>, whose own props react-docgen cannot read for the docs
+export type TextProps<E extends BoxElement = "span"> = TextOwnProps & Omit<BoxProps<E>, keyof TextOwnProps>;
 
 /**
  * Body text in the theme's body font

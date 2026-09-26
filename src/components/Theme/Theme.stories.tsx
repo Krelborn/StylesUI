@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { asArgType, childrenArgType } from "../../docs/argTypes";
 import { Box } from "../Box";
 
 import { Theme } from "./Theme";
@@ -11,6 +12,10 @@ const meta = {
     children: "Themed content",
     style: { padding: "1rem" },
   },
+  argTypes: {
+    as: asArgType("div", ["div", "section", "main"]),
+    children: childrenArgType,
+  },
   parameters: {
     a11y: { test: "error" },
   },
@@ -20,6 +25,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Switches a subtree to the playful theme in dark mode
+ */
 export const PlayfulDark: Story = {
   args: {
     mode: "dark",
@@ -27,6 +35,9 @@ export const PlayfulDark: Story = {
   },
 };
 
+/**
+ * Themes and modes nest independently: an inner `Theme` can change the mode and inherit the theme
+ */
 export const NestedIslands: Story = {
   render: () => (
     <Theme mode="light" style={{ padding: "1rem" }} theme="default">

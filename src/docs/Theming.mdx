@@ -1,0 +1,67 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as ThemeStories from "../components/Theme/Theme.stories";
+
+<Meta title="Guides/Theming" />
+
+# Theming
+
+Every component reads its colours, radius, spacing and fonts from `--sui-*` CSS custom properties,
+so themes and modes are pure CSS. `@krelborn/stylesui/styles.css` must be imported once for them to
+apply.
+
+## Themes
+
+StylesUI ships two themes:
+
+- `default`: blue and gray, small radius, system font. Applies to the whole page.
+- `playful`: violet and orange, large radius, roomier spacing, rounded font. It names the Nunito
+  font first; load it yourself if you want it, otherwise it falls back to the system font.
+
+## Modes
+
+Colour mode follows the operating system by default. `light` and `dark` force a mode, and `system`
+goes back to following the OS.
+
+## Switching a subtree
+
+`Theme` sets the theme and mode for everything inside it. Themes and modes nest independently: an
+inner `Theme` can change only the mode and inherit the theme from above.
+
+<Canvas of={ThemeStories.NestedIslands} />
+
+```tsx
+<Theme mode="dark" theme="playful">
+  <Card>...</Card>
+</Theme>
+```
+
+`Theme` sets `data-sui-theme` and `data-sui-mode` attributes, so you can also put them on any
+element yourself, for example `<html data-sui-theme="playful" data-sui-mode="dark">`.
+
+## Design tokens
+
+Tokens come in three tiers, and themes only change the middle one:
+
+1. **Palette**: colour ramps such as `--sui-blue-600`, shared by every theme.
+2. **Semantic**: what a value is for, such as `--sui-color-primary`, `--sui-color-surface`,
+   `--sui-radius-md`, `--sui-space-3` and `--sui-font-body`. Themes set these, and components read
+   only these.
+3. **Component**: local to a component, such as `--sui-button-bg`. They default to semantic tokens.
+
+[Foundations/Tokens](?path=/docs/foundations-tokens--docs) shows every token in the current theme
+and mode.
+
+## Customising
+
+Override semantic tokens on any element, since components read them directly:
+
+```css
+.checkout {
+  --sui-color-primary: light-dark(var(--sui-green-600), var(--sui-green-400));
+}
+```
+
+Base tokens that others are built from, such as `--sui-space-unit`, palette steps and
+`--sui-color-shadow`, only take effect when overridden on `:root` or on an element with
+`data-sui-theme`, because that is where the derived tokens resolve.

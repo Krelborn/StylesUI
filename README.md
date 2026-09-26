@@ -80,7 +80,7 @@ Other lightningcss-based tools need the equivalent `targets`.
 
 | Script                 | Description                                            |
 | ---------------------- | ------------------------------------------------------ |
-| `pnpm storybook`       | Run Storybook on port 6006                             |
+| `pnpm storybook`       | Run Storybook and its component docs on port 6006      |
 | `pnpm build-storybook` | Build a static Storybook to `storybook-static/`        |
 | `pnpm build`           | Build the library to `dist/` (ESM + type declarations) |
 | `pnpm test`            | Run tests once (`pnpm test:watch` to watch)            |
@@ -92,6 +92,6 @@ A Husky pre-commit hook runs lint-staged, which lints (`oxlint --fix`) and forma
 
 ### Adding a component
 
-Create `src/components/<Name>/` with `<Name>.tsx`, `<Name>.module.css`, `<Name>.test.tsx`, `<Name>.stories.tsx` and an `index.ts`, then export it from `src/index.ts`. Build on `Box` where possible.
+Create `src/components/<Name>/` with `<Name>.tsx`, `<Name>.module.css`, `<Name>.test.tsx`, `<Name>.stories.tsx` and an `index.ts`, then export it from `src/index.ts`. Build on `Box` where possible. JSDoc on the component, its props and each story becomes the component's Docs page in Storybook.
 
 Tree-shaking relies on the build preserving one output module per source module and on `"sideEffects": ["**/*.css"]` in `package.json`. Avoid top-level side effects in component modules.

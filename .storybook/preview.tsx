@@ -1,9 +1,11 @@
 import type { Preview } from "@storybook/react-vite";
 
 import type { ThemeMode, ThemeName } from "../src/components/Theme";
+import { componentDescription } from "../src/docs/componentDescription";
 
 import "../src/styles/index.css";
 
+import { ThemeDocsContainer } from "./ThemeDocsContainer";
 import { ThemeRoot } from "./ThemeRoot";
 
 interface ThemeGlobals {
@@ -17,7 +19,7 @@ const preview: Preview = {
       const { mode, theme } = context.globals as ThemeGlobals;
 
       return (
-        <ThemeRoot mode={mode} theme={theme}>
+        <ThemeRoot isDocs={context.viewMode === "docs"} mode={mode} theme={theme}>
           <Story />
         </ThemeRoot>
       );
@@ -45,6 +47,7 @@ const preview: Preview = {
     mode: "system",
     theme: "default",
   },
+  tags: ["autodocs"],
   parameters: {
     a11y: {
       options: {
@@ -54,6 +57,15 @@ const preview: Preview = {
         },
       },
       test: "todo",
+    },
+    docs: {
+      container: ThemeDocsContainer,
+      extractComponentDescription: componentDescription,
+    },
+    options: {
+      storySort: {
+        order: ["Introduction", "Guides", ["Theming", "Composition"], "Foundations", "*"],
+      },
     },
   },
 };

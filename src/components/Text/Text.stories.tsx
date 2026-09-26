@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { asArgType, childrenArgType } from "../../docs/argTypes";
 import { Box } from "../Box";
 
 import { Text } from "./Text";
@@ -10,6 +11,10 @@ const meta = {
   args: {
     children: "The quick brown fox jumps over the lazy dog",
   },
+  argTypes: {
+    as: asArgType("span", ["span", "p", "strong", "em", "small"]),
+    children: childrenArgType,
+  },
   parameters: {
     a11y: { test: "error" },
   },
@@ -19,14 +24,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Inline body text at the `md` size
+ */
 export const Default: Story = {};
 
+/**
+ * The `muted` tone is for secondary information
+ */
 export const Muted: Story = {
   args: {
     tone: "muted",
   },
 };
 
+/**
+ * `size` maps to the theme's font size tokens
+ */
 export const Sizes: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "0.5rem" }}>
@@ -39,6 +53,9 @@ export const Sizes: Story = {
   ),
 };
 
+/**
+ * `weight` maps to the theme's font weight tokens
+ */
 export const Weights: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "0.5rem" }}>

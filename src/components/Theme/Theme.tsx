@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 
-import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
+import type { BoxElement, BoxProps } from "../Box";
 import { Box } from "../Box";
 
 /**
@@ -28,7 +28,8 @@ interface ThemeOwnProps {
 /**
  * Props for `Theme`: its own props plus every prop supported by the element given in `as`
  */
-export type ThemeProps<E extends BoxElement = "div"> = PolymorphicProps<E, ThemeOwnProps>;
+// Spelled out rather than PolymorphicProps<E, ThemeOwnProps>, whose own props react-docgen cannot read for the docs
+export type ThemeProps<E extends BoxElement = "div"> = ThemeOwnProps & Omit<BoxProps<E>, keyof ThemeOwnProps>;
 
 /**
  * Sets the theme and colour mode attributes for its subtree. `styles.css` paints the background,

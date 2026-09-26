@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
+import { asArgType, childrenArgType } from "../../docs/argTypes";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Heading } from "../Heading";
@@ -13,6 +14,10 @@ const meta = {
   args: {
     children: "Card content",
   },
+  argTypes: {
+    as: asArgType("div", ["div", "article", "section", "aside"]),
+    children: childrenArgType,
+  },
   parameters: {
     a11y: { test: "error" },
   },
@@ -22,8 +27,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * A card with the default `md` padding
+ */
 export const Default: Story = {};
 
+/**
+ * `padding` maps to the theme's spacing tokens
+ */
 export const Paddings: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "1rem" }}>
@@ -34,6 +45,9 @@ export const Paddings: Story = {
   ),
 };
 
+/**
+ * A card composed with `Heading`, `Text` and `Button`, rendered as an `article`
+ */
 export const WithContent: Story = {
   render: () => (
     <Card as="article" style={{ maxWidth: "24rem" }}>

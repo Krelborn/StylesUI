@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { clsx } from "clsx";
 
-import type { BoxElement, BoxProps, PolymorphicProps } from "../Box";
+import type { BoxElement, BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Card.module.css";
@@ -21,7 +21,8 @@ interface CardOwnProps {
 /**
  * Props for `Card`: its own props plus every prop supported by the element given in `as`
  */
-export type CardProps<E extends BoxElement = "div"> = PolymorphicProps<E, CardOwnProps>;
+// Spelled out rather than PolymorphicProps<E, CardOwnProps>, whose own props react-docgen cannot read for the docs
+export type CardProps<E extends BoxElement = "div"> = CardOwnProps & Omit<BoxProps<E>, keyof CardOwnProps>;
 
 /**
  * Raised surface that groups related content

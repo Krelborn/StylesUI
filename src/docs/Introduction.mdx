@@ -1,0 +1,76 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as ThemeShowcaseStories from "../styles/ThemeShowcase.stories";
+
+<Meta title="Introduction" />
+
+# StylesUI
+
+A tree-shakable React 19 component library styled with CSS modules and CSS custom properties. Every
+component is themeable, supports light and dark modes, and every story runs automated WCAG 2.2 AA
+checks.
+
+<Canvas of={ThemeShowcaseStories.AllCombinations} />
+
+## Installation
+
+The package is published to GitHub Packages. Add an `.npmrc` to your project:
+
+```
+@krelborn:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Set `GITHUB_TOKEN` to a classic personal access token with the `read:packages` scope, then install:
+
+```sh
+pnpm add @krelborn/stylesui
+```
+
+## Setup
+
+Import the global stylesheet once at your app root. It provides the reset, colour palette, design
+tokens and themes:
+
+```tsx
+import "@krelborn/stylesui/styles.css";
+```
+
+Each component imports its own CSS, so only the styles for components you use end up in your bundle.
+
+Themes use CSS `light-dark()`, so set your bundler's CSS target to at least Chrome/Edge 123,
+Firefox 120 and Safari 17.5. A lower target rewrites `light-dark()` into fallbacks that stop colour
+modes nesting. With Vite:
+
+```ts
+export default defineConfig({
+  build: { cssTarget: ["chrome123", "edge123", "firefox120", "safari17.5"] },
+});
+```
+
+## Usage
+
+```tsx
+import { Button, Card, Heading, Text } from "@krelborn/stylesui";
+
+export function Welcome() {
+  return (
+    <Card as="article">
+      <Heading level={2}>Welcome</Heading>
+      <Text as="p" tone="muted">
+        Components render semantic HTML and accept every prop of the element they render.
+      </Text>
+      <Button onClick={() => console.log("Started")}>Get started</Button>
+    </Card>
+  );
+}
+```
+
+## Using these docs
+
+- Each component's **Docs** page describes its props and shows every story. The controls in the
+  prop table edit the first example live.
+- The **theme** and **mode** toolbar buttons switch every example on the page.
+- [Theming](?path=/docs/guides-theming--docs) covers themes, modes and design tokens.
+- [Composition](?path=/docs/guides-composition--docs) covers `Box`, the `as` prop and building your
+  own components.

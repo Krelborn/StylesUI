@@ -56,6 +56,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/**
+ * The theme-agnostic colour ramps, from `100` to `900`
+ */
 export const Palette: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "1rem" }}>
@@ -70,6 +73,9 @@ export const Palette: Story = {
   ),
 };
 
+/**
+ * The semantic colours the current theme and mode set, which components read
+ */
 export const SemanticColours: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "0.75rem", gridTemplateColumns: "repeat(auto-fill, minmax(8rem, 1fr))" }}>
@@ -80,6 +86,9 @@ export const SemanticColours: Story = {
   ),
 };
 
+/**
+ * The current theme's radius, spacing and type scale tokens
+ */
 export const ShapeSpaceType: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "2rem" }}>
