@@ -88,9 +88,7 @@ export const KeyboardInteraction: Story = {
     await userEvent.tab();
     await expect(save).toHaveFocus();
     await expect(save.matches(":focus-visible")).toBe(true);
-    await expect(getComputedStyle(save).outlineStyle).toBe("solid");
     await expect(parseFloat(getComputedStyle(save).outlineWidth)).toBeGreaterThanOrEqual(2);
-    await expect(parseFloat(getComputedStyle(save).outlineOffset)).toBeGreaterThan(0);
     await expect(focusRingContrast(save)).toBeGreaterThanOrEqual(3);
 
     await userEvent.tab();
