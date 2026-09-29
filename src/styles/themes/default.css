@@ -14,27 +14,37 @@
   --sui-color-background: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-surface: light-dark(var(--sui-gray-100), var(--sui-gray-800));
   --sui-color-border: light-dark(var(--sui-gray-300), var(--sui-gray-700));
+  --sui-color-control-border: light-dark(transparent, transparent);
   --sui-color-text: light-dark(var(--sui-gray-900), var(--sui-gray-100));
   --sui-color-text-muted: light-dark(var(--sui-gray-600), var(--sui-gray-400));
   --sui-color-focus-ring: light-dark(var(--sui-blue-500), var(--sui-blue-300));
   --sui-color-shadow: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
-  --sui-color-success: light-dark(var(--sui-green-600), var(--sui-green-400));
+  --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));
   --sui-color-on-success: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-warning: light-dark(var(--sui-yellow-500), var(--sui-yellow-300));
   --sui-color-on-warning: light-dark(var(--sui-gray-900), var(--sui-gray-900));
   --sui-color-danger: light-dark(var(--sui-red-600), var(--sui-red-400));
   --sui-color-on-danger: light-dark(var(--sui-white), var(--sui-gray-900));
-  --sui-color-info: light-dark(var(--sui-blue-500), var(--sui-blue-300));
+  --sui-color-info: light-dark(var(--sui-blue-700), var(--sui-blue-300));
   --sui-color-on-info: light-dark(var(--sui-white), var(--sui-gray-900));
 
   --sui-radius-sm: 2px;
   --sui-radius-md: 4px;
   --sui-radius-lg: 8px;
   --sui-radius-full: 9999px;
+  --sui-radius-control: var(--sui-radius-md);
+
+  --sui-border-width: 1px;
+  --sui-focus-ring-width: 2px;
+  --sui-shadow-sm: 0 1px 3px var(--sui-color-shadow);
+
+  --sui-control-depth: 0px;
+  --sui-motion-spring: 120ms ease-out;
 
   --sui-space-unit: 0.25rem;
 
   --sui-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --sui-font-heading: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --sui-font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sui-font-weight-control: var(--sui-font-weight-medium);
 }

@@ -37,12 +37,19 @@ function lightDarkValues(value: string): [light: string, dark: string] {
   return [light, dark];
 }
 
-// Playful's secondary fill stays orange-400 in both schemes. That fill and every theme's
-// yellow warning fill are light enough that gray-900 text reads on them in both schemes,
-// so on-secondary and on-warning don't flip.
+// Text on a light fill stays dark in both schemes: default's yellow warning, and every one of
+// playful's bright fills, which carry its ink. Control borders are transparent in default and
+// ink in playful whatever the scheme.
 const sameInBothModes: Record<string, readonly string[]> = {
-  default: ["--sui-color-on-warning"],
-  playful: ["--sui-color-secondary", "--sui-color-on-secondary", "--sui-color-on-warning"],
+  default: ["--sui-color-on-warning", "--sui-color-control-border"],
+  playful: [
+    "--sui-color-on-secondary",
+    "--sui-color-on-success",
+    "--sui-color-on-warning",
+    "--sui-color-on-danger",
+    "--sui-color-on-info",
+    "--sui-color-control-border",
+  ],
 };
 
 describe("theme tokens", () => {

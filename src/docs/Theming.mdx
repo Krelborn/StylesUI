@@ -15,8 +15,29 @@ apply.
 StylesUI ships two themes:
 
 - `default`: blue and gray, small radius, system font. Applies to the whole page.
-- `playful`: violet and orange, large radius, roomier spacing, rounded font. It names the Nunito
-  font first; load it yourself if you want it, otherwise it falls back to the system font.
+- `playful`: a "chunky pop" look made to be fun to use. Cream or deep plum backgrounds, grape and
+  sunshine-yellow fills, 2px ink outlines, hard offset shadows, roomier spacing and pill buttons
+  that spring up on hover and squash down when pressed. Every colour pairing still meets WCAG 2.2
+  AA in both modes.
+
+### Playful fonts
+
+Playful names Fredoka for headings and Nunito for body text, falling back to the system's rounded
+font. Import the fonts once, next to `styles.css`, to get the full look:
+
+```tsx
+import "@krelborn/stylesui/styles.css";
+import "@krelborn/stylesui/fonts/playful.css";
+```
+
+The fonts are self-hosted, so the page makes no third-party requests, and they stay out of
+`styles.css`, so apps using only `default` never bundle them.
+
+## Motion
+
+Controls in themes with depth, such as playful's buttons, rise on hover and press into their lip
+with spring easing. Hover movement only applies on devices that can hover. When the operating
+system asks for reduced motion, only colours transition and state changes are instant.
 
 ## Modes
 
@@ -62,6 +83,7 @@ Override semantic tokens on any element, since components read them directly:
 }
 ```
 
-Base tokens that others are built from, such as `--sui-space-unit`, palette steps and
-`--sui-color-shadow`, only take effect when overridden on `:root` or on an element with
-`data-sui-theme`, because that is where the derived tokens resolve.
+Base tokens that others are built from, such as `--sui-space-unit`, palette steps,
+`--sui-color-shadow` and `--sui-radius-md` (which `--sui-radius-control` points at in `default`),
+only take effect when overridden on `:root` or on an element with `data-sui-theme`, because that is
+where the derived tokens resolve.

@@ -8,7 +8,7 @@ A base set of styles provides a global CSS reset at the root and defines the bas
 
 ### Colours
 
-A colour palette is defined in the base styles. The default palette ships with 10 base colours with 9 variations.
+A colour palette is defined in the base styles. The default palette ships with 11 base colours with 9 variations.
 
 Base colours are:
 
@@ -22,6 +22,7 @@ Base colours are:
 - `blue`
 - `indigo`
 - `violet`
+- `pink`
 
 For each colour there exists 9 variations `[color]-[variant]` where each variant is a shade on colour ramp from `100` - `900` with `500` being the base colour value. The `black` and `white` colours do not have colour ramps of their own, they sit at undefined `0` and `1000` variations of the `gray` colour.
 
@@ -30,12 +31,21 @@ For each colour there exists 9 variations `[color]-[variant]` where each variant
 Tokens are layered so themes only ever change one tier:
 
 1. **Palette**: the colour ramps above (`--sui-blue-600`). Theme-agnostic.
-2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-font-body`). Themes set these, and components read only these.
+2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-control-depth`, `--sui-font-body`). Themes set these, and components read only these.
 3. **Component**: local to a component's CSS module (`--sui-button-bg`). They default to semantic tokens, and variants reassign them.
 
 ### Themes
 
-A theme sets every semantic token: primary, secondary and status colours, surfaces, text, radius, spacing unit and fonts. StylesUI ships `default` (blue and gray, small radius, system font) and `playful` (violet and orange, large radius, roomier spacing, rounded font). `default` applies at `:root`; any subtree can switch with `data-sui-theme="playful"`, usually through the `Theme` component.
+A theme sets every semantic token: primary, secondary and status colours, surfaces, text, radius, border width, shadows, control depth, motion, spacing unit and fonts. StylesUI ships two:
+
+- `default`: blue and gray, small radius, thin borders, soft shadows, system font, no motion beyond colour fades.
+- `playful`: a "chunky pop" look. Cream background in light mode and deep plum in dark, grape and sunshine-yellow fills, 2px ink outlines, hard offset shadows, pill buttons on a 3D lip that spring up on hover and squash when pressed, and Fredoka headings over Nunito body text.
+
+`default` applies at `:root`; any subtree can switch with `data-sui-theme="playful"`, usually through the `Theme` component.
+
+### Motion
+
+Controls with depth (`--sui-control-depth` above `0px`) sit on a lip in the shadow colour, rise on hover and press down into the lip, easing with `--sui-motion-spring`. Hover movement only applies on devices that can hover, and under `prefers-reduced-motion: reduce` only colours transition, so state changes are instant.
 
 ### Modes
 
@@ -43,7 +53,7 @@ Every semantic colour is defined once with `light-dark()`, so light and dark var
 
 ### Global styles
 
-`@krelborn/stylesui/styles.css` contains the reset, palette, tokens, themes and modes. Apps import it once at the root. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
+`@krelborn/stylesui/styles.css` contains the reset, palette, tokens, themes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
 
 ## Components
 

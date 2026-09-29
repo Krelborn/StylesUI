@@ -56,7 +56,18 @@ import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 </Theme>;
 ```
 
-`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, palette steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s. The playful theme names the Nunito font first; load it yourself if you want it, otherwise it falls back to the system font.
+`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, palette steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s.
+
+The `playful` theme uses Fredoka for headings and Nunito for body text. They're self-hosted and kept out of `styles.css`, so import them alongside it if you use playful; without them it falls back to the system's rounded font:
+
+```tsx
+import "@krelborn/stylesui/styles.css";
+import "@krelborn/stylesui/fonts/playful.css";
+```
+
+Fredoka and Nunito are licensed under the SIL Open Font License 1.1 and come from the [Fontsource](https://fontsource.org) packages `@fontsource-variable/fredoka` and `@fontsource-variable/nunito`.
+
+Playful's buttons lift on hover and press down when clicked. When the OS asks for reduced motion, only their colours transition.
 
 Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
 

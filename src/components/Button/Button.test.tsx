@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { Button } from "./Button";
+import buttonCss from "./Button.module.css?raw";
 
 describe("Button", () => {
   it("must render a button of type button when type is omitted", () => {
@@ -85,4 +86,23 @@ describe("Button", () => {
     // @ts-expect-error "xl" is not a ButtonSize
     render(<Button size="xl">Save</Button>);
   });
+
+  it("must transition only colours when reduced motion is requested", () => {
+    const reducedMotionBlock = buttonCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(transitionedProperties(reducedMotionBlock)).toEqual(["background-color", "border-color"]);
+  });
+
+  it("must never transition the outline when focus moves to the button", () => {
+    const properties = transitionedProperties(buttonCss);
+
+    expect(properties).not.toContain("all");
+    expect(properties).not.toContain("outline");
+  });
 });
+
+function transitionedProperties(css: string): string[] {
+  return [...css.matchAll(/transition(?:-property)?:\s*([^;]+);/g)].flatMap(([, value]) =>
+    value.split(",").map((transition) => transition.trim().split(/\s+/)[0])
+  );
+}

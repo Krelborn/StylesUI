@@ -3,6 +3,7 @@ import type { Preview } from "@storybook/react-vite";
 import type { ThemeMode, ThemeName } from "../src/components/Theme";
 import { componentDescription } from "../src/docs/componentDescription";
 
+import "../fonts/playful.css";
 import "../src/styles/index.css";
 
 import { ThemeDocsContainer } from "./ThemeDocsContainer";

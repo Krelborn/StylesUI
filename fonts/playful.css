@@ -1,0 +1,3 @@
+/* Published as is, not built: Vite's library mode would inline every font file as base64 */
+@import "@fontsource-variable/fredoka/wght.css";
+@import "@fontsource-variable/nunito/wght.css";
