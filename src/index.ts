@@ -16,6 +16,8 @@ export { Row } from "./components/Row";
 export type { RowProps } from "./components/Row";
 export { Stack } from "./components/Stack";
 export type { StackProps } from "./components/Stack";
+export { Switcher } from "./components/Switcher";
+export type { SwitcherProps } from "./components/Switcher";
 export { Text } from "./components/Text";
 export type { TextProps, TextSize, TextTone, TextWeight } from "./components/Text";
 export { Theme } from "./components/Theme";
