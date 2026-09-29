@@ -45,7 +45,7 @@ export type CoverProps<E extends BoxElement = "div"> = CoverOwnProps & Omit<BoxP
  * and below. The children render inside a `div`.
  *
  * @example
- * <Cover as="section" minimumHeight="60vh" top={<Text aria-label="Welcome">Featured</Text>}>
+ * <Cover as="section" minimumHeight="60vh" top={<Text>Featured</Text>} aria-label="Welcome">
  *   <Heading level={1}>Notes on layout</Heading>
  * </Cover>
  */

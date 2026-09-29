@@ -33,8 +33,16 @@ export const Default: Story = {
     bottom: <Text tone="muted">Updated weekly</Text>,
     top: <Text tone="muted">Featured</Text>,
   },
-  render: ({ bottom, minimumHeight, top }) => (
-    <Cover as="section" bottom={bottom} minimumHeight={minimumHeight} top={top} aria-label="Welcome">
+  render: ({ bottom, gap, minimumHeight, padding, top }) => (
+    <Cover
+      as="section"
+      bottom={bottom}
+      gap={gap}
+      minimumHeight={minimumHeight}
+      padding={padding}
+      top={top}
+      aria-label="Welcome"
+    >
       <Heading level={1}>Notes on layout</Heading>
     </Cover>
   ),
@@ -51,8 +59,16 @@ export const Default: Story = {
  * Without `top` or `bottom` the children are still centred vertically
  */
 export const CentredOnly: Story = {
-  render: ({ bottom, minimumHeight, top }) => (
-    <Cover as="section" bottom={bottom} minimumHeight={minimumHeight} top={top} aria-label="Welcome">
+  render: ({ bottom, gap, minimumHeight, padding, top }) => (
+    <Cover
+      as="section"
+      bottom={bottom}
+      gap={gap}
+      minimumHeight={minimumHeight}
+      padding={padding}
+      top={top}
+      aria-label="Welcome"
+    >
       <Heading level={1}>Notes on layout</Heading>
     </Cover>
   ),

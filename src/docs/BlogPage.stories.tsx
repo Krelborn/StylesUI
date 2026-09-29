@@ -42,8 +42,12 @@ export const PostPage: Story = {
         <Row justify="between">
           <Text weight="bold">Field Notes</Text>
           <Cluster as="nav" aria-label="Main">
-            <Text>Posts</Text>
-            <Text>About</Text>
+            <Text as="a" href="#posts">
+              Posts
+            </Text>
+            <Text as="a" href="#posts">
+              About
+            </Text>
           </Cluster>
         </Row>
       </Center>
@@ -74,8 +78,12 @@ export const PostPage: Story = {
                 </li>
               </Cluster>
               <Switcher as="nav" threshold="28rem" aria-label="More posts">
-                <Card>Previous: Theming tokens</Card>
-                <Card>Next: Accessible colour</Card>
+                <Card>
+                  <a href="#previous">Previous: Theming tokens</a>
+                </Card>
+                <Card>
+                  <a href="#next">Next: Accessible colour</a>
+                </Card>
               </Switcher>
             </Stack>
             <Stack as="aside" gap={3} aria-label="Related">

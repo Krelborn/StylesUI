@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { Cover } from "./Cover";
 
 describe("Cover", () => {
-  it("must render a div with gap 4, padding 4 and full viewport height when no props are given", () => {
+  it("must default gap, padding and minimum height when they are omitted", () => {
     render(
       <Cover as="section" aria-label="Hero">
         Content
@@ -56,7 +56,7 @@ describe("Cover", () => {
 
     const cover = screen.getByRole("region", { name: "Hero" });
     expect(cover.style.getPropertyValue("--sui-cover-gap")).toBe("var(--sui-space-2, 0.5rem)");
-    expect(cover.style.getPropertyValue("--sui-cover-padding")).toBe("0");
+    expect(cover.style.getPropertyValue("--sui-cover-padding")).toBe("0px");
     expect(cover.style.getPropertyValue("--sui-cover-minimum-height")).toBe("20rem");
   });
 
