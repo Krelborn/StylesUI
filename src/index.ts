@@ -14,6 +14,8 @@ export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
 export { Row } from "./components/Row";
 export type { RowProps } from "./components/Row";
+export { Sidebar } from "./components/Sidebar";
+export type { SidebarProps } from "./components/Sidebar";
 export { Stack } from "./components/Stack";
 export type { StackProps } from "./components/Stack";
 export { Switcher } from "./components/Switcher";
