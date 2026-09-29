@@ -17,6 +17,6 @@
 
 .sidebar[data-side="end"] > :last-child,
 .sidebar[data-side="start"] > :first-child {
-  flex-basis: var(--sui-sidebar-side-width, auto);
+  flex-basis: var(--sui-sidebar-side-width);
   flex-grow: 1;
 }

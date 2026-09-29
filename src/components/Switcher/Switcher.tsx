@@ -27,7 +27,8 @@ export type SwitcherProps<E extends BoxElement = "div"> = SwitcherOwnProps & Omi
 
 /**
  * Equal-width items in a row that all stack at once when the container is narrower than the
- * threshold
+ * threshold. Wrap a nested Switcher in an element, because a Switcher that is itself an item shadows this
+ * one's custom properties.
  *
  * @example
  * <Switcher as="nav" threshold="36rem" aria-label="More posts">...</Switcher>

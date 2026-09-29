@@ -17,10 +17,10 @@ describe("Sidebar", () => {
     expect(sidebar.style.getPropertyValue("--sui-sidebar-content-minimum-width")).toBe("50%");
   });
 
-  it("must leave the side width to the content when sideWidth is omitted", () => {
+  it("must size the side width to the content when sideWidth is omitted", () => {
     render(<Sidebar>Content</Sidebar>);
 
-    expect(screen.getByText("Content").style.getPropertyValue("--sui-sidebar-side-width")).toBe("");
+    expect(screen.getByText("Content").style.getPropertyValue("--sui-sidebar-side-width")).toBe("auto");
   });
 
   it("must set the side width when sideWidth is given", () => {

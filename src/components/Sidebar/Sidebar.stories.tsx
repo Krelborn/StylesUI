@@ -90,3 +90,30 @@ export const Stacking: Story = {
     await expect(narrowSide.top).toBeGreaterThan(narrowMain.top);
   },
 };
+
+/**
+ * A nested sidebar without `sideWidth` sizes its side pane to its content instead of inheriting the outer width
+ */
+export const Nested: Story = {
+  render: () => (
+    <Box style={{ width: "480px" }}>
+      <Sidebar sideWidth="8rem">
+        <Box>
+          <Sidebar>
+            <Card padding="sm">Inner main</Card>
+            <Card padding="sm">Inner side</Card>
+          </Sidebar>
+        </Box>
+        <Card padding="sm">Outer side</Card>
+      </Sidebar>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const innerSide = canvas.getByText("Inner side");
+    const outerSide = canvas.getByText("Outer side");
+    const remInPixels = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+    await expect(outerSide.getBoundingClientRect().width).toBeGreaterThanOrEqual(8 * remInPixels - 1);
+    await expect(innerSide.getBoundingClientRect().width).toBeLessThan(8 * remInPixels);
+  },
+};

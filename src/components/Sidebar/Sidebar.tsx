@@ -42,7 +42,8 @@ export type SidebarProps<E extends BoxElement = "div"> = SidebarOwnProps & Omit<
 
 /**
  * Main pane and side pane that sit side by side when there is room and stack when there is not.
- * Expects exactly two children.
+ * Expects exactly two children. Wrap a nested Sidebar in an element, because a Sidebar that is itself a
+ * pane shadows this one's custom properties.
  *
  * @example
  * <Sidebar sideWidth="18rem">
@@ -72,7 +73,7 @@ export function Sidebar<E extends BoxElement = "div">({
         {
           "--sui-sidebar-content-minimum-width": contentMinimumWidth,
           "--sui-sidebar-gap": spaceValue(gap),
-          "--sui-sidebar-side-width": sideWidth,
+          "--sui-sidebar-side-width": sideWidth ?? "auto",
         },
         style
       )}
