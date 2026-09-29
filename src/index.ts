@@ -8,6 +8,8 @@ export { Center } from "./components/Center";
 export type { CenterProps, CenterWidth } from "./components/Center";
 export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
+export { Cover } from "./components/Cover";
+export type { CoverProps } from "./components/Cover";
 export { Grid } from "./components/Grid";
 export type { GridProps } from "./components/Grid";
 export { Heading } from "./components/Heading";
