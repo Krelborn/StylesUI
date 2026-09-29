@@ -10,6 +10,8 @@ export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
 export { Cover } from "./components/Cover";
 export type { CoverProps } from "./components/Cover";
+export { Frame } from "./components/Frame";
+export type { FrameProps } from "./components/Frame";
 export { Grid } from "./components/Grid";
 export type { GridProps } from "./components/Grid";
 export { Heading } from "./components/Heading";

@@ -1,0 +1,10 @@
+.frame {
+  aspect-ratio: var(--sui-frame-ratio);
+  overflow: hidden;
+}
+
+.frame > :is(img, video, iframe) {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
