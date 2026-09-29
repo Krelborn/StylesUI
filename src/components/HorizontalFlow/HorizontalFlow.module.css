@@ -1,0 +1,51 @@
+.horizontalFlow {
+  display: flex;
+  flex-direction: row;
+  gap: var(--sui-horizontal-flow-gap);
+}
+
+.horizontalFlow[data-wrap] {
+  flex-wrap: wrap;
+}
+
+.horizontalFlow:where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.horizontalFlow[data-align="start"] {
+  align-items: start;
+}
+
+.horizontalFlow[data-align="center"] {
+  align-items: center;
+}
+
+.horizontalFlow[data-align="end"] {
+  align-items: end;
+}
+
+.horizontalFlow[data-align="stretch"] {
+  align-items: stretch;
+}
+
+.horizontalFlow[data-align="baseline"] {
+  align-items: baseline;
+}
+
+.horizontalFlow[data-justify="start"] {
+  justify-content: start;
+}
+
+.horizontalFlow[data-justify="center"] {
+  justify-content: center;
+}
+
+.horizontalFlow[data-justify="end"] {
+  justify-content: end;
+}
+
+.horizontalFlow[data-justify="between"] {
+  justify-content: space-between;
+}

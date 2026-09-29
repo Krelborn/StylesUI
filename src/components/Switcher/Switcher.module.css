@@ -1,0 +1,17 @@
+.switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sui-switcher-gap);
+}
+
+.switcher:where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Negative below the threshold, which flex-basis clamps to 0, and huge above it, forcing one item per line */
+.switcher > * {
+  flex-grow: 1;
+  flex-basis: calc((var(--sui-switcher-threshold) - 100%) * 999);
+}

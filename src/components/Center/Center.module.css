@@ -1,0 +1,23 @@
+.center {
+  --sui-center-width: var(--sui-width-content, 48rem);
+
+  /* Auto inline margins stop a flex column from stretching this, so it fills its container explicitly */
+  inline-size: 100%;
+  max-inline-size: calc(var(--sui-center-width) + 2 * var(--sui-center-gutter));
+  margin-inline: auto;
+  padding-inline: var(--sui-center-gutter);
+}
+
+.center[data-width="prose"] {
+  --sui-center-width: var(--sui-width-prose, 65ch);
+}
+
+.center[data-width="wide"] {
+  --sui-center-width: var(--sui-width-wide, 72rem);
+}
+
+.center[data-intrinsic] {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

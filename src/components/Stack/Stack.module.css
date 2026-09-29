@@ -1,0 +1,31 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-stack-gap);
+}
+
+.stack:where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stack[data-align="start"] {
+  align-items: start;
+}
+
+.stack[data-align="center"] {
+  align-items: center;
+}
+
+.stack[data-align="end"] {
+  align-items: end;
+}
+
+.stack[data-align="stretch"] {
+  align-items: stretch;
+}
+
+.stack[data-align="baseline"] {
+  align-items: baseline;
+}
