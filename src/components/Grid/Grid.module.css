@@ -1,0 +1,11 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--sui-grid-minimum-item-width), 100%), 1fr));
+  gap: var(--sui-grid-gap);
+}
+
+.grid:where(ul, ol) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
