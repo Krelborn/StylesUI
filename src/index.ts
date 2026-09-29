@@ -6,6 +6,8 @@ export { Card } from "./components/Card";
 export type { CardPadding, CardProps } from "./components/Card";
 export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
+export { Stack } from "./components/Stack";
+export type { StackProps } from "./components/Stack";
 export { Text } from "./components/Text";
 export type { TextProps, TextSize, TextTone, TextWeight } from "./components/Text";
 export { Theme } from "./components/Theme";
