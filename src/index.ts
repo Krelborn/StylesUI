@@ -14,6 +14,8 @@ export { Grid } from "./components/Grid";
 export type { GridProps } from "./components/Grid";
 export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
+export { PageLayout } from "./components/PageLayout";
+export type { PageLayoutProps } from "./components/PageLayout";
 export { Row } from "./components/Row";
 export type { RowProps } from "./components/Row";
 export { Sidebar } from "./components/Sidebar";
