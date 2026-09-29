@@ -98,3 +98,30 @@ export const CustomWidth: Story = {
     await expect(Math.abs(column.left - container.left - (container.right - column.right))).toBeLessThan(1);
   },
 };
+
+/**
+ * `gutter={0}` keeps the column capped at its width instead of letting it fill the parent
+ */
+export const NoGutter: Story = {
+  render: () => (
+    <Box style={{ width: "360px" }}>
+      <Center gutter={0} style={narrowColumn}>
+        <Card padding="sm">Flush column</Card>
+      </Center>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const center = canvas.getByText("Flush column").parentElement;
+    const wrapper = center?.parentElement;
+
+    if (!center || !wrapper) {
+      throw new Error("Expected the column and its wrapper to render");
+    }
+
+    const column = center.getBoundingClientRect();
+    const container = wrapper.getBoundingClientRect();
+
+    await expect(column.width).toBeLessThan(container.width);
+    await expect(Math.abs(column.left - container.left - (container.right - column.right))).toBeLessThan(1);
+  },
+};

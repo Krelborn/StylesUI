@@ -11,7 +11,7 @@ describe("PageLayout", () => {
 
     const layout = screen.getByText("Content");
     expect(layout.tagName).toBe("DIV");
-    expect(layout.style.getPropertyValue("--sui-page-layout-gap")).toBe("0");
+    expect(layout.style.getPropertyValue("--sui-page-layout-gap")).toBe("0px");
   });
 
   it("must render header, main and footer children as landmarks when they are given", () => {
@@ -41,7 +41,7 @@ describe("PageLayout", () => {
 
     const layout = screen.getByText("Content");
     expect(layout).toHaveStyle({ color: "rgb(255, 0, 0)" });
-    expect(layout.style.getPropertyValue("--sui-page-layout-gap")).toBe("0");
+    expect(layout.style.getPropertyValue("--sui-page-layout-gap")).toBe("0px");
   });
 
   it("must let style override the gap when style sets the same custom property", () => {

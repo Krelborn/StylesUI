@@ -38,7 +38,7 @@ describe("Row", () => {
   it("must set the gap when gap is given", () => {
     render(<Row gap={0}>Content</Row>);
 
-    expect(screen.getByText("Content").style.getPropertyValue("--sui-horizontal-flow-gap")).toBe("0");
+    expect(screen.getByText("Content").style.getPropertyValue("--sui-horizontal-flow-gap")).toBe("0px");
   });
 
   it("must render the element given in as when as is set", () => {

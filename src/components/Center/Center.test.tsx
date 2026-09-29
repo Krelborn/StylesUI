@@ -31,7 +31,7 @@ describe("Center", () => {
   it("must set the gutter when gutter is given", () => {
     render(<Center gutter={0}>Content</Center>);
 
-    expect(screen.getByText("Content").style.getPropertyValue("--sui-center-gutter")).toBe("0");
+    expect(screen.getByText("Content").style.getPropertyValue("--sui-center-gutter")).toBe("0px");
   });
 
   it("must render the element given in as when as is set", () => {

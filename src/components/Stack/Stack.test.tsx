@@ -25,7 +25,7 @@ describe("Stack", () => {
   );
 
   it.each([
-    { gap: 0, expected: "0" },
+    { gap: 0, expected: "0px" },
     { gap: 6, expected: "var(--sui-space-6, 1.5rem)" },
   ] as const)("must set the gap to $expected when gap is $gap", ({ expected, gap }) => {
     render(<Stack gap={gap}>Content</Stack>);
