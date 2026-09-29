@@ -13,6 +13,10 @@
 
   --sui-line-height-tight: 1.25;
   --sui-line-height-normal: 1.5;
+
+  --sui-width-prose: 65ch;
+  --sui-width-content: 48rem;
+  --sui-width-wide: 72rem;
 }
 
 /* Custom properties resolve var() where they are declared, so these repeat on every theme element to pick up its unit and shadow colour */
