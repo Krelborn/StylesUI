@@ -18,6 +18,8 @@ export { Grid } from "./components/Grid";
 export type { GridProps } from "./components/Grid";
 export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
+export { Link } from "./components/Link";
+export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
 export { PageLayout } from "./components/PageLayout";
 export type { PageLayoutProps } from "./components/PageLayout";
 export { Row } from "./components/Row";
