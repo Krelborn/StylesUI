@@ -36,6 +36,8 @@ export { Switcher } from "./components/Switcher";
 export type { SwitcherProps } from "./components/Switcher";
 export { Text } from "./components/Text";
 export type { TextProps, TextSize, TextTone, TextWeight } from "./components/Text";
+export { TextInput } from "./components/TextInput";
+export type { TextInputProps, TextInputType } from "./components/TextInput";
 export { Theme } from "./components/Theme";
 export type { ThemeMode, ThemeName, ThemeProps } from "./components/Theme";
 export { VisuallyHidden } from "./components/VisuallyHidden";

@@ -9,7 +9,8 @@
         "Button": "button",
         "Divider": "hr",
         "Link": "a",
-        "SkipLink": "a"
+        "SkipLink": "a",
+        "TextInput": "input"
       }
     }
   },
