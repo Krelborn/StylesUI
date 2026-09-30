@@ -15,7 +15,7 @@
   "guidelinesGlob": "docs/design/*.md",
   "titleMap": {
     "Contrast": null,
-    "Themeshowcase": null,
+    "Themeshowcase": "Theme",
     "Tokens": null,
     "Blogpage": null
   },
@@ -34,6 +34,9 @@
     },
     "PageLayout": {
       "cardMode": "single"
+    },
+    "Theme": {
+      "cardMode": "column"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"
