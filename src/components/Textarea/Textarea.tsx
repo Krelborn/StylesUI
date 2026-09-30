@@ -9,7 +9,8 @@ import { TextControl } from "../TextControl";
  */
 export interface TextareaProps extends Omit<BoxProps<"textarea">, "as" | "children" | "dangerouslySetInnerHTML"> {
   /**
-   * Padding and font size of the textarea, matching the `Button` sizes. Defaults to `md`.
+   * Padding and font size of the textarea, matching the `Button` sizes. Defaults to `md`. The `sm` text is under
+   * 16px, which makes iOS Safari zoom the page when the textarea takes focus.
    */
   size?: ControlSize;
 }

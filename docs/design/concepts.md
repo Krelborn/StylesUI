@@ -52,7 +52,7 @@ Tokens are layered so themes only ever change one tier:
 
 A theme sets every semantic token: primary, secondary and status colours, surfaces, text, borders, focus ring, radius, border width, shadows, control depth, motion, spacing unit and fonts. StylesUI ships two:
 
-- `default`: blue and gray, small radius, thin borders, soft shadows, system font, no depth, and no motion beyond colour fades and a short slide of a checked mark.
+- `default`: blue and gray, small radius, thin borders, soft shadows, system font, no depth, and no motion beyond colour fades, a short slide of a Switch thumb and a short scale of a Checkbox or Radio mark.
 - `playful`: a "chunky pop" look. Cream background in light mode and deep plum in dark, grape and sunshine-yellow fills, 2px ink outlines, hard offset shadows, pill buttons on a 3D lip that spring up on hover and squash when pressed, and Fredoka headings over Nunito body text.
 
 `default` applies at `:root`; any subtree can switch with `data-sui-theme="playful"`, usually through the `Theme` component.
@@ -61,7 +61,7 @@ A theme sets every semantic token: primary, secondary and status colours, surfac
 
 Controls with depth (`--sui-control-depth` above `0px`) sit on a lip in the shadow colour, rise on hover and press down into the lip, easing with `--sui-motion-spring`. Hover movement only applies on devices that can hover, and under `prefers-reduced-motion: reduce` only colours transition, so state changes are instant.
 
-A `Checkbox`, `Radio` or `Switch` moves its mark with the same spring when it is checked. Unchecking uses a plain 120ms ease-out, because a spring on the way out would overshoot. Under `prefers-reduced-motion: reduce` only its colours transition. In `default` the spring is a plain 120ms ease-out, so the mark slides.
+A `Checkbox`, `Radio` or `Switch` moves its mark with the same spring when it is checked. Unchecking uses a plain 120ms ease-out, because a spring on the way out would overshoot. Under `prefers-reduced-motion: reduce` only its colours transition. In `default` the spring is a plain 120ms ease-out, so the Switch thumb slides and the Checkbox and Radio marks scale without a bounce.
 
 ### Modes
 
@@ -83,7 +83,7 @@ The one exception is Link. Its `as` also accepts a component that renders an anc
 
 Link is an anchor in the primary colour with an underline. `underline="hover"` shows the underline only on hover and keyboard focus, and is for navigation: in running text a link needs its underline to be told apart from the text around it (WCAG 1.4.1). Hover changes only the underline, so links need no colour pairing of their own and work inside an Alert. `aria-current` (any value but `"false"`) makes the current link bold.
 
-`--sui-link-color` recolours every Link with the default tone and every link inside Prose. No component declares it, so an ancestor can set it for everything inside. Alert sets it to `currentColor`, so links inside an Alert take its text colour.
+`--sui-link-color` recolours every Link with the default tone and every link inside Prose. Link and Prose read it without declaring it, so an ancestor can set it for everything inside, and Alert does: it sets it to `currentColor`, so links inside an Alert take its text colour.
 
 SkipLink is an anchor to a fragment. It stays out of sight until it takes keyboard focus, then shows pinned to the top-left of the page. Render it first in the page.
 
@@ -113,7 +113,7 @@ TextInput, Textarea and Select are each a single native element, so they behave 
 
 Checkbox, Switch and Radio each render a `label` around a native `input` and its text. `className` and `style` go to the label, and `ref` and every other prop go to the input. The box, dot or track is drawn on the input itself, so it stays a native control, and follows `:checked`, `:disabled` and `[aria-invalid="true"]`. The focus ring is drawn on the input, which holds focus. A checked control fills with `--sui-color-primary` and takes `--sui-color-control-border`, and an unchecked one has an `--sui-color-input-border` border. A Switch is a checkbox input with the `switch` role. Give one of them either children or a Field `label`, not both.
 
-Fieldset groups controls under a legend. Its `label` is the `legend`, `aria-labelledby` points at it, `description` and `error` are linked to the fieldset with `aria-describedby`, and the native `disabled` disables every control inside. It clears the surrounding Field's state, so a control inside a Fieldset does not take the state of a Field around the Fieldset. RadioGroup is a Fieldset that sets the `radiogroup` role itself, so `role` is not one of its props. It holds no state: `value` controls the radios, `defaultValue` selects one at first, and it passes the value, `name`, `required` and `onValueChange` to its Radios through `RadioGroupContext`, so they share one name. A radio is not marked `aria-invalid`, so a group's `error` sets `aria-invalid` on the group and `data-invalid` on each radio, which draws the danger border.
+Fieldset groups controls under a legend. Its `label` is the `legend`, `aria-labelledby` points at it, `description` and `error` are linked to the fieldset with `aria-describedby`, and the native `disabled` disables every control inside. It clears the surrounding Field's state, so a control inside a Fieldset does not take the state of a Field around the Fieldset. RadioGroup is a Fieldset that sets the `radiogroup` role itself, so `role` is not one of its props. It holds no state: `value` controls the radios, `defaultValue` selects one at first, and it passes the value, `defaultValue`, `name`, `required`, `invalid` (whether it has an `error`) and `onValueChange` to its Radios through `RadioGroupContext`, so they share one name. A radio is not marked `aria-invalid`, so a group's `error` sets `aria-invalid` on the group and `data-invalid` on each radio, which draws the danger border.
 
 `required` on a Field or RadioGroup adds an asterisk to the label. The asterisk is `aria-hidden`, because assistive technology announces the control's own required state. A required Checkbox or Switch shows its own asterisk after its label, and a Radio shows none, because its group does.
 

@@ -10,7 +10,7 @@ import { TextControl } from "../TextControl";
 export interface SelectProps extends Omit<BoxProps<"select">, "as" | "multiple" | "size"> {
   /**
    * Height of the select, matching the `Button` sizes. Takes the place of the native `size` attribute. Defaults
-   * to `md`.
+   * to `md`. The `sm` text is under 16px, which makes iOS Safari zoom the page when the select takes focus.
    */
   size?: ControlSize;
 }
