@@ -1,0 +1,183 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+
+import * as AlertStories from "../components/Alert/Alert.stories";
+import * as CheckboxStories from "../components/Checkbox/Checkbox.stories";
+import * as FieldStories from "../components/Field/Field.stories";
+import * as FieldsetStories from "../components/Fieldset/Fieldset.stories";
+import * as RadioGroupStories from "../components/RadioGroup/RadioGroup.stories";
+import * as TextInputStories from "../components/TextInput/TextInput.stories";
+
+import * as ContactFormStories from "./ContactForm.stories";
+
+<Meta title="Guides/Forms" />
+
+# Forms
+
+Every form control is a themed native element, so it behaves in a form, with the keyboard and with
+assistive technology as the platform's own control does. The controls hold no state of their own:
+use `value` or `defaultValue` (`checked` or `defaultChecked` for a checkbox or switch) as you would
+on the native element.
+
+What each component renders:
+
+- `TextInput`: an `input` for a line of text.
+- `Textarea`: a `textarea`.
+- `Select`: a `select`, with native `option` and `optgroup` children.
+- `Checkbox`, `Switch` and `Radio`: an `input` inside the `label` that names it. A `Switch` is a
+  checkbox with the `switch` role.
+- `Field`: the label, description and error around one control.
+- `Fieldset`: a `fieldset` and its `legend`, around a group of controls.
+- `RadioGroup`: a `Fieldset` with the `radiogroup` role, around `Radio`s.
+
+`TextInput`, `Textarea` and `Select` take `size` (`sm`, `md` or `lg`), which on `TextInput` and
+`Select` takes the place of the native `size` attribute. The sizes use the same spacing and font
+size as `Button`, so a `TextInput` or `Select` is as tall as a button of the same size:
+
+<Canvas of={TextInputStories.Sizes} />
+
+## Field
+
+`Field` holds exactly one control and writes the associations for it once. It renders the label,
+the description, the control and the error, in that order:
+
+- `label` points at the control, so clicking it focuses the control.
+- `description` and `error` are linked with `aria-describedby`, the description first.
+- `error` marks the control `aria-invalid`.
+- `required` and `disabled` are passed on to the control.
+
+```tsx
+<Field description="We only use it to send receipts" label="Email" required={true}>
+  <TextInput autoComplete="email" type="email" />
+</Field>
+```
+
+<Canvas of={FieldStories.WithError} />
+
+The control takes its `id` from the field. The field generates one, or uses `controlId` when
+something else has to point at the control, such as a link in an error summary. Inside a `Field`
+the field's id wins over an `id` set on the control, so set `controlId`, not `id`.
+
+Every control inside a `Field` takes that one id, which is why a field holds one control. For
+several controls under one label, use a [group](#groups).
+
+A control outside a `Field` works on its own and needs its own accessible name, for example
+`aria-label`.
+
+## Controls that label themselves
+
+`Checkbox`, `Switch` and `Radio` render a `label` around the input and its text, so their children
+are the label:
+
+```tsx
+<Checkbox name="updates">Send me product updates</Checkbox>
+```
+
+`className` and `style` go to the label. `ref` and every other prop go to the input.
+
+Give one of these controls either children or a `Field` `label`, not both, or it has two labels. To
+give a lone checkbox a description or an error, wrap it in a `Field` with no `label`. The checkbox
+still names itself, and when the field is required it shows the asterisk after its own label:
+
+<Canvas of={CheckboxStories.InAField} />
+
+Use `Switch` for a setting that takes effect at once, and `Checkbox` for a choice that is submitted
+with a form.
+
+## Groups
+
+`Fieldset` groups related controls. Its `label` is required and is rendered as the `legend`, which
+names the group. `description` and `error` are linked to the group with `aria-describedby`, and the
+native `disabled` prop disables every control inside:
+
+<Canvas of={FieldsetStories.WithDescriptionAndError} />
+
+A `Fieldset` holds no value. Each checkbox inside it is a native input with its own `name` and
+`value`. A `Fieldset` can also hold several `Field`s, such as the lines of an address.
+
+`RadioGroup` is a `Fieldset` with the `radiogroup` role, and it holds the value for its radios:
+
+- `defaultValue` selects a radio at first and leaves the group uncontrolled.
+- `value` with `onValueChange` controls the selection.
+- `name` is shared by every radio, and is generated when omitted.
+- `orientation` lays the radios out in a column (`vertical`, the default) or a wrapping row.
+
+```tsx
+<RadioGroup defaultValue="monthly" label="Billing" onValueChange={setBilling}>
+  <Radio value="monthly">Pay monthly</Radio>
+  <Radio value="yearly">Pay yearly</Radio>
+</RadioGroup>
+```
+
+`required` and `error` also go on the group, not on the radios or a `Field`, because a radio cannot
+be marked invalid. `required` sets `aria-required` on the group and the native `required` on each
+radio. `error` sets `aria-invalid` on the group and draws each radio's border in the danger colour:
+
+<Canvas of={RadioGroupStories.WithDescriptionAndError} />
+
+## Required answers
+
+`required` on a `Field` or `RadioGroup` adds an asterisk to the label. The asterisk is hidden from
+assistive technology, which announces the control's own required state, so tell sighted users what
+it means near the top of the form.
+
+The native `required` attribute also makes the browser block submission and show its own message
+bubbles, so a submit handler never runs while an answer is missing. To validate the form yourself
+and show the errors through `Field`, put `noValidate` on the form. The controls keep `required`,
+so they are still announced as required.
+
+## Errors
+
+Pass the message for a control as its field's or group's `error`. Write it as the way to fix the
+problem, such as "Enter your email address".
+
+The inline error is not a live region, so it appears without being announced. When a submission
+fails, also render a summary above the form: an `Alert` with `role="alert"`, which is announced at
+once, listing every error as a `Link` to its control.
+
+<Canvas of={AlertStories.AsErrorSummary} />
+
+```tsx
+import type { JSX, SubmitEvent } from "react";
+import { useState } from "react";
+import { Alert, Button, Field, Link, Stack, TextInput } from "@krelborn/stylesui";
+
+export function SignUpForm(): JSX.Element {
+  const [emailError, setEmailError] = useState<string>();
+
+  const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+
+    const email = new FormData(event.currentTarget).get("email");
+
+    setEmailError(email === "" ? "Enter your email address" : undefined);
+  };
+
+  return (
+    <Stack as="form" noValidate={true} onSubmit={handleSubmit}>
+      {emailError !== undefined && (
+        <Alert role="alert" title="There is 1 problem with your details" tone="danger">
+          <Link href="#sign-up-email">{emailError}</Link>
+        </Alert>
+      )}
+      <Field controlId="sign-up-email" error={emailError} label="Email" required={true}>
+        <TextInput autoComplete="email" name="email" type="email" />
+      </Field>
+      <Button type="submit">Sign up</Button>
+    </Stack>
+  );
+}
+```
+
+`Button` defaults to `type="button"`, so the button that submits the form needs `type="submit"`.
+
+`Alert` sets no role itself. Use `role="alert"` for an error raised by an action, as above, and
+`aria-live="polite"` for a quiet update such as a saved draft.
+
+## A whole form
+
+[Examples/Contact form](?path=/story/examples-contact-form--contact-page) puts these together: a
+`Field` around each text control, a required `RadioGroup`, a `Fieldset` of checkboxes, a `Switch`, a
+required `Checkbox` in a `Field` with no label, and an error summary when the form is submitted
+with answers missing.
+
+<Canvas of={ContactFormStories.ContactPage} />
