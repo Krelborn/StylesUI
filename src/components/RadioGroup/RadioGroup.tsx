@@ -17,7 +17,20 @@ export type RadioGroupOrientation = "horizontal" | "vertical";
 /**
  * Props for `RadioGroup`: its own props plus every native fieldset prop
  */
-export interface RadioGroupProps extends Omit<FieldsetProps, "defaultValue" | "name" | "role"> {
+export interface RadioGroupProps extends Omit<
+  FieldsetProps,
+  "aria-invalid" | "aria-required" | "defaultValue" | "name" | "role"
+> {
+  /**
+   * Not accepted: an `error` marks the group invalid
+   */
+  "aria-invalid"?: never;
+
+  /**
+   * Not accepted: `required` marks the group required
+   */
+  "aria-required"?: never;
+
   /**
    * The value selected at first. It leaves the group uncontrolled, so the radios keep the user's choices.
    */

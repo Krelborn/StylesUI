@@ -11,7 +11,12 @@ import styles from "./Fieldset.module.css";
 /**
  * Props for `Fieldset`: its own props plus every native fieldset prop
  */
-export interface FieldsetProps extends Omit<BoxProps<"fieldset">, "as"> {
+export interface FieldsetProps extends Omit<BoxProps<"fieldset">, "aria-labelledby" | "as"> {
+  /**
+   * Not accepted: the `label` always names the group
+   */
+  "aria-labelledby"?: never;
+
   /**
    * Supporting text shown below the label, linked to the group with `aria-describedby`
    */
