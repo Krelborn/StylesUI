@@ -26,6 +26,20 @@ Base colours are:
 
 For each colour there exists 9 variations `[color]-[variant]` where each variant is a shade on colour ramp from `100` - `900` with `500` being the base colour value. The `black` and `white` colours do not have colour ramps of their own, they sit at undefined `0` and `1000` variations of the `gray` colour.
 
+#### Status colours
+
+Each status (`danger`, `success`, `warning`, `info`) has three grades:
+
+- **Fill**: `--sui-color-<status>`, a solid background. `--sui-color-on-<status>` is the text on it.
+- **Text**: `--sui-color-<status>-text`, for text, borders and icons on the page background, on a surface and on the status's own subtle.
+- **Subtle**: `--sui-color-<status>-subtle`, a tinted background. Body text (`--sui-color-text`) sits on it. Primary-coloured text must not, because it falls below 4.5:1 on some subtles.
+
+#### Borders
+
+- `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
+- `--sui-color-control-border`: the Button outline. Transparent in `default`.
+- `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background and a surface (WCAG 1.4.11).
+
 ### Token tiers
 
 Tokens are layered so themes only ever change one tier:

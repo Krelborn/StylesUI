@@ -35,6 +35,28 @@ export function focusRingContrast(element: HTMLElement): number {
 }
 
 /**
+ * Measures the WCAG contrast ratio between an element's border and the background behind the
+ * element. WCAG 1.4.11 requires at least 3:1 for the boundary of a form control.
+ *
+ * Needs a real browser; throws under jsdom. Throws if the element has no drawn border. The top
+ * border is measured, so give the element a border on every side.
+ *
+ * @param element the element whose border is measured
+ * @returns the contrast ratio, from 1 to 21
+ */
+export function borderContrast(element: HTMLElement): number {
+  const style = getComputedStyle(element);
+
+  if (style.borderTopStyle === "none" || style.borderTopStyle === "hidden" || parseFloat(style.borderTopWidth) === 0) {
+    throw new Error("borderContrast requires a drawn border; this element has no border");
+  }
+
+  const background = backgroundBehind(element);
+
+  return contrastRatio(composite(toRgba(style.borderTopColor), background), background);
+}
+
+/**
  * Measures the WCAG contrast ratio between an element's text colour and its background. WCAG 1.4.3
  * requires at least 4.5:1 for normal text and 3:1 for large text.
  *
