@@ -6,7 +6,9 @@
     // Storybook docs pages, loaded by the stories glob in .storybook/main.ts
     "src/**/*.mdx",
     // Claude Code hook scripts, run from .claude/settings.json commands
-    ".claude/hooks/*.mjs"
+    ".claude/hooks/*.mjs",
+    // Font stylesheets published unbuilt through package.json exports
+    "fonts/*.css"
   ],
   "ignorePatterns": [".storybook/**"],
   // Registered only in .storybook/main.ts, which ignorePatterns hides; addon-docs is also imported by

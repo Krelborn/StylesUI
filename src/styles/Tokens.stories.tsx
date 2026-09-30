@@ -8,10 +8,12 @@ import { Text } from "../components/Text";
 import defaultThemeCss from "./themes/default.css?raw";
 import { declaredTokens, hues, steps } from "./tokenSource";
 
+// Edge colours rather than fills, and default's control border is transparent
+const unswatchedColours = new Set(["--sui-color-control-border", "--sui-color-shadow"]);
 const semanticColours = [...declaredTokens(defaultThemeCss).keys()]
-  .filter((name) => name.startsWith("--sui-color-") && name !== "--sui-color-shadow")
+  .filter((name) => name.startsWith("--sui-color-") && !unswatchedColours.has(name))
   .map((name) => name.replace("--sui-color-", ""));
-const radii = ["sm", "md", "lg", "full"] as const;
+const radii = ["sm", "md", "lg", "full", "control"] as const;
 const spaces = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 const fontSizes = ["xs", "sm", "md", "lg", "xl", "2xl", "3xl"] as const;
 

@@ -29,7 +29,7 @@ Install dependencies via `pnpm add` without hand-written versions so the latest 
 - `src/index.ts` is the only package entry. Each component lives in `src/components/<Name>/` (`<Name>.tsx`, `<Name>.module.css`, `<Name>.test.tsx`, `<Name>.stories.tsx`, `index.ts`) and is re-exported from `src/index.ts`.
 - `Box` is the polymorphic primitive other components should build on. `as` is constrained to `keyof JSX.IntrinsicElements`, and all other props (including `ref`, React 19 ref-as-prop, no `forwardRef`) are typed from the chosen element via `ComponentPropsWithRef`.
 - Components read CSS custom properties with fallbacks (e.g. `var(--sui-space-2, 0.5rem)`) so consumers theme by overriding variables.
-- Global styles live in `src/styles/` (palette, tokens, `themes/`, modes, reset) and are built to `dist/styles.css`, exported as `@krelborn/stylesui/styles.css`. Themes set semantic tokens with `light-dark()`; `docs/design/concepts.md` describes the token tiers. `src/styles/themeTokens.test.ts` checks that every theme declares the same tokens.
+- Global styles live in `src/styles/` (palette, tokens, `themes/`, modes, reset) and are built to `dist/styles.css`, exported as `@krelborn/stylesui/styles.css`. Themes set semantic tokens with `light-dark()`; `docs/design/concepts.md` describes the token tiers. `src/styles/themeTokens.test.ts` checks that every theme declares the same tokens; `--_sui-*` properties are private helpers of one theme and exempt.
 - The React Compiler runs at build time (`@rolldown/plugin-babel` + `reactCompilerPreset`), so output imports `react/compiler-runtime`. Don't add manual `useMemo`/`useCallback` for memoization.
 
 ### Tree-shaking and CSS delivery (`vite.config.ts`, `package.json`)
@@ -42,6 +42,7 @@ These pieces work together; changing one can silently break consumers:
 - `"sideEffects": ["**/*.css"]` in `package.json` lets bundlers drop unused JS while keeping CSS imports. Component modules must not have other top-level side effects.
 - Scoped class names are `sui-[local]-[hash:base64:5]`.
 - `build.cssTarget` is pinned to the `light-dark()` support floor (Chrome/Edge 123, Firefox 120, Safari 17.5). A lower target makes lightningcss rewrite `light-dark()` into fallback variables, which breaks theme and mode nesting. `.storybook/main.ts` reuses the same target through `viteFinal`, and consumers must match it (the README documents this).
+- `fonts/playful.css` lives outside `src/` and is published unbuilt through `files` and `exports`, because library mode inlines every asset and would base64 each font subset. The consumer's bundler resolves its `@fontsource-variable/*` imports, so those packages are `dependencies`.
 
 To verify tree-shaking after build changes, build a throwaway consumer app that imports the package with and without using a component, and check the unused case contains no component JS/CSS.
 
@@ -56,6 +57,7 @@ Vitest has a `unit` project (jsdom, `src/**/*.test.{ts,tsx}`) and four `storyboo
 - oxlint's `jsx-a11y` plugin is enabled with `Button` mapped to `button` and `as` read as the rendered element, so rules see through the polymorphic components.
 - `.storybook/preview.tsx` sets `a11y.test: "todo"` globally (violations reported, not failing). A story file whose stories have no violations sets `a11y.test: "error"` in its meta, so new violations fail the test run.
 - Interactive components get a `KeyboardInteraction` story whose play function checks tab order, visible focus, keyboard activation and any WAI-ARIA APG keyboard pattern and ARIA state the widget has. Assert `focusRingContrast(element) >= 3` (WCAG 1.4.11) on the focused element, and use `textContrast(element, background)` for states axe can't reach, such as hover (WCAG 1.4.3); both live in `src/test/colorContrast.ts`, and the four storybook projects cover every mode and theme.
+- `src/styles/Contrast.stories.tsx` asserts every semantic colour pairing a theme guarantees (text 4.5:1, focus ring 3:1) in every mode and theme. When a component starts relying on a new pairing, add it there.
 
 ## Storybook
 

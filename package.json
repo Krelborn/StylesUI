@@ -6,7 +6,8 @@
     "url": "git+https://github.com/Krelborn/StylesUI.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "fonts"
   ],
   "type": "module",
   "sideEffects": [
@@ -19,7 +20,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./dist/styles.css"
+    "./styles.css": "./dist/styles.css",
+    "./fonts/playful.css": "./fonts/playful.css"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -41,6 +43,8 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@fontsource-variable/fredoka": "^5.3.0",
+    "@fontsource-variable/nunito": "^5.3.0",
     "clsx": "^2.1.1"
   },
   "devDependencies": {

@@ -2,27 +2,37 @@
   --sui-button-bg: var(--sui-color-primary, #2563eb);
   --sui-button-bg-hover: var(--sui-color-primary-hover, #1d4ed8);
   --sui-button-fg: var(--sui-color-on-primary, #fff);
-  --sui-button-border: transparent;
-  --sui-button-radius: var(--sui-radius-md, 4px);
+  --sui-button-border: var(--sui-color-control-border, transparent);
+  --sui-button-border-width: var(--sui-border-width, 1px);
+  --sui-button-radius: var(--sui-radius-control, 4px);
   --sui-button-padding-x: var(--sui-space-4, 1rem);
   --sui-button-padding-y: var(--sui-space-2, 0.5rem);
   --sui-button-font-size: var(--sui-font-size-md, 1rem);
+  --sui-button-font-weight: var(--sui-font-weight-control, 500);
+  --sui-button-depth: var(--sui-control-depth, 0px);
+  --sui-button-lip: var(--sui-color-shadow, transparent);
+  --sui-button-spring: var(--sui-motion-spring, 120ms ease-out);
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--sui-space-2, 0.5rem);
   padding: var(--sui-button-padding-y) var(--sui-button-padding-x);
-  border: 1px solid var(--sui-button-border);
+  border: var(--sui-button-border-width) solid var(--sui-button-border);
   border-radius: var(--sui-button-radius);
   background-color: var(--sui-button-bg);
+  box-shadow: 0 var(--sui-button-depth) 0 var(--sui-button-lip);
   color: var(--sui-button-fg);
   font-family: var(--sui-font-body, system-ui, sans-serif);
   font-size: var(--sui-button-font-size);
-  font-weight: var(--sui-font-weight-medium, 500);
+  font-weight: var(--sui-button-font-weight);
   line-height: var(--sui-line-height-tight, 1.25);
   cursor: pointer;
-  transition: background-color 120ms ease;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow var(--sui-button-spring),
+    transform var(--sui-button-spring);
 }
 
 .button[data-variant="secondary"] {
@@ -54,12 +64,36 @@
   background-color: var(--sui-button-bg-hover);
 }
 
+/* Touch screens keep :hover after a tap, which would leave the button raised */
+@media (hover: hover) {
+  .button:hover:not(:disabled) {
+    box-shadow: 0 calc(var(--sui-button-depth) * 1.5) 0 var(--sui-button-lip);
+    transform: translateY(calc(var(--sui-button-depth) / -2));
+  }
+}
+
+/* A spring on the way down would overshoot through the lip, so only the release bounces */
+.button:active:not(:disabled) {
+  box-shadow: 0 0 0 var(--sui-button-lip);
+  transform: translateY(var(--sui-button-depth));
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
 .button:focus-visible {
-  outline: 2px solid var(--sui-color-focus-ring, #3b82f6);
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
   outline-offset: 2px;
 }
 
 .button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
 }

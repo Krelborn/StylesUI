@@ -19,7 +19,7 @@
   --sui-width-wide: 72rem;
 }
 
-/* Custom properties resolve var() where they are declared, so these repeat on every theme element to pick up its unit and shadow colour */
+/* Custom properties resolve var() where they are declared, so these repeat on every theme element to pick up its unit */
 :root,
 [data-sui-theme] {
   --sui-space-1: calc(1 * var(--sui-space-unit));
@@ -30,6 +30,4 @@
   --sui-space-6: calc(6 * var(--sui-space-unit));
   --sui-space-7: calc(7 * var(--sui-space-unit));
   --sui-space-8: calc(8 * var(--sui-space-unit));
-
-  --sui-shadow-sm: 0 1px 3px var(--sui-color-shadow);
 }
