@@ -1,0 +1,39 @@
+.skipLink {
+  --sui-skip-link-bg: var(--sui-color-primary, #2563eb);
+  --sui-skip-link-fg: var(--sui-color-on-primary, #fff);
+  --sui-skip-link-z-index: 1000;
+
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Inset from the corner so the whole focus ring stays on screen */
+.skipLink:focus-visible {
+  position: fixed;
+  inset-block-start: var(--sui-space-2, 0.5rem);
+  inset-inline-start: var(--sui-space-2, 0.5rem);
+  z-index: var(--sui-skip-link-z-index);
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--sui-space-2, 0.5rem) var(--sui-space-4, 1rem);
+  overflow: visible;
+  clip-path: none;
+  border-radius: var(--sui-radius-control, 4px);
+  background-color: var(--sui-skip-link-bg);
+  color: var(--sui-skip-link-fg);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-font-size-md, 1rem);
+  font-weight: var(--sui-font-weight-control, 500);
+  line-height: var(--sui-line-height-tight, 1.25);
+  text-decoration: none;
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}

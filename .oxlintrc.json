@@ -8,7 +8,8 @@
       "components": {
         "Button": "button",
         "Divider": "hr",
-        "Link": "a"
+        "Link": "a",
+        "SkipLink": "a"
       }
     }
   },
