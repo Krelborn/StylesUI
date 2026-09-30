@@ -1,0 +1,53 @@
+.alert {
+  --sui-alert-bg: var(--sui-color-info-subtle, #edf5ff);
+  --sui-alert-accent: var(--sui-color-info-text, #1d4ed8);
+  /* A Link inside takes the alert's text colour */
+  --sui-link-color: currentColor;
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sui-space-3, 0.75rem);
+  padding: var(--sui-space-4, 1rem);
+  border: var(--sui-border-width, 1px) solid var(--sui-alert-accent);
+  border-radius: var(--sui-radius-md, 4px);
+  background-color: var(--sui-alert-bg);
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-font-size-md, 1rem);
+  line-height: var(--sui-line-height-normal, 1.5);
+  overflow-wrap: anywhere;
+}
+
+.alert[data-tone="danger"] {
+  --sui-alert-bg: var(--sui-color-danger-subtle, #fff1f1);
+  --sui-alert-accent: var(--sui-color-danger-text, #b91c1c);
+}
+
+.alert[data-tone="success"] {
+  --sui-alert-bg: var(--sui-color-success-subtle, #eefef3);
+  --sui-alert-accent: var(--sui-color-success-text, #166534);
+}
+
+.alert[data-tone="warning"] {
+  --sui-alert-bg: var(--sui-color-warning-subtle, #fffce1);
+  --sui-alert-accent: var(--sui-color-warning-text, #854d0e);
+}
+
+.icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  /* One line of text tall, so the icon centres on the first line however many lines follow */
+  block-size: 1lh;
+  color: var(--sui-alert-accent);
+}
+
+.content {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  color: var(--sui-alert-accent);
+  font-weight: var(--sui-font-weight-bold, 700);
+}
