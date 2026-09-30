@@ -1,5 +1,5 @@
-import type { ComponentPropsWithRef, JSX, JSXElementConstructor } from "react";
 import { clsx } from "clsx";
+import type { ComponentPropsWithRef, JSX, JSXElementConstructor } from "react";
 
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";

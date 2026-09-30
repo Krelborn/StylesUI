@@ -1,5 +1,5 @@
-import type { JSX } from "react";
 import { clsx } from "clsx";
+import type { JSX } from "react";
 
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
@@ -12,7 +12,7 @@ import styles from "./Badge.module.css";
 export type BadgeElement = "a" | "button" | "span";
 
 /**
- * Badge colours: the theme's status colours, its primary colour, or a neutral grey
+ * Badge colours: the theme's status colours, its primary colour, or its secondary colour for `neutral`
  */
 export type BadgeTone = "danger" | "info" | "neutral" | "primary" | "success" | "warning";
 

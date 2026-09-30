@@ -19,7 +19,7 @@ describe("Radio", () => {
   });
 
   it("must be named by aria-label when it has no children", () => {
-    renderBase(<Radio aria-label="Email" value="email" />);
+    renderBase(<Radio value="email" aria-label="Email" />);
 
     expect(elements.email).toBeInTheDocument();
   });

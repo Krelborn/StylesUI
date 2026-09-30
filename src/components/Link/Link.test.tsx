@@ -1,6 +1,6 @@
+import { render, screen } from "@testing-library/react";
 import type { ComponentPropsWithRef, JSX } from "react";
 import { createRef, forwardRef } from "react";
-import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";

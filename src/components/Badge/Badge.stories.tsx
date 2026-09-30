@@ -111,7 +111,7 @@ export const AsLink: Story = {
  */
 export const LongText: Story = {
   render: () => (
-    <Box as="section" aria-label="Narrow column" style={{ inlineSize: "8rem" }}>
+    <Box as="section" style={{ inlineSize: "8rem" }} aria-label="Narrow column">
       <Badge tone="warning">{unbrokenWord}</Badge>
     </Box>
   ),
