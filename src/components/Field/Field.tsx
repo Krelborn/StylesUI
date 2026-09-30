@@ -55,7 +55,7 @@ export type FieldProps<E extends BoxElement = "div"> = FieldOwnProps & Omit<BoxP
  * label and error association is written once. Renders the label, description, control and error in that order.
  *
  * @example
- * <Field label="Email" description="We only use it to send receipts" required={true}>
+ * <Field description="We only use it to send receipts" label="Email" required={true}>
  *   <TextInput />
  * </Field>
  */
