@@ -1,0 +1,154 @@
+.choiceControl {
+  --sui-choice-control-size: 1.5rem;
+  --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
+  --sui-choice-control-bg: var(--sui-color-background, #fff);
+  --sui-choice-control-border: var(--sui-color-input-border, #6b7280);
+  --sui-choice-control-border-width: var(--sui-border-width, 1px);
+  --sui-choice-control-radius: var(--sui-radius-sm, 2px);
+  --sui-choice-control-fill: var(--sui-color-primary, #2563eb);
+  --sui-choice-control-fill-border: var(--sui-color-control-border, transparent);
+  --sui-choice-control-mark: var(--sui-color-on-primary, #fff);
+  --sui-choice-control-mark-size: calc(var(--sui-choice-control-size) * 0.6);
+  --sui-choice-control-spring: var(--sui-motion-spring, 120ms ease-out);
+
+  display: inline-flex;
+  align-items: flex-start;
+  /* Stops a flex or grid parent stretching the label, which would make the empty space beside the text clickable */
+  inline-size: fit-content;
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  line-height: var(--sui-line-height-normal, 1.5);
+}
+
+.choiceControl[data-kind="radio"] {
+  --sui-choice-control-radius: 50%;
+  --sui-choice-control-mark-size: calc(var(--sui-choice-control-size) * 0.4);
+}
+
+.choiceControl[data-kind="switch"] {
+  --sui-choice-control-radius: var(--sui-radius-full, 9999px);
+  --sui-choice-control-track-size: 2.75rem;
+  --sui-choice-control-thumb: var(--sui-color-input-border, #6b7280);
+  --sui-choice-control-thumb-inset: 0.125rem;
+  --sui-choice-control-thumb-travel: calc(var(--sui-choice-control-track-size) - var(--sui-choice-control-size));
+  --sui-choice-control-mark-size: calc(
+    var(--sui-choice-control-size) - 2 * var(--sui-choice-control-border-width) - 2 *
+      var(--sui-choice-control-thumb-inset)
+  );
+}
+
+.input {
+  display: grid;
+  flex: none;
+  place-content: center;
+  inline-size: var(--sui-choice-control-size);
+  block-size: var(--sui-choice-control-size);
+  margin: 0;
+  border: var(--sui-choice-control-border-width) solid var(--sui-choice-control-border);
+  border-radius: var(--sui-choice-control-radius);
+  background-color: var(--sui-choice-control-bg);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+  appearance: none;
+}
+
+.input::before {
+  inline-size: var(--sui-choice-control-mark-size);
+  block-size: var(--sui-choice-control-mark-size);
+  background-color: var(--sui-choice-control-mark);
+  content: "";
+  transform: scale(0);
+  transition:
+    background-color 120ms ease,
+    transform var(--sui-choice-control-spring);
+}
+
+/* A spring on the way out would overshoot to a negative scale and flash a mirrored mark, so only checking bounces */
+.input:not(:checked)::before {
+  transition-duration: 120ms;
+  transition-timing-function: ease-out;
+}
+
+.input:checked {
+  --sui-choice-control-bg: var(--sui-choice-control-fill);
+  --sui-choice-control-border: var(--sui-choice-control-fill-border);
+}
+
+.input:checked::before {
+  transform: none;
+}
+
+.choiceControl[data-kind="checkbox"] > .input::before {
+  clip-path: polygon(0% 56%, 12% 44%, 38% 70%, 88% 12%, 100% 22%, 38% 94%);
+}
+
+.choiceControl[data-kind="radio"] > .input::before {
+  border-radius: 50%;
+}
+
+.choiceControl[data-kind="switch"] > .input {
+  justify-content: start;
+  inline-size: var(--sui-choice-control-track-size);
+}
+
+.choiceControl[data-kind="switch"] > .input::before {
+  margin-inline-start: var(--sui-choice-control-thumb-inset);
+  border-radius: 50%;
+  transform: none;
+}
+
+.choiceControl[data-kind="switch"] > .input:not(:checked)::before {
+  background-color: var(--sui-choice-control-thumb);
+}
+
+.choiceControl[data-kind="switch"] > .input:checked::before {
+  transform: translateX(var(--sui-choice-control-thumb-travel));
+}
+
+/* translateX has no logical direction, so the thumb's travel is reversed by hand */
+.choiceControl[data-kind="switch"] > .input:dir(rtl) {
+  --sui-choice-control-thumb-travel: calc(var(--sui-choice-control-size) - var(--sui-choice-control-track-size));
+}
+
+.input:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+.choiceControl[data-kind="checkbox"] > .input[aria-invalid="true"],
+.choiceControl[data-kind="switch"] > .input[aria-invalid="true"] {
+  --sui-choice-control-border: var(--sui-color-danger-text, #b91c1c);
+}
+
+.text {
+  padding-inline-start: var(--sui-choice-control-gap);
+  cursor: pointer;
+}
+
+.input:disabled,
+.input:disabled + .text {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input::before {
+    transition: background-color 120ms ease;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the fill and the mark on it */
+@media (forced-colors: active) {
+  .choiceControl {
+    --sui-choice-control-bg: Canvas;
+    --sui-choice-control-border: CanvasText;
+    --sui-choice-control-fill: Highlight;
+    --sui-choice-control-fill-border: Highlight;
+    --sui-choice-control-mark: HighlightText;
+  }
+
+  .choiceControl[data-kind="switch"] {
+    --sui-choice-control-thumb: CanvasText;
+  }
+}

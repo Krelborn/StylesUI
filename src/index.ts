@@ -6,6 +6,8 @@ export { Card } from "./components/Card";
 export type { CardPadding, CardProps } from "./components/Card";
 export { Center } from "./components/Center";
 export type { CenterProps, CenterWidth } from "./components/Center";
+export { Checkbox } from "./components/Checkbox";
+export type { CheckboxProps } from "./components/Checkbox";
 export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
 export { Cover } from "./components/Cover";
