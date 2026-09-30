@@ -100,10 +100,10 @@ describe("Fieldset", () => {
     render(
       <>
         <Fieldset
-          aria-describedby="extra-note"
           description="Choose how we reach you"
           error="Choose at least one"
           label="Notifications"
+          aria-describedby="extra-note"
         >
           <Checkbox>Email</Checkbox>
         </Fieldset>
@@ -119,7 +119,7 @@ describe("Fieldset", () => {
   it("must keep only the consumer's aria-describedby when there is no description or error", () => {
     render(
       <>
-        <Fieldset aria-describedby="extra-note" label="Notifications">
+        <Fieldset label="Notifications" aria-describedby="extra-note">
           <Checkbox>Email</Checkbox>
         </Fieldset>
         <p id="extra-note">We never share your choice</p>
@@ -153,7 +153,7 @@ describe("Fieldset", () => {
 
   it("must pass role and aria attributes through when they are given", () => {
     render(
-      <Fieldset aria-invalid="true" aria-required="true" label="Delivery" role="radiogroup">
+      <Fieldset label="Delivery" role="radiogroup" aria-invalid="true" aria-required="true">
         <Checkbox>Post</Checkbox>
       </Fieldset>
     );
