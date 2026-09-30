@@ -321,7 +321,6 @@ describe("RadioGroup", () => {
   });
 });
 
-// Renders three radios in a group, and records what the group and the first radio report
 function setUpTest(props: Partial<RadioGroupProps> = {}) {
   const onChange = vi.fn();
   const onValueChange = vi.fn();
