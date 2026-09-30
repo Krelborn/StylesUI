@@ -39,6 +39,9 @@ Controls in themes with depth, such as playful's buttons, rise on hover and pres
 with spring easing. Hover movement only applies on devices that can hover. When the operating
 system asks for reduced motion, only colours transition and state changes are instant.
 
+Text inputs, textareas and selects stay flat in every theme, with no lip and no spring. A checkbox,
+radio or switch moves its mark with the theme's spring when it is checked.
+
 ## Modes
 
 Colour mode follows the operating system by default. `light` and `dark` force a mode, and `system`
@@ -73,6 +76,34 @@ Tokens come in three tiers, and themes only change the middle one:
 [Foundations/Tokens](?path=/docs/foundations-tokens--docs) shows every token in the current theme
 and mode.
 
+### Status colours
+
+Each status (`danger`, `success`, `warning` and `info`) has three grades:
+
+- **Fill**: `--sui-color-<status>`, a solid background. `--sui-color-on-<status>` is the text on
+  it.
+- **Text**: `--sui-color-<status>-text`, for text, borders and icons on the page, on a surface and
+  on the status's own subtle.
+- **Subtle**: `--sui-color-<status>-subtle`, a tinted background. Body text (`--sui-color-text`)
+  sits on it.
+
+`Alert` and a subtle `Badge` use the text and subtle grades, a solid `Badge` uses the fill, and a
+form error uses the text grade. Primary-coloured text must not sit on a status subtle, because it
+falls below 4.5:1 on some of them.
+
+### Borders
+
+Three tokens draw borders, each with its own contrast guarantee:
+
+- `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
+- `--sui-color-control-border`: the outline of `Button`, `Badge` and a checked checkbox, radio or
+  switch. Transparent in `default`.
+- `--sui-color-input-border`: the boundary of form controls, at least 3:1 against the page and a
+  surface.
+
+[Foundations/Contrast](?path=/docs/foundations-contrast--docs) checks every pairing a theme
+guarantees, in each mode.
+
 ## Customising
 
 Override semantic tokens on any element, since components read them directly:
@@ -80,6 +111,15 @@ Override semantic tokens on any element, since components read them directly:
 ```css
 .checkout {
   --sui-color-primary: light-dark(var(--sui-green-600), var(--sui-green-400));
+}
+```
+
+`--sui-link-color` recolours every link in `Prose` and every `Link` with the default tone inside
+the element it is set on. `Alert` sets it so the links inside take the alert's text colour:
+
+```css
+.footer {
+  --sui-link-color: var(--sui-color-text-muted);
 }
 ```
 
