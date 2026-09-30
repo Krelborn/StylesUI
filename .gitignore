@@ -27,3 +27,11 @@ storybook-static
 
 # Agent planning docs (specs, plans)
 docs/superpowers/
+
+# design-sync
+.design-sync/sb-reference/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+.ds-sync/
+ds-bundle/

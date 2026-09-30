@@ -1,0 +1,40 @@
+{
+  "projectId": "1738c3d0-eb31-4def-9023-bded6e28864a",
+  "pkg": "@krelborn/stylesui",
+  "globalName": "StylesUI",
+  "shape": "storybook",
+  "storybookStatic": ".design-sync/sb-reference",
+  "storybookConfigDir": ".storybook",
+  "buildCmd": "pnpm build",
+  "tsconfig": ".design-sync/tsconfig.json",
+  "cssEntry": "dist/styles.css",
+  "extraFonts": [
+    "node_modules/@fontsource-variable/fredoka/wght.css",
+    "node_modules/@fontsource-variable/nunito/wght.css"
+  ],
+  "guidelinesGlob": "docs/design/*.md",
+  "titleMap": {
+    "Contrast": null,
+    "Themeshowcase": null,
+    "Tokens": null,
+    "Blogpage": null
+  },
+  "overrides": {
+    "Center": {
+      "cardMode": "column"
+    },
+    "Grid": {
+      "cardMode": "column"
+    },
+    "Sidebar": {
+      "cardMode": "column"
+    },
+    "Switcher": {
+      "cardMode": "column"
+    },
+    "PageLayout": {
+      "cardMode": "single"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

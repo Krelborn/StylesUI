@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "react/compiler-runtime": ["./compiler-runtime.js"]
+    }
+  }
+}
