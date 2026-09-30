@@ -1,0 +1,188 @@
+.prose {
+  --sui-prose-font-size: var(--sui-font-size-md, 1rem);
+  --sui-prose-flow: var(--sui-space-4, 1rem);
+
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-prose-font-size);
+  line-height: var(--sui-line-height-normal, 1.5);
+  overflow-wrap: anywhere;
+}
+
+.prose[data-size="sm"] {
+  --sui-prose-font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.prose[data-size="lg"] {
+  --sui-prose-font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+/*
+ * Every rule below is :where(.prose) followed by type selectors only. That puts it above the
+ * reset's universal rules and below every component class, so a component inside prose keeps its
+ * own styles. A class, attribute or pseudo-class goes inside :where() to keep it there.
+ */
+
+:where(.prose) p,
+:where(.prose) ul,
+:where(.prose) ol,
+:where(.prose) blockquote,
+:where(.prose) pre,
+:where(.prose) figure,
+:where(.prose) table,
+:where(.prose) hr {
+  margin: var(--sui-prose-flow) 0 0;
+}
+
+:where(.prose) h1,
+:where(.prose) h2,
+:where(.prose) h3,
+:where(.prose) h4,
+:where(.prose) h5,
+:where(.prose) h6 {
+  margin: calc(var(--sui-prose-flow) * 2) 0 0;
+  font-family: var(--sui-font-heading, system-ui, sans-serif);
+  font-weight: var(--sui-font-weight-bold, 700);
+  line-height: var(--sui-line-height-tight, 1.25);
+}
+
+:where(.prose) h1 {
+  font-size: var(--sui-font-size-3xl, 1.875rem);
+}
+
+:where(.prose) h2 {
+  font-size: var(--sui-font-size-2xl, 1.5rem);
+}
+
+:where(.prose) h3 {
+  font-size: var(--sui-font-size-xl, 1.25rem);
+}
+
+:where(.prose) h4 {
+  font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+:where(.prose) h5 {
+  font-size: var(--sui-font-size-md, 1rem);
+}
+
+:where(.prose) h6 {
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+:where(.prose) li {
+  margin-block-start: calc(var(--sui-prose-flow) / 4);
+}
+
+:where(.prose) figcaption {
+  margin-block-start: calc(var(--sui-prose-flow) / 2);
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: 0.875em;
+}
+
+/* After every rule that sets a block-start margin, which it ties with in specificity */
+:where(.prose) p:where(:first-child),
+:where(.prose) ul:where(:first-child),
+:where(.prose) ol:where(:first-child),
+:where(.prose) blockquote:where(:first-child),
+:where(.prose) pre:where(:first-child),
+:where(.prose) figure:where(:first-child),
+:where(.prose) table:where(:first-child),
+:where(.prose) hr:where(:first-child),
+:where(.prose) h1:where(:first-child),
+:where(.prose) h2:where(:first-child),
+:where(.prose) h3:where(:first-child),
+:where(.prose) h4:where(:first-child),
+:where(.prose) h5:where(:first-child),
+:where(.prose) h6:where(:first-child),
+:where(.prose) li:where(:first-child),
+:where(.prose) figcaption:where(:first-child) {
+  margin-block-start: 0;
+}
+
+:where(.prose) a {
+  color: var(--sui-link-color, var(--sui-color-primary, #2563eb));
+  text-decoration-line: underline;
+  text-decoration-thickness: var(--sui-border-width, 1px);
+  text-underline-offset: 0.2em;
+}
+
+:where(.prose) a:where(:hover) {
+  text-decoration-thickness: calc(var(--sui-border-width, 1px) * 2);
+}
+
+:where(.prose) a:where(:focus-visible) {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+:where(.prose) ul,
+:where(.prose) ol {
+  padding-inline-start: var(--sui-space-6, 1.5rem);
+}
+
+/*
+ * revert restores the browser's marker for each nesting level. It would also drop the marker a type
+ * attribute asks for, so a list with one is left alone.
+ */
+:where(.prose) ul:where(:not([type])),
+:where(.prose) ol:where(:not([type])) {
+  list-style-type: revert;
+}
+
+:where(.prose) blockquote {
+  padding-inline-start: var(--sui-space-4, 1rem);
+  border-inline-start: calc(var(--sui-border-width, 1px) * 3) solid var(--sui-color-border, #d1d5db);
+  color: var(--sui-color-text-muted, #4b5563);
+}
+
+:where(.prose) hr {
+  border: 0;
+  border-block-start: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+}
+
+:where(.prose) code,
+:where(.prose) kbd {
+  padding: 0 var(--sui-space-1, 0.25rem);
+  border-radius: var(--sui-radius-sm, 2px);
+  background-color: var(--sui-color-surface, #f3f4f6);
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.875em;
+}
+
+:where(.prose) pre {
+  padding: var(--sui-space-4, 1rem);
+  border-radius: var(--sui-radius-md, 4px);
+  background-color: var(--sui-color-surface, #f3f4f6);
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+  /* Wraps rather than scrolls, because a scrolling block would need a tabindex to be reachable by keyboard */
+  white-space: pre-wrap;
+}
+
+:where(.prose) pre code {
+  padding: 0;
+  border-radius: 0;
+  background-color: transparent;
+  font-size: inherit;
+}
+
+:where(.prose) img {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+:where(.prose) table {
+  border-collapse: collapse;
+}
+
+:where(.prose) th,
+:where(.prose) td {
+  padding: var(--sui-space-2, 0.5rem) var(--sui-space-3, 0.75rem);
+  border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+}
+
+:where(.prose) th {
+  font-weight: var(--sui-font-weight-bold, 700);
+}
