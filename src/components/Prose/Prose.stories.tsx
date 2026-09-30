@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
 
@@ -6,8 +7,9 @@ import { focusRingContrast } from "../../test/colorContrast";
 import { Badge } from "../Badge";
 import { Box } from "../Box";
 import { Button } from "../Button";
+import type { CardProps } from "../Card";
 import { Card } from "../Card";
-import { Cluster } from "../Cluster";
+import { Heading } from "../Heading";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
 
@@ -37,6 +39,29 @@ const longUrl =
 
 const wideCodeLine =
   'const response = await fetch("https://api.example.com/v2/organisations/acme/projects/website/deployments?status=failed");';
+
+const releaseCardHeading = "Hear about the next release";
+const releaseCardText = "One email when a version ships, and nothing else.";
+
+/**
+ * A card of StylesUI components, shown outside prose and inside it to compare the two
+ */
+function ReleaseCard(props: CardProps): JSX.Element {
+  return (
+    <Card {...props}>
+      <Stack align="start" gap={3}>
+        <Badge as="a" href="#changelog" tone="success">
+          Changelog
+        </Badge>
+        <Heading level={3}>{releaseCardHeading}</Heading>
+        <Text as="p" tone="muted">
+          {releaseCardText}
+        </Text>
+        <Button>Subscribe</Button>
+      </Stack>
+    </Card>
+  );
+}
 
 function blockStartMargin(element: HTMLElement): number {
   return parseFloat(getComputedStyle(element).marginBlockStart);
@@ -173,46 +198,35 @@ export const Sizes: Story = {
 };
 
 /**
- * A StylesUI component inside prose keeps its own styles: the `Button` and the `Badge` rendered as
- * a link look the same in the prose as they do in the row above it. Prose spaces only the raw
- * elements it styles, so the `Card` sets its own margin from `--sui-prose-flow`.
+ * A StylesUI component inside prose keeps its own styles. The same card is shown above the prose
+ * and inside it, and its `Badge` link, `Heading`, `Text` paragraph and `Button` look the same and
+ * sit the same distance apart in both. Prose spaces only the raw elements it styles, so the card
+ * inside it sets its own margin from `--sui-prose-flow`.
  */
 export const WithComponents: Story = {
   render: (args) => (
     <Stack gap={6}>
-      <Cluster>
-        <Button>Subscribe</Button>
-        <Badge as="a" href="#changelog">
-          Changelog
-        </Badge>
-      </Cluster>
+      <ReleaseCard />
       <Prose {...args}>
         <h2 id="changelog">Changelog</h2>
-        <p>
-          Version 2 adds form controls and feedback components. Every release is listed in the{" "}
-          <Badge as="a" href="#changelog">
-            Changelog
-          </Badge>
-          .
-        </p>
-        <Card style={{ marginBlockStart: "var(--sui-prose-flow)" }}>
-          <Stack align="start" gap={3}>
-            <Text weight="bold">Hear about the next release</Text>
-            <Button>Subscribe</Button>
-          </Stack>
-        </Card>
+        <p>Version 2 adds form controls and feedback components.</p>
+        <ReleaseCard style={{ marginBlockStart: "var(--sui-prose-flow)" }} />
       </Prose>
     </Stack>
   ),
   play: async ({ canvas }) => {
-    const [outsideButton, insideButton] = canvas.getAllByRole("button", { name: "Subscribe" });
     const [outsideBadge, insideBadge] = canvas.getAllByRole("link", { name: "Changelog" });
+    const [outsideHeading, insideHeading] = canvas.getAllByRole("heading", { name: releaseCardHeading });
+    const [outsideText, insideText] = canvas.getAllByText(releaseCardText);
+    const [outsideButton, insideButton] = canvas.getAllByRole("button", { name: "Subscribe" });
 
-    await expect(getComputedStyle(insideButton).color).toBe(getComputedStyle(outsideButton).color);
     await expect(getComputedStyle(insideBadge).textDecorationLine).toBe(
       getComputedStyle(outsideBadge).textDecorationLine
     );
     await expect(getComputedStyle(insideBadge).color).toBe(getComputedStyle(outsideBadge).color);
+    await expect(blockStartMargin(insideHeading)).toBe(blockStartMargin(outsideHeading));
+    await expect(blockStartMargin(insideText)).toBe(blockStartMargin(outsideText));
+    await expect(getComputedStyle(insideButton).color).toBe(getComputedStyle(outsideButton).color);
   },
 };
 

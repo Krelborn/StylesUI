@@ -29,8 +29,10 @@ export type ProseProps<E extends BoxElement = "div"> = ProseOwnProps & Omit<BoxP
  * and tables. It is for content that cannot be written one component per element, such as rendered
  * markdown or CMS output.
  *
- * A StylesUI component inside prose keeps its own styles, but a raw element inside that component
- * is still styled as prose. Code blocks wrap rather than scroll.
+ * A StylesUI component inside prose keeps its own styles. Two things are still styled as prose: a
+ * raw element inside that component, and, for the properties it does not set itself, a component
+ * rendered through `as` as an element prose styles, such as `<Text as="code">`. Code blocks wrap
+ * rather than scroll.
  *
  * @example
  * <Prose as="article" size="lg">
