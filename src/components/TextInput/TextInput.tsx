@@ -27,7 +27,7 @@ export interface TextInputProps extends Omit<BoxProps<"input">, "as" | "children
 
 /**
  * Themed single-line text input. Inside a `Field` it takes its label, description, error, and required and
- * disabled state from the field; on its own it needs an `aria-label`.
+ * disabled state from the field. Outside one, give it an accessible name, for example with `aria-label`.
  *
  * @example
  * <Field label="Email">

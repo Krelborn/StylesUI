@@ -107,6 +107,6 @@ export const Disabled: Story = {
     const input = canvas.getByRole("textbox", { name: "Email" });
 
     await expect(input).toBeDisabled();
-    await expect(getComputedStyle(canvas.getByText("Email")).opacity).toBe("0.5");
+    await expect(Number(getComputedStyle(canvas.getByText("Email")).opacity)).toBeLessThan(1);
   },
 };

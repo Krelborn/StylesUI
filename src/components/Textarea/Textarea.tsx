@@ -17,7 +17,7 @@ export interface TextareaProps extends Omit<BoxProps<"textarea">, "as" | "childr
 /**
  * Themed multi-line text input that the user can resize vertically. Set its height with `rows` and its text
  * with `value` or `defaultValue`. Inside a `Field` it takes its label, description, error, and required and
- * disabled state from the field; on its own it needs an `aria-label`.
+ * disabled state from the field. Outside one, give it an accessible name, for example with `aria-label`.
  *
  * @example
  * <Field label="Message">

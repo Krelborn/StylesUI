@@ -79,7 +79,7 @@ The one exception is Link. Its `as` also accepts a component that renders an anc
 
 ### Forms
 
-Field wraps one form control with its label, description and error message, and shares its state with the control. The control takes its `id`, `aria-describedby`, `aria-invalid`, `required` and `disabled` from the Field around it, so the association between label, error and control is written once. Field's id for the control always wins over one set on the control, so the label reaches it. A control outside a Field works on its own and needs an `aria-label`.
+Field wraps one form control with its label, description and error message, and shares its state with the control. The control takes its `id`, `aria-describedby`, `aria-invalid`, `required` and `disabled` from the Field around it, so the association between label, error and control is written once. Field's id for the control always wins over one set on the control, so the label reaches it. A control outside a Field works on its own and needs its own accessible name, for example an `aria-label`.
 
 TextInput, Textarea and Select are each a single native element, so they behave in a form, with the keyboard and with assistive technology as the platform's own controls do.
 

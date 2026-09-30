@@ -17,7 +17,8 @@ interface TextControlOwnProps<E extends TextControlElement> {
   as: E;
 
   /**
-   * Height of the control, matching the `Button` sizes. Takes the place of the native `size` attribute.
+   * Padding and font size of the control, matching the `Button` sizes. Takes the place of the native `size`
+   * attribute.
    */
   size: ControlSize;
 }
