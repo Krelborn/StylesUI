@@ -9,6 +9,7 @@
         "Button": "button",
         "Checkbox": "input",
         "Divider": "hr",
+        "Fieldset": "fieldset",
         "Link": "a",
         "Select": "select",
         "SkipLink": "a",
