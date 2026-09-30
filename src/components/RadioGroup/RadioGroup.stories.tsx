@@ -25,10 +25,27 @@ const meta = {
       description: "The `Radio` components the group holds",
       table: { type: { summary: "ReactNode" } },
     },
+    description: {
+      control: "text",
+      description: "Supporting text shown below the label, linked to the group with `aria-describedby`",
+      table: { type: { summary: "ReactNode" } },
+    },
     disabled: {
       control: "boolean",
       description: "Disables every radio and dims the label",
       table: { type: { summary: "boolean" } },
+    },
+    error: {
+      control: "text",
+      description:
+        "Error message shown below the radios, linked to the group with `aria-describedby`. It marks the group and every radio invalid.",
+      table: { type: { summary: "ReactNode" } },
+    },
+    label: {
+      control: "text",
+      description: "Label for the group, rendered as its `legend`, which names the group",
+      table: { type: { summary: "ReactNode" } },
+      type: { name: "other", required: true, value: "ReactNode" },
     },
   },
   parameters: {

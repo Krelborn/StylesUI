@@ -17,7 +17,7 @@ export type RadioGroupOrientation = "horizontal" | "vertical";
 /**
  * Props for `RadioGroup`: its own props plus every native fieldset prop
  */
-export interface RadioGroupProps extends Omit<FieldsetProps, "defaultValue" | "name"> {
+export interface RadioGroupProps extends Omit<FieldsetProps, "defaultValue" | "name" | "role"> {
   /**
    * The value selected at first. It leaves the group uncontrolled, so the radios keep the user's choices.
    */

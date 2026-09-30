@@ -309,6 +309,17 @@ describe("RadioGroup", () => {
     expect(elements.group.tagName).toBe("FIELDSET");
   });
 
+  it("must reject role when it is given", () => {
+    renderBase(
+      // @ts-expect-error RadioGroup always has the radiogroup role
+      <RadioGroup label="Contact method" role="radiogroup">
+        <Radio value="email">Email</Radio>
+      </RadioGroup>
+    );
+
+    expect(elements.group).toBeInTheDocument();
+  });
+
   it("must reject a non-string value when one is given", () => {
     renderBase(
       // @ts-expect-error RadioGroup values are strings
