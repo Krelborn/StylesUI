@@ -1,0 +1,28 @@
+.field {
+  --sui-field-gap: var(--sui-space-1, 0.25rem);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-field-gap);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  line-height: var(--sui-line-height-normal, 1.5);
+}
+
+.label {
+  font-weight: var(--sui-font-weight-control, 500);
+}
+
+.field[data-disabled] .label,
+fieldset:disabled .label {
+  opacity: 0.5;
+}
+
+.description {
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.error {
+  color: var(--sui-color-danger-text, #b91c1c);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
