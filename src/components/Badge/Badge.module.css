@@ -55,7 +55,7 @@
 }
 
 .badge[data-tone="primary"][data-variant="subtle"] {
-  --sui-badge-bg: var(--sui-color-primary-subtle, #dbeafe);
+  --sui-badge-bg: var(--sui-color-primary-subtle, #edf5ff);
   --sui-badge-fg: var(--sui-color-primary, #2563eb);
 }
 
