@@ -82,16 +82,16 @@ export const Disabled: Story = {
 };
 
 /**
- * A `Field` with no `label` leaves the switch to name itself and gives it the rest: `error` marks
- * it `aria-invalid`, which draws its border in the danger colour, and `required` adds an asterisk
- * to the switch's own label
+ * A `Field` with no `label` leaves the switch to name itself and gives it the rest. When the
+ * setting fails to take effect, `error` describes the switch and marks it `aria-invalid`, which
+ * draws its border in the danger colour
  */
 export const InAField: Story = {
   args: {
     children: "Two-step sign-in",
   },
   render: (args) => (
-    <Field error="Turn on two-step sign-in to continue" required={true}>
+    <Field error="Two-step sign-in could not be turned on. Try again.">
       <Switch {...args} />
     </Field>
   ),
@@ -99,8 +99,7 @@ export const InAField: Story = {
     const twoStep = canvas.getByRole("switch", { name: "Two-step sign-in" });
 
     await expect(twoStep).toBeInvalid();
-    await expect(twoStep).toBeRequired();
-    await expect(twoStep).toHaveAccessibleDescription("Turn on two-step sign-in to continue");
+    await expect(twoStep).toHaveAccessibleDescription("Two-step sign-in could not be turned on. Try again.");
     await expect(borderContrast(twoStep)).toBeGreaterThanOrEqual(3);
   },
 };
