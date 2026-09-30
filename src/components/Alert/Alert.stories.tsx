@@ -178,7 +178,7 @@ export const CustomIcon: Story = {
  * update that is not urgent, set `aria-live="polite"` instead:
  *
  * ```tsx
- * <Alert aria-live="polite" tone="success">Draft saved</Alert>
+ * <Alert tone="success" aria-live="polite">Draft saved</Alert>
  * ```
  */
 export const AsErrorSummary: Story = {
@@ -208,8 +208,8 @@ export const AsErrorSummary: Story = {
  */
 export const LongText: Story = {
   render: () => (
-    <Box data-testid="narrow-column" style={{ inlineSize: "16rem" }}>
-      <Alert data-testid="long-text-alert" title={unbrokenTitle} tone="danger">
+    <Box style={{ inlineSize: "16rem" }} data-testid="narrow-column">
+      <Alert title={unbrokenTitle} tone="danger" data-testid="long-text-alert">
         {unbrokenWord}
       </Alert>
     </Box>

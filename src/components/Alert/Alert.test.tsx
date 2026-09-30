@@ -49,7 +49,7 @@ describe("Alert", () => {
 
   it.each(tones)("must apply the %s tone when it is set", (tone) => {
     render(
-      <Alert data-testid="alert" tone={tone}>
+      <Alert tone={tone} data-testid="alert">
         Saved
       </Alert>
     );
@@ -77,7 +77,7 @@ describe("Alert", () => {
 
   it("must not set a title attribute when a title is given", () => {
     render(
-      <Alert data-testid="alert" title="Heads up">
+      <Alert title="Heads up" data-testid="alert">
         Your changes are saved
       </Alert>
     );
@@ -88,7 +88,7 @@ describe("Alert", () => {
 
   it.each(tones)("must render the default icon hidden from assistive technology for the %s tone", (tone) => {
     render(
-      <Alert data-testid="alert" tone={tone}>
+      <Alert tone={tone} data-testid="alert">
         Saved
       </Alert>
     );
@@ -98,7 +98,7 @@ describe("Alert", () => {
 
   it("must render the icon in place of the default icon when one is given", () => {
     render(
-      <Alert data-testid="alert" icon={<span>Tip</span>}>
+      <Alert icon={<span>Tip</span>} data-testid="alert">
         Saved
       </Alert>
     );
@@ -109,7 +109,7 @@ describe("Alert", () => {
 
   it.each([null, false])("must render no icon when icon is %s", (icon) => {
     render(
-      <Alert data-testid="alert" icon={icon}>
+      <Alert icon={icon} data-testid="alert">
         Saved
       </Alert>
     );
@@ -120,7 +120,7 @@ describe("Alert", () => {
 
   it("must forward native props when they are given", () => {
     render(
-      <Alert data-testid="alert" id="import-result">
+      <Alert id="import-result" data-testid="alert">
         Saved
       </Alert>
     );
@@ -142,7 +142,7 @@ describe("Alert", () => {
     const ref = createRef<HTMLDivElement>();
 
     render(
-      <Alert data-testid="alert" ref={ref}>
+      <Alert ref={ref} data-testid="alert">
         Saved
       </Alert>
     );

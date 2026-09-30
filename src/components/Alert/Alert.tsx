@@ -43,15 +43,15 @@ export type AlertProps<E extends BoxElement = "div"> = AlertOwnProps & Omit<BoxP
  * `aria-live="polite"` for a quiet update.
  *
  * @example
- * <Alert tone="warning" title="Scheduled maintenance">
+ * <Alert title="Scheduled maintenance" tone="warning">
  *   The dashboard is read-only on Saturday from 02:00 to 03:00 UTC.
  * </Alert>
  *
  * @example
- * <Alert aria-live="polite" tone="success">Draft saved</Alert>
+ * <Alert tone="success" aria-live="polite">Draft saved</Alert>
  *
  * @example
- * <Alert role="alert" tone="danger" title="Payment failed">
+ * <Alert role="alert" title="Payment failed" tone="danger">
  *   The card was declined. Check the details and try again.
  * </Alert>
  */
