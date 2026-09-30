@@ -12,6 +12,7 @@
         "Link": "a",
         "Select": "select",
         "SkipLink": "a",
+        "Switch": "input",
         "Textarea": "textarea",
         "TextInput": "input"
       }

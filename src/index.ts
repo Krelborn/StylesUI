@@ -36,6 +36,8 @@ export { SkipLink } from "./components/SkipLink";
 export type { SkipLinkProps } from "./components/SkipLink";
 export { Stack } from "./components/Stack";
 export type { StackProps } from "./components/Stack";
+export { Switch } from "./components/Switch";
+export type { SwitchProps } from "./components/Switch";
 export { Switcher } from "./components/Switcher";
 export type { SwitcherProps } from "./components/Switcher";
 export { Text } from "./components/Text";
