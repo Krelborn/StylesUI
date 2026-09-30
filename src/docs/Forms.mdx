@@ -169,7 +169,9 @@ export function SignUpForm(): JSX.Element {
 `Button` defaults to `type="button"`, so the button that submits the form needs `type="submit"`.
 
 `Alert` sets no role itself. Use `role="alert"` for an error raised by an action, as above, and
-`aria-live="polite"` for a quiet update such as a saved draft.
+`aria-live="polite"` for a quiet update such as a saved draft. Screen readers announce a polite
+region reliably only when it is on the page before its content changes, so keep the element with
+`aria-live` rendered and render the `Alert` inside it.
 
 ## A whole form
 

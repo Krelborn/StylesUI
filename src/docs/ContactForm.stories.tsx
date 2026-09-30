@@ -1,6 +1,8 @@
+import { Description, Primary, Title } from "@storybook/addon-docs/blocks";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { JSX, SubmitEvent } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { expect, userEvent, within } from "storybook/test";
 
 import { Alert } from "../components/Alert";
@@ -83,6 +85,8 @@ function ContactForm(): JSX.Element {
   const [errors, setErrors] = useState<AnswerErrors>({});
   const [isSent, setIsSent] = useState(false);
   const [isSubscriber, setIsSubscriber] = useState(false);
+  const confirmationRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
   const problems = requiredAnswers.filter(({ name }) => errors[name] !== undefined);
 
   const handleSubmit = (event: SubmitEvent<HTMLFormElement>): void => {
@@ -93,19 +97,25 @@ function ContactForm(): JSX.Element {
     const nextErrors = findErrors(new FormData(form));
     const isValid = Object.keys(nextErrors).length === 0;
 
-    setErrors(nextErrors);
-    setIsSent(isValid);
+    // The summary or the confirmation has to be rendered before it can take focus
+    flushSync(() => {
+      setErrors(nextErrors);
+      setIsSent(isValid);
+    });
 
     if (isValid) {
       form.reset();
       setIsSubscriber(false);
+      confirmationRef.current?.focus();
+    } else {
+      summaryRef.current?.focus();
     }
   };
 
   return (
     <Stack gap={6}>
       {problems.length > 0 && (
-        <Alert role="alert" title={summaryTitle(problems.length)} tone="danger">
+        <Alert ref={summaryRef} role="alert" tabIndex={-1} title={summaryTitle(problems.length)} tone="danger">
           <Stack as="ul" gap={1}>
             {problems.map(({ error, name }) => (
               <Box as="li" key={name}>
@@ -113,11 +123,6 @@ function ContactForm(): JSX.Element {
               </Box>
             ))}
           </Stack>
-        </Alert>
-      )}
-      {isSent && (
-        <Alert title="Message sent" tone="success" aria-live="polite">
-          We reply within two working days.
         </Alert>
       )}
       <Stack as="form" gap={5} noValidate={true} onSubmit={handleSubmit}>
@@ -191,6 +196,13 @@ function ContactForm(): JSX.Element {
           <Button type="submit">Send message</Button>
         </Row>
       </Stack>
+      <Box aria-live="polite">
+        {isSent && (
+          <Alert ref={confirmationRef} tabIndex={-1} title="Message sent" tone="success">
+            We reply within two working days.
+          </Alert>
+        )}
+      </Box>
     </Stack>
   );
 }
@@ -199,25 +211,19 @@ const meta = {
   title: "Examples/Contact form",
   parameters: {
     a11y: { test: "error" },
-    docs: { story: { height: "48rem", inline: false } },
+    docs: {
+      // The default page repeats the first story in a list of all stories once a file has two
+      page: () => (
+        <>
+          <Title />
+          <Description of="story" />
+          <Primary />
+        </>
+      ),
+      story: { height: "48rem", inline: false },
+    },
     layout: "fullscreen",
   },
-} satisfies Meta;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-/**
- * A full contact page. Each text control sits in a `Field`, the radios in a `RadioGroup`, the
- * checkboxes in a `Fieldset`, and the consent `Checkbox` labels itself inside a `Field` with no
- * `label`. The `Switch` takes effect at once, showing one more field.
- *
- * The form sets `noValidate` and checks the answers itself when it is submitted. Each missing
- * answer gets an `error` on its `Field` or group, and an `Alert` with `role="alert"` above the form
- * lists them all, each linked to its control. The play function submits the form empty.
- */
-export const ContactPage: Story = {
   render: () => (
     <PageLayout gap={6}>
       <SkipLink href="#main">Skip to main content</SkipLink>
@@ -253,6 +259,32 @@ export const ContactPage: Story = {
       </Center>
     </PageLayout>
   ),
+} satisfies Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+/**
+ * A full contact page. Each text control sits in a `Field`, the radios in a `RadioGroup`, the
+ * checkboxes in a `Fieldset`, and the consent `Checkbox` labels itself inside a `Field` with no
+ * `label`. The `Switch` takes effect at once, showing one more field.
+ *
+ * The form sets `noValidate` and checks the answers itself when it is submitted. Each missing
+ * answer gets an `error` on its `Field` or group, and an `Alert` with `role="alert"` above the form
+ * lists them all, each linked to its control. A failed submission moves focus to that summary. A
+ * successful one moves focus to the confirmation below the form, which appears inside an
+ * `aria-live="polite"` region that is always rendered.
+ */
+export const ContactPage: Story = {};
+
+/**
+ * The contact page after the form is submitted with every answer missing: the error summary takes
+ * focus in view, and each required control is marked invalid and described by its error. It is
+ * left off the Docs page, since submitting moves focus and scrolls the page.
+ */
+export const InvalidSubmission: Story = {
+  tags: ["!autodocs"],
   play: async ({ canvas, canvasElement }) => {
     const requiredControls = [
       { control: canvas.getByRole("textbox", { name: "Name" }), errorDescription: "Enter your name" },
@@ -281,8 +313,12 @@ export const ContactPage: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Send message" }));
 
     const summary = await canvas.findByRole("alert");
+    const summaryBox = summary.getBoundingClientRect();
     const summaryLinks = within(summary).getAllByRole<HTMLAnchorElement>("link");
 
+    await expect(summary).toHaveFocus();
+    await expect(summaryBox.top).toBeGreaterThanOrEqual(0);
+    await expect(summaryBox.bottom).toBeLessThanOrEqual(window.innerHeight);
     await expect(summary).toHaveTextContent("There are 6 problems with your message");
     await expect(summaryLinks).toHaveLength(requiredControls.length);
 
