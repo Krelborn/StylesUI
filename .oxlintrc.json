@@ -12,6 +12,7 @@
         "Fieldset": "fieldset",
         "Link": "a",
         "Radio": "input",
+        "RadioGroup": "fieldset",
         "Select": "select",
         "SkipLink": "a",
         "Switch": "input",

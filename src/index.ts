@@ -30,6 +30,8 @@ export { PageLayout } from "./components/PageLayout";
 export type { PageLayoutProps } from "./components/PageLayout";
 export { Radio } from "./components/Radio";
 export type { RadioProps } from "./components/Radio";
+export { RadioGroup } from "./components/RadioGroup";
+export type { RadioGroupOrientation, RadioGroupProps } from "./components/RadioGroup";
 export { Row } from "./components/Row";
 export type { RowProps } from "./components/Row";
 export { Select } from "./components/Select";
