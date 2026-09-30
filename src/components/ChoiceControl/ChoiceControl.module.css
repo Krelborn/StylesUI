@@ -110,7 +110,8 @@
   outline-offset: 2px;
 }
 
-.input[type="checkbox"][aria-invalid="true"] {
+.input[type="checkbox"][aria-invalid="true"],
+.input[type="radio"][data-invalid] {
   --sui-choice-control-border: var(--sui-color-danger-text, #b91c1c);
 }
 
