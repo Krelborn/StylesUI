@@ -20,8 +20,7 @@ const markPaths: Record<AlertTone, string> = {
 
 /**
  * Decorative glyph for an alert tone, drawn in the current text colour and hidden from assistive
- * technology, since the alert's text carries the meaning. A circle holds the mark, except for
- * `warning`, which uses a triangle.
+ * technology, since the alert's text carries the meaning
  */
 export function AlertIcon({ tone }: AlertIconProps): JSX.Element {
   return (

@@ -8,7 +8,7 @@ import { Alert } from "./Alert";
 const tones: AlertTone[] = ["danger", "info", "success", "warning"];
 
 // The default icon is hidden from assistive technology, so no accessible query can find it
-function findDefaultIcon(): SVGElement | null {
+function queryIcon(): SVGElement | null {
   return screen.getByTestId("alert").querySelector("svg");
 }
 
@@ -93,7 +93,7 @@ describe("Alert", () => {
       </Alert>
     );
 
-    expect(findDefaultIcon()).toHaveAttribute("aria-hidden", "true");
+    expect(queryIcon()).toHaveAttribute("aria-hidden", "true");
   });
 
   it("must render the icon in place of the default icon when one is given", () => {
@@ -104,7 +104,7 @@ describe("Alert", () => {
     );
 
     expect(screen.getByText("Tip")).toBeInTheDocument();
-    expect(findDefaultIcon()).toBeNull();
+    expect(queryIcon()).toBeNull();
   });
 
   it.each([null, false])("must render no icon when icon is %s", (icon) => {
@@ -114,7 +114,7 @@ describe("Alert", () => {
       </Alert>
     );
 
-    expect(findDefaultIcon()).toBeNull();
+    expect(queryIcon()).toBeNull();
     expect(screen.getByText("Saved")).toBeInTheDocument();
   });
 
