@@ -15,8 +15,12 @@ describe("Fieldset", () => {
       </Fieldset>
     );
 
+    const legend = screen.getByText("Notifications");
+
     expect(elements.group.tagName).toBe("FIELDSET");
-    expect(screen.getByText("Notifications").tagName).toBe("LEGEND");
+    expect(legend.tagName).toBe("LEGEND");
+    expect(legend.id).not.toBe("");
+    expect(elements.group).toHaveAttribute("aria-labelledby", legend.id);
   });
 
   it("must exclude trailing hidden content from the group name when the label is a node", () => {
