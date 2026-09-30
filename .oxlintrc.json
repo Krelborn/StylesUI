@@ -10,6 +10,7 @@
         "Divider": "hr",
         "Link": "a",
         "SkipLink": "a",
+        "Textarea": "textarea",
         "TextInput": "input"
       }
     }

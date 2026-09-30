@@ -31,6 +31,13 @@
   --sui-text-control-font-size: var(--sui-font-size-lg, 1.125rem);
 }
 
+.textControl:where(textarea) {
+  --sui-text-control-radius: var(--sui-radius-md, 4px);
+
+  line-height: var(--sui-line-height-normal, 1.5);
+  resize: vertical;
+}
+
 .textControl::placeholder {
   color: var(--sui-color-text-muted, #4b5563);
   /* Firefox fades placeholders, which would take the muted colour below its contrast guarantee */
