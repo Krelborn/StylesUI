@@ -9,6 +9,7 @@
         "Button": "button",
         "Divider": "hr",
         "Link": "a",
+        "Select": "select",
         "SkipLink": "a",
         "Textarea": "textarea",
         "TextInput": "input"

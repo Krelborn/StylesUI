@@ -26,6 +26,8 @@ export { PageLayout } from "./components/PageLayout";
 export type { PageLayoutProps } from "./components/PageLayout";
 export { Row } from "./components/Row";
 export type { RowProps } from "./components/Row";
+export { Select } from "./components/Select";
+export type { SelectProps } from "./components/Select";
 export { Sidebar } from "./components/Sidebar";
 export type { SidebarProps } from "./components/Sidebar";
 export { SkipLink } from "./components/SkipLink";

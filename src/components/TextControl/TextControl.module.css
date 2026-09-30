@@ -38,6 +38,39 @@
   resize: vertical;
 }
 
+.textControl:where(select) {
+  --sui-text-control-chevron-size: 0.375em;
+
+  padding-inline-end: calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) * 3);
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent calc(50% - 1px),
+      currentColor calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 1px),
+      currentColor calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+  /* The two strokes overlap by 1px so that pixel rounding cannot open a gap where they meet */
+  background-position:
+    right calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) - 1px) center,
+    right var(--sui-text-control-padding-x) center;
+  background-repeat: no-repeat;
+  background-size: var(--sui-text-control-chevron-size) var(--sui-text-control-chevron-size);
+  appearance: none;
+}
+
+/* background-position has no logical keywords, so the chevron is moved to the inline end by hand */
+.textControl:where(select):dir(rtl) {
+  background-position:
+    left var(--sui-text-control-padding-x) center,
+    left calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) - 1px) center;
+}
+
 .textControl::placeholder {
   color: var(--sui-color-text-muted, #4b5563);
   /* Firefox fades placeholders, which would take the muted colour below its contrast guarantee */
