@@ -76,3 +76,13 @@ Every semantic colour is defined once with `light-dark()`, so light and dark var
 The Box component forms the base wrapper around all DOM elements. Never render DOM elements directly, instead render them using Box or use a pre-existing wrapper component that itself renders a Box.
 
 The one exception is Link. Its `as` also accepts a component that renders an anchor, such as a router's link, and Link renders that component directly.
+
+### Forms
+
+Field wraps one form control with its label, description and error message, and shares its state with the control. The control takes its `id`, `aria-describedby`, `aria-invalid`, `required` and `disabled` from the Field around it, so the association between label, error and control is written once. Field's id for the control always wins over one set on the control, so the label reaches it. A control outside a Field works on its own and needs an `aria-label`.
+
+TextInput, Textarea and Select are each a single native element, so they behave in a form, with the keyboard and with assistive technology as the platform's own controls do.
+
+- **Sizes**: `sm`, `md` and `lg` use the same spacing and font size tokens as Button, so a TextInput or Select is as tall as a button of the same size. `size` takes the place of the native `size` attribute.
+- **State**: styles follow native and ARIA state (`:disabled`, `:focus-visible`, `[aria-invalid="true"]`) rather than extra props. An invalid control draws its border in `--sui-color-danger-text`.
+- **Depth**: text controls are flat in every theme. They have no lip and no spring, which are kept for controls that are pressed.
