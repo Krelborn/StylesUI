@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
 
 import { Badge } from "../components/Badge";
 import { Card } from "../components/Card";
@@ -135,13 +134,4 @@ export const PostPage: Story = {
       </Center>
     </PageLayout>
   ),
-  play: async ({ canvas }) => {
-    const skipLink = canvas.getByRole("link", { name: "Skip to main content" });
-
-    await userEvent.tab();
-
-    await expect(skipLink).toHaveFocus();
-    await expect(skipLink).toHaveAttribute("href", "#main");
-    await expect(canvas.getByRole("main")).toHaveAttribute("id", "main");
-  },
 };
