@@ -1,5 +1,6 @@
 .choiceControl {
   --sui-choice-control-size: 1.5rem;
+  --sui-choice-control-track-size: var(--sui-choice-control-size);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
   --sui-choice-control-bg: var(--sui-color-background, #fff);
   --sui-choice-control-border: var(--sui-color-input-border, #6b7280);
@@ -8,7 +9,14 @@
   --sui-choice-control-fill: var(--sui-color-primary, #2563eb);
   --sui-choice-control-fill-border: var(--sui-color-control-border, transparent);
   --sui-choice-control-mark: var(--sui-color-on-primary, #fff);
+  --sui-choice-control-mark-unchecked: var(--sui-choice-control-mark);
   --sui-choice-control-mark-size: calc(var(--sui-choice-control-size) * 0.6);
+  --sui-choice-control-mark-shape: polygon(0% 56%, 12% 44%, 38% 70%, 88% 12%, 100% 22%, 38% 94%);
+  --sui-choice-control-mark-radius: 0;
+  --sui-choice-control-mark-justify: center;
+  --sui-choice-control-mark-inset: 0;
+  --sui-choice-control-mark-transform: none;
+  --sui-choice-control-mark-transform-unchecked: scale(0);
   --sui-choice-control-spring: var(--sui-motion-spring, 120ms ease-out);
 
   display: inline-flex;
@@ -22,25 +30,41 @@
 .choiceControl[data-kind="radio"] {
   --sui-choice-control-radius: 50%;
   --sui-choice-control-mark-size: calc(var(--sui-choice-control-size) * 0.4);
+  --sui-choice-control-mark-shape: none;
+  --sui-choice-control-mark-radius: 50%;
 }
 
 .choiceControl[data-kind="switch"] {
-  --sui-choice-control-radius: var(--sui-radius-full, 9999px);
   --sui-choice-control-track-size: 2.75rem;
-  --sui-choice-control-thumb: var(--sui-color-input-border, #6b7280);
-  --sui-choice-control-thumb-inset: 0.125rem;
-  --sui-choice-control-thumb-travel: calc(var(--sui-choice-control-track-size) - var(--sui-choice-control-size));
+  --sui-choice-control-radius: var(--sui-radius-full, 9999px);
+  --sui-choice-control-mark-unchecked: var(--sui-color-input-border, #6b7280);
   --sui-choice-control-mark-size: calc(
     var(--sui-choice-control-size) - 2 * var(--sui-choice-control-border-width) - 2 *
-      var(--sui-choice-control-thumb-inset)
+      var(--sui-choice-control-mark-inset)
+  );
+  --sui-choice-control-mark-shape: none;
+  --sui-choice-control-mark-radius: 50%;
+  --sui-choice-control-mark-justify: start;
+  --sui-choice-control-mark-inset: 0.125rem;
+  --sui-choice-control-mark-transform: translateX(
+    calc(var(--sui-choice-control-track-size) - var(--sui-choice-control-size))
+  );
+  --sui-choice-control-mark-transform-unchecked: none;
+}
+
+/* translateX has no logical direction, so the thumb's travel is reversed by hand */
+.choiceControl[data-kind="switch"]:dir(rtl) {
+  --sui-choice-control-mark-transform: translateX(
+    calc(var(--sui-choice-control-size) - var(--sui-choice-control-track-size))
   );
 }
 
 .input {
   display: grid;
   flex: none;
-  place-content: center;
-  inline-size: var(--sui-choice-control-size);
+  align-content: center;
+  justify-content: var(--sui-choice-control-mark-justify);
+  inline-size: var(--sui-choice-control-track-size);
   block-size: var(--sui-choice-control-size);
   margin: 0;
   border: var(--sui-choice-control-border-width) solid var(--sui-choice-control-border);
@@ -56,18 +80,15 @@
 .input::before {
   inline-size: var(--sui-choice-control-mark-size);
   block-size: var(--sui-choice-control-mark-size);
-  background-color: var(--sui-choice-control-mark);
+  margin-inline-start: var(--sui-choice-control-mark-inset);
+  border-radius: var(--sui-choice-control-mark-radius);
+  background-color: var(--sui-choice-control-mark-unchecked);
   content: "";
-  transform: scale(0);
+  clip-path: var(--sui-choice-control-mark-shape);
+  transform: var(--sui-choice-control-mark-transform-unchecked);
   transition:
     background-color 120ms ease,
-    transform var(--sui-choice-control-spring);
-}
-
-/* A spring on the way out would overshoot to a negative scale and flash a mirrored mark, so only checking bounces */
-.input:not(:checked)::before {
-  transition-duration: 120ms;
-  transition-timing-function: ease-out;
+    transform 120ms ease-out;
 }
 
 .input:checked {
@@ -75,40 +96,13 @@
   --sui-choice-control-border: var(--sui-choice-control-fill-border);
 }
 
+/* A spring on the way out would overshoot to a negative scale and flash a mirrored mark, so only checking bounces */
 .input:checked::before {
-  transform: none;
-}
-
-.choiceControl[data-kind="checkbox"] > .input::before {
-  clip-path: polygon(0% 56%, 12% 44%, 38% 70%, 88% 12%, 100% 22%, 38% 94%);
-}
-
-.choiceControl[data-kind="radio"] > .input::before {
-  border-radius: 50%;
-}
-
-.choiceControl[data-kind="switch"] > .input {
-  justify-content: start;
-  inline-size: var(--sui-choice-control-track-size);
-}
-
-.choiceControl[data-kind="switch"] > .input::before {
-  margin-inline-start: var(--sui-choice-control-thumb-inset);
-  border-radius: 50%;
-  transform: none;
-}
-
-.choiceControl[data-kind="switch"] > .input:not(:checked)::before {
-  background-color: var(--sui-choice-control-thumb);
-}
-
-.choiceControl[data-kind="switch"] > .input:checked::before {
-  transform: translateX(var(--sui-choice-control-thumb-travel));
-}
-
-/* translateX has no logical direction, so the thumb's travel is reversed by hand */
-.choiceControl[data-kind="switch"] > .input:dir(rtl) {
-  --sui-choice-control-thumb-travel: calc(var(--sui-choice-control-size) - var(--sui-choice-control-track-size));
+  background-color: var(--sui-choice-control-mark);
+  transform: var(--sui-choice-control-mark-transform);
+  transition:
+    background-color 120ms ease,
+    transform var(--sui-choice-control-spring);
 }
 
 .input:focus-visible {
@@ -116,8 +110,7 @@
   outline-offset: 2px;
 }
 
-.choiceControl[data-kind="checkbox"] > .input[aria-invalid="true"],
-.choiceControl[data-kind="switch"] > .input[aria-invalid="true"] {
+.input[type="checkbox"][aria-invalid="true"] {
   --sui-choice-control-border: var(--sui-color-danger-text, #b91c1c);
 }
 
@@ -133,7 +126,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .input::before {
+  .input::before,
+  .input:checked::before {
     transition: background-color 120ms ease;
   }
 }
@@ -149,6 +143,6 @@
   }
 
   .choiceControl[data-kind="switch"] {
-    --sui-choice-control-thumb: CanvasText;
+    --sui-choice-control-mark-unchecked: CanvasText;
   }
 }
