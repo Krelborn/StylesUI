@@ -14,7 +14,7 @@ export type DividerOrientation = "horizontal" | "vertical";
 /**
  * Props for `Divider`: its own props plus every native hr prop
  */
-export interface DividerProps extends Omit<BoxProps<"hr">, "as"> {
+export interface DividerProps extends Omit<BoxProps<"hr">, "as" | "children" | "dangerouslySetInnerHTML"> {
   /**
    * Direction the divider runs. A vertical divider needs a flex row to stretch. Defaults to `horizontal`.
    */

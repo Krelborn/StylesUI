@@ -1,4 +1,4 @@
-import { createRef } from "react";
+import { createRef, isValidElement } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -63,5 +63,21 @@ describe("Divider", () => {
   it("must reject as when it is given", () => {
     // @ts-expect-error Divider always renders an hr
     render(<Divider as="div" />);
+  });
+
+  it("must reject children when they are given", () => {
+    // Built without rendering, since React throws when an hr is given content
+    // @ts-expect-error an hr takes no children
+    const element = <Divider>Section</Divider>;
+
+    expect(isValidElement(element)).toBe(true);
+  });
+
+  it("must reject dangerouslySetInnerHTML when it is given", () => {
+    // Built without rendering, since React throws when an hr is given content
+    // @ts-expect-error an hr takes no inner HTML
+    const element = <Divider dangerouslySetInnerHTML={{ __html: "Section" }} />;
+
+    expect(isValidElement(element)).toBe(true);
   });
 });
