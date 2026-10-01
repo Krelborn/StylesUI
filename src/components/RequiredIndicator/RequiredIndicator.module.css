@@ -1,0 +1,4 @@
+.requiredIndicator {
+  margin-inline-start: var(--sui-space-1, 0.25rem);
+  color: var(--sui-color-danger-text, #b91c1c);
+}

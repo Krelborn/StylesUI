@@ -1,0 +1,92 @@
+.textControl {
+  --sui-text-control-bg: var(--sui-color-background, #fff);
+  --sui-text-control-fg: var(--sui-color-text, #111827);
+  --sui-text-control-border: var(--sui-color-input-border, #6b7280);
+  --sui-text-control-border-width: var(--sui-border-width, 1px);
+  --sui-text-control-radius: var(--sui-radius-control, 4px);
+  --sui-text-control-padding-x: var(--sui-space-4, 1rem);
+  --sui-text-control-padding-y: var(--sui-space-2, 0.5rem);
+  --sui-text-control-font-size: var(--sui-font-size-md, 1rem);
+
+  padding: var(--sui-text-control-padding-y) var(--sui-text-control-padding-x);
+  border: var(--sui-text-control-border-width) solid var(--sui-text-control-border);
+  border-radius: var(--sui-text-control-radius);
+  background-color: var(--sui-text-control-bg);
+  color: var(--sui-text-control-fg);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-text-control-font-size);
+  line-height: var(--sui-line-height-tight, 1.25);
+  transition: border-color 120ms ease;
+}
+
+.textControl[data-size="sm"] {
+  --sui-text-control-padding-x: var(--sui-space-3, 0.75rem);
+  --sui-text-control-padding-y: var(--sui-space-1, 0.25rem);
+  --sui-text-control-font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.textControl[data-size="lg"] {
+  --sui-text-control-padding-x: var(--sui-space-6, 1.5rem);
+  --sui-text-control-padding-y: var(--sui-space-3, 0.75rem);
+  --sui-text-control-font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+.textControl:where(textarea) {
+  --sui-text-control-radius: var(--sui-radius-md, 4px);
+
+  line-height: var(--sui-line-height-normal, 1.5);
+  resize: vertical;
+}
+
+.textControl:where(select) {
+  --sui-text-control-chevron-size: 0.375em;
+
+  padding-inline-end: calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) * 3);
+  background-image:
+    linear-gradient(
+      45deg,
+      transparent calc(50% - 1px),
+      currentColor calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    ),
+    linear-gradient(
+      135deg,
+      transparent calc(50% - 1px),
+      currentColor calc(50% - 1px) calc(50% + 1px),
+      transparent calc(50% + 1px)
+    );
+  /* The two strokes overlap by 1px so that pixel rounding cannot open a gap where they meet */
+  background-position:
+    right calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) - 1px) center,
+    right var(--sui-text-control-padding-x) center;
+  background-repeat: no-repeat;
+  background-size: var(--sui-text-control-chevron-size) var(--sui-text-control-chevron-size);
+  appearance: none;
+}
+
+/* background-position has no logical keywords, so the chevron is moved to the inline end by hand */
+.textControl:where(select):dir(rtl) {
+  background-position:
+    left var(--sui-text-control-padding-x) center,
+    left calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) - 1px) center;
+}
+
+.textControl::placeholder {
+  color: var(--sui-color-text-muted, #4b5563);
+  /* Firefox fades placeholders, which would take the muted colour below its contrast guarantee */
+  opacity: 1;
+}
+
+.textControl:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+.textControl[aria-invalid="true"] {
+  --sui-text-control-border: var(--sui-color-danger-text, #b91c1c);
+}
+
+.textControl:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

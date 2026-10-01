@@ -29,6 +29,8 @@ Install dependencies via `pnpm add` without hand-written versions so the latest 
 - `src/index.ts` is the only package entry. Each component lives in `src/components/<Name>/` (`<Name>.tsx`, `<Name>.module.css`, `<Name>.test.tsx`, `<Name>.stories.tsx`, `index.ts`) and is re-exported from `src/index.ts`.
 - `Box` is the polymorphic primitive other components should build on. `as` is constrained to `keyof JSX.IntrinsicElements`, and all other props (including `ref`, React 19 ref-as-prop, no `forwardRef`) are typed from the chosen element via `ComponentPropsWithRef`.
 - `Link` is the one exception to `as` being an element name: its `as` is `"a"` or a component that renders an anchor, such as a router's link. Its props are typed from that component, which it renders directly rather than through `Box`.
+- `src/forms/` holds what the form controls share: the `ControlSize` type, `FieldContext`, the `useFieldControl` hook that merges a surrounding `Field`'s id, description, invalid, required and disabled state into a control's props, and `hasContent`. `Field` provides the context and a control reads it only through the hook.
+- Each React context lives alone in its own `.ts` module under `src/forms/`, never in a component file and never imported through a component barrel. A control can then read a context without pulling the component that provides it into a consumer's bundle.
 - Components read CSS custom properties with fallbacks (e.g. `var(--sui-space-2, 0.5rem)`) so consumers theme by overriding variables.
 - Global styles live in `src/styles/` (palette, tokens, `themes/`, modes, reset) and are built to `dist/styles.css`, exported as `@krelborn/stylesui/styles.css`. Themes set semantic tokens with `light-dark()`; `docs/design/concepts.md` describes the token tiers. `src/styles/themeTokens.test.ts` checks that every theme declares the same tokens; `--_sui-*` properties are private helpers of one theme and exempt.
 - The React Compiler runs at build time (`@rolldown/plugin-babel` + `reactCompilerPreset`), so output imports `react/compiler-runtime`. Don't add manual `useMemo`/`useCallback` for memoization.
@@ -59,6 +61,7 @@ Vitest has a `unit` project (jsdom, `src/**/*.test.{ts,tsx}`) and four `storyboo
 - `.storybook/preview.tsx` sets `a11y.test: "todo"` globally (violations reported, not failing). A story file whose stories have no violations sets `a11y.test: "error"` in its meta, so new violations fail the test run.
 - Interactive components get a `KeyboardInteraction` story whose play function checks tab order, visible focus, keyboard activation and any WAI-ARIA APG keyboard pattern and ARIA state the widget has. Assert `focusRingContrast(element) >= 3` (WCAG 1.4.11) on the focused element, and use `textContrast(element, background)` for states axe can't reach, such as hover (WCAG 1.4.3); both live in `src/test/colorContrast.ts`, and the four storybook projects cover every mode and theme.
 - `src/styles/Contrast.stories.tsx` asserts every semantic colour pairing a theme guarantees (text 4.5:1, focus ring 3:1) in every mode and theme. When a component starts relying on a new pairing, add it there.
+- Every interactive target is at least 24px in both dimensions, or spaced to pass axe's `target-size` rule (WCAG 2.5.8), which runs on every story.
 
 ## Storybook
 
