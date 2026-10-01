@@ -8,6 +8,7 @@ describe("hasContent", () => {
     { description: "undefined", node: undefined },
     { description: "null", node: null },
     { description: "false", node: false },
+    { description: "true", node: true },
     { description: "an empty string", node: "" },
   ])("must return false when the node is $description", ({ node }) => {
     expect(hasContent(node)).toBe(false);

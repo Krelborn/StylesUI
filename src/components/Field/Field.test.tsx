@@ -86,6 +86,7 @@ describe("Field", () => {
   it.each([
     { description: "an empty string", empty: "" },
     { description: "false", empty: false },
+    { description: "true", empty: true },
     { description: "null", empty: null },
   ])("must not describe the control when the description is $description", ({ empty }) => {
     render(
@@ -111,6 +112,7 @@ describe("Field", () => {
   it.each([
     { description: "an empty string", empty: "" },
     { description: "false", empty: false },
+    { description: "true", empty: true },
     { description: "null", empty: null },
   ])("must not mark the control invalid or describe it when the error is $description", ({ empty }) => {
     render(
