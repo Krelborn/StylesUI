@@ -8,7 +8,9 @@
     // Claude Code hook scripts, run from .claude/settings.json commands
     ".claude/hooks/*.mjs",
     // Font stylesheets published unbuilt through package.json exports
-    "fonts/*.css"
+    "fonts/*.css",
+    // Setup file of the storybook test projects, which vite.config.ts builds in a loop fallow does not read
+    "src/test/storybookSetup.ts"
   ],
   "ignorePatterns": [".storybook/**"],
   // Registered only in .storybook/main.ts, which ignorePatterns hides; addon-docs is also imported by

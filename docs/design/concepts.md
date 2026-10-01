@@ -74,3 +74,5 @@ Every semantic colour is defined once with `light-dark()`, so light and dark var
 ### Box
 
 The Box component forms the base wrapper around all DOM elements. Never render DOM elements directly, instead render them using Box or use a pre-existing wrapper component that itself renders a Box.
+
+The one exception is Link. Its `as` also accepts a component that renders an anchor, such as a router's link, and Link renders that component directly.

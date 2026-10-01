@@ -1,0 +1,36 @@
+.link {
+  /* A component given in `as` is not rendered through Box, which sets this for an anchor */
+  box-sizing: border-box;
+  /* --sui-link-color is never declared here, so an ancestor can set it for every link inside it */
+  color: var(--sui-link-color, var(--sui-color-primary, #2563eb));
+  font: inherit;
+  text-decoration-line: underline;
+  text-decoration-thickness: var(--sui-border-width, 1px);
+  text-underline-offset: 0.2em;
+}
+
+.link[data-tone="inherit"] {
+  color: inherit;
+}
+
+.link[data-underline="always"]:hover {
+  text-decoration-thickness: calc(var(--sui-border-width, 1px) * 2);
+}
+
+.link[data-underline="hover"] {
+  text-decoration-line: none;
+}
+
+.link[data-underline="hover"]:hover,
+.link[data-underline="hover"]:focus-visible {
+  text-decoration-line: underline;
+}
+
+.link[aria-current]:not([aria-current="false"]) {
+  font-weight: var(--sui-font-weight-bold, 700);
+}
+
+.link:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}

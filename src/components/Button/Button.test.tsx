@@ -3,6 +3,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { transitionedProperties } from "../../test/transitionedProperties";
+
 import { Button } from "./Button";
 import buttonCss from "./Button.module.css?raw";
 
@@ -100,9 +102,3 @@ describe("Button", () => {
     expect(properties).not.toContain("outline");
   });
 });
-
-function transitionedProperties(css: string): string[] {
-  return [...css.matchAll(/transition(?:-property)?:\s*([^;]+);/g)].flatMap(([, value]) =>
-    value.split(",").map((transition) => transition.trim().split(/\s+/)[0])
-  );
-}
