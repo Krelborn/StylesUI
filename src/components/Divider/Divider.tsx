@@ -24,6 +24,9 @@ export interface DividerProps extends Omit<BoxProps<"hr">, "as" | "children" | "
 /**
  * Thin rule that separates content, exposed to assistive technology as a separator
  *
+ * The rule is decorative and its colour is not held to 3:1 contrast. Where it is the only visible sign of a break,
+ * set `--sui-divider-color: var(--sui-color-input-border)`.
+ *
  * @example
  * <Divider />
  */
