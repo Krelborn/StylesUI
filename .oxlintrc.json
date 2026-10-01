@@ -6,7 +6,8 @@
     "jsx-a11y": {
       "polymorphicPropName": "as",
       "components": {
-        "Button": "button"
+        "Button": "button",
+        "Divider": "hr"
       }
     }
   },
