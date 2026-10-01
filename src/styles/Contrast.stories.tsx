@@ -3,7 +3,7 @@ import { expect } from "storybook/test";
 
 import { Box } from "../components/Box";
 import { Text } from "../components/Text";
-import { focusRingContrast, textContrast } from "../test/colorContrast";
+import { borderContrast, focusRingContrast, textContrast } from "../test/colorContrast";
 
 interface ColourPair {
   /**
@@ -16,6 +16,15 @@ interface ColourPair {
    */
   foreground: string;
 }
+
+const statuses = ["danger", "success", "warning", "info"] as const;
+
+const statusTextPairs: readonly ColourPair[] = statuses.flatMap((status) => [
+  { background: "background", foreground: `${status}-text` },
+  { background: "surface", foreground: `${status}-text` },
+  { background: `${status}-subtle`, foreground: `${status}-text` },
+  { background: `${status}-subtle`, foreground: "text" },
+]);
 
 const textPairs: readonly ColourPair[] = [
   { background: "background", foreground: "text" },
@@ -33,9 +42,21 @@ const textPairs: readonly ColourPair[] = [
   { background: "warning", foreground: "on-warning" },
   { background: "danger", foreground: "on-danger" },
   { background: "info", foreground: "on-info" },
+  { background: "secondary-subtle", foreground: "text" },
+  ...statusTextPairs,
 ];
 
-const focusRingBackgrounds = ["background", "surface", "shadow"] as const;
+const focusRingBackgrounds = [
+  "background",
+  "surface",
+  "shadow",
+  "danger-subtle",
+  "success-subtle",
+  "warning-subtle",
+  "info-subtle",
+] as const;
+
+const inputBorderBackgrounds = ["background", "surface"] as const;
 
 function pairLabel({ background, foreground }: ColourPair): string {
   return `${foreground} on ${background}`;
@@ -84,8 +105,8 @@ export const TextPairs: Story = {
 };
 
 /**
- * The focus ring keeps at least 3:1 against the page, a surface, and the shadow-coloured lip a
- * button's ring crosses in themes where controls have depth
+ * The focus ring keeps at least 3:1 against the page, a surface, each status subtle, and the
+ * shadow-coloured lip a button's ring crosses in themes where controls have depth
  */
 export const FocusRing: Story = {
   render: () => (
@@ -116,6 +137,36 @@ export const FocusRing: Story = {
       }
 
       await expect(focusRingContrast(ring), `focus-ring on ${background}`).toBeGreaterThanOrEqual(3);
+    }
+  },
+};
+
+/**
+ * The form control border keeps at least 3:1 against the page and a surface
+ */
+export const InputBorder: Story = {
+  render: () => (
+    <Box style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+      {inputBorderBackgrounds.map((background) => (
+        <Box key={background} style={{ backgroundColor: `var(--sui-color-${background})`, padding: "0.75rem" }}>
+          <Box
+            as="figure"
+            style={{
+              border: "var(--sui-border-width) solid var(--sui-color-input-border)",
+              height: "2rem",
+              width: "4rem",
+            }}
+            aria-label={`input-border on ${background}`}
+          />
+        </Box>
+      ))}
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    for (const background of inputBorderBackgrounds) {
+      const border = canvas.getByRole("figure", { name: `input-border on ${background}` });
+
+      await expect(borderContrast(border), `input-border on ${background}`).toBeGreaterThanOrEqual(3);
     }
   },
 };
