@@ -7,7 +7,7 @@ import { TextControl } from "../TextControl";
 /**
  * Props for `Textarea`: its own props plus every native textarea prop
  */
-export interface TextareaProps extends Omit<BoxProps<"textarea">, "as" | "children"> {
+export interface TextareaProps extends Omit<BoxProps<"textarea">, "as" | "children" | "dangerouslySetInnerHTML"> {
   /**
    * Padding and font size of the textarea, matching the `Button` sizes. Defaults to `md`.
    */

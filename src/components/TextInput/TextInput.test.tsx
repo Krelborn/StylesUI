@@ -127,6 +127,14 @@ describe("TextInput", () => {
     expect(isValidElement(element)).toBe(true);
   });
 
+  it("must reject dangerouslySetInnerHTML when it is given", () => {
+    // Built without rendering, since React throws when an input is given inner HTML
+    // @ts-expect-error an input takes no inner HTML
+    const element = <TextInput dangerouslySetInnerHTML={{ __html: "Email" }} aria-label="Email" />;
+
+    expect(isValidElement(element)).toBe(true);
+  });
+
   it("must reject as when it is given", () => {
     // @ts-expect-error TextInput always renders an input
     render(<TextInput as="textarea" aria-label="Email" />);

@@ -12,7 +12,10 @@ export type TextInputType = "email" | "number" | "password" | "search" | "tel" |
 /**
  * Props for `TextInput`: its own props plus every native input prop
  */
-export interface TextInputProps extends Omit<BoxProps<"input">, "as" | "children" | "size" | "type"> {
+export interface TextInputProps extends Omit<
+  BoxProps<"input">,
+  "as" | "children" | "dangerouslySetInnerHTML" | "size" | "type"
+> {
   /**
    * Height of the input, matching the `Button` sizes. Takes the place of the native `size` attribute. Defaults
    * to `md`.

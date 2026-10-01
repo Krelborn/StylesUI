@@ -96,6 +96,14 @@ describe("Textarea", () => {
     expect(isValidElement(element)).toBe(true);
   });
 
+  it("must reject dangerouslySetInnerHTML when it is given", () => {
+    // Built without rendering, since React throws when a textarea is given inner HTML
+    // @ts-expect-error a textarea takes its text from value or defaultValue
+    const element = <Textarea dangerouslySetInnerHTML={{ __html: "Hello" }} aria-label="Message" />;
+
+    expect(isValidElement(element)).toBe(true);
+  });
+
   it("must reject as when it is given", () => {
     // @ts-expect-error Textarea always renders a textarea
     render(<Textarea as="input" aria-label="Message" />);
