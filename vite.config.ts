@@ -7,9 +7,19 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vite";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
+import type { BrowserCommand } from "vitest/node";
 
 const storybookModes = ["light", "dark"];
 const storybookThemes = ["default", "playful"];
+
+/**
+ * Moves the real pointer off the page, so the story about to render is not under it
+ *
+ * @param context the command context, holding the page the story runs in
+ */
+const movePointerOffPage: BrowserCommand = async ({ page }) => {
+  await page.mouse.move(-1000, -1000);
+};
 
 // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
 // Imported by .storybook/main.ts, which fallow's ignorePatterns excludes from analysis
@@ -85,11 +95,13 @@ export default defineConfig({
             ],
             test: {
               name: `storybook-${mode}-${theme}`,
+              setupFiles: ["src/test/storybookSetup.ts"],
               browser: {
                 enabled: true,
                 headless: true,
                 provider: playwright(),
                 instances: [{ browser: "chromium" as const }],
+                commands: { movePointerOffPage },
               },
             },
           };
