@@ -7,10 +7,12 @@
       "polymorphicPropName": "as",
       "components": {
         "Button": "button",
+        "Checkbox": "input",
         "Divider": "hr",
         "Link": "a",
         "Select": "select",
         "SkipLink": "a",
+        "Switch": "input",
         "Textarea": "textarea",
         "TextInput": "input"
       }
