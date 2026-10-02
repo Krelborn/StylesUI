@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { UserEvent } from "@testing-library/user-event";
 import userEvent from "@testing-library/user-event";
 import type { JSX, ReactNode } from "react";
@@ -301,6 +301,33 @@ describe("useTooltip", () => {
     expect(escapePrevented).toEqual([true, false]);
   });
 
+  it("must leave Escape to the page when open is controlled and onOpenChange is omitted", async () => {
+    const { user } = setUpTest();
+    const escapePrevented: boolean[] = [];
+    const listening = new AbortController();
+    render(<Example open={true} />);
+    window.addEventListener("keydown", (event) => escapePrevented.push(event.defaultPrevented), {
+      signal: listening.signal,
+    });
+
+    await user.keyboard("{Escape}");
+    listening.abort();
+
+    expect(escapePrevented).toEqual([false]);
+    expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
+  });
+
+  it("must leave Escape to the trigger when it ends a text composition", async () => {
+    const { user } = setUpTest();
+    render(<FieldExample />);
+    await user.tab();
+
+    const escapeNotPrevented = fireEvent.keyDown(elements.displayNameInput, { isComposing: true, key: "Escape" });
+
+    expect(escapeNotPrevented).toBe(true);
+    expect(elements.visibleTooltip).toHaveAccessibleName("Use the name people know you by");
+  });
+
   it("must hide the tooltip when the trigger is pressed", async () => {
     const { advance, user } = setUpTest();
     render(<Example />);
@@ -562,6 +589,9 @@ const elements = {
   },
   get cancelButton() {
     return screen.getByRole("button", { name: "Cancel" });
+  },
+  get displayNameInput() {
+    return screen.getByRole("textbox", { name: "Display name" });
   },
   get publishButton() {
     return screen.getByRole("button", { name: "Publish" });

@@ -71,7 +71,8 @@ interface OverlayState {
 
 /**
  * Holds an overlay's open state, controlled or uncontrolled, and hides an open overlay on Escape. An Escape that
- * hides the overlay has its default action prevented, so a dialog around the trigger stays open.
+ * hides the overlay has its default action prevented, so a dialog around the trigger stays open. Escape is left alone
+ * while it ends a text composition, and when the overlay cannot close because it is controlled with no `onOpenChange`.
  *
  * @param options the initial or controlled open state, the delays and the change callback
  * @returns the overlay's id, the `anchor-name` that ties it to its trigger, whether it is open, and the requests that
@@ -121,7 +122,9 @@ export function useOverlay({
   }
 
   const hideOnEscape = useEffectEvent((event: KeyboardEvent) => {
-    if (event.key === "Escape") {
+    const canClose = controlledOpen === undefined || onOpenChange !== undefined;
+
+    if (event.key === "Escape" && !event.isComposing && canClose) {
       event.preventDefault();
       request(false, 0);
     }
