@@ -114,6 +114,8 @@ describe("Field", () => {
     { description: "false", empty: false },
     { description: "true", empty: true },
     { description: "null", empty: null },
+    { description: "an empty array", empty: [] },
+    { description: "an empty fragment", empty: <></> },
   ])("must not mark the control invalid or describe it when the error is $description", ({ empty }) => {
     render(
       <Field error={empty} label="Email">
