@@ -1,0 +1,15 @@
+.radioGroup {
+  --sui-radio-group-gap: var(--sui-space-2, 0.5rem);
+
+  display: flex;
+  gap: var(--sui-radio-group-gap);
+}
+
+.radioGroup[data-orientation="vertical"] {
+  flex-direction: column;
+}
+
+.radioGroup[data-orientation="horizontal"] {
+  flex-flow: row wrap;
+  gap: var(--sui-radio-group-gap) var(--sui-space-4, 1rem);
+}

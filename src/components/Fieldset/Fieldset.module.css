@@ -1,0 +1,33 @@
+.fieldset {
+  --sui-fieldset-gap: var(--sui-space-1, 0.25rem);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-fieldset-gap);
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  line-height: var(--sui-line-height-normal, 1.5);
+}
+
+/* A legend is not a flex item, so the gap after it is its own margin */
+.legend {
+  margin-block-end: var(--sui-fieldset-gap);
+  padding: 0;
+  font-weight: var(--sui-font-weight-control, 500);
+}
+
+.fieldset:disabled .legend {
+  opacity: 0.5;
+}
+
+.description {
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.error {
+  color: var(--sui-color-danger-text, #b91c1c);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+}
