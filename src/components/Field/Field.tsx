@@ -4,11 +4,16 @@ import { useId } from "react";
 
 import type { FieldContextValue } from "../../forms";
 import { FieldContext, hasContent } from "../../forms";
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 import { RequiredIndicator } from "../RequiredIndicator";
 
 import styles from "./Field.module.css";
+
+/**
+ * Elements a `Field` can render: block containers that can hold its label, description, control and error
+ */
+export type FieldElement = "div" | "li" | "section";
 
 interface FieldOwnProps {
   /**
@@ -48,7 +53,7 @@ interface FieldOwnProps {
  * Props for `Field`: its own props plus every prop supported by the element given in `as`
  */
 // Spelled out rather than PolymorphicProps<E, FieldOwnProps>, whose own props react-docgen cannot read for the docs
-export type FieldProps<E extends BoxElement = "div"> = FieldOwnProps & Omit<BoxProps<E>, keyof FieldOwnProps>;
+export type FieldProps<E extends FieldElement = "div"> = FieldOwnProps & Omit<BoxProps<E>, keyof FieldOwnProps>;
 
 /**
  * Wraps one form control with a label, a description and an error message, and links them to the control so the
@@ -59,7 +64,7 @@ export type FieldProps<E extends BoxElement = "div"> = FieldOwnProps & Omit<BoxP
  *   <TextInput />
  * </Field>
  */
-export function Field<E extends BoxElement = "div">({
+export function Field<E extends FieldElement = "div">({
   as,
   className,
   controlId,

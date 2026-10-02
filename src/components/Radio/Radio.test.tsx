@@ -1,6 +1,6 @@
 import { render as renderBase, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
+import { createRef, isValidElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { RadioGroupContext } from "../../forms";
@@ -176,6 +176,14 @@ describe("Radio", () => {
     );
 
     expect(elements.email).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it("must reject dangerouslySetInnerHTML when it is given", () => {
+    // Built without rendering, since React throws when an input is given inner HTML
+    // @ts-expect-error an input takes no inner HTML
+    const element = <Radio dangerouslySetInnerHTML={{ __html: "Email" }} aria-label="Email" value="email" />;
+
+    expect(isValidElement(element)).toBe(true);
   });
 
   it("must render the group's name when it is inside a group", () => {

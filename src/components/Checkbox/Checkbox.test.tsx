@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
+import { createRef, isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";
@@ -145,6 +145,14 @@ describe("Checkbox", () => {
     render(<Checkbox as="textarea">Accept terms</Checkbox>);
 
     expect(elements.checkbox).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it("must reject dangerouslySetInnerHTML when it is given", () => {
+    // Built without rendering, since React throws when an input is given inner HTML
+    // @ts-expect-error an input takes no inner HTML
+    const element = <Checkbox dangerouslySetInnerHTML={{ __html: "Accept terms" }} aria-label="Accept terms" />;
+
+    expect(isValidElement(element)).toBe(true);
   });
 
   it("must leave only colour transitions in the choice control stylesheet when reduced motion is requested", () => {

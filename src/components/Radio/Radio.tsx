@@ -9,7 +9,10 @@ import { ChoiceControl } from "../ChoiceControl";
  * Props for `Radio`: its own props plus every native input prop. `className` and `style` go to the wrapping
  * label; `ref` and every other prop go to the input.
  */
-export interface RadioProps extends Omit<BoxProps<"input">, "as" | "children" | "type" | "value"> {
+export interface RadioProps extends Omit<
+  BoxProps<"input">,
+  "as" | "children" | "dangerouslySetInnerHTML" | "type" | "value"
+> {
   /**
    * Label shown beside the button, which names the radio. Without it, give the radio an accessible name, for
    * example with `aria-label`.

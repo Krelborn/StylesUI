@@ -25,10 +25,11 @@ Most components are polymorphic in the same way, so pick the element that fits t
 The rest render the element their job needs and accept the props of that element. What each
 component renders:
 
-- **Any element, given in `as`**: `Box`, `Card`, `Center`, `Cluster`, `Cover`, `Field`, `Frame`,
-  `Grid`, `PageLayout`, `Prose`, `Row`, `Sidebar`, `Stack`, `Switcher`, `Text`, `Theme` and
+- **Any element, given in `as`**: `Box`, `Card`, `Center`, `Cluster`, `Cover`, `Frame`, `Grid`,
+  `PageLayout`, `Prose`, `Row`, `Sidebar`, `Stack`, `Switcher`, `Text`, `Theme` and
   `VisuallyHidden`.
 - **A `span`, `a` or `button`, given in `as`**: `Badge`.
+- **A `div`, `li` or `section`, given in `as`**: `Field`.
 - **One fixed element**: `Alert` (`div`), `Button` (`button`), `Divider` (`hr`), `Fieldset` and
   `RadioGroup` (`fieldset`), `Heading` (`h1` to `h6`, from `level`), `Select` (`select`),
   `SkipLink` (`a`), `Textarea` (`textarea`) and `TextInput` (`input`).

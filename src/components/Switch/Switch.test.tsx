@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef } from "react";
+import { createRef, isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { Field } from "../Field";
@@ -153,6 +153,16 @@ describe("Switch", () => {
     render(<Switch as="textarea">Email notifications</Switch>);
 
     expect(elements.switch).toBeInstanceOf(HTMLInputElement);
+  });
+
+  it("must reject dangerouslySetInnerHTML when it is given", () => {
+    // Built without rendering, since React throws when an input is given inner HTML
+    const element = (
+      // @ts-expect-error an input takes no inner HTML
+      <Switch dangerouslySetInnerHTML={{ __html: "Email notifications" }} aria-label="Email notifications" />
+    );
+
+    expect(isValidElement(element)).toBe(true);
   });
 });
 
