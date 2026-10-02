@@ -84,7 +84,8 @@ interface TooltipTriggerProps {
   onPointerEnter: PointerEventHandler<HTMLElement>;
 
   /**
-   * Hides the tooltip after the hide delay, for a mouse or pen, unless the trigger has keyboard focus
+   * Cancels a pending show and hides the tooltip after the hide delay, for a mouse or pen, unless keyboard focus
+   * opened the tooltip and it is still open
    */
   onPointerLeave: PointerEventHandler<HTMLElement>;
 
@@ -127,8 +128,9 @@ const defaultDelay: Required<OverlayDelay> = { hide: 150, show: 400 };
  * `getOverlayProps()` on the `Tooltip`. The tooltip opens after the show delay when a mouse or pen rests on the
  * trigger and at once when the trigger takes keyboard focus. It stays open while the pointer is over the tooltip, and
  * hides after the hide delay once the pointer leaves both, or at once on blur, on Escape and when the trigger is
- * pressed. Only one tooltip is open at a time, and while one is open, or for 300ms after it closes, the next opens
- * without its show delay.
+ * pressed. A tooltip that keyboard focus opened stays open when the pointer leaves, until blur or Escape. Only one
+ * tooltip is open at a time, and while one is open, or for 300ms after it closes, the next opens without its show
+ * delay.
  *
  * @param options open state, delays, placement and how the tooltip relates to its trigger
  * @returns prop getters for the trigger and the `Tooltip`, and whether the tooltip is open
@@ -153,7 +155,7 @@ export function useTooltip({
     onOpenChange,
     open: controlledOpen,
   });
-  const hasKeyboardFocus = useRef(false);
+  const keyboardHoldsOpen = useRef(false);
   const hideForCoordinator = useEffectEvent(() => overlay.hide());
   const { id, open } = overlay;
 
@@ -164,6 +166,12 @@ export function useTooltip({
 
     return claimTooltip(id, () => hideForCoordinator());
   }, [id, open]);
+
+  useEffect(() => {
+    if (!open) {
+      keyboardHoldsOpen.current = false;
+    }
+  }, [open]);
 
   function handleTriggerPointerEnter(event: PointerEvent<HTMLElement>): void {
     if (event.pointerType === "touch") {
@@ -178,21 +186,21 @@ export function useTooltip({
   }
 
   function handlePointerLeave(event: PointerEvent<HTMLElement>): void {
-    if (event.pointerType !== "touch" && !hasKeyboardFocus.current) {
+    if (event.pointerType !== "touch" && !(keyboardHoldsOpen.current && open)) {
       overlay.hideAfterDelay();
     }
   }
 
   function handleFocus(event: FocusEvent<HTMLElement>): void {
-    hasKeyboardFocus.current = event.currentTarget.matches(":focus-visible");
+    keyboardHoldsOpen.current = event.currentTarget.matches(":focus-visible");
 
-    if (hasKeyboardFocus.current) {
+    if (keyboardHoldsOpen.current) {
       overlay.show();
     }
   }
 
   function handleBlur(): void {
-    hasKeyboardFocus.current = false;
+    keyboardHoldsOpen.current = false;
     overlay.hide();
   }
 

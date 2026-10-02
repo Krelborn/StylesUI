@@ -1,4 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
+import type { UserEvent } from "@testing-library/user-event";
 import userEvent from "@testing-library/user-event";
 import type { JSX, ReactNode } from "react";
 import { useState } from "react";
@@ -130,6 +131,18 @@ describe("useTooltip", () => {
     expect(elements.visibleTooltip).toBeNull();
   });
 
+  it("must not show the tooltip when the pointer leaves before the show delay", async () => {
+    const { advance, user } = setUpTest();
+    render(<Example />);
+
+    await user.hover(elements.publishButton);
+    advance(200);
+    await user.unhover(elements.publishButton);
+    advance(2000);
+
+    expect(elements.visibleTooltip).toBeNull();
+  });
+
   it("must stay open when the pointer moves from the trigger onto the tooltip", async () => {
     const { advance, user } = setUpTest();
     render(<Example />);
@@ -206,6 +219,58 @@ describe("useTooltip", () => {
     advance(1000);
 
     expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
+  });
+
+  it.each([
+    { dismiss: (user: UserEvent) => user.keyboard("{Escape}"), dismissal: "Escape" },
+    { dismiss: (user: UserEvent) => user.click(elements.publishButton), dismissal: "pressing the trigger" },
+  ])(
+    "must not show the tooltip when the pointer leaves before the show delay after $dismissal hid a keyboard-opened tooltip",
+    async ({ dismiss }) => {
+      const { advance, user } = setUpTest();
+      render(<Example />);
+      await user.tab();
+      await dismiss(user);
+      await user.unhover(elements.publishButton);
+      advance(1000);
+
+      await user.hover(elements.publishButton);
+      advance(50);
+      await user.unhover(elements.publishButton);
+      advance(2000);
+
+      expect(elements.visibleTooltip).toBeNull();
+    }
+  );
+
+  it("must hide the tooltip after the hide delay when the pointer opened it after Escape hid a keyboard-opened one", async () => {
+    const { advance, user } = setUpTest();
+    render(<Example />);
+    await user.tab();
+    await user.keyboard("{Escape}");
+    advance(1000);
+    await user.hover(elements.publishButton);
+    advance(400);
+
+    await user.unhover(elements.publishButton);
+    advance(150);
+
+    expect(elements.visibleTooltip).toBeNull();
+  });
+
+  it("must not request to open when the pointer leaves before the show delay of a focused tooltip held closed", async () => {
+    const { advance, user } = setUpTest();
+    const onOpenChange = vi.fn();
+    render(<Example onOpenChange={onOpenChange} open={false} />);
+    await user.tab();
+    onOpenChange.mockClear();
+
+    await user.hover(elements.publishButton);
+    advance(50);
+    await user.unhover(elements.publishButton);
+    advance(2000);
+
+    expect(onOpenChange).not.toHaveBeenCalled();
   });
 
   it("must hide the tooltip and keep focus on the trigger when Escape is pressed", async () => {
