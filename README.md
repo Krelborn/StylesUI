@@ -87,7 +87,7 @@ Other lightningcss-based tools need the equivalent `targets`.
 
 ## Requirements
 
-- React 19
+- React 19.2 or later
 
 ## Development
 
