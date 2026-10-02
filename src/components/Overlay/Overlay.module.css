@@ -1,0 +1,30 @@
+/* Zero specificity, so the class of the component built on Overlay wins; author styles still beat the browser's [popover] defaults */
+:where(.overlay) {
+  inset: auto;
+  margin: var(--sui-space-2, 0.5rem);
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.overlay[data-placement="top"] {
+  position-area: top;
+  position-try-fallbacks: flip-block;
+}
+
+.overlay[data-placement="bottom"] {
+  position-area: bottom;
+  position-try-fallbacks: flip-block;
+}
+
+.overlay[data-placement="start"] {
+  position-area: inline-start;
+  position-try-fallbacks: flip-inline;
+}
+
+.overlay[data-placement="end"] {
+  position-area: inline-end;
+  position-try-fallbacks: flip-inline;
+}
