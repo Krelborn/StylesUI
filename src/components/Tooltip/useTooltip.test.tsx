@@ -1,6 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX, ReactNode } from "react";
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Box } from "../Box";
@@ -393,6 +394,18 @@ describe("useTooltip", () => {
     expect(screen.getAllByRole("tooltip")).toHaveLength(1);
     expect(elements.visibleTooltip).toHaveAccessibleName("Publishes it later");
   });
+
+  it("must hide the open tooltip when another opens and the parent's onOpenChange re-renders both", async () => {
+    const { advance, user } = setUpTest();
+    render(<OpenChangeCounterExample />);
+    await user.hover(elements.publishButton);
+    advance(400);
+
+    await user.hover(elements.archiveButton);
+
+    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+    expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
+  });
 });
 
 interface ExampleProps extends UseTooltipOptions {
@@ -424,6 +437,19 @@ function Example({
     <>
       <Button {...tooltip.getTriggerProps(triggerProps)}>{label}</Button>
       <Tooltip {...tooltip.getOverlayProps()}>{children}</Tooltip>
+    </>
+  );
+}
+
+function OpenChangeCounterExample(): JSX.Element {
+  const [openChanges, setOpenChanges] = useState(0);
+
+  return (
+    <>
+      <Example label="Archive" onOpenChange={() => setOpenChanges(openChanges + 1)}>
+        Hides it from subscribers
+      </Example>
+      <Example onOpenChange={() => setOpenChanges(openChanges + 1)} />
     </>
   );
 }

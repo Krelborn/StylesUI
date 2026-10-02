@@ -1,5 +1,5 @@
 import type { CSSProperties, FocusEvent, FocusEventHandler, PointerEvent, PointerEventHandler } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 import type { OverlayDelay, OverlayPlacement } from "../../overlays";
 import { mergeProps, useOverlay } from "../../overlays";
@@ -154,15 +154,16 @@ export function useTooltip({
     open: controlledOpen,
   });
   const hasKeyboardFocus = useRef(false);
-  const { hide, id, open } = overlay;
+  const hideForCoordinator = useEffectEvent(() => overlay.hide());
+  const { id, open } = overlay;
 
   useEffect(() => {
     if (!open) {
       return;
     }
 
-    return claimTooltip(id, hide);
-  }, [hide, id, open]);
+    return claimTooltip(id, () => hideForCoordinator());
+  }, [id, open]);
 
   function handleTriggerPointerEnter(event: PointerEvent<HTMLElement>): void {
     if (event.pointerType === "touch") {
