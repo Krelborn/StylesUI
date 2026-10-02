@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { JSX } from "react";
+import type { JSX, PointerEventHandler } from "react";
 
 import type { OverlayPlacement } from "../../overlays";
 import type { BoxProps } from "../Box";
@@ -20,6 +20,16 @@ export interface TooltipOverlayProps {
    * The tooltip's id, which the trigger's `aria-describedby` or `aria-labelledby` points at. From `getOverlayProps`.
    */
   id: string;
+
+  /**
+   * Keeps the tooltip open while the pointer is over it. From `getOverlayProps`.
+   */
+  onPointerEnter?: PointerEventHandler<HTMLElement>;
+
+  /**
+   * Hides the tooltip after the hide delay once the pointer leaves it. From `getOverlayProps`.
+   */
+  onPointerLeave?: PointerEventHandler<HTMLElement>;
 
   /**
    * Whether the tooltip is shown. From `getOverlayProps`.

@@ -66,4 +66,4 @@ export { VisuallyHidden } from "./components/VisuallyHidden";
 export type { VisuallyHiddenProps } from "./components/VisuallyHidden";
 export type { ControlSize } from "./forms";
 export type { Alignment, Justification, Space } from "./layout";
-export type { OverlayPlacement } from "./overlays";
+export type { OverlayDelay, OverlayPlacement } from "./overlays";

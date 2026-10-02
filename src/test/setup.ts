@@ -1,6 +1,10 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
+
+// Testing Library's asyncWrapper waits on a setTimeout it only advances through Jest's global, so under Vitest's fake
+// timers every user-event call hangs without this.
+vi.stubGlobal("jest", { advanceTimersByTime: vi.advanceTimersByTime.bind(vi) });
 
 // jsdom has no Popover API and its default stylesheet hides every popover, because none ever matches :popover-open.
 // showPopover() marks a popover open instead, and this rule undoes the hiding for it.

@@ -1,6 +1,7 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, FocusEvent, FocusEventHandler, PointerEvent, PointerEventHandler } from "react";
+import { useRef } from "react";
 
-import type { OverlayPlacement } from "../../overlays";
+import type { OverlayDelay, OverlayPlacement } from "../../overlays";
 import { mergeProps, useOverlay } from "../../overlays";
 
 import type { TooltipOverlayProps } from "./Tooltip";
@@ -20,7 +21,18 @@ export interface UseTooltipOptions {
   defaultOpen?: boolean;
 
   /**
-   * Controls whether the tooltip is open
+   * Show and hide delays. Defaults to 400ms to show and 150ms to hide; an omitted field keeps its default. A hide
+   * delay too short for the pointer to cross from the trigger to the tooltip hides the tooltip on the way.
+   */
+  delay?: OverlayDelay;
+
+  /**
+   * Called with the requested open state whenever the tooltip asks to open or close
+   */
+  onOpenChange?: (open: boolean) => void;
+
+  /**
+   * Controls whether the tooltip is open. The hook then only reports through `onOpenChange`.
    */
   open?: boolean;
 
@@ -49,6 +61,31 @@ interface TooltipTriggerProps {
    * The tooltip's id when it names the trigger
    */
   "aria-labelledby"?: string;
+
+  /**
+   * Hides the tooltip
+   */
+  onBlur: FocusEventHandler<HTMLElement>;
+
+  /**
+   * Shows the tooltip when focus arrives from the keyboard
+   */
+  onFocus: FocusEventHandler<HTMLElement>;
+
+  /**
+   * Hides the tooltip
+   */
+  onPointerDown: PointerEventHandler<HTMLElement>;
+
+  /**
+   * Shows the tooltip after the show delay, for a mouse or pen
+   */
+  onPointerEnter: PointerEventHandler<HTMLElement>;
+
+  /**
+   * Hides the tooltip after the hide delay, for a mouse or pen, unless the trigger has keyboard focus
+   */
+  onPointerLeave: PointerEventHandler<HTMLElement>;
 
   /**
    * Names the trigger as the tooltip's anchor
@@ -82,11 +119,16 @@ export interface UseTooltipResult {
   open: boolean;
 }
 
+const defaultDelay: Required<OverlayDelay> = { hide: 150, show: 400 };
+
 /**
  * Connects a `Tooltip` to the element it belongs to. Spread `getTriggerProps()` on that element and
- * `getOverlayProps()` on the `Tooltip`.
+ * `getOverlayProps()` on the `Tooltip`. The tooltip opens after the show delay when a mouse or pen rests on the
+ * trigger and at once when the trigger takes keyboard focus. It stays open while the pointer is over the tooltip, and
+ * hides after the hide delay once the pointer leaves both, or at once on blur, on Escape and when the trigger is
+ * pressed.
  *
- * @param options open state, placement and how the tooltip relates to its trigger
+ * @param options open state, delays, placement and how the tooltip relates to its trigger
  * @returns prop getters for the trigger and the `Tooltip`, and whether the tooltip is open
  *
  * @example
@@ -97,20 +139,60 @@ export interface UseTooltipResult {
  */
 export function useTooltip({
   defaultOpen = false,
+  delay,
+  onOpenChange,
   open: controlledOpen,
   placement = "top",
   relationship = "description",
 }: UseTooltipOptions = {}): UseTooltipResult {
-  const overlay = useOverlay({ defaultOpen, open: controlledOpen });
+  const overlay = useOverlay({
+    defaultOpen,
+    delay: { hide: delay?.hide ?? defaultDelay.hide, show: delay?.show ?? defaultDelay.show },
+    onOpenChange,
+    open: controlledOpen,
+  });
+  const hasKeyboardFocus = useRef(false);
+
+  function handleTriggerPointerEnter(event: PointerEvent<HTMLElement>): void {
+    if (event.pointerType !== "touch") {
+      overlay.showAfterDelay();
+    }
+  }
+
+  function handlePointerLeave(event: PointerEvent<HTMLElement>): void {
+    if (event.pointerType !== "touch" && !hasKeyboardFocus.current) {
+      overlay.hideAfterDelay();
+    }
+  }
+
+  function handleFocus(event: FocusEvent<HTMLElement>): void {
+    hasKeyboardFocus.current = event.currentTarget.matches(":focus-visible");
+
+    if (hasKeyboardFocus.current) {
+      overlay.show();
+    }
+  }
+
+  function handleBlur(): void {
+    hasKeyboardFocus.current = false;
+    overlay.hide();
+  }
 
   const overlayProps: TooltipOverlayProps = {
     anchorName: overlay.anchorName,
     id: overlay.id,
+    onPointerEnter: overlay.cancelDelay,
+    onPointerLeave: handlePointerLeave,
     open: overlay.open,
     placement,
   };
   const triggerProps: TooltipTriggerProps = {
     ...(relationship === "label" ? { "aria-labelledby": overlay.id } : { "aria-describedby": overlay.id }),
+    onBlur: handleBlur,
+    onFocus: handleFocus,
+    onPointerDown: overlay.hide,
+    onPointerEnter: handleTriggerPointerEnter,
+    onPointerLeave: handlePointerLeave,
     style: { anchorName: overlay.anchorName },
   };
 
