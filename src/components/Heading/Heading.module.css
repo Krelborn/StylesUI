@@ -1,4 +1,6 @@
 .heading {
+  /* Not left to the reset, whose universal rule loses to an ancestor that spaces its raw headings by type */
+  margin: 0;
   font-family: var(--sui-font-heading, system-ui, sans-serif);
   font-weight: var(--sui-font-weight-bold, 700);
   line-height: var(--sui-line-height-tight, 1.25);

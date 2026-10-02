@@ -1,4 +1,6 @@
 .text {
+  /* Not left to the reset, whose universal rule loses to an ancestor that spaces its raw paragraphs by type */
+  margin: 0;
   font-family: var(--sui-font-body, system-ui, sans-serif);
   line-height: var(--sui-line-height-normal, 1.5);
 }
