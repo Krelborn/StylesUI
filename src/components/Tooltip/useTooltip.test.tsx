@@ -374,6 +374,25 @@ describe("useTooltip", () => {
 
     expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
   });
+
+  it("must hide the open tooltip when a third tooltip opens after a hand-off", async () => {
+    const { advance, user } = setUpTest();
+    render(
+      <>
+        <Example />
+        <Example label="Archive">Hides it from subscribers</Example>
+        <Example label="Schedule">Publishes it later</Example>
+      </>
+    );
+    await user.tab();
+    await user.hover(elements.archiveButton);
+    advance(1000);
+
+    await user.hover(elements.scheduleButton);
+
+    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+    expect(elements.visibleTooltip).toHaveAccessibleName("Publishes it later");
+  });
 });
 
 interface ExampleProps extends UseTooltipOptions {
@@ -455,6 +474,9 @@ const elements = {
   },
   get publishButton() {
     return screen.getByRole("button", { name: "Publish" });
+  },
+  get scheduleButton() {
+    return screen.getByRole("button", { name: "Schedule" });
   },
   get visibleTooltip() {
     return screen.queryByRole("tooltip");
