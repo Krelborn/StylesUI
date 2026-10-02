@@ -10,21 +10,26 @@
 }
 
 .overlay[data-placement="top"] {
+  justify-self: anchor-center;
   position-area: top;
   position-try-fallbacks: flip-block;
 }
 
 .overlay[data-placement="bottom"] {
+  justify-self: anchor-center;
   position-area: bottom;
   position-try-fallbacks: flip-block;
 }
 
+/* The self- keywords follow the overlay's own direction, which it inherits from the trigger's container, not the viewport's */
 .overlay[data-placement="start"] {
-  position-area: inline-start;
+  align-self: anchor-center;
+  position-area: self-inline-start;
   position-try-fallbacks: flip-inline;
 }
 
 .overlay[data-placement="end"] {
-  position-area: inline-end;
+  align-self: anchor-center;
+  position-area: self-inline-end;
   position-try-fallbacks: flip-inline;
 }
