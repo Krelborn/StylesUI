@@ -6,6 +6,7 @@
     "jsx-a11y": {
       "polymorphicPropName": "as",
       "components": {
+        "Alert": "div",
         "Button": "button",
         "Checkbox": "input",
         "Divider": "hr",

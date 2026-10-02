@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { asArgType, childrenArgType } from "../../docs/argTypes";
+import { childrenArgType } from "../../docs/argTypes";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 import { Link } from "../Link";
@@ -50,7 +50,6 @@ const meta = {
   title: "Feedback/Alert",
   component: Alert,
   argTypes: {
-    as: asArgType("div", ["div", "section", "aside"]),
     children: childrenArgType,
   },
   parameters: {

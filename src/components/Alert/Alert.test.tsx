@@ -13,7 +13,7 @@ function queryIcon(): SVGElement | null {
 }
 
 describe("Alert", () => {
-  it("must render a div when as is omitted", () => {
+  it("must render a div when only children are given", () => {
     render(<Alert data-testid="alert">Saved</Alert>);
 
     expect(screen.getByTestId("alert").tagName).toBe("DIV");
@@ -29,16 +29,6 @@ describe("Alert", () => {
     render(<Alert role="alert">Saved</Alert>);
 
     expect(screen.getByRole("alert")).toHaveTextContent("Saved");
-  });
-
-  it("must render the element given in as when as is set", () => {
-    render(
-      <Alert as="section" aria-label="Import result">
-        Saved
-      </Alert>
-    );
-
-    expect(screen.getByRole("region", { name: "Import result" })).toHaveTextContent("Saved");
   });
 
   it("must apply the info tone when it is omitted", () => {
@@ -153,5 +143,10 @@ describe("Alert", () => {
   it("must reject a tone when it is not supported", () => {
     // @ts-expect-error "error" is not an AlertTone
     render(<Alert tone="error">Saved</Alert>);
+  });
+
+  it("must reject as when it is given", () => {
+    // @ts-expect-error Alert always renders a div
+    render(<Alert as="section">Saved</Alert>);
   });
 });

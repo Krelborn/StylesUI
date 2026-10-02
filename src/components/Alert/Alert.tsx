@@ -2,7 +2,7 @@ import type { JSX, ReactNode } from "react";
 import { clsx } from "clsx";
 
 import { hasContent } from "../../forms";
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Alert.module.css";
@@ -13,7 +13,10 @@ import { AlertIcon } from "./AlertIcon";
  */
 export type AlertTone = "danger" | "info" | "success" | "warning";
 
-interface AlertOwnProps {
+/**
+ * Props for `Alert`: its own props plus every native div prop
+ */
+export interface AlertProps extends Omit<BoxProps<"div">, "as" | "title"> {
   /**
    * Icon shown before the content. Defaults to the icon for the tone; `null` or `false` shows none.
    */
@@ -30,12 +33,6 @@ interface AlertOwnProps {
    */
   tone?: AlertTone;
 }
-
-/**
- * Props for `Alert`: its own props plus every prop supported by the element given in `as`
- */
-// Spelled out rather than PolymorphicProps<E, AlertOwnProps>, whose own props react-docgen cannot read for the docs
-export type AlertProps<E extends BoxElement = "div"> = AlertOwnProps & Omit<BoxProps<E>, keyof AlertOwnProps>;
 
 /**
  * Inline message in one of four tones, with an icon for the tone and an optional title. It has no
@@ -55,20 +52,11 @@ export type AlertProps<E extends BoxElement = "div"> = AlertOwnProps & Omit<BoxP
  *   The card was declined. Check the details and try again.
  * </Alert>
  */
-export function Alert<E extends BoxElement = "div">({
-  as,
-  className,
-  icon,
-  title,
-  tone = "info",
-  ...rest
-}: AlertProps<E>): JSX.Element {
-  // Widened as in Box: AlertProps<E> already guarantees the props match `as`
-  const { children, ...boxProps } = rest as BoxProps<"div">;
+export function Alert({ children, className, icon, title, tone = "info", ...rest }: AlertProps): JSX.Element {
   const showIcon = icon !== null && icon !== false;
 
   return (
-    <Box {...boxProps} as={as as "div"} className={clsx(styles.alert, className)} data-tone={tone}>
+    <Box {...rest} className={clsx(styles.alert, className)} data-tone={tone}>
       {showIcon ? (
         <Box as="span" className={styles.icon}>
           {icon === undefined ? <AlertIcon tone={tone} /> : icon}
