@@ -10,7 +10,7 @@ import styles from "./ChoiceControl.module.css";
 
 type ChoiceControlKind = "checkbox" | "radio" | "switch";
 
-interface ChoiceControlProps extends Omit<BoxProps<"input">, "as" | "children" | "type"> {
+interface ChoiceControlProps extends Omit<BoxProps<"input">, "as" | "children" | "dangerouslySetInnerHTML" | "type"> {
   /**
    * Label shown beside the control, which names it
    */

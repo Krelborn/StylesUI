@@ -7,7 +7,7 @@ import { ChoiceControl } from "../ChoiceControl";
  * Props for `Checkbox`: its own props plus every native input prop. `className` and `style` go to the wrapping
  * label; `ref` and every other prop go to the input.
  */
-export interface CheckboxProps extends Omit<BoxProps<"input">, "as" | "children" | "type"> {
+export interface CheckboxProps extends Omit<BoxProps<"input">, "as" | "children" | "dangerouslySetInnerHTML" | "type"> {
   /**
    * Label shown beside the box, which names the checkbox. Without it, give the checkbox an accessible name, for
    * example with `aria-label` or the `label` of the `Field` around it.
