@@ -65,7 +65,7 @@ const preview: Preview = {
     },
     options: {
       storySort: {
-        order: ["Introduction", "Guides", ["Theming", "Composition"], "Foundations", "*"],
+        order: ["Introduction", "Guides", ["Theming", "Composition", "Forms"], "Foundations", "*"],
       },
     },
   },

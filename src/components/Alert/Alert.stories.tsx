@@ -174,10 +174,14 @@ export const CustomIcon: Story = {
 /**
  * An alert has no role, so a screen reader reads it in place. For an error raised by an action,
  * such as a submitted form, set `role="alert"` so it is announced straight away. For a quiet
- * update that is not urgent, set `aria-live="polite"` instead:
+ * update that is not urgent, set `aria-live="polite"` instead. Screen readers announce a polite
+ * region reliably only when it is on the page before its content changes, so keep the element
+ * with `aria-live` rendered and render the alert inside it:
  *
  * ```tsx
- * <Alert tone="success" aria-live="polite">Draft saved</Alert>
+ * <Box aria-live="polite">
+ *   {isSaved && <Alert tone="success">Draft saved</Alert>}
+ * </Box>
  * ```
  */
 export const AsErrorSummary: Story = {

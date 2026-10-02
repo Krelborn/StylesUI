@@ -18,7 +18,7 @@ node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules ./node
 - [GENERAL] Previews had component CSS but no tokens or themes -> the converter only collected the per-component CSS imported by the JS entry -> `cssEntry: "dist/styles.css"`.
 - [GENERAL] Playful theme fonts did not ship -> `fonts/playful.css` only `@import`s `@fontsource-variable/*` -> `extraFonts` points at the two fontsource `wght.css` files.
 - `! preview decorator bundle failed` (woff2 has no loader) prints on every build. Left as is, with no `cfg.provider`: the decorator only sets `data-sui-theme="default"` and `data-sui-mode="system"` on the document, which is what `:root` already gets from `styles.css`.
-- Story titles Contrast, Tokens and BlogPage are not components -> `titleMap` excludes them.
+- Story titles Contrast, Tokens, BlogPage and ContactForm are not components -> `titleMap` excludes them.
 - ThemeShowcase (`src/styles/ThemeShowcase.stories.tsx`) is mapped onto `Theme` in `titleMap`, so the Theme card shows every theme and mode. Its title puts the Theme card in the `foundations` group. `cardMode: "column"` keeps the four-up grid at full width.
 - Center, Grid, Sidebar, Switcher: `[GRID_OVERFLOW]` wide -> `cardMode: "column"`.
 - PageLayout: `min-block-size: 100dvh` -> `cardMode: "single"` so the card is full-bleed.

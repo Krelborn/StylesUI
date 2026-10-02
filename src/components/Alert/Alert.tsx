@@ -1,5 +1,5 @@
-import type { JSX, ReactNode } from "react";
 import { clsx } from "clsx";
+import type { JSX, ReactNode } from "react";
 
 import { hasContent } from "../../forms";
 import type { BoxProps } from "../Box";
@@ -37,7 +37,9 @@ export interface AlertProps extends Omit<BoxProps<"div">, "as" | "title"> {
 /**
  * Inline message in one of four tones, with an icon for the tone and an optional title. It has no
  * role, so screen readers read it in place. Set `role="alert"` for an error raised by an action, or
- * `aria-live="polite"` for a quiet update.
+ * `aria-live="polite"` for a quiet update. Screen readers announce a polite region reliably only when
+ * it is on the page before its content changes, so keep the element with `aria-live` rendered and
+ * render the alert inside it.
  *
  * @example
  * <Alert title="Scheduled maintenance" tone="warning">
@@ -45,7 +47,9 @@ export interface AlertProps extends Omit<BoxProps<"div">, "as" | "title"> {
  * </Alert>
  *
  * @example
- * <Alert tone="success" aria-live="polite">Draft saved</Alert>
+ * <Box aria-live="polite">
+ *   {isSaved && <Alert tone="success">Draft saved</Alert>}
+ * </Box>
  *
  * @example
  * <Alert role="alert" title="Payment failed" tone="danger">

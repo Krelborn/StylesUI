@@ -71,6 +71,14 @@
     left calc(var(--sui-text-control-padding-x) + var(--sui-text-control-chevron-size) - 1px) center;
 }
 
+/* Forced colours drops gradient backgrounds, so the native arrow stands in for the chevron */
+@media (forced-colors: active) {
+  .textControl:where(select) {
+    padding-inline-end: var(--sui-text-control-padding-x);
+    appearance: auto;
+  }
+}
+
 .textControl::placeholder {
   color: var(--sui-color-text-muted, #4b5563);
   /* Firefox fades placeholders, which would take the muted colour below its contrast guarantee */

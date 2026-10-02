@@ -320,6 +320,28 @@ describe("RadioGroup", () => {
     expect(elements.group).toBeInTheDocument();
   });
 
+  it("must reject aria-invalid when it is given", () => {
+    renderBase(
+      // @ts-expect-error RadioGroup is marked invalid by its error
+      <RadioGroup label="Contact method" aria-invalid="true">
+        <Radio value="email">Email</Radio>
+      </RadioGroup>
+    );
+
+    expect(elements.group).not.toHaveAttribute("aria-invalid");
+  });
+
+  it("must reject aria-required when it is given", () => {
+    renderBase(
+      // @ts-expect-error RadioGroup is marked required by its required prop
+      <RadioGroup label="Contact method" aria-required="true">
+        <Radio value="email">Email</Radio>
+      </RadioGroup>
+    );
+
+    expect(elements.group).not.toHaveAttribute("aria-required");
+  });
+
   it("must reject a non-string value when one is given", () => {
     renderBase(
       // @ts-expect-error RadioGroup values are strings

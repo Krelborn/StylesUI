@@ -1,5 +1,5 @@
-import type { JSX } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { JSX } from "react";
 import { expect, userEvent } from "storybook/test";
 
 import { asArgType } from "../../docs/argTypes";

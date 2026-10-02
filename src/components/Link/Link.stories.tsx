@@ -1,5 +1,5 @@
-import type { ComponentPropsWithRef, JSX, MouseEvent } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ComponentPropsWithRef, JSX, MouseEvent } from "react";
 import { expect, fn, userEvent } from "storybook/test";
 
 import { childrenArgType } from "../../docs/argTypes";

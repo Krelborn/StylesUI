@@ -1,5 +1,5 @@
-import type { JSX } from "react";
 import { clsx } from "clsx";
+import type { JSX } from "react";
 
 import type { BoxElement, BoxProps } from "../Box";
 import { Box } from "../Box";

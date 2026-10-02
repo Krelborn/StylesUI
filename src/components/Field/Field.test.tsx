@@ -1,7 +1,7 @@
-import type { JSX } from "react";
-import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { JSX } from "react";
+import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 
 import type { FieldControlProps } from "../../forms";

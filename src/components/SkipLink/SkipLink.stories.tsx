@@ -9,6 +9,8 @@ import { Text } from "../Text";
 
 import { SkipLink } from "./SkipLink";
 
+const longLabel = "Skip past the site navigation, the search form and the list of recent posts to the main content";
+
 const meta = {
   title: "Navigation/SkipLink",
   component: SkipLink,
@@ -66,5 +68,28 @@ export const KeyboardInteraction: Story = {
     await expect(parseFloat(getComputedStyle(skipLink).outlineWidth)).toBeGreaterThanOrEqual(2);
     await expect(focusRingContrast(skipLink)).toBeGreaterThanOrEqual(3);
     await expect(textContrast(skipLink)).toBeGreaterThanOrEqual(4.5);
+  },
+};
+
+/**
+ * A long label, such as a translated one, wraps when the link shows, so the link and its focus
+ * ring stay inside the viewport
+ */
+export const LongLabel: Story = {
+  args: {
+    children: longLabel,
+  },
+  play: async ({ canvas }) => {
+    const skipLink = canvas.getByRole("link", { name: longLabel });
+
+    await userEvent.tab();
+    await expect(skipLink).toHaveFocus();
+
+    const { left, right } = skipLink.getBoundingClientRect();
+    const { outlineOffset, outlineWidth } = getComputedStyle(skipLink);
+    const ringReach = parseFloat(outlineWidth) + parseFloat(outlineOffset);
+
+    await expect(left - ringReach).toBeGreaterThanOrEqual(0);
+    await expect(right + ringReach).toBeLessThanOrEqual(document.documentElement.clientWidth);
   },
 };

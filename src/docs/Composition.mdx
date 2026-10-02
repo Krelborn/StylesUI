@@ -2,6 +2,8 @@ import { Canvas, Meta } from "@storybook/addon-docs/blocks";
 
 import * as BoxStories from "../components/Box/Box.stories";
 import * as CardStories from "../components/Card/Card.stories";
+import * as LinkStories from "../components/Link/Link.stories";
+import * as ProseStories from "../components/Prose/Prose.stories";
 
 <Meta title="Guides/Composition" />
 
@@ -16,13 +18,71 @@ type-checked against the chosen element, so `href` is accepted with `as="a"` and
 
 <Canvas of={BoxStories.AsLink} />
 
-`Card`, `Text` and `Theme` are polymorphic in the same way, so pick the element that fits the
-content:
+Most components are polymorphic in the same way, so pick the element that fits the content:
 
 <Canvas of={CardStories.WithContent} />
 
-`Button` always renders a `button` and `Heading` renders the `h1`–`h6` element matching its
-`level`. Both accept every prop of that element.
+The rest render the element their job needs and accept the props of that element. What each
+component renders:
+
+- **Any element, given in `as`**: `Box`, `Card`, `Center`, `Cluster`, `Cover`, `Field`, `Frame`,
+  `Grid`, `PageLayout`, `Prose`, `Row`, `Sidebar`, `Stack`, `Switcher`, `Text`, `Theme` and
+  `VisuallyHidden`.
+- **A `span`, `a` or `button`, given in `as`**: `Badge`.
+- **One fixed element**: `Alert` (`div`), `Button` (`button`), `Divider` (`hr`), `Fieldset` and
+  `RadioGroup` (`fieldset`), `Heading` (`h1` to `h6`, from `level`), `Select` (`select`),
+  `SkipLink` (`a`), `Textarea` (`textarea`) and `TextInput` (`input`).
+- **An `input` inside the `label` that names it**: `Checkbox`, `Radio` and `Switch`.
+- **An `a`, or a component that renders one**: `Link`.
+
+A fixed-element component leaves out the native props it replaces, such as `size` on `TextInput`
+and `Select`. On `Checkbox`, `Radio` and `Switch`, `className` and `style` go to the label, and
+`ref` and every other prop go to the input.
+
+## Link and router components
+
+`Link` renders an anchor. Its `as` takes no other element, only a component that renders an
+anchor, such as your router's link. `Link` then accepts that component's props in place of the
+anchor's:
+
+```tsx
+<Link as={RouterLink} to="/settings" underline="hover">
+  Settings
+</Link>
+```
+
+<Canvas of={LinkStories.AsComponent} />
+
+`Link` passes the component a `className` and `data-*` attributes, and the component must pass
+them on to its anchor or the link is unstyled. Nothing checks that it does.
+
+Two limits come from how the component's props are read:
+
+- A link component whose props depend on a type parameter, such as one that checks `to` against
+  your routes, has them read at that parameter's constraint, so checking each link's `to` does not
+  work through `as`. Use the router's own way of wrapping an anchor component instead. TanStack
+  Router documents `createLink` for this.
+- A class component is accepted but cannot be given a `ref`.
+
+If your own `jsx-a11y` lint settings map `Link` to `a`, the `anchor-is-valid` rule reports a `Link`
+whose destination is the component's own prop, because it has no `href`, so disable the rule on
+that line.
+
+## Raw HTML in Prose
+
+`Prose` styles the raw elements inside it, for content that cannot be written one component per
+element, such as rendered markdown. Components and prose mix, with these rules:
+
+- A StylesUI component inside prose keeps every property its own class declares.
+- Prose spaces only the raw elements it styles. A component placed directly in prose gets no
+  spacing, so give it a margin from `--sui-prose-flow`, as the card below does.
+- A component rendered through `as` as an element prose styles, such as `<Text as="code">`, still
+  takes the prose properties it does not set itself.
+- A raw element inside a component inside prose, such as a bare `p` in a `Card`, is styled as
+  prose. There is no opt-out.
+- `size` scales the body text only. Headings keep the size of their level.
+
+<Canvas of={ProseStories.WithComponents} />
 
 ## Class names and styles
 
@@ -40,20 +100,20 @@ import type { JSX } from "react";
 import type { BoxElement, BoxProps, PolymorphicProps } from "@krelborn/stylesui";
 import { Box } from "@krelborn/stylesui";
 
-interface BadgeOwnProps {
+interface PillOwnProps {
   tone?: "info" | "success";
 }
 
-type BadgeProps<E extends BoxElement = "span"> = PolymorphicProps<E, BadgeOwnProps>;
+type PillProps<E extends BoxElement = "span"> = PolymorphicProps<E, PillOwnProps>;
 
-export function Badge<E extends BoxElement = "span">({ as, tone = "info", ...rest }: BadgeProps<E>): JSX.Element {
-  // BadgeProps<E> already guarantees the props match `as`
+export function Pill<E extends BoxElement = "span">({ as, tone = "info", ...rest }: PillProps<E>): JSX.Element {
+  // PillProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"span">;
 
   return <Box {...boxProps} as={(as ?? "span") as "span"} data-tone={tone} />;
 }
 
-<Badge as="a" href="/changelog" tone="success">
+<Pill as="a" href="/changelog" tone="success">
   Released
-</Badge>;
+</Pill>;
 ```

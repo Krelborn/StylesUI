@@ -18,7 +18,7 @@ export interface TextInputProps extends Omit<
 > {
   /**
    * Height of the input, matching the `Button` sizes. Takes the place of the native `size` attribute. Defaults
-   * to `md`.
+   * to `md`. The `sm` text is under 16px, which makes iOS Safari zoom the page when the input takes focus.
    */
   size?: ControlSize;
 

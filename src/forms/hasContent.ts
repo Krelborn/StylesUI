@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * Tells whether a node renders anything, so a `description` or `error` slot can be skipped when it is empty
+ * Tells whether a node holds a value other than an empty one, so an empty `description` or `error` slot can be
+ * skipped
  *
  * @param node the node to check
  * @returns false for `undefined`, `null`, a boolean and an empty string, otherwise true

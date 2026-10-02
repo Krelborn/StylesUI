@@ -1,5 +1,5 @@
-import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
+import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 
 import { Checkbox } from "../Checkbox";
@@ -234,6 +234,17 @@ describe("Fieldset", () => {
     );
 
     expect(elements.group.tagName).toBe("FIELDSET");
+  });
+
+  it("must reject aria-labelledby when it is given", () => {
+    render(
+      // @ts-expect-error Fieldset is always named by its legend
+      <Fieldset label="Notifications" aria-labelledby="other-name">
+        <Checkbox>Email</Checkbox>
+      </Fieldset>
+    );
+
+    expect(elements.group).toHaveAccessibleName("Notifications");
   });
 
   it("must reject a missing label when none is given", () => {

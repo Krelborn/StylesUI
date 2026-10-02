@@ -1,6 +1,6 @@
+import { clsx } from "clsx";
 import type { JSX, ReactNode } from "react";
 import { useId } from "react";
-import { clsx } from "clsx";
 
 import type { FieldContextValue } from "../../forms";
 import { FieldContext, hasContent } from "../../forms";

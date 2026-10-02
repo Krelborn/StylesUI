@@ -1,5 +1,5 @@
-import type { JSX, ReactNode } from "react";
 import { render as renderBase, screen } from "@testing-library/react";
+import type { JSX, ReactNode } from "react";
 import { describe, expect, it } from "vitest";
 
 import type { FieldContextValue } from "./FieldContext";

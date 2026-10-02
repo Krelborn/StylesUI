@@ -22,6 +22,7 @@
   z-index: var(--sui-skip-link-z-index);
   width: auto;
   height: auto;
+  max-inline-size: calc(100% - 2 * var(--sui-space-2, 0.5rem));
   margin: 0;
   padding: var(--sui-space-2, 0.5rem) var(--sui-space-4, 1rem);
   overflow: visible;
@@ -33,6 +34,7 @@
   font-size: var(--sui-font-size-md, 1rem);
   font-weight: var(--sui-font-weight-control, 500);
   line-height: var(--sui-line-height-tight, 1.25);
+  white-space: normal;
   text-decoration: none;
   outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
   outline-offset: 2px;
