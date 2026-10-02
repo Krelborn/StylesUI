@@ -332,6 +332,33 @@ export const KeyboardInteraction: Story = {
 };
 
 /**
+ * Tab moves along a row of buttons. Each button's tooltip shows as the button takes focus, and the tooltip of the
+ * button before it hides.
+ */
+export const TabBetweenTriggers: Story = {
+  render: ({ children }) => (
+    <Box style={{ display: "flex", gap: "0.5rem" }}>
+      <PublishButton>{children}</PublishButton>
+      <CopyLinkButton />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const publish = canvas.getByRole("button", { name: "Publish" });
+    const copyLink = canvas.getByRole("button", { name: "Copy link" });
+
+    await userEvent.tab();
+    await expect(publish).toHaveFocus();
+    await expect(await canvas.findByRole("tooltip", { name: "Sends to all subscribers" })).toBeInTheDocument();
+
+    await userEvent.tab();
+    await expect(copyLink).toHaveFocus();
+    await expect(copyLink.matches(":focus-visible")).toBe(true);
+    await expect(await canvas.findByRole("tooltip", { name: "Copy link" })).toBeInTheDocument();
+    await expect(canvas.queryByRole("tooltip", { name: "Sends to all subscribers" })).toBeNull();
+  },
+};
+
+/**
  * The pointer can move from the button onto its tooltip without the tooltip closing, and the tooltip closes shortly
  * after the pointer leaves both
  */
