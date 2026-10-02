@@ -1,0 +1,152 @@
+import { createRef } from "react";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+
+import type { AlertTone } from "./Alert";
+import { Alert } from "./Alert";
+
+const tones: AlertTone[] = ["danger", "info", "success", "warning"];
+
+// The default icon is hidden from assistive technology, so no accessible query can find it
+function queryIcon(): SVGElement | null {
+  return screen.getByTestId("alert").querySelector("svg");
+}
+
+describe("Alert", () => {
+  it("must render a div when only children are given", () => {
+    render(<Alert data-testid="alert">Saved</Alert>);
+
+    expect(screen.getByTestId("alert").tagName).toBe("DIV");
+  });
+
+  it("must have no role when none is given", () => {
+    render(<Alert data-testid="alert">Saved</Alert>);
+
+    expect(screen.getByTestId("alert")).not.toHaveAttribute("role");
+  });
+
+  it("must pass the role through when one is given", () => {
+    render(<Alert role="alert">Saved</Alert>);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Saved");
+  });
+
+  it("must apply the info tone when it is omitted", () => {
+    render(<Alert data-testid="alert">Saved</Alert>);
+
+    expect(screen.getByTestId("alert")).toHaveAttribute("data-tone", "info");
+  });
+
+  it.each(tones)("must apply the %s tone when it is set", (tone) => {
+    render(
+      <Alert tone={tone} data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(screen.getByTestId("alert")).toHaveAttribute("data-tone", tone);
+  });
+
+  it("must render the children when they are given", () => {
+    render(<Alert>Your changes are saved</Alert>);
+
+    expect(screen.getByText("Your changes are saved")).toBeInTheDocument();
+  });
+
+  it("must render the title when one is given", () => {
+    render(<Alert title="Heads up">Your changes are saved</Alert>);
+
+    expect(screen.getByText("Heads up")).toBeInTheDocument();
+  });
+
+  it("must render a node as the title when one is given", () => {
+    render(<Alert title={<em>Heads up</em>}>Your changes are saved</Alert>);
+
+    expect(screen.getByText("Heads up").tagName).toBe("EM");
+  });
+
+  it("must not set a title attribute when a title is given", () => {
+    render(
+      <Alert title="Heads up" data-testid="alert">
+        Your changes are saved
+      </Alert>
+    );
+
+    expect(screen.getByTestId("alert")).not.toHaveAttribute("title");
+    expect(screen.queryByTitle("Heads up")).not.toBeInTheDocument();
+  });
+
+  it.each(tones)("must render the default icon hidden from assistive technology for the %s tone", (tone) => {
+    render(
+      <Alert tone={tone} data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(queryIcon()).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("must render the icon in place of the default icon when one is given", () => {
+    render(
+      <Alert icon={<span>Tip</span>} data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(screen.getByText("Tip")).toBeInTheDocument();
+    expect(queryIcon()).toBeNull();
+  });
+
+  it.each([null, false])("must render no icon when icon is %s", (icon) => {
+    render(
+      <Alert icon={icon} data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(queryIcon()).toBeNull();
+    expect(screen.getByText("Saved")).toBeInTheDocument();
+  });
+
+  it("must forward native props when they are given", () => {
+    render(
+      <Alert id="import-result" data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(screen.getByTestId("alert")).toHaveAttribute("id", "import-result");
+  });
+
+  it("must merge className when one is given", () => {
+    render(
+      <Alert className="custom" data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(screen.getByTestId("alert")).toHaveClass("custom");
+  });
+
+  it("must forward ref when one is given", () => {
+    const ref = createRef<HTMLDivElement>();
+
+    render(
+      <Alert ref={ref} data-testid="alert">
+        Saved
+      </Alert>
+    );
+
+    expect(ref.current).toBe(screen.getByTestId("alert"));
+  });
+
+  it("must reject a tone when it is not supported", () => {
+    // @ts-expect-error "error" is not an AlertTone
+    render(<Alert tone="error">Saved</Alert>);
+  });
+
+  it("must reject as when it is given", () => {
+    // @ts-expect-error Alert always renders a div
+    render(<Alert as="section">Saved</Alert>);
+  });
+});
