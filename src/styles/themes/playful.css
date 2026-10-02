@@ -27,6 +27,8 @@
     color-mix(in srgb, var(--sui-violet-900) 60%, var(--sui-gray-500)),
     var(--sui-violet-200)
   );
+  --sui-color-tooltip: light-dark(var(--_sui-ink), color-mix(in srgb, var(--sui-violet-100), var(--sui-white)));
+  --sui-color-on-tooltip: light-dark(color-mix(in srgb, var(--sui-orange-100) 40%, var(--sui-white)), var(--_sui-plum));
   --sui-color-focus-ring: light-dark(var(--sui-pink-600), var(--sui-yellow-300));
   --sui-color-shadow: light-dark(var(--_sui-ink), var(--sui-pink-600));
   --sui-color-success: light-dark(var(--sui-green-400), var(--sui-green-300));

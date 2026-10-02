@@ -18,6 +18,8 @@
   --sui-color-input-border: light-dark(var(--sui-gray-500), var(--sui-gray-400));
   --sui-color-text: light-dark(var(--sui-gray-900), var(--sui-gray-100));
   --sui-color-text-muted: light-dark(var(--sui-gray-600), var(--sui-gray-400));
+  --sui-color-tooltip: light-dark(var(--sui-gray-900), var(--sui-gray-100));
+  --sui-color-on-tooltip: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-focus-ring: light-dark(var(--sui-blue-500), var(--sui-blue-300));
   --sui-color-shadow: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
   --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));
