@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX } from "react";
-import { createRef } from "react";
+import { createRef, isValidElement } from "react";
 import { describe, expect, it } from "vitest";
 
 import type { FieldControlProps } from "../../forms";
@@ -197,22 +197,24 @@ describe("Field", () => {
 
   it("must render the element given in as when as is set", () => {
     render(
-      <Field as="fieldset" label="Email">
-        <Probe />
-      </Field>
+      <ul>
+        <Field as="li" label="Email">
+          <Probe />
+        </Field>
+      </ul>
     );
 
-    expect(screen.getByRole("group").tagName).toBe("FIELDSET");
+    expect(screen.getByRole("listitem")).toContainElement(elements.input);
   });
 
   it("must merge className when one is given", () => {
     render(
-      <Field as="fieldset" className="custom" label="Email">
+      <Field as="section" className="custom" label="Email" aria-label="Account">
         <Probe />
       </Field>
     );
 
-    expect(screen.getByRole("group")).toHaveClass("custom");
+    expect(screen.getByRole("region", { name: "Account" })).toHaveClass("custom");
   });
 
   it("must forward native props when they are given", () => {
@@ -247,13 +249,19 @@ describe("Field", () => {
     );
   });
 
-  it("must reject as when it is not an intrinsic element", () => {
-    render(
-      // @ts-expect-error "widget" is not a BoxElement
-      <Field as="widget" label="Email">
-        <Probe />
-      </Field>
-    );
+  it("must reject as when it is not a block container", () => {
+    const fields = [
+      // @ts-expect-error a field renders only as a div, li or section
+      <Field as="fieldset" key="fieldset" label="Email" />,
+      // @ts-expect-error a field renders only as a div, li or section
+      <Field as="label" htmlFor="email" key="label" label="Email" aria-label="Email" />,
+      // @ts-expect-error a field renders only as a div, li or section
+      <Field as="p" key="p" label="Email" />,
+      // @ts-expect-error a field renders only as a div, li or section
+      <Field as="span" key="span" label="Email" />,
+    ];
+
+    expect(fields.every((field) => isValidElement(field))).toBe(true);
   });
 });
 

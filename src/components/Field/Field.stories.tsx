@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
 
-import { asArgType } from "../../docs/argTypes";
 import { TextInput } from "../TextInput";
 
 import { Field } from "./Field";
@@ -13,7 +12,16 @@ const meta = {
     label: "Email",
   },
   argTypes: {
-    as: asArgType("div", ["div", "li", "section"]),
+    as: {
+      control: "select",
+      description:
+        "Element to render: a `div`, or an `li` or `section` where the field is a list item or a region. The field accepts every prop that element supports, including `ref`.",
+      options: ["div", "li", "section"],
+      table: {
+        defaultValue: { summary: "div" },
+        type: { summary: '"div" | "li" | "section"' },
+      },
+    },
     children: {
       control: false,
       description: "The one form control the field labels",

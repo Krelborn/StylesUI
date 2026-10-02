@@ -19,7 +19,7 @@ export type { CoverProps } from "./components/Cover";
 export { Divider } from "./components/Divider";
 export type { DividerOrientation, DividerProps } from "./components/Divider";
 export { Field } from "./components/Field";
-export type { FieldProps } from "./components/Field";
+export type { FieldElement, FieldProps } from "./components/Field";
 export { Fieldset } from "./components/Fieldset";
 export type { FieldsetProps } from "./components/Fieldset";
 export { Frame } from "./components/Frame";
