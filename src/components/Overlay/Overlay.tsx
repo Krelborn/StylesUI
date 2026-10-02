@@ -37,7 +37,8 @@ export function Overlay({ anchorName, className, open, placement, style, ...rest
   useEffect(() => {
     const element = popover.current;
 
-    if (element === null || !open) {
+    // Browsers inside the library's floor but below the overlay floor have no Popover API
+    if (element === null || !open || !("showPopover" in element)) {
       return;
     }
 

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, onTestFinished } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";
 
@@ -63,6 +63,22 @@ describe("Tooltip", () => {
     );
 
     expect(screen.getByRole("tooltip", { name: "Sends to all subscribers" })).toBeInTheDocument();
+  });
+
+  it("must still render when the browser has no Popover API", () => {
+    const showPopover = HTMLElement.prototype.showPopover;
+    Reflect.deleteProperty(HTMLElement.prototype, "showPopover");
+    onTestFinished(() => {
+      HTMLElement.prototype.showPopover = showPopover;
+    });
+
+    render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Sends to all subscribers");
   });
 
   it("must not transition when reduced motion is requested", () => {
