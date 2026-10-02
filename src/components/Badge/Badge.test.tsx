@@ -1,4 +1,4 @@
-import { createRef } from "react";
+import { createRef, isValidElement } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
@@ -73,5 +73,18 @@ describe("Badge", () => {
   it("must reject a variant when it is not supported", () => {
     // @ts-expect-error "outline" is not a BadgeVariant
     render(<Badge variant="outline">New</Badge>);
+  });
+
+  it("must reject as when it is an element a badge is not", () => {
+    // @ts-expect-error a badge renders only as a span, a link or a button
+    render(<Badge as="div">New</Badge>);
+  });
+
+  it("must reject as when it is a void element", () => {
+    // Built without rendering, since React throws when an input is given children
+    // @ts-expect-error a badge renders only as a span, a link or a button
+    const element = <Badge as="input">New</Badge>;
+
+    expect(isValidElement(element)).toBe(true);
   });
 });

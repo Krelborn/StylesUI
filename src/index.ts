@@ -1,7 +1,7 @@
 export { Alert } from "./components/Alert";
 export type { AlertProps, AlertTone } from "./components/Alert";
 export { Badge } from "./components/Badge";
-export type { BadgeProps, BadgeTone, BadgeVariant } from "./components/Badge";
+export type { BadgeElement, BadgeProps, BadgeTone, BadgeVariant } from "./components/Badge";
 export { Box } from "./components/Box";
 export type { BoxElement, BoxProps, PolymorphicProps } from "./components/Box";
 export { Button } from "./components/Button";

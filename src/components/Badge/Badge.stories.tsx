@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { asArgType, childrenArgType } from "../../docs/argTypes";
+import { childrenArgType } from "../../docs/argTypes";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 import { Cluster } from "../Cluster";
@@ -22,7 +22,16 @@ const meta = {
     children: "Beta",
   },
   argTypes: {
-    as: asArgType("span", ["span", "a", "button"]),
+    as: {
+      control: "select",
+      description:
+        "Element to render: a `span`, or an `a` or `button` for a badge that links or acts. The badge accepts every prop that element supports, including `ref`.",
+      options: ["span", "a", "button"],
+      table: {
+        defaultValue: { summary: "span" },
+        type: { summary: '"a" | "button" | "span"' },
+      },
+    },
     children: childrenArgType,
   },
   parameters: {

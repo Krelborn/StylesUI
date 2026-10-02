@@ -1,10 +1,15 @@
 import type { JSX } from "react";
 import { clsx } from "clsx";
 
-import type { BoxElement, BoxProps } from "../Box";
+import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Badge.module.css";
+
+/**
+ * Elements a `Badge` can render: a `span`, or an `a` or `button` for a badge that links or acts
+ */
+export type BadgeElement = "a" | "button" | "span";
 
 /**
  * Badge colours: the theme's status colours, its primary colour, or a neutral grey
@@ -32,7 +37,7 @@ interface BadgeOwnProps {
  * Props for `Badge`: its own props plus every prop supported by the element given in `as`
  */
 // Spelled out rather than PolymorphicProps<E, BadgeOwnProps>, whose own props react-docgen cannot read for the docs
-export type BadgeProps<E extends BoxElement = "span"> = BadgeOwnProps & Omit<BoxProps<E>, keyof BadgeOwnProps>;
+export type BadgeProps<E extends BadgeElement = "span"> = BadgeOwnProps & Omit<BoxProps<E>, keyof BadgeOwnProps>;
 
 /**
  * Small label for a tag, a status or a count
@@ -40,7 +45,7 @@ export type BadgeProps<E extends BoxElement = "span"> = BadgeOwnProps & Omit<Box
  * @example
  * <Badge tone="success" variant="solid">Published</Badge>
  */
-export function Badge<E extends BoxElement = "span">({
+export function Badge<E extends BadgeElement = "span">({
   as,
   className,
   tone = "neutral",
