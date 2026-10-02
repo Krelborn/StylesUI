@@ -412,7 +412,7 @@ describe("useTooltip", () => {
     await user.unhover(elements.publishButton);
     advance(150);
 
-    advance(149);
+    advance(299);
     await user.hover(elements.archiveButton);
 
     expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
