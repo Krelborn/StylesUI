@@ -18,7 +18,8 @@
         "SkipLink": "a",
         "Switch": "input",
         "Textarea": "textarea",
-        "TextInput": "input"
+        "TextInput": "input",
+        "Tooltip": "span"
       }
     }
   },

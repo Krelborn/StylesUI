@@ -43,6 +43,7 @@ const textPairs: readonly ColourPair[] = [
   { background: "danger", foreground: "on-danger" },
   { background: "info", foreground: "on-info" },
   { background: "secondary-subtle", foreground: "text" },
+  { background: "tooltip", foreground: "on-tooltip" },
   ...statusTextPairs,
 ];
 
@@ -74,7 +75,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Every text and background pairing the current theme guarantees, each at least 4.5:1
+ * Every text and background pairing the current theme guarantees: both tokens are declared, and each pair is at
+ * least 4.5:1
  */
 export const TextPairs: Story = {
   render: () => (
@@ -98,8 +100,12 @@ export const TextPairs: Story = {
   play: async ({ canvas }) => {
     for (const pair of textPairs) {
       const label = pairLabel(pair);
+      const element = canvas.getByText(label);
+      const style = getComputedStyle(element);
 
-      await expect(textContrast(canvas.getByText(label)), label).toBeGreaterThanOrEqual(4.5);
+      await expect(style.getPropertyValue(`--sui-color-${pair.background}`), `${label} background token`).not.toBe("");
+      await expect(style.getPropertyValue(`--sui-color-${pair.foreground}`), `${label} foreground token`).not.toBe("");
+      await expect(textContrast(element), label).toBeGreaterThanOrEqual(4.5);
     }
   },
 };
