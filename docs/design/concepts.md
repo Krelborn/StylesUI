@@ -120,3 +120,15 @@ Fieldset groups controls under a legend. Its `label` is the `legend`, `aria-labe
 An `error` renders below the control in `--sui-color-danger-text` and is linked with `aria-describedby`. It is not a live region, so a form's summary of errors is an Alert with `role="alert"`.
 
 The text controls share the internal TextControl, and the choice controls share the internal ChoiceControl. RequiredIndicator draws the asterisk. Shared code lives in `src/forms/`: the `ControlSize` type, the two contexts, the `useFieldControl` hook and `hasContent`, which tells whether a `description` or `error` has anything to render.
+
+### Overlays
+
+An overlay floats beside the element that opens it, its trigger. A hook owns each kind of overlay: it holds the open state, opens and closes the overlay in response to the trigger, and hands out prop getters, `getTriggerProps()` for the trigger and `getOverlayProps()` for the overlay component. A getter merges the consumer's own props with the hook's: where both set a handler, both run, the consumer's first; the hook's `aria-describedby` or `aria-labelledby` id comes before the consumer's; and `style` objects merge.
+
+The overlay is a `popover="manual"` element in the top layer, so no `overflow` clips it and no stacking context covers it. It stays in place in the DOM, so it inherits the theme and mode around it: render it inside the same `Theme` as its trigger. CSS anchor positioning places it on the side of the trigger given by `placement`, where `start` and `end` follow the writing direction around the trigger, and flips it to the opposite side when there is no room. Overlays need Chrome 129, Firefox 147 or Safari 26.
+
+Tooltip is the first overlay. `useTooltip` opens it after a delay when a mouse or pen rests on the trigger, and at once when the trigger takes keyboard focus (`:focus-visible`). A text field matches `:focus-visible` however it takes focus, so its tooltip also opens when it is clicked into. It hides after a delay once the pointer leaves both the trigger and the tooltip, so the pointer can move onto the tooltip, and at once on blur, on Escape and when the trigger is pressed. An Escape that hides a tooltip goes no further, so a dialog around the trigger stays open until the next Escape. One tooltip is open at a time, and while one is open, or for 300ms after it closes, the next opens without its delay.
+
+A tooltip describes its trigger (`aria-describedby`), or names it with `relationship: "label"` (`aria-labelledby`) when the trigger has no text of its own, such as an icon-only button. It holds text only, nothing interactive. A native `disabled` button cannot take focus, so keyboard users never reach its tooltip: use `aria-disabled` on a trigger whose tooltip they need.
+
+The tooltip's colours are `--sui-color-tooltip` and `--sui-color-on-tooltip`, which each theme sets to the inverse of body text on the page background.

@@ -71,6 +71,8 @@ Playful's buttons lift on hover and press down when clicked. When the OS asks fo
 
 Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
 
+`Tooltip` uses the Popover API and CSS anchor positioning, which need Chrome/Edge 129, Firefox 147 or Safari 26. With Vite, the CSS target below leaves its anchor positioning styles unchanged.
+
 ### Bundler CSS target
 
 Set your bundler's CSS target to at least Chrome/Edge 123, Firefox 120, Safari 17.5, or colour modes stop nesting: a lower target makes lightningcss rewrite `light-dark()` into fallback variables resolved once at `:root`. With Vite:
