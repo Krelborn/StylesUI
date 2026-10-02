@@ -38,6 +38,9 @@
     },
     "Theme": {
       "cardMode": "column"
+    },
+    "TextInput": {
+      "cardMode": "column"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"
