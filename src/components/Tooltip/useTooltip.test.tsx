@@ -289,6 +289,91 @@ describe("useTooltip", () => {
     expect(onFocus).toHaveBeenCalled();
     expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
   });
+
+  it("must hide the open tooltip when another tooltip opens", async () => {
+    const { user } = setUpTest();
+    render(
+      <>
+        <Example />
+        <Example label="Archive">Hides it from subscribers</Example>
+      </>
+    );
+    await user.tab();
+
+    await user.hover(elements.archiveButton);
+
+    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+    expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
+  });
+
+  it("must skip the show delay when another tooltip closed less than 300ms ago", async () => {
+    const { advance, user } = setUpTest();
+    render(
+      <>
+        <Example />
+        <Example label="Archive">Hides it from subscribers</Example>
+      </>
+    );
+    await user.hover(elements.publishButton);
+    advance(400);
+    await user.unhover(elements.publishButton);
+    advance(150);
+
+    advance(149);
+    await user.hover(elements.archiveButton);
+
+    expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
+  });
+
+  it("must wait for the show delay when the last tooltip closed 300ms ago", async () => {
+    const { advance, user } = setUpTest();
+    render(
+      <>
+        <Example />
+        <Example label="Archive">Hides it from subscribers</Example>
+      </>
+    );
+    await user.hover(elements.publishButton);
+    advance(400);
+    await user.unhover(elements.publishButton);
+    advance(150);
+
+    advance(300);
+    await user.hover(elements.archiveButton);
+
+    expect(elements.visibleTooltip).toBeNull();
+
+    advance(400);
+
+    expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
+  });
+
+  it("must open the next tooltip after its show delay when the open tooltip unmounts", async () => {
+    const { advance, user } = setUpTest();
+    const { rerender } = render(
+      <>
+        <Example key="publish" />
+        <Example key="archive" label="Archive">
+          Hides it from subscribers
+        </Example>
+      </>
+    );
+    await user.tab();
+
+    rerender(
+      <Example key="archive" label="Archive">
+        Hides it from subscribers
+      </Example>
+    );
+    advance(1000);
+    await user.hover(elements.archiveButton);
+
+    expect(elements.visibleTooltip).toBeNull();
+
+    advance(400);
+
+    expect(elements.visibleTooltip).toHaveAccessibleName("Hides it from subscribers");
+  });
 });
 
 interface ExampleProps extends UseTooltipOptions {
@@ -335,8 +420,14 @@ function FieldExample(): JSX.Element {
   );
 }
 
+let hoursAhead = 0;
+
 function setUpTest() {
+  // The tooltip coordinator keeps state across tests; starting each test an hour later keeps one test's closed
+  // tooltip from skipping the next test's show delay
+  hoursAhead += 1;
   vi.useFakeTimers();
+  vi.setSystemTime(Date.now() + hoursAhead * 3_600_000);
 
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
@@ -356,6 +447,9 @@ const copyIcon = (
 );
 
 const elements = {
+  get archiveButton() {
+    return screen.getByRole("button", { name: "Archive" });
+  },
   get cancelButton() {
     return screen.getByRole("button", { name: "Cancel" });
   },

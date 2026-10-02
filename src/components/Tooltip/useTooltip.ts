@@ -1,10 +1,11 @@
 import type { CSSProperties, FocusEvent, FocusEventHandler, PointerEvent, PointerEventHandler } from "react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import type { OverlayDelay, OverlayPlacement } from "../../overlays";
 import { mergeProps, useOverlay } from "../../overlays";
 
 import type { TooltipOverlayProps } from "./Tooltip";
+import { claimTooltip, isTooltipWarm } from "./tooltipCoordinator";
 
 /**
  * Whether a tooltip names its trigger or describes it
@@ -126,7 +127,8 @@ const defaultDelay: Required<OverlayDelay> = { hide: 150, show: 400 };
  * `getOverlayProps()` on the `Tooltip`. The tooltip opens after the show delay when a mouse or pen rests on the
  * trigger and at once when the trigger takes keyboard focus. It stays open while the pointer is over the tooltip, and
  * hides after the hide delay once the pointer leaves both, or at once on blur, on Escape and when the trigger is
- * pressed.
+ * pressed. Only one tooltip is open at a time, and while one is open, or for 300ms after it closes, the next opens
+ * without its show delay.
  *
  * @param options open state, delays, placement and how the tooltip relates to its trigger
  * @returns prop getters for the trigger and the `Tooltip`, and whether the tooltip is open
@@ -152,9 +154,24 @@ export function useTooltip({
     open: controlledOpen,
   });
   const hasKeyboardFocus = useRef(false);
+  const { hide, id, open } = overlay;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    return claimTooltip(id, hide);
+  }, [hide, id, open]);
 
   function handleTriggerPointerEnter(event: PointerEvent<HTMLElement>): void {
-    if (event.pointerType !== "touch") {
+    if (event.pointerType === "touch") {
+      return;
+    }
+
+    if (isTooltipWarm()) {
+      overlay.show();
+    } else {
       overlay.showAfterDelay();
     }
   }
