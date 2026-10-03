@@ -7,7 +7,7 @@
   "storybookConfigDir": ".storybook",
   "buildCmd": "pnpm build",
   "tsconfig": ".design-sync/tsconfig.json",
-  "cssEntry": "dist/styles.css",
+  "extraEntries": ["./.design-sync/global-styles.js"],
   "extraFonts": [
     "node_modules/@fontsource-variable/fredoka/wght.css",
     "node_modules/@fontsource-variable/nunito/wght.css"
@@ -41,6 +41,10 @@
     },
     "TextInput": {
       "cardMode": "column"
+    },
+    "Tooltip": {
+      "cardMode": "single",
+      "primaryStory": "Placement"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"
