@@ -16,7 +16,8 @@ export interface SegmentProps extends Omit<
   "as" | "children" | "dangerouslySetInnerHTML" | "type" | "value"
 > {
   /**
-   * The segment's label, which names it
+   * The segment's label, which names it. Without it, give the segment an accessible name, for example with
+   * `aria-label`.
    */
   children?: ReactNode;
 

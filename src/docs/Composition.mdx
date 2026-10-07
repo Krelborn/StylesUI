@@ -32,16 +32,16 @@ component renders:
 - **A `span`, `a` or `button`, given in `as`**: `Badge`.
 - **A `div`, `li` or `section`, given in `as`**: `Field`.
 - **One fixed element**: `Alert` (`div`), `Avatar` and `AvatarGroup` (`span`), `Button` (`button`),
-  `Code` (`code`), `Counter` (`span`), `Divider` (`hr`), `Fieldset` and `RadioGroup` (`fieldset`),
-  `Heading` (`h1` to `h6`, from `level`), `Kbd` (`kbd`), `Select` (`select`), `SkipLink` (`a`),
-  `StatusDot` (`span`), `Tabs`, `TabList` and `TabPanel` (`div`), `Tab` (`button`),
-  `Textarea` (`textarea`) and `TextInput` (`input`).
-- **An `input` inside the `label` that names it**: `Checkbox`, `Radio` and `Switch`.
+  `Code` (`code`), `Counter` (`span`), `Divider` (`hr`), `Fieldset`, `RadioGroup` and
+  `SegmentedControl` (`fieldset`), `Heading` (`h1` to `h6`, from `level`), `Kbd` (`kbd`),
+  `Select` (`select`), `SkipLink` (`a`), `StatusDot` (`span`), `Tabs`, `TabList` and `TabPanel`
+  (`div`), `Tab` (`button`), `Textarea` (`textarea`) and `TextInput` (`input`).
+- **An `input` inside the `label` that names it**: `Checkbox`, `Radio`, `Segment` and `Switch`.
 - **An `a`, or a component that renders one**: `Link`.
 
 A fixed-element component leaves out the native props it replaces, such as `size` on `TextInput`
-and `Select`. On `Checkbox`, `Radio` and `Switch`, `className` and `style` go to the label, and
-`ref` and every other prop go to the input.
+and `Select`. On `Checkbox`, `Radio`, `Segment` and `Switch`, `className` and `style` go to the label,
+and `ref` and every other prop go to the input.
 
 ## Link and router components
 
