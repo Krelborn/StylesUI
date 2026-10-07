@@ -27,6 +27,13 @@ describe("Avatar", () => {
     expect(screen.getByRole("img", { name: "Pat Lee" }).textContent).toBe("PL");
   });
 
+  it("must show the initials when src is empty", () => {
+    render(<Avatar name="Pat Lee" src="" />);
+
+    expect(screen.queryByRole("presentation")).toBeNull();
+    expect(screen.getByRole("img", { name: "Pat Lee" }).textContent).toBe("PL");
+  });
+
   it("must show the initials when the image fails to load", () => {
     render(<Avatar name="Pat Lee" src={patSource} />);
 

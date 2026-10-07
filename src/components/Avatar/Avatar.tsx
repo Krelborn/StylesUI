@@ -29,8 +29,8 @@ export interface AvatarProps extends Omit<BoxProps<"span">, "as" | "children" | 
   size?: AvatarSize;
 
   /**
-   * Image URL. Initials show while it is missing, and after it fails to load until `src` changes to a URL that has
-   * not failed.
+   * Image URL. Initials show while it is missing or empty, and after it fails to load until `src` changes to a URL
+   * that has not failed.
    */
   src?: string;
 }
@@ -53,7 +53,7 @@ export function Avatar({
   const [failedSource, setFailedSource] = useState<string | undefined>(undefined);
   const initials = initialsOf(name);
   const shownInitials = size === "xs" ? (Array.from(initials)[0] ?? "") : initials;
-  const showsImage = src !== undefined && src !== failedSource;
+  const showsImage = src !== undefined && src !== "" && src !== failedSource;
 
   return (
     <Box
