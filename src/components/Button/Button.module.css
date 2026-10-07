@@ -48,6 +48,14 @@
   --sui-button-border: var(--sui-color-primary, #2563eb);
 }
 
+.button[data-variant="ghost"] {
+  --sui-button-bg: transparent;
+  --sui-button-bg-hover: var(--sui-color-secondary-subtle, #f3f4f6);
+  --sui-button-fg: var(--sui-color-text, #111827);
+  --sui-button-border: transparent;
+  --sui-button-depth: 0px;
+}
+
 .button[data-size="sm"] {
   --sui-button-padding-x: var(--sui-space-3, 0.75rem);
   --sui-button-padding-y: var(--sui-space-1, 0.25rem);
@@ -78,6 +86,11 @@
   transform: translateY(var(--sui-button-depth));
   transition-duration: 120ms;
   transition-timing-function: ease-out;
+}
+
+.button[data-variant="ghost"]:active:not(:disabled) {
+  background-color: var(--sui-color-secondary, #e5e7eb);
+  color: var(--sui-color-on-secondary, #111827);
 }
 
 .button:focus-visible {
