@@ -138,6 +138,10 @@
   min-inline-size: 0;
 }
 
+.tabPanel[hidden] {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tab,
   .tab[data-variant="pill"][aria-selected="true"] {
@@ -162,6 +166,8 @@
 
   .tab[data-variant="pill"][aria-selected="true"] {
     border-color: Highlight;
+    background-color: Highlight;
+    color: HighlightText;
   }
 
   .tab[aria-disabled="true"] {

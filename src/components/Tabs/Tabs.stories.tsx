@@ -98,6 +98,7 @@ async function expectPillState(tab: HTMLElement, selected: boolean): Promise<voi
 const meta = {
   title: "Navigation/Tabs",
   component: Tabs,
+  subcomponents: { Tab, TabList, TabPanel },
   args: {
     defaultValue: "code",
     onValueChange: fn(),
@@ -244,8 +245,8 @@ export const Vertical: Story = {
 };
 
 /**
- * With `activation="manual"` the arrow keys only move focus, and Enter or Space selects. Use it when showing a panel
- * is slow.
+ * With `activation="manual"` the arrow keys only move focus, and a click, Enter or Space selects. Use it when showing
+ * a panel is slow.
  */
 export const ManualActivation: Story = {
   args: {
@@ -300,6 +301,40 @@ export const Disabled: Story = {
 
     await userEvent.click(issues);
     await expect(canvas.getByRole("tab", { name: "Code" })).toHaveAttribute("aria-selected", "true");
+  },
+};
+
+/**
+ * A class that sets `display` on a `TabPanel`, such as a flex layout for its content, does not show the panel while
+ * its tab is not selected
+ */
+export const StyledPanels: Story = {
+  render: (args) => (
+    <>
+      <style>{".styledPanel { display: flex; gap: 1rem; }"}</style>
+      <Tabs {...args}>
+        <TabList aria-label="Repository">
+          <Tab value="code">Code</Tab>
+          <Tab value="issues">Issues</Tab>
+        </TabList>
+        <TabPanel className="styledPanel" value="code">
+          <Text as="p">The files in the repository.</Text>
+        </TabPanel>
+        <TabPanel className="styledPanel" value="issues">
+          <Text as="p">Bugs and feature requests.</Text>
+        </TabPanel>
+      </Tabs>
+    </>
+  ),
+  play: async ({ canvas }) => {
+    const [codePanel, issuesPanel] = canvas.getAllByRole("tabpanel", { hidden: true });
+
+    await expect(getComputedStyle(codePanel).display).toBe("flex");
+    await expect(getComputedStyle(issuesPanel).display).toBe("none");
+
+    await userEvent.click(canvas.getByRole("tab", { name: "Issues" }));
+    await expect(getComputedStyle(issuesPanel).display).toBe("flex");
+    await expect(getComputedStyle(codePanel).display).toBe("none");
   },
 };
 
