@@ -1,0 +1,27 @@
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-3, 0.75rem);
+}
+
+.tabs[data-orientation="vertical"] {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.tabList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sui-space-1, 0.25rem);
+}
+
+.tabList[aria-orientation="vertical"] {
+  flex: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.tabPanel {
+  flex: 1;
+  min-inline-size: 0;
+}
