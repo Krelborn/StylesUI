@@ -1,0 +1,24 @@
+.avatarGroup {
+  --sui-avatar-group-ring: var(--sui-color-background, #fff);
+  --sui-avatar-group-ring-width: 2px;
+
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Each avatar declares its own --sui-avatar-size, so the overlap follows the avatar's size */
+.avatarGroup > [role="img"] {
+  box-shadow: 0 0 0 var(--sui-avatar-group-ring-width) var(--sui-avatar-group-ring);
+}
+
+.avatarGroup > [role="img"] + [role="img"] {
+  margin-inline-start: calc(var(--sui-avatar-size, 2rem) / -4);
+}
+
+.overflow {
+  margin-inline-start: var(--sui-space-1, 0.25rem);
+  color: var(--sui-color-text-muted, #4b5563);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  font-weight: var(--sui-font-weight-control, 500);
+}
