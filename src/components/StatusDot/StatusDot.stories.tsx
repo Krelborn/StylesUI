@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { CSSProperties } from "react";
 import { expect, within } from "storybook/test";
 
 import { borderContrast, textContrast } from "../../test/colorContrast";
 import type { BadgeTone } from "../Badge";
+import { Box } from "../Box";
 import { Card } from "../Card";
 import { Cluster } from "../Cluster";
 import { Stack } from "../Stack";
@@ -24,6 +26,13 @@ const toneTokens: Record<BadgeTone, string> = {
 };
 
 const transparent = "rgba(0, 0, 0, 0)";
+
+const selectionStyle = {
+  "--sui-status-dot-color": "currentColor",
+  backgroundColor: "var(--sui-color-primary, #2563eb)",
+  color: "var(--sui-color-on-primary, #ffffff)",
+  padding: "0.5rem",
+} as CSSProperties;
 
 function remToPixels(rem: number): number {
   return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -134,6 +143,44 @@ export const Tones: Story = {
 };
 
 /**
+ * A container that sets `--sui-status-dot-color: currentColor` gives the dots inside it its text colour, for a row
+ * filled with the primary colour, where no tone keeps 3:1
+ */
+export const OnSelection: Story = {
+  render: () => (
+    <Box as="section" style={selectionStyle} aria-label="selected">
+      <Cluster align="center">
+        {variants.flatMap((variant) =>
+          tones.map((tone) => (
+            <StatusDot key={`${tone}-${variant}`} label={`${tone} ${variant}`} tone={tone} variant={variant} />
+          ))
+        )}
+      </Cluster>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const selection = canvas.getByRole("region", { name: "selected" });
+    const selectionColor = getComputedStyle(selection).color;
+
+    for (const variant of variants) {
+      for (const tone of tones) {
+        const message = `${tone} ${variant}`;
+        const dot = within(selection).getByRole("img", { name: message });
+
+        await expect(getComputedStyle(dot).color, `${message} colour`).toBe(selectionColor);
+
+        if (variant === "solid") {
+          await expect(getComputedStyle(dot).backgroundColor, `${message} fill`).toBe(selectionColor);
+          await expect(textContrast(dot, "transparent"), message).toBeGreaterThanOrEqual(3);
+        } else {
+          await expect(borderContrast(dot), message).toBeGreaterThanOrEqual(3);
+        }
+      }
+    }
+  },
+};
+
+/**
  * A dot beside text that already says what it means is decorative: leave out `label` and screen readers skip it
  */
 export const Labelled: Story = {
@@ -143,7 +190,7 @@ export const Labelled: Story = {
         <StatusDot label="Checks failing" tone="danger" /> Build
       </Text>
       <Text>
-        <StatusDot data-testid="decorative-dot" tone="warning" variant="ring" /> 2 problems
+        <StatusDot tone="warning" variant="ring" data-testid="decorative-dot" /> 2 problems
       </Text>
     </Stack>
   ),

@@ -25,6 +25,13 @@ describe("StatusDot", () => {
     expect(screen.queryByRole("img", { hidden: true })).toBeNull();
   });
 
+  it("must be hidden from assistive technology when label is empty", () => {
+    render(<StatusDot data-testid="dot" label="" />);
+
+    expect(screen.getByTestId("dot")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByRole("img", { hidden: true })).toBeNull();
+  });
+
   it("must apply the neutral tone, solid variant and medium size when they are omitted", () => {
     render(<StatusDot label="No checks" />);
 
@@ -76,6 +83,33 @@ describe("StatusDot", () => {
     render(
       // @ts-expect-error the label decides the role
       <StatusDot label="Checks passing" role="note" />
+    );
+
+    expect(screen.getByRole("img", { name: "Checks passing" })).toBeInTheDocument();
+  });
+
+  it("must reject aria-label when it is given", () => {
+    render(
+      // @ts-expect-error the label names the dot
+      <StatusDot label="Checks passing" aria-label="Other" />
+    );
+
+    expect(screen.getByRole("img", { name: "Checks passing" })).toBeInTheDocument();
+  });
+
+  it("must reject aria-labelledby when it is given", () => {
+    render(
+      // @ts-expect-error the label names the dot
+      <StatusDot label="Checks passing" aria-labelledby="missing" />
+    );
+
+    expect(screen.getByRole("img", { name: "Checks passing" })).toBeInTheDocument();
+  });
+
+  it("must reject aria-hidden when it is given", () => {
+    render(
+      // @ts-expect-error the label decides whether the dot is hidden
+      <StatusDot label="Checks passing" aria-hidden={true} />
     );
 
     expect(screen.getByRole("img", { name: "Checks passing" })).toBeInTheDocument();

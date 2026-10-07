@@ -1,6 +1,6 @@
 .statusDot {
   --sui-status-dot-size: 0.5rem;
-  --sui-status-dot-color: var(--sui-color-input-border, #6b7280);
+  --sui-status-dot-tone-color: var(--sui-color-input-border, #6b7280);
 
   display: inline-block;
   flex: none;
@@ -8,7 +8,8 @@
   block-size: var(--sui-status-dot-size);
   border: calc(var(--sui-status-dot-size) / 4) solid currentColor;
   border-radius: 50%;
-  color: var(--sui-status-dot-color);
+  /* --sui-status-dot-color is never declared here, so an ancestor can set it for every dot inside it */
+  color: var(--sui-status-dot-color, var(--sui-status-dot-tone-color));
   vertical-align: middle;
 }
 
@@ -21,31 +22,32 @@
 }
 
 .statusDot[data-tone="danger"] {
-  --sui-status-dot-color: var(--sui-color-danger-text, #b91c1c);
+  --sui-status-dot-tone-color: var(--sui-color-danger-text, #b91c1c);
 }
 
 .statusDot[data-tone="info"] {
-  --sui-status-dot-color: var(--sui-color-info-text, #1d4ed8);
+  --sui-status-dot-tone-color: var(--sui-color-info-text, #1d4ed8);
 }
 
 .statusDot[data-tone="primary"] {
-  --sui-status-dot-color: var(--sui-color-primary, #2563eb);
+  --sui-status-dot-tone-color: var(--sui-color-primary, #2563eb);
 }
 
 .statusDot[data-tone="success"] {
-  --sui-status-dot-color: var(--sui-color-success-text, #166534);
+  --sui-status-dot-tone-color: var(--sui-color-success-text, #166534);
 }
 
 .statusDot[data-tone="warning"] {
-  --sui-status-dot-color: var(--sui-color-warning-text, #854d0e);
+  --sui-status-dot-tone-color: var(--sui-color-warning-text, #854d0e);
 }
 
 @media (forced-colors: active) {
   .statusDot {
-    --sui-status-dot-color: CanvasText;
+    color: inherit;
   }
 
+  /* Forced colours replace a background colour with Canvas, so the border fills a solid dot instead */
   .statusDot[data-variant="solid"] {
-    background-color: CanvasText;
+    border-width: calc(var(--sui-status-dot-size) / 2);
   }
 }
