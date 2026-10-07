@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 
 import { childrenArgType } from "../../docs/argTypes";
+import { textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
+import { Card } from "../Card";
+import { Stack } from "../Stack";
 
 import { Heading } from "./Heading";
 
@@ -53,5 +57,30 @@ export const SizeOverride: Story = {
     children: "Level 1, small size",
     level: 1,
     size: "lg",
+  },
+};
+
+/**
+ * `muted` quiets a heading that labels a group, such as a sidebar section. Both tones keep 4.5:1 contrast on the
+ * page and on a surface.
+ */
+export const Tones: Story = {
+  render: () => (
+    <Stack gap={3}>
+      <Heading level={2}>Default tone</Heading>
+      <Heading level={2} size="xs" tone="muted">
+        Muted tone
+      </Heading>
+      <Card padding="sm">
+        <Heading level={3} size="xs" tone="muted">
+          Muted tone on a card
+        </Heading>
+      </Card>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    for (const name of ["Default tone", "Muted tone", "Muted tone on a card"]) {
+      await expect(textContrast(canvas.getByRole("heading", { name })), name).toBeGreaterThanOrEqual(4.5);
+    }
   },
 };

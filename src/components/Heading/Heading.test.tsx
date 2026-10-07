@@ -28,6 +28,31 @@ describe("Heading", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Title" })).toHaveAttribute("data-size", "md");
   });
 
+  it("must apply the default tone when tone is omitted", () => {
+    render(<Heading level={2}>Title</Heading>);
+
+    expect(screen.getByRole("heading", { name: "Title" })).toHaveAttribute("data-tone", "default");
+  });
+
+  it("must apply the muted tone when it is set", () => {
+    render(
+      <Heading level={2} tone="muted">
+        Title
+      </Heading>
+    );
+
+    expect(screen.getByRole("heading", { name: "Title" })).toHaveAttribute("data-tone", "muted");
+  });
+
+  it("must reject a tone when it is not supported", () => {
+    render(
+      // @ts-expect-error "danger" is not a TextTone
+      <Heading level={2} tone="danger">
+        Title
+      </Heading>
+    );
+  });
+
   it("must merge className when one is given", () => {
     render(
       <Heading className="custom" level={2}>

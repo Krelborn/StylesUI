@@ -3,6 +3,7 @@ import { clsx } from "clsx";
 
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
+import type { TextTone } from "../Text";
 
 import styles from "./Heading.module.css";
 
@@ -29,6 +30,12 @@ export interface HeadingProps extends Omit<BoxProps<"h1">, "as"> {
    * Font size. Defaults to a size matching the level (1 is `3xl`, 6 is `sm`).
    */
   size?: HeadingSize;
+
+  /**
+   * Text colour. `muted` is for a quiet heading that labels a group, such as a sidebar section. Defaults to
+   * `default`, which inherits the surrounding text colour.
+   */
+  tone?: TextTone;
 }
 
 const defaultSizes = {
@@ -45,14 +52,18 @@ const defaultSizes = {
  *
  * @example
  * <Heading level={2}>Settings</Heading>
+ *
+ * @example
+ * <Heading level={2} size="xs" tone="muted">For review</Heading>
  */
-export function Heading({ className, level, size, ...rest }: HeadingProps): JSX.Element {
+export function Heading({ className, level, size, tone = "default", ...rest }: HeadingProps): JSX.Element {
   return (
     <Box
       {...rest}
       as={`h${level}` as const}
       className={clsx(styles.heading, className)}
       data-size={size ?? defaultSizes[level]}
+      data-tone={tone}
     />
   );
 }
