@@ -110,7 +110,9 @@
     background-color: Highlight;
   }
 
+  /* Left automatic, the browser draws a Canvas backplate behind the label that hides HighlightText */
   .input:checked + .text {
     color: HighlightText;
+    forced-color-adjust: none;
   }
 }
