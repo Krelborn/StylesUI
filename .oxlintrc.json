@@ -9,6 +9,7 @@
         "Alert": "div",
         "Button": "button",
         "Checkbox": "input",
+        "Code": "code",
         "Divider": "hr",
         "Fieldset": "fieldset",
         "Link": "a",

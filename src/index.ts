@@ -14,6 +14,8 @@ export { Checkbox } from "./components/Checkbox";
 export type { CheckboxProps } from "./components/Checkbox";
 export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
+export { Code } from "./components/Code";
+export type { CodeProps } from "./components/Code";
 export { Cover } from "./components/Cover";
 export type { CoverProps } from "./components/Cover";
 export { Divider } from "./components/Divider";

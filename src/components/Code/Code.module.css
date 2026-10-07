@@ -1,0 +1,9 @@
+.code {
+  padding: 0 var(--sui-space-1, 0.25rem);
+  border-radius: var(--sui-radius-sm, 2px);
+  background-color: var(--sui-color-surface, #f3f4f6);
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 0.875em;
+  overflow-wrap: anywhere;
+}
