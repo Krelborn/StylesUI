@@ -12,6 +12,7 @@
         "Code": "code",
         "Divider": "hr",
         "Fieldset": "fieldset",
+        "Kbd": "kbd",
         "Link": "a",
         "Radio": "input",
         "RadioGroup": "fieldset",
