@@ -50,6 +50,12 @@ function resolveColor(element: HTMLElement, color: string): string {
   return resolved;
 }
 
+function colorAlpha(color: string): number {
+  const alpha = color.match(/(?:rgba\(.*,|\/)\s*([\d.]+)\s*\)$/)?.[1];
+
+  return alpha === undefined ? 1 : Number(alpha);
+}
+
 function indicatorScale(tab: HTMLElement): number {
   return new DOMMatrix(getComputedStyle(tab, "::after").transform).a;
 }
@@ -287,8 +293,10 @@ export const Disabled: Story = {
     await userEvent.keyboard("{ArrowRight}");
     await expect(issues).toHaveFocus();
     await expect(issues).toHaveAttribute("aria-selected", "false");
-    await expect(getComputedStyle(issues).opacity).toBe("0.5");
+    await expect(getComputedStyle(issues).opacity).toBe("1");
+    await expect(colorAlpha(getComputedStyle(issues).color)).toBeCloseTo(0.5, 2);
     await expect(getComputedStyle(issues).cursor).toBe("not-allowed");
+    await expect(focusRingContrast(issues)).toBeGreaterThanOrEqual(3);
 
     await userEvent.click(issues);
     await expect(canvas.getByRole("tab", { name: "Code" })).toHaveAttribute("aria-selected", "true");
