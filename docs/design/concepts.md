@@ -97,9 +97,17 @@ Every descendant rule is `:where(.prose)` followed by type selectors only. That 
 - A component rendered with `as` as an element prose styles, such as `<Text as="code">`, still takes the prose properties its own class does not set.
 - A component placed directly in prose gets no flow spacing, because the spacing rules match raw elements and Heading and Text set their own margin to 0.
 
+### Code and keys
+
+Code is inline code in the monospace font on the surface colour, the look Prose gives a raw `code`. It wraps a long value rather than push its column wider. Kbd is a key: the same font and surface with a border whose bottom edge is twice as thick, so a shortcut reads as keys rather than as code. Write a combination as one Kbd per key. Prose draws a raw `kbd` with Kbd's declarations, and a unit test keeps the two identical.
+
 ### Alerts and badges
 
 Alert and Badge use the status grades. An Alert draws its border, icon and title in `--sui-color-<status>-text` on `--sui-color-<status>-subtle`, with body text in `--sui-color-text`. A subtle Badge is `<tone>-subtle` with `<tone>-text`, and a solid Badge is the fill with its `on-*` colour. The primary Badge uses `primary` and `primary-subtle`, and the neutral Badge uses `secondary` and `secondary-subtle`. Alert sets no role, so it is read in place; the docs show `role="alert"` for an error raised by an action and `aria-live="polite"` for a quiet update.
+
+Counter is a Badge shaped as a pill, at least 1.25rem across, with fixed-width digits. It shows a `max` as "99+", marks a lower bound with `capped` ("30+"), and adds `hiddenSuffix` for screen readers only. It renders nothing below 1.
+
+StatusDot is a small circle in `currentColor`. Its tones use the status text grades, primary, and `--sui-color-input-border` for neutral, so every dot keeps 3:1 against the page and a surface (WCAG 1.4.11). The status fills do not all reach 3:1: warning on white is 1.92:1. `ring` draws only the border, so a ring and a solid dot differ by shape as well as colour. With a `label` the dot is an image named by it; without one it is hidden from assistive technology, so put text beside a dot that carries meaning. Under forced colours a solid dot fills with `CanvasText` and a ring keeps a `CanvasText` border.
 
 ### Forms
 
