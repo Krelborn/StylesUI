@@ -50,6 +50,8 @@ export { RadioGroup } from "./components/RadioGroup";
 export type { RadioGroupOrientation, RadioGroupProps } from "./components/RadioGroup";
 export { Row } from "./components/Row";
 export type { RowProps } from "./components/Row";
+export { Segment, SegmentedControl } from "./components/SegmentedControl";
+export type { SegmentedControlProps, SegmentProps } from "./components/SegmentedControl";
 export { Select } from "./components/Select";
 export type { SelectProps } from "./components/Select";
 export { Sidebar } from "./components/Sidebar";
