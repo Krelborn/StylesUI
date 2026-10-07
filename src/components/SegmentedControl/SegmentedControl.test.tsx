@@ -3,9 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { transitionedProperties } from "../../test/transitionedProperties";
+
 import { Segment } from "./Segment";
 import type { SegmentedControlProps } from "./SegmentedControl";
 import { SegmentedControl } from "./SegmentedControl";
+import segmentedControlCss from "./SegmentedControl.module.css?raw";
 
 describe("SegmentedControl", () => {
   it("must be a radio group named by its label when it renders", () => {
@@ -202,6 +205,14 @@ describe("SegmentedControl", () => {
     );
 
     expect(elements.group).toBeInTheDocument();
+  });
+
+  it("must transition only colours when reduced motion is requested", () => {
+    const reducedMotionBlock =
+      segmentedControlCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(transitionedProperties(reducedMotionBlock)).toEqual(["background-color", "border-color"]);
+    expect(reducedMotionBlock).toContain(".input:checked");
   });
 });
 

@@ -1,21 +1,116 @@
 .track {
+  --sui-segmented-control-inset: 2px;
+  --sui-segmented-control-depth: var(--sui-control-depth, 0px);
+  --sui-segment-padding-x: var(--sui-space-4, 1rem);
+  --sui-segment-padding-y: var(--sui-space-2, 0.5rem);
+  --sui-segment-font-size: var(--sui-font-size-md, 1rem);
+
   display: inline-flex;
+  gap: var(--sui-segmented-control-inset);
+  padding: var(--sui-segmented-control-inset);
+  padding-block-end: calc(var(--sui-segmented-control-inset) + var(--sui-segmented-control-depth));
+  border: var(--sui-border-width, 1px) solid var(--sui-color-input-border, #6b7280);
+  border-radius: var(--sui-radius-control, 4px);
 }
 
+.track[data-size="sm"] {
+  --sui-segment-padding-x: var(--sui-space-3, 0.75rem);
+  --sui-segment-padding-y: var(--sui-space-1, 0.25rem);
+  --sui-segment-font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.track[data-size="lg"] {
+  --sui-segment-padding-x: var(--sui-space-6, 1.5rem);
+  --sui-segment-padding-y: var(--sui-space-3, 0.75rem);
+  --sui-segment-font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+.segmentedControl[aria-invalid="true"] .track {
+  border-color: var(--sui-color-danger-text, #b91c1c);
+}
+
+/* Inside the track's inset, so a segment plus the inset is as tall as a Button of the same size */
 .segment {
   position: relative;
   display: inline-grid;
   place-items: center;
+  padding: calc(var(--sui-segment-padding-y) - var(--sui-segmented-control-inset))
+    calc(var(--sui-segment-padding-x) - var(--sui-segmented-control-inset));
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-segment-font-size);
+  font-weight: var(--sui-font-weight-control, 500);
+  line-height: var(--sui-line-height-tight, 1.25);
 }
 
+/* The input covers the segment and draws its fill and focus ring, so the ring is on the element that holds focus */
 .input {
   position: absolute;
   inset: 0;
   margin: 0;
+  border: var(--sui-border-width, 1px) solid transparent;
+  border-radius: calc(var(--sui-radius-control, 4px) - var(--sui-segmented-control-inset));
+  background-color: transparent;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease-out;
   appearance: none;
 }
 
 .text {
   position: relative;
   pointer-events: none;
+}
+
+.input:hover:not(:checked, :disabled) {
+  background-color: var(--sui-color-secondary-subtle, #f3f4f6);
+}
+
+/* A spring on the way out would overshoot, so only checking bounces */
+.input:checked {
+  border-color: var(--sui-color-control-border, transparent);
+  background-color: var(--sui-color-primary, #2563eb);
+  box-shadow: 0 var(--sui-segmented-control-depth) 0 var(--sui-color-shadow, transparent);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    box-shadow var(--sui-motion-spring, 120ms ease-out);
+}
+
+.input:checked + .text {
+  color: var(--sui-color-on-primary, #fff);
+}
+
+.input:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+.input:disabled,
+.input:disabled + .text {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .input:checked {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the checked fill */
+@media (forced-colors: active) {
+  .input:checked {
+    border-color: Highlight;
+    background-color: Highlight;
+  }
+
+  .input:checked + .text {
+    color: HighlightText;
+  }
 }
