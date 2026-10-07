@@ -10,7 +10,7 @@ import styles from "./Tabs.module.css";
 import { TabsContext } from "./TabsContext";
 
 /**
- * When a tab is selected: `automatic` as it takes focus, `manual` only when Enter or Space presses it
+ * When a tab is selected: `automatic` as it takes focus, `manual` only when a click, Enter or Space activates it
  */
 export type TabsActivation = "automatic" | "manual";
 

@@ -420,6 +420,17 @@ describe("Tabs", () => {
     );
   });
 
+  it("must reject Tabs when both value and defaultValue are given", () => {
+    renderBase(
+      // @ts-expect-error a tab is selected by value or by defaultValue, never both
+      <Tabs defaultValue="code" value="code">
+        <TabList aria-label="Repository">
+          <Tab value="code">Code</Tab>
+        </TabList>
+      </Tabs>
+    );
+  });
+
   it("must reject a tab list when it has no name", () => {
     renderBase(
       <Tabs defaultValue="code">

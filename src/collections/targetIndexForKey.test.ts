@@ -52,7 +52,6 @@ describe("targetIndexForKey", () => {
       targetIndexForKey({
         count: 0,
         currentIndex: -1,
-        direction: "ltr",
         key: "Home",
         orientation: "horizontal",
         wraps: true,
@@ -62,6 +61,7 @@ describe("targetIndexForKey", () => {
 
   it.each<KeyCase>([
     { currentIndex: -1, expected: 0, key: "ArrowDown", orientation: "vertical", wraps: false },
+    { currentIndex: -1, expected: 0, key: "ArrowDown", orientation: "vertical", wraps: true },
     { currentIndex: -1, expected: 0, key: "ArrowUp", orientation: "vertical", wraps: false },
     { currentIndex: -1, expected: 2, key: "ArrowUp", orientation: "vertical", wraps: true },
   ])("must return $expected when $key is pressed with nothing focused", (keyCase) => {
@@ -71,7 +71,7 @@ describe("targetIndexForKey", () => {
 
 function targetIndexFor({
   currentIndex,
-  direction = "ltr",
+  direction,
   key,
   orientation = "horizontal",
   wraps = true,

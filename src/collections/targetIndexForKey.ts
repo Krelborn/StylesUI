@@ -20,9 +20,9 @@ interface TargetIndexOptions {
   currentIndex: number;
 
   /**
-   * Writing direction around the collection
+   * Writing direction around the collection. It only matters for a horizontal collection. Defaults to `ltr`.
    */
-  direction: WritingDirection;
+  direction?: WritingDirection;
 
   /**
    * The pressed key, as `KeyboardEvent.key` gives it
@@ -43,8 +43,8 @@ interface TargetIndexOptions {
 /**
  * Finds the item an arrow key, Home or End moves focus to in a collection such as a tab list or a listbox
  *
- * @param options the key, the focused item, the size, orientation and writing direction of the collection, and whether
- *   it wraps
+ * @param options the key, the focused item, the size, orientation and wrapping of the collection, and its writing
+ *   direction if it is horizontal and may run right to left
  * @returns the index to move to, which is the current index at an end that does not wrap; null for a key the
  *   collection does not handle, or when it is empty. With nothing focused, forward goes to the first item and back goes
  *   to the last when wrapping, or to the first when not.
@@ -52,7 +52,7 @@ interface TargetIndexOptions {
 export function targetIndexForKey({
   count,
   currentIndex,
-  direction,
+  direction = "ltr",
   key,
   orientation,
   wraps,
