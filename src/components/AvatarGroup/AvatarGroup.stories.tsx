@@ -83,15 +83,16 @@ export const WithMax: Story = {
 };
 
 /**
- * On a card, set `--sui-avatar-group-ring` to the surface colour so the rings match what is behind them
+ * On a card, set `--sui-avatar-group-ring` on the card, or any ancestor, to the surface colour so the rings match what
+ * is behind them
  */
 export const OnSurface: Story = {
   render: (args) => (
-    <Card padding="sm">
-      <AvatarGroup
-        {...args}
-        style={withCustomProperties({ "--sui-avatar-group-ring": "var(--sui-color-surface)" }, args.style)}
-      />
+    <Card
+      padding="sm"
+      style={withCustomProperties({ "--sui-avatar-group-ring": "var(--sui-color-surface)" }, undefined)}
+    >
+      <AvatarGroup {...args} />
     </Card>
   ),
   play: async ({ canvas }) => {

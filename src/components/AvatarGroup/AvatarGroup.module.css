@@ -1,14 +1,13 @@
 .avatarGroup {
-  --sui-avatar-group-ring: var(--sui-color-background, #fff);
-  --sui-avatar-group-ring-width: 2px;
-
   display: inline-flex;
   align-items: center;
 }
 
 /* Each avatar declares its own --sui-avatar-size, so the overlap follows the avatar's size */
 .avatarGroup > [role="img"] {
-  box-shadow: 0 0 0 var(--sui-avatar-group-ring-width) var(--sui-avatar-group-ring);
+  /* The ring tokens are never declared, so an ancestor can set them for every group inside it */
+  box-shadow: 0 0 0 var(--sui-avatar-group-ring-width, 2px)
+    var(--sui-avatar-group-ring, var(--sui-color-background, #fff));
 }
 
 .avatarGroup > [role="img"] + [role="img"] {
