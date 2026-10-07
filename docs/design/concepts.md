@@ -37,7 +37,7 @@ Each status (`danger`, `success`, `warning`, `info`) has three grades:
 #### Borders
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
-- `--sui-color-control-border`: the outline of `Button`, `Badge` and a checked `Checkbox`, `Radio` or `Switch`. Transparent in `default`.
+- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge` and a checked `Checkbox`, `Radio` or `Switch`. Transparent in `default`.
 - `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background and a surface (WCAG 1.4.11).
 
 ### Token tiers
@@ -111,9 +111,9 @@ StatusDot is a small circle in `currentColor`. Its tones use the status text gra
 
 ### Avatars
 
-Avatar is an image named by `name`, drawn as the person's picture or their initials on the secondary colour. A picture that fails to load gives way to the initials, and that URL is not tried again until `src` changes. An empty `src` counts as missing, so the initials show. Initials are the first letters of the first two words, or the first two letters of a single word, splitting on anything that is not a letter, mark or digit in any script, so "@plee" gives "PL" and "acme/web-team" gives "AW". An `xs` avatar shows one letter. Its outline is `--sui-color-control-border`, invisible in `default` and an ink ring in `playful`. When the name is printed beside it, the avatar takes `aria-hidden` so the name is read once.
+Avatar is an image named by `name`, drawn as the person's picture or their initials on the secondary colour. A picture that fails to load gives way to the initials, and that URL is not requested again while the Avatar stays mounted, even if `src` changes to another URL and back. An empty `src` counts as missing, so the initials show. Initials are the first letters of the first two words, or the first two letters of a single word, splitting on anything that is not a letter, mark or digit in any script, so "@plee" gives "PL" and "acme/web-team" gives "AW". An `xs` avatar shows one letter. Its outline is `--sui-color-control-border`, invisible in `default` and an ink ring in `playful`. Under forced colours the outline is `CanvasText`, and it is what separates grouped avatars once forced colours drop the ring's box-shadow. When the name is printed beside it, the avatar takes `aria-hidden` so the name is read once.
 
-AvatarGroup is a named group of avatars that overlap by a quarter of their size, each ringed in `--sui-avatar-group-ring` (the page background by default) at `--sui-avatar-group-ring-width` (2px by default). AvatarGroup reads both without declaring them, so an ancestor can set them for every group inside it. A Card does not set them, so the ring on a Card is the page background unless the Card sets `--sui-avatar-group-ring` to `var(--sui-color-surface)`. `max` is at least 1, so a group never shows a count alone. Past `max`, avatars are hidden on screen inside VisuallyHidden, so screen readers still read every name, and a muted "+n" that they skip stands in for them. A group with no more avatars than `max` shows no count.
+AvatarGroup is a named group of avatars that overlap by a quarter of their size, each ringed in `--sui-avatar-group-ring` (the page background by default) at `--sui-avatar-group-ring-width` (2px by default). AvatarGroup reads both without declaring them, so an ancestor can set them for every group inside it. A Card does not set them, so the ring on a Card is the page background unless you set `--sui-avatar-group-ring` on the Card (or another ancestor) to `var(--sui-color-surface)`. `max` is at least 1, so a group never shows a count alone. Past `max`, avatars are hidden on screen inside VisuallyHidden, so screen readers still read every name, and a muted "+n" that they skip stands in for them. A group with no more avatars than `max` shows no count.
 
 ### Forms
 

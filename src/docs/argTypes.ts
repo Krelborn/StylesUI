@@ -14,6 +14,23 @@ export const childrenArgType: InputType = {
 };
 
 /**
+ * Arg types for the `aria-label` and `aria-labelledby` props of a component that requires an accessible name, which
+ * react-docgen cannot see through the `RequiredAccessibleName` union
+ */
+export const accessibleNameArgTypes: Record<"aria-label" | "aria-labelledby", InputType> = {
+  "aria-label": {
+    control: "text",
+    description: "The name, when no visible text names the element. Give `aria-label` or `aria-labelledby`.",
+    table: { type: { summary: "string" } },
+  },
+  "aria-labelledby": {
+    control: "text",
+    description: "Ids of the visible elements that name the element. Give `aria-label` or `aria-labelledby`.",
+    table: { type: { summary: "string" } },
+  },
+};
+
+/**
  * Builds the arg type for a polymorphic component's `as` prop, which react-docgen cannot see on
  * props inherited from `Box`
  *

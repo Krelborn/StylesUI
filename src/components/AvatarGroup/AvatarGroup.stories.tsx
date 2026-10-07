@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 
+import { accessibleNameArgTypes } from "../../docs/argTypes";
 import { withCustomProperties } from "../../layout";
 import { Avatar } from "../Avatar";
 import { Card } from "../Card";
@@ -25,11 +26,7 @@ const meta = {
     children: reviewers.map((name) => <Avatar key={name} name={name} size="sm" />),
   },
   argTypes: {
-    "aria-label": {
-      control: "text",
-      description: "Names the group. Give `aria-label` or `aria-labelledby`.",
-      table: { type: { summary: "string" } },
-    },
+    ...accessibleNameArgTypes,
     children: {
       control: false,
       description: "The `Avatar`s",
