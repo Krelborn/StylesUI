@@ -3,13 +3,13 @@
   align-items: center;
 }
 
-/* Each avatar declares its own --sui-avatar-size, so the overlap follows the avatar's size */
 .avatarGroup > [role="img"] {
   /* The ring tokens are never declared, so an ancestor can set them for every group inside it */
   box-shadow: 0 0 0 var(--sui-avatar-group-ring-width, 2px)
     var(--sui-avatar-group-ring, var(--sui-color-background, #fff));
 }
 
+/* Each avatar declares its own --sui-avatar-size, so the overlap follows the avatar's size */
 .avatarGroup > [role="img"] + [role="img"] {
   margin-inline-start: calc(var(--sui-avatar-size, 2rem) / -4);
 }

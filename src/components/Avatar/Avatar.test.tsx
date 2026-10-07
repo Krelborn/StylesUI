@@ -62,6 +62,18 @@ describe("Avatar", () => {
     expect(screen.queryByRole("presentation")).toBeNull();
   });
 
+  it("must keep the initials when src changes back to one that failed before another one failed", () => {
+    const { rerender } = render(<Avatar name="Pat Lee" src={patSource} />);
+    fireEvent.error(screen.getByRole("presentation"));
+    rerender(<Avatar name="Pat Lee" src={patNewSource} />);
+    fireEvent.error(screen.getByRole("presentation"));
+
+    rerender(<Avatar name="Pat Lee" src={patSource} />);
+
+    expect(screen.queryByRole("presentation")).toBeNull();
+    expect(screen.getByRole("img", { name: "Pat Lee" }).textContent).toBe("PL");
+  });
+
   it("must show one letter when the size is xs", () => {
     render(<Avatar name="Pat Lee" size="xs" />);
 
@@ -69,13 +81,13 @@ describe("Avatar", () => {
   });
 
   it("must take its name from aria-label when one is given", () => {
-    render(<Avatar aria-label="Pat Lee, reviewer" name="Pat Lee" />);
+    render(<Avatar name="Pat Lee" aria-label="Pat Lee, reviewer" />);
 
     expect(screen.getByRole("img", { name: "Pat Lee, reviewer" })).toBeInTheDocument();
   });
 
   it("must be hidden from assistive technology when aria-hidden is set", () => {
-    render(<Avatar aria-hidden={true} name="Pat Lee" />);
+    render(<Avatar name="Pat Lee" aria-hidden={true} />);
 
     expect(screen.queryByRole("img")).toBeNull();
   });

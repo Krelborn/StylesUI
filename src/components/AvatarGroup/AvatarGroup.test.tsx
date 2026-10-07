@@ -66,6 +66,13 @@ describe("AvatarGroup", () => {
     expect(screen.getByText("+3")).toBeInTheDocument();
   });
 
+  it("must show every avatar and no count when max is not a number", () => {
+    renderGroup({ max: Number.NaN });
+
+    expect(screen.getAllByRole("img")).toHaveLength(4);
+    expect(elements.group.textContent).not.toContain("+");
+  });
+
   it("must reject a group when it has no name", () => {
     render(
       // @ts-expect-error a group needs aria-label or aria-labelledby

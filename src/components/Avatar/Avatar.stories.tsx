@@ -117,7 +117,7 @@ export const BrokenImage: Story = {
 export const BesideName: Story = {
   render: () => (
     <Row align="center" gap={2}>
-      <Avatar aria-hidden={true} name="Pat Lee" size="sm" />
+      <Avatar name="Pat Lee" size="sm" aria-hidden={true} />
       <Text>Pat Lee</Text>
     </Row>
   ),

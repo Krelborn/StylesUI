@@ -17,7 +17,7 @@ interface AvatarGroupOwnProps {
 
   /**
    * How many avatars show, at least 1. The rest are hidden on screen behind a "+n" count, but screen readers still
-   * read their names. Shows every avatar when left out.
+   * read their names. Shows every avatar when left out or not a number.
    */
   max?: number;
 }
@@ -41,7 +41,7 @@ export type AvatarGroupProps = AvatarGroupOwnProps &
  */
 export function AvatarGroup({ children, className, max, ...rest }: AvatarGroupProps): JSX.Element {
   const avatars = Children.toArray(children);
-  const shownCount = max === undefined ? avatars.length : Math.max(1, max);
+  const shownCount = max === undefined || Number.isNaN(max) ? avatars.length : Math.max(1, max);
   const hiddenAvatars = avatars.slice(shownCount);
 
   return (

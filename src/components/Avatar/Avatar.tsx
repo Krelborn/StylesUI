@@ -14,7 +14,7 @@ import { initialsOf } from "./initialsOf";
 export type AvatarSize = "lg" | "md" | "sm" | "xs";
 
 /**
- * Props for `Avatar`: its own props plus every `span` prop except `children` and `role`
+ * Props for `Avatar`: its own props plus every `span` prop except `children`, `dangerouslySetInnerHTML` and `role`
  */
 export interface AvatarProps extends Omit<BoxProps<"span">, "as" | "children" | "dangerouslySetInnerHTML" | "role"> {
   /**
@@ -50,10 +50,10 @@ export function Avatar({
   src,
   ...rest
 }: AvatarProps): JSX.Element {
-  const [failedSource, setFailedSource] = useState<string | undefined>(undefined);
+  const [failedSources, setFailedSources] = useState<ReadonlySet<string>>(() => new Set());
   const initials = initialsOf(name);
   const shownInitials = size === "xs" ? (Array.from(initials)[0] ?? "") : initials;
-  const showsImage = src !== undefined && src !== "" && src !== failedSource;
+  const showsImage = src !== undefined && src !== "" && !failedSources.has(src);
 
   return (
     <Box
@@ -66,7 +66,13 @@ export function Avatar({
       data-size={size}
     >
       {showsImage ? (
-        <Box alt="" as="img" className={styles.image} onError={() => setFailedSource(src)} src={src} />
+        <Box
+          alt=""
+          as="img"
+          className={styles.image}
+          onError={() => setFailedSources((previous) => new Set(previous).add(src))}
+          src={src}
+        />
       ) : (
         shownInitials
       )}
