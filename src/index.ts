@@ -16,6 +16,8 @@ export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
 export { Code } from "./components/Code";
 export type { CodeProps } from "./components/Code";
+export { Counter } from "./components/Counter";
+export type { CounterProps } from "./components/Counter";
 export { Cover } from "./components/Cover";
 export type { CoverProps } from "./components/Cover";
 export { Divider } from "./components/Divider";

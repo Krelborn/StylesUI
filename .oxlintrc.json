@@ -10,6 +10,7 @@
         "Button": "button",
         "Checkbox": "input",
         "Code": "code",
+        "Counter": "span",
         "Divider": "hr",
         "Fieldset": "fieldset",
         "Kbd": "kbd",

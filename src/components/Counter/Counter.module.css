@@ -1,0 +1,11 @@
+/* [data-variant], which every Counter has, puts this rule above Badge's base rule whichever stylesheet loads first */
+.counter[data-variant] {
+  justify-content: center;
+  min-inline-size: 1.25rem;
+  min-block-size: 1.25rem;
+  padding: 0 var(--sui-space-1, 0.25rem);
+  border-radius: var(--sui-radius-full, 9999px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  white-space: nowrap;
+}
