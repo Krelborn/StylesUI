@@ -7,6 +7,7 @@
       "polymorphicPropName": "as",
       "components": {
         "Alert": "div",
+        "Avatar": "span",
         "Button": "button",
         "Checkbox": "input",
         "Code": "code",

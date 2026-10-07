@@ -1,5 +1,7 @@
 export { Alert } from "./components/Alert";
 export type { AlertProps, AlertTone } from "./components/Alert";
+export { Avatar } from "./components/Avatar";
+export type { AvatarProps, AvatarSize } from "./components/Avatar";
 export { Badge } from "./components/Badge";
 export type { BadgeElement, BadgeProps, BadgeTone, BadgeVariant } from "./components/Badge";
 export { Box } from "./components/Box";
