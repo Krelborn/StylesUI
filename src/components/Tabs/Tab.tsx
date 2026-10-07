@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
-import type { FocusEvent, JSX, KeyboardEvent, MouseEvent } from "react";
+import type { FocusEvent, JSX, KeyboardEvent, MouseEvent, PointerEvent } from "react";
+import { useRef } from "react";
 
 import { targetIndexForKey } from "../../collections";
 import type { BoxProps } from "../Box";
@@ -39,8 +40,9 @@ export interface TabProps extends Omit<
 
 /**
  * One tab in a `TabList`. The arrow keys move between tabs, wrapping at both ends, and Home and End go to the first
- * and last. Your `onClick`, `onFocus` and `onKeyDown` run first; preventing a click's or key's default stops the tab
- * handling it. A disabled tab ignores clicks, so your `onClick` does not run for it.
+ * and last. Your `onBlur`, `onClick`, `onFocus`, `onKeyDown`, `onPointerCancel` and `onPointerDown` run first;
+ * preventing a click's or key's default stops the tab handling it. A disabled tab ignores clicks, so your `onClick`
+ * does not run for it.
  *
  * @example
  * <Tab value="issues">Issues</Tab>
@@ -48,16 +50,29 @@ export interface TabProps extends Omit<
 export function Tab({
   className,
   disabled = false,
+  onBlur,
   onClick,
   onFocus,
   onKeyDown,
+  onPointerCancel,
+  onPointerDown,
   value,
   ...rest
 }: TabProps): JSX.Element {
   const tabs = useTabsContext("Tab");
   const selected = tabs.selectedValue === value;
+  // A pointer press focuses the tab before its click, so the click selects, which lets a consumer's onClick prevent it
+  const pressedByPointerRef = useRef(false);
+
+  function handleBlur(event: FocusEvent<HTMLButtonElement>): void {
+    onBlur?.(event);
+
+    pressedByPointerRef.current = false;
+  }
 
   function handleClick(event: MouseEvent<HTMLButtonElement>): void {
+    pressedByPointerRef.current = false;
+
     if (disabled) {
       return;
     }
@@ -72,7 +87,7 @@ export function Tab({
   function handleFocus(event: FocusEvent<HTMLButtonElement>): void {
     onFocus?.(event);
 
-    if (tabs.activation === "automatic" && !disabled) {
+    if (tabs.activation === "automatic" && !disabled && !pressedByPointerRef.current) {
       tabs.select(value);
     }
   }
@@ -102,15 +117,30 @@ export function Tab({
     }
   }
 
+  function handlePointerCancel(event: PointerEvent<HTMLButtonElement>): void {
+    onPointerCancel?.(event);
+
+    pressedByPointerRef.current = false;
+  }
+
+  function handlePointerDown(event: PointerEvent<HTMLButtonElement>): void {
+    onPointerDown?.(event);
+
+    pressedByPointerRef.current = true;
+  }
+
   return (
     <Box
       {...rest}
       as="button"
       className={clsx(styles.tab, className)}
       id={tabId(tabs.baseId, value)}
+      onBlur={handleBlur}
       onClick={handleClick}
       onFocus={handleFocus}
       onKeyDown={handleKeyDown}
+      onPointerCancel={handlePointerCancel}
+      onPointerDown={handlePointerDown}
       role="tab"
       tabIndex={selected ? 0 : -1}
       type="button"

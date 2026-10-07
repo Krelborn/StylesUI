@@ -237,6 +237,77 @@ describe("Tabs", () => {
     expect(elements.tab("Wiki")).toHaveAttribute("aria-selected", "true");
   });
 
+  it("must keep the selected tab when the consumer's onClick prevents a click with automatic activation", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    renderBase(
+      <Tabs defaultValue="code" onValueChange={onValueChange}>
+        <TabList aria-label="Repository">
+          <Tab value="code">Code</Tab>
+          <Tab onClick={(event) => event.preventDefault()} value="wiki">
+            Wiki
+          </Tab>
+        </TabList>
+      </Tabs>
+    );
+
+    await user.click(elements.tab("Wiki"));
+
+    expect(elements.tab("Code")).toHaveAttribute("aria-selected", "true");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("must report a click once when the parent does not apply the controlled value", async () => {
+    const { onValueChange, render, user } = setUpTest();
+    render({ selection: { value: "code" } });
+
+    await user.click(elements.tab("Issues"));
+
+    expect(onValueChange).toHaveBeenCalledTimes(1);
+    expect(onValueChange).toHaveBeenCalledWith("issues");
+  });
+
+  it("must select a tab when an arrow key focuses it after its pointer press was cancelled", async () => {
+    const { onValueChange, render, user } = setUpTest();
+    render();
+    fireEvent.pointerDown(elements.tab("Issues"));
+    fireEvent.pointerCancel(elements.tab("Issues"));
+    await user.tab();
+
+    await user.keyboard("{ArrowRight}");
+
+    expect(elements.tab("Issues")).toHaveAttribute("aria-selected", "true");
+    expect(onValueChange).toHaveBeenLastCalledWith("issues");
+  });
+
+  it("must select a tab when an arrow key focuses it after a click that never focused it", async () => {
+    const { onValueChange, render, user } = setUpTest();
+    render({ selection: { value: "code" } });
+    fireEvent.pointerDown(elements.tab("Issues"));
+    fireEvent.click(elements.tab("Issues"));
+    await user.tab();
+
+    await user.keyboard("{ArrowRight}");
+
+    expect(elements.tab("Issues")).toHaveFocus();
+    expect(onValueChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("must select a tab when an arrow key focuses it after a press on it was released elsewhere", async () => {
+    const { render, user } = setUpTest();
+    render();
+    await user.pointer({ keys: "[MouseLeft>]", target: elements.tab("Issues") });
+    await user.pointer({ keys: "[/MouseLeft]", target: document.body });
+    expect(elements.tab("Issues")).toHaveFocus();
+    expect(elements.tab("Code")).toHaveAttribute("aria-selected", "true");
+    await user.tab();
+    await user.tab({ shift: true });
+
+    await user.keyboard("{ArrowRight}");
+
+    expect(elements.tab("Issues")).toHaveAttribute("aria-selected", "true");
+  });
+
   it("must put only the selected tab in the tab order when it renders", async () => {
     const { render, user } = setUpTest();
     render({ selection: { defaultValue: "issues" } });
