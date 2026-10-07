@@ -40,7 +40,7 @@ export interface TabProps extends Omit<
 /**
  * One tab in a `TabList`. The arrow keys move between tabs, wrapping at both ends, and Home and End go to the first
  * and last. Your `onClick`, `onFocus` and `onKeyDown` run first; preventing a click's or key's default stops the tab
- * handling it.
+ * handling it. A disabled tab ignores clicks, so your `onClick` does not run for it.
  *
  * @example
  * <Tab value="issues">Issues</Tab>
@@ -58,9 +58,13 @@ export function Tab({
   const selected = tabs.selectedValue === value;
 
   function handleClick(event: MouseEvent<HTMLButtonElement>): void {
+    if (disabled) {
+      return;
+    }
+
     onClick?.(event);
 
-    if (!event.defaultPrevented && !disabled) {
+    if (!event.defaultPrevented) {
       tabs.select(value);
     }
   }

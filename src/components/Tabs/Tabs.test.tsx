@@ -195,6 +195,46 @@ describe("Tabs", () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
+  it("must not call the consumer's onClick when a disabled tab is clicked", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    renderBase(
+      <Tabs defaultValue="code">
+        <TabList aria-label="Repository">
+          <Tab value="code">Code</Tab>
+          <Tab disabled={true} onClick={onClick} value="wiki">
+            Wiki
+          </Tab>
+        </TabList>
+      </Tabs>
+    );
+
+    await user.click(elements.tab("Wiki"));
+
+    expect(onClick).not.toHaveBeenCalled();
+    expect(elements.tab("Code")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("must call the consumer's onClick and select the tab when an enabled tab is clicked", async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    renderBase(
+      <Tabs defaultValue="code">
+        <TabList aria-label="Repository">
+          <Tab value="code">Code</Tab>
+          <Tab onClick={onClick} value="wiki">
+            Wiki
+          </Tab>
+        </TabList>
+      </Tabs>
+    );
+
+    await user.click(elements.tab("Wiki"));
+
+    expect(onClick).toHaveBeenCalled();
+    expect(elements.tab("Wiki")).toHaveAttribute("aria-selected", "true");
+  });
+
   it("must put only the selected tab in the tab order when it renders", async () => {
     const { render, user } = setUpTest();
     render({ selection: { defaultValue: "issues" } });
