@@ -19,6 +19,7 @@
         "RadioGroup": "fieldset",
         "Select": "select",
         "SkipLink": "a",
+        "StatusDot": "span",
         "Switch": "input",
         "Textarea": "textarea",
         "TextInput": "input",

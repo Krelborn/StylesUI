@@ -54,6 +54,8 @@ export { SkipLink } from "./components/SkipLink";
 export type { SkipLinkProps } from "./components/SkipLink";
 export { Stack } from "./components/Stack";
 export type { StackProps } from "./components/Stack";
+export { StatusDot } from "./components/StatusDot";
+export type { StatusDotProps, StatusDotSize, StatusDotVariant } from "./components/StatusDot";
 export { Switch } from "./components/Switch";
 export type { SwitchProps } from "./components/Switch";
 export { Switcher } from "./components/Switcher";
