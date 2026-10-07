@@ -4,12 +4,14 @@ import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import type { WritingDirection } from "../../collections";
 import { MissingContextError } from "../../errors";
+import { transitionedProperties } from "../../test/transitionedProperties";
 
 import { Tab } from "./Tab";
 import { TabList } from "./TabList";
 import { TabPanel } from "./TabPanel";
 import type { TabsActivation, TabsOrientation } from "./Tabs";
 import { Tabs } from "./Tabs";
+import tabsCss from "./Tabs.module.css?raw";
 
 const repositoryTabs = [
   { label: "Code", value: "code" },
@@ -314,6 +316,12 @@ describe("Tabs", () => {
     await user.keyboard("{ArrowRight}");
 
     expect(elements.tab("Code")).toHaveFocus();
+  });
+
+  it("must transition only colours when reduced motion is requested", () => {
+    const reducedMotionBlock = tabsCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(transitionedProperties(reducedMotionBlock)).toEqual(["background-color", "border-color", "color", "none"]);
   });
 
   it.each([
