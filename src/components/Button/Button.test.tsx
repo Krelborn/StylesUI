@@ -38,12 +38,13 @@ describe("Button", () => {
     }
   );
 
-  it("must fill a pressed ghost button with the secondary pairing when it is pressed", () => {
+  it("must fill a ghost button with the secondary pairing when it is pressed", () => {
     const pressedGhostRule =
       buttonCss.match(/\.button\[data-variant="ghost"\]:active:not\(:disabled\) \{(.*?)\}/s)?.[1] ?? "";
+    const declarations = pressedGhostRule.split(";").map((declaration) => declaration.trim());
 
-    expect(pressedGhostRule).toContain("background-color: var(--sui-color-secondary,");
-    expect(pressedGhostRule).toContain("color: var(--sui-color-on-secondary,");
+    expect(declarations).toContain("background-color: var(--sui-color-secondary, #e5e7eb)");
+    expect(declarations).toContain("color: var(--sui-color-on-secondary, #111827)");
   });
 
   it.each(["sm", "md", "lg"] as const)("must apply the %s size when it is set", (size) => {

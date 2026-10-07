@@ -12,8 +12,8 @@ import styles from "./Button.module.css";
 export type ButtonSize = "sm" | "md" | "lg";
 
 /**
- * Button styles: filled primary, filled secondary, primary-coloured outline, or `ghost`, which has no fill or border
- * until it is hovered and never sits on a lip
+ * Button styles: filled primary, filled secondary, primary-coloured outline, or `ghost`, which has no border and no
+ * fill until it is hovered, and never sits on a lip
  */
 export type ButtonVariant = "ghost" | "outline" | "primary" | "secondary";
 

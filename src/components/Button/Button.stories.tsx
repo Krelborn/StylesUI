@@ -62,8 +62,8 @@ export const Outline: Story = {
 };
 
 /**
- * No fill or border until hovered, for quiet actions in toolbars and status bars. It stays flat in every theme, and
- * fills with the secondary colour while pressed.
+ * No border, and no fill until hovered, for quiet actions in toolbars and status bars. It stays flat in every theme,
+ * and fills with the secondary colour while pressed.
  */
 export const Ghost: Story = {
   args: {

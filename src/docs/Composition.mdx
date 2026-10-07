@@ -92,7 +92,8 @@ StylesUI has no empty-state component, because the layout components already mak
 nothing to show, say so with a heading and a sentence of muted text. When the user can do something about it, add an
 action:
 
-- `Cover` with `minimumHeight="100%"` centres the message vertically in its pane;
+- `Cover` with `minimumHeight="100%"` centres the message vertically in its pane, which needs a set height, such as a
+  flex or grid item or a fixed `blockSize`;
 - `Center` with `intrinsic={true}` and `width="prose"` centres it horizontally at a readable width, and
   `textAlign: "center"` centres its lines;
 - a `Stack` with `align="center"` holds the `Heading`, the muted `Text` and the action.
