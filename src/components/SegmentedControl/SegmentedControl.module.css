@@ -34,11 +34,11 @@
   position: relative;
   display: inline-grid;
   place-items: center;
-  padding: calc(var(--sui-segment-padding-y) - var(--sui-segmented-control-inset))
-    calc(var(--sui-segment-padding-x) - var(--sui-segmented-control-inset));
+  padding: calc(var(--sui-segment-padding-y, var(--sui-space-2, 0.5rem)) - var(--sui-segmented-control-inset, 2px))
+    calc(var(--sui-segment-padding-x, var(--sui-space-4, 1rem)) - var(--sui-segmented-control-inset, 2px));
   color: var(--sui-color-text, #111827);
   font-family: var(--sui-font-body, system-ui, sans-serif);
-  font-size: var(--sui-segment-font-size);
+  font-size: var(--sui-segment-font-size, var(--sui-font-size-md, 1rem));
   font-weight: var(--sui-font-weight-control, 500);
   line-height: var(--sui-line-height-tight, 1.25);
 }
@@ -49,7 +49,7 @@
   inset: 0;
   margin: 0;
   border: var(--sui-border-width, 1px) solid transparent;
-  border-radius: calc(var(--sui-radius-control, 4px) - var(--sui-segmented-control-inset));
+  border-radius: calc(var(--sui-radius-control, 4px) - var(--sui-segmented-control-inset, 2px));
   background-color: transparent;
   cursor: pointer;
   transition:
@@ -61,6 +61,7 @@
 
 .text {
   position: relative;
+  transition: color 120ms ease;
   pointer-events: none;
 }
 
@@ -72,7 +73,7 @@
 .input:checked {
   border-color: var(--sui-color-control-border, transparent);
   background-color: var(--sui-color-primary, #2563eb);
-  box-shadow: 0 var(--sui-segmented-control-depth) 0 var(--sui-color-shadow, transparent);
+  box-shadow: 0 var(--sui-segmented-control-depth, var(--sui-control-depth, 0px)) 0 var(--sui-color-shadow, transparent);
   transition:
     background-color 120ms ease,
     border-color 120ms ease,

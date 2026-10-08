@@ -35,7 +35,7 @@ function trackOf(input: HTMLElement): HTMLElement {
 
 const transparent = "rgba(0, 0, 0, 0)";
 
-// Checking transitions the fill and text colour over 120ms and the lip over a spring, so the settled state is awaited
+// Checking fades the fill, border and text colour over 120ms and springs the lip, so the settled state is awaited
 async function expectChecked(input: HTMLElement, text: HTMLElement): Promise<void> {
   const track = trackOf(input);
   const depth = parseFloat(getComputedStyle(track).getPropertyValue("--sui-control-depth"));
@@ -91,11 +91,56 @@ const meta = {
       description: "The `Segment`s",
       table: { type: { summary: "ReactNode" } },
     },
+    defaultValue: {
+      control: "text",
+      description:
+        "The value selected at first. It leaves the control uncontrolled, so the segments keep the user's choices.",
+      table: { type: { summary: "string" } },
+    },
+    description: {
+      control: "text",
+      description: "Supporting text shown below the label, linked to the control with `aria-describedby`",
+      table: { type: { summary: "ReactNode" } },
+    },
+    disabled: {
+      control: "boolean",
+      description: "Disables every segment and dims the control",
+      table: { type: { summary: "boolean" } },
+    },
+    error: {
+      control: "text",
+      description:
+        "Error message shown below the segments, linked to the control with `aria-describedby`. It marks the control invalid and draws the track's border in the danger colour.",
+      table: { type: { summary: "ReactNode" } },
+    },
     label: {
       control: "text",
       description: "Label for the control, rendered as its `legend`, which names it",
       table: { type: { summary: "ReactNode" } },
       type: { name: "other", required: true, value: "ReactNode" },
+    },
+    name: {
+      control: "text",
+      description:
+        "Name every segment submits its value under. Defaults to a generated name that is unique to the control.",
+      table: { type: { summary: "string" } },
+    },
+    onValueChange: {
+      control: false,
+      description: "Called with the value of the segment the user selects, after that segment's own `onChange`",
+      table: { type: { summary: "(value: string) => void" } },
+    },
+    required: {
+      control: "boolean",
+      description:
+        "Whether one segment must be selected. It marks the control and every segment required and adds an asterisk to the label.",
+      table: { defaultValue: { summary: "false" }, type: { summary: "boolean" } },
+    },
+    value: {
+      control: false,
+      description:
+        "The selected value, which makes the control controlled: the selection follows it, so update it from `onValueChange`. Give a value that matches no segment to select none.",
+      table: { type: { summary: "string" } },
     },
   },
   parameters: {
@@ -150,7 +195,8 @@ export const Default: Story = {
 };
 
 /**
- * `sm`, `md` and `lg` sit level with a Button of the same size
+ * `sm`, `md` and `lg` sit level with a Button of the same size, apart from the lip in themes with depth, for which the
+ * track reserves room
  */
 export const Sizes: Story = {
   render: (args) => (

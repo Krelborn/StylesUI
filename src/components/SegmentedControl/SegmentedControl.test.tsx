@@ -141,7 +141,7 @@ describe("SegmentedControl", () => {
     expect(elements.group).toHaveAccessibleDescription("Choose an appearance");
   });
 
-  it("must mark every segment invalid for styling when an error is given", () => {
+  it("must mark every segment with data-invalid when an error is given", () => {
     const { render } = setUpTest();
 
     render({ error: "Choose an appearance" });
@@ -213,6 +213,13 @@ describe("SegmentedControl", () => {
 
     expect(transitionedProperties(reducedMotionBlock)).toEqual(["background-color", "border-color"]);
     expect(reducedMotionBlock).toContain(".input:checked");
+  });
+
+  it("must keep the checked label out of forced colour adjustment when forced colours are active", () => {
+    const forcedColorsBlock = segmentedControlCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+    const checkedTextRule = forcedColorsBlock.match(/\.input:checked \+ \.text \{(.*?)\}/s)?.[1] ?? "";
+
+    expect(checkedTextRule).toContain("forced-color-adjust: none");
   });
 });
 
