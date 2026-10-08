@@ -43,6 +43,7 @@
   text-align: start;
   text-decoration: none;
   cursor: pointer;
+  scroll-margin-block: var(--sui-space-2, 0.5rem);
   transition:
     background-color 120ms ease,
     color 120ms ease;

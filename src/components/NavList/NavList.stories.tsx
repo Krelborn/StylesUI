@@ -4,7 +4,7 @@ import { useState } from "react";
 import { expect, userEvent } from "storybook/test";
 
 import { accessibleNameArgTypes, childrenArgType } from "../../docs/argTypes";
-import { focusRingContrast, textContrast } from "../../test/colorContrast";
+import { focusRingContrast, resolvedColor, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 import { Counter } from "../Counter";
 import { Text } from "../Text";
@@ -104,6 +104,23 @@ function ringReach(element: HTMLElement): number {
   return parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
 }
 
+/**
+ * Asserts that a focused item and its focus ring lie inside the scrolling element around it
+ *
+ * @param item the focused item
+ * @param scroller the scrolling element that holds the item
+ */
+async function expectRingInside(item: HTMLElement, scroller: HTMLElement): Promise<void> {
+  const itemBox = item.getBoundingClientRect();
+  const scrollerBox = scroller.getBoundingClientRect();
+  const reach = ringReach(item);
+
+  await expect(itemBox.top - reach).toBeGreaterThanOrEqual(scrollerBox.top);
+  await expect(itemBox.bottom + reach).toBeLessThanOrEqual(scrollerBox.bottom);
+}
+
+const sidebarPages = ["Overview", "Getting started", "Theming", "Forms", "Layout", "Navigation", "Overlays", "Testing"];
+
 const meta = {
   title: "Navigation/NavList",
   component: NavList,
@@ -141,9 +158,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvas }) => {
     const current = canvas.getByRole("link", { name: "Getting started" });
+    const bar = getComputedStyle(current, "::before");
 
     await expect(textContrast(current)).toBeGreaterThanOrEqual(4.5);
     await expect(Number(getComputedStyle(current).fontWeight)).toBeGreaterThanOrEqual(700);
+    await expect(bar.transform).toBe("matrix(1, 0, 0, 1, 0, 0)");
+    await expect(bar.backgroundColor).toBe(resolvedColor(current, "var(--sui-color-primary)"));
     await expect(textContrast(canvas.getByRole("link", { name: "Theming" }))).toBeGreaterThanOrEqual(4.5);
   },
 };
@@ -254,6 +274,7 @@ export const KeyboardInteraction: Story = {
     await expect(second).toHaveFocus();
     await expect(getComputedStyle(second, "::before").transform).toBe("matrix(1, 0, 0, 0, 0, 0)");
     await expect(Number(getComputedStyle(second).fontWeight)).toBeLessThan(700);
+    await expect(textContrast(second, "var(--sui-color-secondary-subtle)")).toBeGreaterThanOrEqual(4.5);
 
     const secondBox = second.getBoundingClientRect();
     const secondReach = ringReach(second);
@@ -263,5 +284,46 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.keyboard("{Enter}");
     await expect(canvas.getByText("Activated: Theming")).toBeInTheDocument();
+  },
+};
+
+/**
+ * A sidebar that scrolls keeps each focused item's ring inside it, as Tab moves down to items below the fold and
+ * Shift+Tab moves back up to items scrolled above it.
+ */
+export const ScrollingSidebar: Story = {
+  render: () => (
+    <Box style={{ blockSize: "8rem", inlineSize: "14rem", overflow: "auto" }} data-testid="sidebar">
+      <NavList aria-label="Documentation">
+        {sidebarPages.map((page) => (
+          <NavListItem href={`#${page}`} key={page}>
+            {page}
+          </NavListItem>
+        ))}
+      </NavList>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const sidebar = canvas.getByTestId("sidebar");
+    const links = canvas.getAllByRole("link");
+
+    await expect(sidebar.scrollHeight).toBeGreaterThan(sidebar.clientHeight);
+
+    for (const link of links) {
+      await userEvent.tab();
+      await expect(link).toHaveFocus();
+      await expect(link.matches(":focus-visible")).toBe(true);
+      await expectRingInside(link, sidebar);
+    }
+
+    await expect(sidebar.scrollTop).toBeGreaterThan(0);
+
+    for (const link of links.slice(0, -1).reverse()) {
+      await userEvent.tab({ shift: true });
+      await expect(link).toHaveFocus();
+      await expectRingInside(link, sidebar);
+    }
+
+    await expect(sidebar.scrollTop).toBe(0);
   },
 };
