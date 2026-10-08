@@ -21,6 +21,7 @@
   color: var(--sui-color-text, #111827);
   cursor: default;
   scroll-margin-block: calc(var(--sui-focus-ring-width, 2px) + 2px);
+  user-select: none;
   transition:
     background-color 120ms ease,
     color 120ms ease;
@@ -101,5 +102,14 @@
 
   .option[aria-disabled="true"]:not([aria-selected="true"]) {
     color: GrayText;
+  }
+
+  /*
+   * Forced colours turn the colour reset above into CanvasText, so element children take the option's GrayText instead,
+   * which marks them disabled without the opacity
+   */
+  :where(.option[aria-disabled="true"]:not([aria-selected="true"])) > * {
+    color: GrayText;
+    opacity: 1;
   }
 }

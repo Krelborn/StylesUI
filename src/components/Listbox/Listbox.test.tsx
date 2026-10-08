@@ -710,15 +710,41 @@ describe("Listbox", () => {
   });
 
   it("must fill the selected option with Highlight and opt out of forced colours when forced colours are active", () => {
-    const forcedColorsBlock = listboxCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
-    const selectedRule = forcedColorsBlock.match(/\.option\[aria-selected="true"\],[^{]*\{(.*?)\}/s)?.[1] ?? "";
-    const declarations = selectedRule.split(";").map((declaration) => declaration.trim());
+    const declarations = forcedColorsDeclarations('.option[aria-selected="true"],');
 
     expect(declarations).toContain("background-color: Highlight");
     expect(declarations).toContain("color: HighlightText");
     expect(declarations).toContain("forced-color-adjust: none");
   });
+
+  it("must show a disabled option's element children in GrayText at full opacity when forced colours are active", () => {
+    const declarations = forcedColorsDeclarations(
+      ':where(.option[aria-disabled="true"]:not([aria-selected="true"])) > *'
+    );
+
+    expect(declarations).toContain("color: GrayText");
+    expect(declarations).toContain("opacity: 1");
+  });
 });
+
+/**
+ * Reads the declarations of a rule in the stylesheet's forced-colours block
+ *
+ * @param selector the start of the rule's selector, as the stylesheet writes it
+ * @returns each declaration, trimmed; none when the block has no such rule
+ */
+function forcedColorsDeclarations(selector: string): string[] {
+  const forcedColorsBlock = listboxCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+  const ruleStart = forcedColorsBlock.indexOf(selector);
+
+  if (ruleStart === -1) {
+    return [];
+  }
+
+  const rule = forcedColorsBlock.slice(ruleStart).match(/\{(.*?)\}/s)?.[1] ?? "";
+
+  return rule.split(";").map((declaration) => declaration.trim());
+}
 
 type FruitListOptions = Omit<FruitListboxProps, "onAction" | "onValueChange">;
 

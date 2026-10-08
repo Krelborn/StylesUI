@@ -11,6 +11,7 @@ import { Badge } from "../Badge";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Counter } from "../Counter";
+import { Heading } from "../Heading";
 import { Row } from "../Row";
 import { Stack } from "../Stack";
 import { StatusDot } from "../StatusDot";
@@ -61,6 +62,8 @@ const pullRequests: readonly PullRequest[] = [
 
 const repositories = Array.from({ length: 30 }, (_, index) => `acme/service-${index + 1}`);
 
+const checksTones = { failing: "danger", passing: "success" } as const;
+
 interface PullRequestOptionProps {
   /**
    * The pull request the option stands for
@@ -69,14 +72,26 @@ interface PullRequestOptionProps {
 }
 
 /**
- * One pull request as the app's row shows it, named by its title and described by its metadata
+ * One pull request as the app's row shows it, named by its title and described by its metadata, draft badge and
+ * comment count, in reading order
  */
 function PullRequestOption({ pullRequest }: PullRequestOptionProps): JSX.Element {
   const titleId = useId();
   const metadataId = useId();
+  const draftId = useId();
+  const commentsId = useId();
+  const descriptionIds = [metadataId];
+
+  if (pullRequest.draft) {
+    descriptionIds.push(draftId);
+  }
+
+  if (pullRequest.comments > 0) {
+    descriptionIds.push(commentsId);
+  }
 
   return (
-    <ListboxOption value={pullRequest.id} aria-describedby={metadataId} aria-labelledby={titleId}>
+    <ListboxOption value={pullRequest.id} aria-describedby={descriptionIds.join(" ")} aria-labelledby={titleId}>
       <Row align="center" gap={2}>
         <Avatar name={pullRequest.author} size="sm" aria-hidden={true} />
         <Stack gap={1} style={{ flex: 1, minInlineSize: 0 }}>
@@ -84,17 +99,36 @@ function PullRequestOption({ pullRequest }: PullRequestOptionProps): JSX.Element
             {pullRequest.title}
           </Text>
           <Text id={metadataId} size="sm" tone="muted">
-            {`${pullRequest.repository} #${pullRequest.id} · checks ${pullRequest.checks}${pullRequest.draft ? " · draft" : ""}`}
+            {`${pullRequest.repository} #${pullRequest.id} · checks ${pullRequest.checks}`}
           </Text>
         </Stack>
-        <StatusDot
-          tone={pullRequest.checks === "passing" ? "success" : "danger"}
-          data-testid={`checks-${pullRequest.id}`}
-        />
-        {pullRequest.draft && <Badge>Draft</Badge>}
-        <Counter count={pullRequest.comments} hiddenSuffix="comments" />
+        <StatusDot tone={checksTones[pullRequest.checks]} data-testid={`checks-${pullRequest.id}`} />
+        {pullRequest.draft && <Badge id={draftId}>Draft</Badge>}
+        <Counter count={pullRequest.comments} hiddenSuffix="comments" id={commentsId} />
       </Row>
     </ListboxOption>
+  );
+}
+
+/**
+ * A pane that scrolls a heading and the listbox the heading names, as the app's sidebar does
+ */
+function RepositoryPane(): JSX.Element {
+  const headingId = useId();
+
+  return (
+    <Box style={{ blockSize: "12rem", inlineSize: "20rem", overflow: "auto" }} data-testid="pane">
+      <Heading id={headingId} level={2} size="sm">
+        Repositories
+      </Heading>
+      <Listbox defaultValue="acme/service-20" aria-labelledby={headingId}>
+        {repositories.map((repository) => (
+          <ListboxOption key={repository} value={repository}>
+            {repository}
+          </ListboxOption>
+        ))}
+      </Listbox>
+    </Box>
   );
 }
 
@@ -128,18 +162,24 @@ async function waitForTransitions(element: HTMLElement): Promise<void> {
 }
 
 /**
- * Asserts that an option lies inside a scrolling listbox, clear of the focus ring drawn inside the listbox's edge
+ * Asserts that an option lies inside the element that scrolls it, at least the width of the listbox's focus ring from
+ * its top and bottom, so the ring drawn inside the listbox's edge never covers it
  *
  * @param option the option
- * @param listbox the focused listbox that scrolls it
+ * @param listbox the focused listbox
+ * @param scroller the element that scrolls the option: the listbox itself, or a pane around it
  */
-async function expectClearOfRing(option: HTMLElement, listbox: HTMLElement): Promise<void> {
+async function expectClearOfRing(
+  option: HTMLElement,
+  listbox: HTMLElement,
+  scroller: HTMLElement = listbox
+): Promise<void> {
   const optionBox = option.getBoundingClientRect();
-  const listboxBox = listbox.getBoundingClientRect();
+  const scrollerBox = scroller.getBoundingClientRect();
   const ringWidth = parseFloat(getComputedStyle(listbox).outlineWidth);
 
-  await expect(optionBox.top).toBeGreaterThanOrEqual(listboxBox.top + ringWidth);
-  await expect(optionBox.bottom).toBeLessThanOrEqual(listboxBox.bottom - ringWidth);
+  await expect(optionBox.top).toBeGreaterThanOrEqual(scrollerBox.top + ringWidth);
+  await expect(optionBox.bottom).toBeLessThanOrEqual(scrollerBox.bottom - ringWidth);
 }
 
 const meta = {
@@ -176,12 +216,15 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Plain options. Without focus the selection is a primary tint with primary text and a bar; an unselected option is
- * tinted under the pointer. Clicking an option selects it and focuses the listbox.
+ * tinted under the pointer. Clicking an option selects it and focuses the listbox, and as in a native listbox, a
+ * double-click does not select a word of its text.
  */
 export const Default: Story = {
   play: async ({ args, canvas }) => {
     const selected = canvas.getByRole("option", { name: "acme/service-2" });
     const unselected = canvas.getByRole("option", { name: "acme/service-1" });
+
+    await expect(getComputedStyle(unselected).userSelect).toBe("none");
 
     await expect(textContrast(selected)).toBeGreaterThanOrEqual(4.5);
     await expect(getComputedStyle(selected, "::before").backgroundColor).toBe(
@@ -196,9 +239,10 @@ export const Default: Story = {
 };
 
 /**
- * The app's rows: an avatar, a title naming the option, muted metadata describing it, a status dot, a draft badge and
- * a comment count. Muted text and the status dot in the selected option take the selection's text colour, with and
- * without focus.
+ * The app's rows: an avatar, a title naming the option, muted metadata, a status dot, a draft badge and a comment
+ * count. A screen reader announces only what `aria-labelledby` and `aria-describedby` name, so the metadata, the badge
+ * and the count describe the option, in reading order. Muted text and the status dot in the selected option take the
+ * selection's text colour, with and without focus.
  */
 export const RichOptions: Story = {
   render: () => (
@@ -217,7 +261,10 @@ export const RichOptions: Story = {
     const primary = resolvedColor(option, "var(--sui-color-primary)");
     const onPrimary = resolvedColor(option, "var(--sui-color-on-primary)");
 
-    await expect(option).toHaveAccessibleDescription("acme/web #42 · checks passing");
+    await expect(option).toHaveAccessibleDescription("acme/web #42 · checks passing 3 comments");
+    await expect(canvas.getByRole("option", { name: "Add rate limiting" })).toHaveAccessibleDescription(
+      "acme/api #57 · checks failing Draft"
+    );
     await expect(textContrast(metadata, getComputedStyle(option).backgroundColor)).toBeGreaterThanOrEqual(4.5);
     await expect(getComputedStyle(dot).color).toBe(primary);
     await expect(getComputedStyle(unselectedDot).color).toBe(
@@ -268,6 +315,30 @@ export const Scrolling: Story = {
 
     await userEvent.keyboard("{ArrowUp}".repeat(8));
     await waitFor(() => expectClearOfRing(canvas.getByRole("option", { name: "acme/service-22" }), listbox));
+    await expect(window.scrollY).toBe(pageScroll);
+  },
+};
+
+/**
+ * In a pane that scrolls a heading and the listbox it names, focus entering from the keyboard scrolls the selected
+ * option into view, and End keeps the last option clear of the pane's edge, without scrolling the page
+ */
+export const ScrollingPane: Story = {
+  render: () => <RepositoryPane />,
+  play: async ({ canvas }) => {
+    const pane = canvas.getByTestId("pane");
+    const listbox = canvas.getByRole("listbox", { name: "Repositories" });
+    const selected = canvas.getByRole("option", { name: "acme/service-20" });
+    const pageScroll = window.scrollY;
+
+    await expect(selected.getBoundingClientRect().top).toBeGreaterThan(pane.getBoundingClientRect().bottom);
+
+    await userEvent.tab();
+    await expect(listbox).toHaveFocus();
+    await waitFor(() => expectClearOfRing(selected, listbox, pane));
+
+    await userEvent.keyboard("{End}");
+    await waitFor(() => expectClearOfRing(canvas.getByRole("option", { name: "acme/service-30" }), listbox, pane));
     await expect(window.scrollY).toBe(pageScroll);
   },
 };
