@@ -37,7 +37,7 @@ Each status (`danger`, `success`, `warning`, `info`) has three grades:
 #### Borders
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
-- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge` and a checked `Checkbox`, `Radio` or `Switch`. Transparent in `default`.
+- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge`, the selected `Tabs` pill and a checked `Checkbox`, `Radio`, `Segment` or `Switch`. Transparent in `default`.
 - `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background and a surface (WCAG 1.4.11).
 
 ### Token tiers
@@ -135,7 +135,7 @@ SegmentedControl is a horizontal RadioGroup around a track, so it takes RadioGro
 
 An `error` renders below the control in `--sui-color-danger-text` and is linked with `aria-describedby`. It is not a live region, so a form's summary of errors is an Alert with `role="alert"`.
 
-The text controls share the internal TextControl, and the choice controls share the internal ChoiceControl. RequiredIndicator draws the asterisk. Shared code lives in `src/forms/`: the `ControlSize` type, the two contexts, the `useFieldControl` hook and `hasContent`, which tells whether a `description` or `error` has anything to render.
+The text controls share the internal TextControl, and the choice controls share the internal ChoiceControl. RequiredIndicator draws the asterisk. Shared code lives in `src/forms/`: the `ControlSize` type, the two contexts, the `useFieldControl` and `useRadioGroupItem` hooks and `hasContent`, which tells whether a `description` or `error` has anything to render.
 
 ### Overlays
 
