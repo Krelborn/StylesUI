@@ -1,7 +1,6 @@
-import type { ChangeEvent, JSX, ReactNode } from "react";
-import { useContext } from "react";
+import type { JSX, ReactNode } from "react";
 
-import { RadioGroupContext } from "../../forms";
+import { useRadioGroupItem } from "../../forms";
 import type { BoxProps } from "../Box";
 import { ChoiceControl } from "../ChoiceControl";
 
@@ -36,40 +35,10 @@ export interface RadioProps extends Omit<
  * <Radio name="plan" value="monthly">Pay monthly</Radio>
  */
 export function Radio({ children, onChange, value, ...rest }: RadioProps): JSX.Element {
-  const group = useContext(RadioGroupContext);
-
-  if (group === null) {
-    return (
-      <ChoiceControl {...rest} kind="radio" onChange={onChange} value={value}>
-        {children}
-      </ChoiceControl>
-    );
-  }
-
-  const selection: Pick<RadioProps, "checked" | "defaultChecked"> = {};
-
-  if (group.value !== undefined) {
-    selection.checked = group.value === value;
-  } else if (group.defaultValue !== undefined) {
-    selection.defaultChecked = group.defaultValue === value;
-  }
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>): void => {
-    onChange?.(event);
-    group.onValueChange?.(value);
-  };
+  const groupProps = useRadioGroupItem({ onChange, value });
 
   return (
-    <ChoiceControl
-      {...rest}
-      {...selection}
-      kind="radio"
-      name={group.name}
-      onChange={handleChange}
-      required={group.required}
-      value={value}
-      data-invalid={group.invalid ? "" : undefined}
-    >
+    <ChoiceControl {...rest} {...groupProps} kind="radio" value={value}>
       {children}
     </ChoiceControl>
   );

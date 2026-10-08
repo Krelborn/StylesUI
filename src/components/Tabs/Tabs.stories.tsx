@@ -4,7 +4,7 @@ import { useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import type { ControlSize } from "../../forms";
-import { focusRingContrast, textContrast } from "../../test/colorContrast";
+import { focusRingContrast, resolvedColor, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Cluster } from "../Cluster";
@@ -40,16 +40,6 @@ function RepositoryTabs(props: TabsProps): JSX.Element {
   );
 }
 
-function resolveColor(element: HTMLElement, color: string): string {
-  const probe = document.createElement("span");
-  probe.style.color = color;
-  element.append(probe);
-  const resolved = getComputedStyle(probe).color;
-  probe.remove();
-
-  return resolved;
-}
-
 function colorAlpha(color: string): number {
   const alpha = color.match(/(?:rgba\(.*,|\/)\s*([\d.]+)\s*\)$/)?.[1];
 
@@ -62,7 +52,7 @@ function indicatorScale(tab: HTMLElement): number {
 
 // Selecting transitions colours, the bar and the lift over 120ms or a spring, so the settled state is awaited first
 async function expectUnderlineState(tab: HTMLElement, selected: boolean): Promise<void> {
-  const textColor = resolveColor(tab, selected ? "var(--sui-color-text)" : "var(--sui-color-text-muted)");
+  const textColor = resolvedColor(tab, selected ? "var(--sui-color-text)" : "var(--sui-color-text-muted)");
 
   await waitFor(() => {
     expect(getComputedStyle(tab).color).toBe(textColor);
@@ -72,7 +62,7 @@ async function expectUnderlineState(tab: HTMLElement, selected: boolean): Promis
   if (selected) {
     const indicator = getComputedStyle(tab, "::after");
 
-    await expect(indicator.backgroundColor).toBe(resolveColor(tab, "var(--sui-color-primary)"));
+    await expect(indicator.backgroundColor).toBe(resolvedColor(tab, "var(--sui-color-primary)"));
     await expect(parseFloat(indicator.height)).toBe(2 * parseFloat(getComputedStyle(tab).borderTopWidth));
   }
 
@@ -80,8 +70,8 @@ async function expectUnderlineState(tab: HTMLElement, selected: boolean): Promis
 }
 
 async function expectPillState(tab: HTMLElement, selected: boolean): Promise<void> {
-  const fill = selected ? resolveColor(tab, "var(--sui-color-primary)") : "rgba(0, 0, 0, 0)";
-  const textColor = resolveColor(tab, selected ? "var(--sui-color-on-primary)" : "var(--sui-color-text-muted)");
+  const fill = selected ? resolvedColor(tab, "var(--sui-color-primary)") : "rgba(0, 0, 0, 0)";
+  const textColor = resolvedColor(tab, selected ? "var(--sui-color-on-primary)" : "var(--sui-color-text-muted)");
   const lift = selected ? -parseFloat(getComputedStyle(tab).getPropertyValue("--sui-control-depth")) / 2 : 0;
 
   await waitFor(() => {

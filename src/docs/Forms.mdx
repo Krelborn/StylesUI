@@ -21,8 +21,8 @@ What each component renders:
 - `TextInput`: an `input` for a line of text.
 - `Textarea`: a `textarea`.
 - `Select`: a `select`, with native `option` and `optgroup` children.
-- `Checkbox`, `Switch` and `Radio`: an `input` inside the `label` that names it. A `Switch` is a
-  checkbox with the `switch` role.
+- `Checkbox`, `Switch`, `Radio` and `Segment`: an `input` inside the `label` that names it. A
+  `Switch` is a checkbox with the `switch` role, and a `Segment` is a radio drawn as a joined button.
 - `Field`: the label, description and error around one control.
 - `Fieldset`: a `fieldset` and its `legend`, around a group of controls.
 - `RadioGroup`: a `Fieldset` with the `radiogroup` role, around `Radio`s.
@@ -63,8 +63,8 @@ A control outside a `Field` works on its own and needs its own accessible name, 
 
 ## Controls that label themselves
 
-`Checkbox`, `Switch` and `Radio` render a `label` around the input and its text, so their children
-are the label:
+`Checkbox`, `Switch`, `Radio` and `Segment` render a `label` around the input and its text, so
+their children are the label:
 
 ```tsx
 <Checkbox name="updates">Send me product updates</Checkbox>
@@ -111,6 +111,9 @@ be marked invalid. `required` sets `aria-required` on the group and the native `
 radio. `error` sets `aria-invalid` on the group and draws each radio's border in the danger colour:
 
 <Canvas of={RadioGroupStories.WithDescriptionAndError} />
+
+`SegmentedControl` is a `RadioGroup` drawn as joined buttons, for two to five short choices, and
+[its docs page](?path=/docs/forms-segmentedcontrol--docs) shows its sizes and states.
 
 ## Required answers
 

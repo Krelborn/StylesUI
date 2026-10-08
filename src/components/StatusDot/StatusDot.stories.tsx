@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { CSSProperties } from "react";
 import { expect, within } from "storybook/test";
 
-import { borderContrast, textContrast } from "../../test/colorContrast";
+import { borderContrast, resolvedColor, textContrast } from "../../test/colorContrast";
 import type { BadgeTone } from "../Badge";
 import { Box } from "../Box";
 import { Card } from "../Card";
@@ -38,16 +38,6 @@ function remToPixels(rem: number): number {
   return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
 }
 
-function resolveToken(dot: HTMLElement, token: string): string {
-  const probe = document.createElement("span");
-  probe.style.color = `var(${token})`;
-  dot.after(probe);
-  const resolved = getComputedStyle(probe).color;
-  probe.remove();
-
-  return resolved;
-}
-
 async function expectDrawnDot(
   dot: HTMLElement,
   tone: BadgeTone,
@@ -58,7 +48,7 @@ async function expectDrawnDot(
 
   await expect(dot.getBoundingClientRect().width, `${message} width`).toBeCloseTo(remToPixels(0.5), 1);
   await expect(dot.getBoundingClientRect().height, `${message} height`).toBeCloseTo(remToPixels(0.5), 1);
-  await expect(style.color, `${message} colour`).toBe(resolveToken(dot, toneTokens[tone]));
+  await expect(style.color, `${message} colour`).toBe(resolvedColor(dot, `var(${toneTokens[tone]})`));
 
   if (variant === "solid") {
     await expect(style.backgroundColor, `${message} fill`).toBe(style.color);

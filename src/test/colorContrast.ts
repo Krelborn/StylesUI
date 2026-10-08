@@ -76,6 +76,21 @@ export function textContrast(element: HTMLElement, background?: string): number 
   return contrastRatio(composite(toRgba(getComputedStyle(element).color), surface), surface);
 }
 
+/**
+ * Resolves a CSS colour in an element's scope to the string the browser reports for a computed
+ * `color`, so it can be compared with `getComputedStyle(...).color` and the like.
+ *
+ * Needs a real browser to resolve custom properties and `light-dark()`.
+ *
+ * @param element the element whose custom properties and `color-scheme` the colour is resolved
+ *   against
+ * @param color a CSS colour, such as `"var(--sui-color-primary)"`
+ * @returns the resolved colour, such as `"rgb(37, 99, 235)"`
+ */
+export function resolvedColor(element: HTMLElement, color: string): string {
+  return computedInProbe(element, "color", color);
+}
+
 function backgroundBehind(element: HTMLElement): Rgba {
   const layers: Rgba[] = [];
 
@@ -93,12 +108,18 @@ function backgroundBehind(element: HTMLElement): Rgba {
 }
 
 // Resolved on a child so custom properties and light-dark() take the element's values
-function resolveIn(element: HTMLElement, color: string): Rgba {
+function computedInProbe(element: HTMLElement, property: "backgroundColor" | "color", color: string): string {
   const probe = document.createElement("span");
-  probe.style.backgroundColor = color;
+  probe.style[property] = color;
   element.append(probe);
-  const resolved = toRgba(getComputedStyle(probe).backgroundColor);
+  const resolved = getComputedStyle(probe)[property];
   probe.remove();
+
+  return resolved;
+}
+
+function resolveIn(element: HTMLElement, color: string): Rgba {
+  const resolved = toRgba(computedInProbe(element, "backgroundColor", color));
 
   if (resolved.alpha === 0 && color !== "transparent") {
     throw new Error(`textContrast background "${color}" resolved to a fully transparent colour`);

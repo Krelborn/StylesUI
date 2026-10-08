@@ -19,6 +19,8 @@
         "Link": "a",
         "Radio": "input",
         "RadioGroup": "fieldset",
+        "Segment": "input",
+        "SegmentedControl": "fieldset",
         "Select": "select",
         "SkipLink": "a",
         "StatusDot": "span",
