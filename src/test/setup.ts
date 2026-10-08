@@ -20,6 +20,13 @@ HTMLElement.prototype.hidePopover = function hidePopover(this: HTMLElement): voi
   this.removeAttribute("data-popover-open");
 };
 
+// jsdom parses :popover-open but never matches it, so it is read as the attribute the stubs above set
+const matches = Element.prototype.matches;
+
+Element.prototype.matches = function matchesWithPopoverOpen(this: Element, selectors: string): boolean {
+  return matches.call(this, selectors.replaceAll(":popover-open", "[data-popover-open]"));
+} as typeof matches;
+
 // Testing Library only auto-cleans when test globals are enabled
 afterEach(() => {
   cleanup();

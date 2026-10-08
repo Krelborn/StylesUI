@@ -46,9 +46,15 @@ describe("mergeProps", () => {
   });
 
   it("must merge style objects with the hook's properties winning when both set style", () => {
+    expect(mergeProps({ style: { color: "red", inlineSize: "1rem" } }, { style: { color: "blue" } })).toEqual({
+      style: { color: "blue", inlineSize: "1rem" },
+    });
+  });
+
+  it("must keep both anchor names when both styles set anchorName", () => {
     expect(
-      mergeProps({ style: { anchorName: "--own", color: "red" } }, { style: { anchorName: "--sui-overlay-tip" } })
-    ).toEqual({ style: { anchorName: "--sui-overlay-tip", color: "red" } });
+      mergeProps({ style: { anchorName: "--sui-overlay-popover" } }, { style: { anchorName: "--sui-overlay-tip" } })
+    ).toEqual({ style: { anchorName: "--sui-overlay-tip, --sui-overlay-popover" } });
   });
 
   it("must keep the consumer's value when the hook's value is undefined", () => {

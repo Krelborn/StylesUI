@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useId, useRef, useState } from "react";
 
+import { anchorNameFor } from "./anchorNameFor";
 import type { OverlayDelay } from "./OverlayDelay";
 
 interface UseOverlayOptions {
@@ -154,7 +155,7 @@ export function useOverlay({
   );
 
   return {
-    anchorName: `--sui-overlay-${id.replace(/[^\w-]/g, "")}`,
+    anchorName: anchorNameFor(id),
     cancelDelay,
     hide: () => request(false, 0),
     hideAfterDelay: () => request(false, delay.hide),

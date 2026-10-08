@@ -60,5 +60,5 @@ export interface TooltipProps
  * <Tooltip {...tooltip.getOverlayProps()}>Sends to all subscribers</Tooltip>
  */
 export function Tooltip({ className, ...rest }: TooltipProps): JSX.Element {
-  return <Overlay {...rest} className={clsx(styles.tooltip, className)} role="tooltip" />;
+  return <Overlay {...rest} as="span" className={clsx(styles.tooltip, className)} popover="manual" role="tooltip" />;
 }
