@@ -263,9 +263,11 @@ export const Controlled: Story = {
 
 /**
  * A parent that keeps `open` true while it handles `onOpenChange` holds the popover open: Escape is reported as a
- * close, and the popover shows again even when the `Popover` itself does not render again.
+ * close, and the popover shows again even when the `Popover` itself does not render again. It is left off the Docs
+ * page, where its popover would keep closing the other stories' popovers.
  */
 export const HeldOpen: Story = {
+  tags: ["!autodocs"],
   render: () => <HeldOpenPopover />,
   play: async ({ canvas }) => {
     const link = await canvas.findByRole("link", { name: "Open pull request" });
