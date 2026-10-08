@@ -1,7 +1,8 @@
 import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { memo, useState } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
@@ -12,6 +13,10 @@ import type { UsePopoverOptions } from "./usePopover";
 import { usePopover } from "./usePopover";
 
 describe("usePopover", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("must point the trigger at the popover when it renders", () => {
     render(<ProblemsPopover />);
 
@@ -95,6 +100,42 @@ describe("usePopover", () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  it("must show the popover again when the browser closes it and the Popover does not re-render", () => {
+    render(<HeldOpenPopover />);
+
+    elements.popover.hidePopover();
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+  });
+
+  it("must show the popover only once when the browser closes it and the Popover re-renders", () => {
+    const showPopover = HTMLElement.prototype.showPopover;
+    vi.spyOn(HTMLElement.prototype, "showPopover").mockImplementation(function showPopoverOnce(this: HTMLElement) {
+      if (this.matches(":popover-open")) {
+        throw new DOMException("The popover is already showing", "InvalidStateError");
+      }
+
+      showPopover.call(this);
+    });
+    render(<ProblemsPopover onOpenChange={vi.fn()} open={true} />);
+
+    elements.popover.hidePopover();
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+  });
+
+  it("must keep the popover hidden when the browser closes it and the parent follows onOpenChange", () => {
+    render(<FollowingPopover />);
+
+    elements.popover.hidePopover();
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).not.toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must hide an uncontrolled popover and report it when close is called", async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
@@ -168,6 +209,40 @@ function ProblemsPopover({ onTriggerClick, ...options }: ProblemsPopoverProps): 
 }
 
 /**
+ * A popover its parent keeps open, rendered through a `Popover` that never re-renders, as when a consumer caches the
+ * element
+ */
+function HeldOpenPopover(): JSX.Element {
+  const popover = usePopover({ onOpenChange: vi.fn(), open: true });
+
+  return (
+    <>
+      <Button {...popover.getTriggerProps()}>2 problems</Button>
+      <UnchangingPopover {...popover.getOverlayProps()} data-testid="popover">
+        <Text as="p">Checks are failing</Text>
+      </UnchangingPopover>
+    </>
+  );
+}
+
+/**
+ * A controlled popover whose parent closes it when asked to
+ */
+function FollowingPopover(): JSX.Element {
+  const [open, setOpen] = useState(true);
+  const popover = usePopover({ onOpenChange: setOpen, open });
+
+  return (
+    <>
+      <Button {...popover.getTriggerProps()}>2 problems</Button>
+      <Popover {...popover.getOverlayProps()} data-testid="popover">
+        <Text as="p">Checks are failing</Text>
+      </Popover>
+    </>
+  );
+}
+
+/**
  * An icon-only button that anchors both its own tooltip and a popover
  */
 function IconTriggerPopover(): JSX.Element {
@@ -198,6 +273,8 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
     oldState: newState === "open" ? "closed" : "open",
   });
 }
+
+const UnchangingPopover = memo(Popover, () => true);
 
 const elements = {
   get popover(): HTMLElement {

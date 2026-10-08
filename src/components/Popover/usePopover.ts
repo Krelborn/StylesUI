@@ -1,5 +1,5 @@
 import type { CSSProperties, ToggleEvent } from "react";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import type { OverlayPlacement } from "../../overlays";
 import { anchorNameFor, mergeProps } from "../../overlays";
@@ -109,10 +109,20 @@ export function usePopover({
 }: UsePopoverOptions = {}): UsePopoverResult {
   const id = useId();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
-  const [, requestRender] = useState(0);
+  const [renderRequest, requestRender] = useState(0);
+  const popoverElement = useRef<HTMLElement | null>(null);
   const controlled = controlledOpen !== undefined;
   const open = controlledOpen ?? uncontrolledOpen;
   const anchorName = anchorNameFor(id);
+
+  // The consumer may not re-render the Popover for this hook's state alone, so the hook shows it again itself
+  useEffect(() => {
+    const element = popoverElement.current;
+
+    if (renderRequest > 0 && open && element !== null && !element.matches(":popover-open")) {
+      element.showPopover();
+    }
+  }, [open, renderRequest]);
 
   function commit(nextOpen: boolean): void {
     if (!controlled) {
@@ -138,8 +148,8 @@ export function usePopover({
 
     commit(nextOpen);
 
-    // A parent that keeps `open` true sets no state, so Overlay's effect needs this render to show the popover again
     if (controlled) {
+      popoverElement.current = event.currentTarget;
       requestRender((count) => count + 1);
     }
   }
