@@ -22,7 +22,8 @@ export interface UsePopoverOptions {
 
   /**
    * Controls whether the popover is open. The hook then cancels openings and reports them through `onOpenChange`; a
-   * close the browser makes is reported after it happens, and the popover shows again if `open` stays true.
+   * close the browser makes is reported after it happens, and the popover shows again if `open` stays true. Only one
+   * popover can be open at a time, so two held open this way keep closing each other.
    */
   open?: boolean;
 
