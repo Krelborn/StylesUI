@@ -110,18 +110,23 @@ describe("usePopover", () => {
   });
 
   it("must show the popover only once when the browser closes it and the Popover re-renders", () => {
-    const showPopover = HTMLElement.prototype.showPopover;
-    vi.spyOn(HTMLElement.prototype, "showPopover").mockImplementation(function showPopoverOnce(this: HTMLElement) {
-      if (this.matches(":popover-open")) {
-        throw new DOMException("The popover is already showing", "InvalidStateError");
-      }
-
-      showPopover.call(this);
-    });
+    rejectInvalidShowPopover();
     render(<ProblemsPopover onOpenChange={vi.fn()} open={true} />);
 
     elements.popover.hidePopover();
     fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+  });
+
+  it("must show the new popover when a remount replaced the one the browser closed", async () => {
+    const user = userEvent.setup();
+    rejectInvalidShowPopover();
+    render(<RemountingPopover />);
+
+    elements.popover.hidePopover();
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+    await user.click(elements.trigger);
 
     expect(elements.popover).toBeVisible();
   });
@@ -243,6 +248,25 @@ function FollowingPopover(): JSX.Element {
 }
 
 /**
+ * A controlled popover that only renders its `Popover` while open, so each opening mounts a new element
+ */
+function RemountingPopover(): JSX.Element {
+  const [open, setOpen] = useState(true);
+  const popover = usePopover({ onOpenChange: setOpen, open });
+
+  return (
+    <>
+      <Button {...popover.getTriggerProps({ onClick: () => setOpen(true) })}>2 problems</Button>
+      {popover.open && (
+        <Popover {...popover.getOverlayProps()} data-testid="popover">
+          <Text as="p">Checks are failing</Text>
+        </Popover>
+      )}
+    </>
+  );
+}
+
+/**
  * An icon-only button that anchors both its own tooltip and a popover
  */
 function IconTriggerPopover(): JSX.Element {
@@ -271,6 +295,26 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
   return Object.assign(new Event(type, { cancelable: type === "beforetoggle" && newState === "open" }), {
     newState,
     oldState: newState === "open" ? "closed" : "open",
+  });
+}
+
+/**
+ * Makes `showPopover` throw as a browser's does when the popover is already showing or is not in the document, which
+ * the jsdom stub never does
+ */
+function rejectInvalidShowPopover(): void {
+  const showPopover = HTMLElement.prototype.showPopover;
+
+  vi.spyOn(HTMLElement.prototype, "showPopover").mockImplementation(function showPopoverOrThrow(this: HTMLElement) {
+    if (!this.isConnected) {
+      throw new DOMException("The popover is not in the document", "InvalidStateError");
+    }
+
+    if (this.matches(":popover-open")) {
+      throw new DOMException("The popover is already showing", "InvalidStateError");
+    }
+
+    showPopover.call(this);
   });
 }
 

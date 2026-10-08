@@ -119,7 +119,7 @@ export function usePopover({
   useEffect(() => {
     const element = popoverElement.current;
 
-    if (renderRequest > 0 && open && element !== null && !element.matches(":popover-open")) {
+    if (renderRequest > 0 && open && element !== null && element.isConnected && !element.matches(":popover-open")) {
       element.showPopover();
     }
   }, [open, renderRequest]);
