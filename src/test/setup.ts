@@ -27,6 +27,9 @@ Element.prototype.matches = function matchesWithPopoverOpen(this: Element, selec
   return matches.call(this, selectors.replaceAll(":popover-open", "[data-popover-open]"));
 } as typeof matches;
 
+// jsdom has no scrollIntoView; tests that care spy on this stub
+Element.prototype.scrollIntoView = function scrollIntoView(): void {};
+
 // Testing Library only auto-cleans when test globals are enabled
 afterEach(() => {
   cleanup();

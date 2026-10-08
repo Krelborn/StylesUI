@@ -42,6 +42,8 @@ export { Kbd } from "./components/Kbd";
 export type { KbdProps } from "./components/Kbd";
 export { Link } from "./components/Link";
 export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
+export { Listbox, ListboxOption } from "./components/Listbox";
+export type { ListboxOptionProps, ListboxProps } from "./components/Listbox";
 export { NavList, NavListGroup, NavListItem } from "./components/NavList";
 export type { NavListGroupProps, NavListItemElement, NavListItemProps, NavListProps } from "./components/NavList";
 export { PageLayout } from "./components/PageLayout";

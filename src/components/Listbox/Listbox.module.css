@@ -1,0 +1,118 @@
+.listbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: calc(var(--sui-focus-ring-width, 2px) + 2px);
+  border-radius: var(--sui-radius-md, 4px);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+}
+
+/* Inside the edge, so a scrolling pane cannot clip it; the padding and the options' scroll margin keep options off it */
+.listbox:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+.option {
+  position: relative;
+  padding: var(--sui-space-2, 0.5rem);
+  padding-inline-start: calc(var(--sui-space-2, 0.5rem) + var(--sui-border-width, 1px) * 2);
+  border-radius: var(--sui-radius-md, 4px);
+  color: var(--sui-color-text, #111827);
+  cursor: default;
+  scroll-margin-block: calc(var(--sui-focus-ring-width, 2px) + 2px);
+  user-select: none;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.option::before {
+  position: absolute;
+  inset-block: var(--sui-space-1, 0.25rem);
+  inset-inline-start: 0;
+  inline-size: calc(var(--sui-border-width, 1px) * 2);
+  border-radius: var(--sui-radius-full, 9999px);
+  background-color: transparent;
+  content: "";
+}
+
+.option:hover:not([aria-selected="true"], [aria-disabled="true"]) {
+  background-color: var(--sui-color-secondary-subtle, #f3f4f6);
+}
+
+/*
+ * The selection tokens are never declared here, so an ancestor can set them, such as an app while its window is
+ * inactive. Muted text and status dots inside take the selection's text colour, which keeps their contrast on it.
+ */
+.option[aria-selected="true"] {
+  --sui-color-text-muted: currentColor;
+  --sui-status-dot-color: currentColor;
+
+  background-color: var(--sui-listbox-inactive-selection, var(--sui-color-primary-subtle, #edf5ff));
+  color: var(--sui-listbox-on-inactive-selection, var(--sui-color-primary, #2563eb));
+}
+
+.option[aria-selected="true"]::before {
+  background-color: var(--sui-listbox-inactive-selection-bar, var(--sui-color-primary, #2563eb));
+}
+
+.listbox:focus .option[aria-selected="true"] {
+  background-color: var(--sui-listbox-selection, var(--sui-color-primary, #2563eb));
+  color: var(--sui-listbox-on-selection, var(--sui-color-on-primary, #fff));
+}
+
+.listbox:focus-visible .option[data-active]:not([aria-selected="true"]) {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+.option[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+/*
+ * Opacity on the option would dim its focus ring too, so its text is dimmed by colour and its elements by opacity. A
+ * disabled option that a value selects anyway keeps the selection's look.
+ */
+.option[aria-disabled="true"]:not([aria-selected="true"]) {
+  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
+}
+
+/* Back to the undimmed colour, which the opacity halves; without specificity, so a child's own colour still wins */
+:where(.option[aria-disabled="true"]:not([aria-selected="true"])) > * {
+  color: var(--sui-color-text, #111827);
+  opacity: 0.5;
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the selection */
+@media (forced-colors: active) {
+  /* Left automatic, the browser draws a Canvas backplate behind the text that hides HighlightText */
+  .option[aria-selected="true"],
+  .listbox:focus .option[aria-selected="true"] {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  /* forced-color-adjust: none keeps the bar's theme colour, so it takes the fill's */
+  .option[aria-selected="true"]::before {
+    background-color: Highlight;
+  }
+
+  .option[aria-disabled="true"]:not([aria-selected="true"]) {
+    color: GrayText;
+  }
+
+  /*
+   * Forced colours turn every colour inside the option into CanvasText, its elements' own colours too, so everything in
+   * it takes GrayText, which marks it disabled without the opacity
+   */
+  .option[aria-disabled="true"]:not([aria-selected="true"]) * {
+    color: GrayText;
+  }
+
+  :where(.option[aria-disabled="true"]:not([aria-selected="true"])) > * {
+    opacity: 1;
+  }
+}
