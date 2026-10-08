@@ -46,6 +46,8 @@ describe("Popover", () => {
         Checks are failing
       </Popover>
     );
+
+    expect(screen.getByText("Checks are failing")).toHaveAttribute("popover", "auto");
   });
 
   it("must only fade when reduced motion is requested", () => {

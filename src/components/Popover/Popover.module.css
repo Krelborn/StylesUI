@@ -1,6 +1,4 @@
 .popover {
-  --sui-popover-offset: 4px;
-
   max-inline-size: var(--sui-popover-max-width, 20rem);
   padding: var(--sui-space-3, 0.75rem);
   border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
@@ -23,28 +21,28 @@
   }
 
   .popover[data-placement="top"] {
-    translate: 0 var(--sui-popover-offset);
+    translate: 0 var(--sui-popover-offset, 4px);
   }
 
   .popover[data-placement="bottom"] {
-    translate: 0 calc(var(--sui-popover-offset) * -1);
+    translate: 0 calc(var(--sui-popover-offset, 4px) * -1);
   }
 
   .popover[data-placement="start"] {
-    translate: var(--sui-popover-offset) 0;
+    translate: var(--sui-popover-offset, 4px) 0;
   }
 
   .popover[data-placement="end"] {
-    translate: calc(var(--sui-popover-offset) * -1) 0;
+    translate: calc(var(--sui-popover-offset, 4px) * -1) 0;
   }
 
   /* translate has no logical direction, so start and end swap by hand */
   .popover[data-placement="start"]:dir(rtl) {
-    translate: calc(var(--sui-popover-offset) * -1) 0;
+    translate: calc(var(--sui-popover-offset, 4px) * -1) 0;
   }
 
   .popover[data-placement="end"]:dir(rtl) {
-    translate: var(--sui-popover-offset) 0;
+    translate: var(--sui-popover-offset, 4px) 0;
   }
 }
 

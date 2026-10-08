@@ -16,7 +16,8 @@ export interface UsePopoverOptions {
   defaultOpen?: boolean;
 
   /**
-   * Called with the new open state when the popover opens or closes, or, when controlled, asks to
+   * Called with the new open state when the popover opens or closes; when controlled, also with `true` when the user
+   * asks to open it
    */
   onOpenChange?: (open: boolean) => void;
 

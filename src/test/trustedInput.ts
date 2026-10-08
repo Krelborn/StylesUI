@@ -8,12 +8,14 @@ export interface TrustedInput {
   clickByTestId: (testId: string) => Promise<void>;
 
   /**
-   * Clicks the bottom-right corner of the story's frame, outside what the story renders
+   * Clicks the bottom-right corner of the story's frame. The story must render nothing there, so the click lands
+   * outside it.
    */
   clickPageCorner: () => Promise<void>;
 
   /**
-   * Presses a key, named as Playwright names it, such as "Escape"
+   * Presses a key, named as Playwright names it, such as "Escape". The key goes to whatever has focus in the story's
+   * frame.
    */
   pressKey: (key: string) => Promise<void>;
 }

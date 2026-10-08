@@ -71,7 +71,7 @@ Playful's buttons lift on hover and press down when clicked. When the OS asks fo
 
 Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
 
-`Tooltip` uses the Popover API and CSS anchor positioning, which need Chrome/Edge 129, Firefox 147 or Safari 26. With Vite, the CSS target below leaves its anchor positioning styles unchanged.
+`Tooltip` and `Popover` use the Popover API and CSS anchor positioning, which need Chrome/Edge 129, Firefox 147 or Safari 26. With Vite, the CSS target below leaves their anchor positioning styles unchanged.
 
 ### Bundler CSS target
 

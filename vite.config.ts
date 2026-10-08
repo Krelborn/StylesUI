@@ -13,6 +13,13 @@ const storybookModes = ["light", "dark"];
 const storybookThemes = ["default", "playful"];
 
 /**
+ * Thrown when a browser command cannot find what it acts on in the story's frame
+ */
+class StoryFrameError extends Error {
+  public override readonly name = "StoryFrameError";
+}
+
+/**
  * Moves the real pointer off the page, so the story about to render is not under it
  *
  * @param context the command context, holding the page the story runs in
@@ -53,7 +60,7 @@ const clickPageCorner: BrowserCommand = async ({ iframe }) => {
   const box = await body.boundingBox();
 
   if (box === null) {
-    throw new Error("The story's frame has no body to click");
+    throw new StoryFrameError("The story's frame has no body to click");
   }
 
   await body.click({ position: { x: box.width - 1, y: box.height - 1 } });

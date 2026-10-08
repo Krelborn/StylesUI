@@ -235,8 +235,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Clicking the button opens the popover below it and marks the button expanded. The button's own `onClick` still
- * runs.
+ * Clicking the button opens the popover below it and marks the button expanded, and clicking it again closes the
+ * popover. The button's own `onClick` still runs.
  */
 export const Default: Story = {
   render: () => <ClickCountingPopover />,
@@ -249,6 +249,12 @@ export const Default: Story = {
     await waitFor(() => expect(link).toBeVisible());
     await expect(trigger).toHaveAttribute("aria-expanded", "true");
     await expect(canvas.getByText("Clicks: 1")).toBeInTheDocument();
+
+    await userEvent.click(trigger);
+
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+    await expect(link).not.toBeVisible();
+    await expect(canvas.getByText("Clicks: 2")).toBeInTheDocument();
   },
 };
 

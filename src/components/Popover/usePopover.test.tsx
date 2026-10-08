@@ -174,12 +174,11 @@ describe("usePopover", () => {
 
   it("must run the consumer's trigger handler when one is given", async () => {
     const user = userEvent.setup();
-    const handleClick = vi.fn();
-    render(<ProblemsPopover onTriggerClick={handleClick} />);
+    render(<ClickCountingPopover />);
 
     await user.click(elements.trigger);
 
-    expect(handleClick).toHaveBeenCalledOnce();
+    expect(screen.getByText("Clicks: 1")).toBeInTheDocument();
   });
 
   it("must anchor to an IconButton that also anchors its tooltip", () => {
@@ -209,6 +208,20 @@ function ProblemsPopover({ onTriggerClick, ...options }: ProblemsPopoverProps): 
         <Text as="p">Checks are failing</Text>
         <Button onClick={popover.close}>Dismiss</Button>
       </Popover>
+    </>
+  );
+}
+
+/**
+ * A popover whose trigger also counts its own clicks
+ */
+function ClickCountingPopover(): JSX.Element {
+  const [clicks, setClicks] = useState(0);
+
+  return (
+    <>
+      <ProblemsPopover onTriggerClick={() => setClicks((count) => count + 1)} />
+      <Text>{`Clicks: ${clicks}`}</Text>
     </>
   );
 }
@@ -299,8 +312,9 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
 }
 
 /**
- * Makes `showPopover` throw as a browser's does when the popover is already showing or is not in the document, which
- * the jsdom stub never does
+ * Makes `showPopover` stricter than a browser's: it throws when the popover is not in the document, as a browser's does,
+ * and also when it is already showing, where a browser returns without effect, so a test fails on a needless show. The
+ * jsdom stub does neither.
  */
 function rejectInvalidShowPopover(): void {
   const showPopover = HTMLElement.prototype.showPopover;
