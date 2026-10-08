@@ -76,7 +76,8 @@ whose destination is the component's own prop, because it has no `href`, so disa
 that line.
 
 `NavListItem` takes a router's link component in `as` in the same way, with the same `className`
-rule and the same limits.
+rule and the same limits. A consumer whose lint settings map `NavListItem` to `a` needs the same
+per-line `anchor-is-valid` disable for a router component's `to`.
 
 ## Raw HTML in Prose
 

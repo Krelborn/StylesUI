@@ -52,8 +52,9 @@ export type NavListItemProps<E extends NavListItemElement = "a"> = NavListItemOw
   OmitFromEach<NavListItemElementProps<E>, keyof NavListItemOwnProps | keyof NavListItemElementOwnProps<E>>;
 
 /**
- * One item in a `NavList`. Every prop goes to the link or button, not the list item around it. Mark the current item
- * with `aria-current` (`"page"` for a link, `"true"` for a view switched by a button).
+ * One item in a `NavList`. Every prop but `trailing` goes to the link, button or component given in `as`, not the list
+ * item around it. A component given in `as` must pass the `className` it is given on to its anchor, or the item is
+ * unstyled. Mark the current item with `aria-current` (`"page"` for a link, `"true"` for a view switched by a button).
  *
  * @example
  * <NavListItem href="/needs-you" trailing={<Counter count={3} />} aria-current="page">Needs you</NavListItem>
