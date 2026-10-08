@@ -8,6 +8,7 @@ import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
+import { Cluster } from "../Cluster";
 import { Link } from "../Link";
 import { Stack } from "../Stack";
 import { StatusDot } from "../StatusDot";
@@ -119,6 +120,32 @@ function ControlledPopover(): JSX.Element {
         <DetailsPopover onOpenChange={setOpen} open={open} />
       </Box>
       <Text>{`Open: ${open ? "yes" : "no"}`}</Text>
+    </Stack>
+  );
+}
+
+/**
+ * A popover beside a button that counts its clicks in the popover's owner, so clicking that button closes the popover
+ * and renders its owner again at once
+ */
+function CountingOwnerPopover(): JSX.Element {
+  const [clicks, setClicks] = useState(0);
+  const popover = usePopover();
+
+  return (
+    <Stack align="start" gap={3}>
+      <Cluster gap={4}>
+        <Button {...popover.getTriggerProps()} variant="secondary">
+          Show details
+        </Button>
+        <Popover {...popover.getOverlayProps()}>
+          <Link href="#pull-request-42">Open pull request</Link>
+        </Popover>
+        <Button onClick={() => setClicks((count) => count + 1)} variant="secondary" data-testid="count">
+          Count
+        </Button>
+      </Cluster>
+      <Text>{`Clicks: ${clicks}`}</Text>
     </Stack>
   );
 }
@@ -368,5 +395,31 @@ export const KeyboardInteraction: Story = {
     await waitFor(() => expect(link).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
+ * A click on another button closes the popover, and it stays closed when that button's handler renders the popover's
+ * owner again
+ */
+export const OutsideClickRendersOwner: Story = {
+  render: () => <CountingOwnerPopover />,
+  play: async ({ canvas }) => {
+    const trigger = canvas.getByRole("button", { name: "Show details" });
+
+    await userEvent.click(trigger);
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.clickByTestId("count");
+    await expect(await canvas.findByText("Clicks: 1")).toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+    await expect(link).not.toBeVisible();
   },
 };

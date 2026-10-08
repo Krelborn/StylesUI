@@ -116,7 +116,8 @@ export function usePopover({
   const open = controlledOpen ?? uncontrolledOpen;
   const anchorName = anchorNameFor(id);
 
-  // The consumer may not re-render the Popover for this hook's state alone, so the hook shows it again itself
+  // Overlay follows only changes to `open`, which stays true while the browser closes a held-open popover, so the hook
+  // shows it again itself
   useEffect(() => {
     const element = popoverElement.current;
 

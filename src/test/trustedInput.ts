@@ -3,6 +3,11 @@
  */
 export interface TrustedInput {
   /**
+   * Clicks the element with the given `data-testid` in the story's frame
+   */
+  clickByTestId: (testId: string) => Promise<void>;
+
+  /**
    * Clicks the bottom-right corner of the story's frame, outside what the story renders
    */
   clickPageCorner: () => Promise<void>;

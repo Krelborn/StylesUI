@@ -54,7 +54,8 @@ export function Overlay({
 }: OverlayProps): JSX.Element {
   const element = useRef<HTMLSpanElement>(null);
 
-  // Every render, so a popover the browser closed while `open` stayed true is shown again
+  // Only when `open` changes: the browser's own opening or closing reaches `open` a task later, and syncing on a render
+  // in between would undo it
   useEffect(() => {
     const current = element.current;
 
@@ -70,7 +71,7 @@ export function Overlay({
     } else if (!open && shown) {
       current.hidePopover();
     }
-  });
+  }, [open]);
 
   return (
     <Box

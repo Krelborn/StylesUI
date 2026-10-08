@@ -33,6 +33,16 @@ const pressKey: BrowserCommand<[key: string]> = async ({ page }, key) => {
 };
 
 /**
+ * Clicks an element in the story's frame with the real pointer
+ *
+ * @param context the command context, holding the frame the story runs in
+ * @param testId the element's `data-testid`
+ */
+const clickByTestId: BrowserCommand<[testId: string]> = async ({ iframe }, testId) => {
+  await iframe.getByTestId(testId).click();
+};
+
+/**
  * Clicks the bottom-right corner of the story's frame with the real pointer, away from the top-left where stories
  * render
  *
@@ -129,7 +139,7 @@ export default defineConfig({
                 headless: true,
                 provider: playwright(),
                 instances: [{ browser: "chromium" as const }],
-                commands: { clickPageCorner, movePointerOffPage, pressKey },
+                commands: { clickByTestId, clickPageCorner, movePointerOffPage, pressKey },
               },
             },
           };

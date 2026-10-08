@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { describe, expect, it, onTestFinished } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";
 
@@ -45,63 +45,6 @@ describe("Tooltip", () => {
     );
 
     expect(screen.queryByRole("tooltip")).toBeNull();
-  });
-
-  it("must show the tooltip again when the browser closed it while open stays true", () => {
-    const { rerender } = render(
-      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
-        Sends to all subscribers
-      </Tooltip>
-    );
-    screen.getByRole("tooltip").hidePopover();
-
-    rerender(
-      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
-        Sends to everyone
-      </Tooltip>
-    );
-
-    expect(screen.getByRole("tooltip", { name: "Sends to everyone" })).toBeVisible();
-  });
-
-  it("must not show the tooltip again when it is already shown", () => {
-    const showPopover = vi.spyOn(HTMLElement.prototype, "showPopover");
-    onTestFinished(() => {
-      showPopover.mockRestore();
-    });
-    const { rerender } = render(
-      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
-        Sends to all subscribers
-      </Tooltip>
-    );
-
-    rerender(
-      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
-        Sends to everyone
-      </Tooltip>
-    );
-
-    expect(showPopover).toHaveBeenCalledTimes(1);
-  });
-
-  it("must not hide the tooltip when it is already hidden", () => {
-    const hidePopover = vi.spyOn(HTMLElement.prototype, "hidePopover");
-    onTestFinished(() => {
-      hidePopover.mockRestore();
-    });
-    const { rerender } = render(
-      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={false} placement="top">
-        Sends to all subscribers
-      </Tooltip>
-    );
-
-    rerender(
-      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={false} placement="top">
-        Sends to everyone
-      </Tooltip>
-    );
-
-    expect(hidePopover).not.toHaveBeenCalled();
   });
 
   it("must require the props getOverlayProps returns", () => {

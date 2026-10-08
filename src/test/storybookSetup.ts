@@ -6,6 +6,11 @@ import { registerTrustedInput } from "./trustedInput";
 declare module "vitest/browser" {
   interface BrowserCommands {
     /**
+     * Clicks the element with the given `data-testid` in the story's frame with the real pointer
+     */
+    clickByTestId: (testId: string) => Promise<void>;
+
+    /**
      * Clicks the bottom-right corner of the story's frame with the real pointer
      */
     clickPageCorner: () => Promise<void>;
@@ -23,6 +28,7 @@ declare module "vitest/browser" {
 }
 
 registerTrustedInput({
+  clickByTestId: (testId) => commands.clickByTestId(testId),
   clickPageCorner: () => commands.clickPageCorner(),
   pressKey: (key) => commands.pressKey(key),
 });
