@@ -46,10 +46,34 @@ describe("mergeProps", () => {
   });
 
   it("must merge style objects with the hook's properties winning when both set style", () => {
-    expect(
-      mergeProps({ style: { anchorName: "--own", color: "red" } }, { style: { anchorName: "--sui-overlay-tip" } })
-    ).toEqual({ style: { anchorName: "--sui-overlay-tip", color: "red" } });
+    expect(mergeProps({ style: { color: "red", inlineSize: "1rem" } }, { style: { color: "blue" } })).toEqual({
+      style: { color: "blue", inlineSize: "1rem" },
+    });
   });
+
+  it("must keep both anchor names when both styles set anchorName", () => {
+    expect(
+      mergeProps({ style: { anchorName: "--sui-overlay-popover" } }, { style: { anchorName: "--sui-overlay-tip" } })
+    ).toEqual({ style: { anchorName: "--sui-overlay-tip, --sui-overlay-popover" } });
+  });
+
+  it("must keep every consumer anchor name when the consumer's anchorName lists several", () => {
+    expect(
+      mergeProps(
+        { style: { anchorName: "--card, --sui-overlay-popover" } },
+        { style: { anchorName: "--sui-overlay-tip" } }
+      )
+    ).toEqual({ style: { anchorName: "--sui-overlay-tip, --card, --sui-overlay-popover" } });
+  });
+
+  it.each(["none", "inherit", "initial", "unset", "revert", "revert-layer", "--card, none"])(
+    "must take the hook's anchor name when the consumer's anchorName is '%s'",
+    (anchorName) => {
+      expect(mergeProps({ style: { anchorName } }, { style: { anchorName: "--sui-overlay-tip" } })).toEqual({
+        style: { anchorName: "--sui-overlay-tip" },
+      });
+    }
+  );
 
   it("must keep the consumer's value when the hook's value is undefined", () => {
     const hookProps: { "aria-describedby"?: string } = { "aria-describedby": undefined };

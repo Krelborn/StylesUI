@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 
 const joinedIdProps = new Set(["aria-describedby", "aria-labelledby"]);
 
+const dashedIdent = /^--[-\w\u{80}-\u{10FFFF}]+$/u;
+
 /**
  * Combines a consumer's own props with the props an overlay hook sets on the same element
  *
@@ -9,8 +11,10 @@ const joinedIdProps = new Set(["aria-describedby", "aria-labelledby"]);
  * @param hook the props the hook sets
  * @returns the consumer's props with the hook's added. Where both set a prop, both functions run, the consumer's
  *   first; `aria-describedby` and `aria-labelledby` list the hook's ids before the consumer's; `style` objects merge,
- *   the hook's properties winning; and any other prop takes the hook's value. A hook value of `undefined` keeps the
- *   consumer's.
+ *   the hook's properties winning except `anchorName`, which lists the hook's name before the consumer's when the
+ *   consumer's is a list of dashed idents, so one trigger can anchor two overlays, and otherwise takes the hook's name,
+ *   in place of a keyword such as `none` or `inherit`; and any other prop takes the hook's value. A hook value of
+ *   `undefined` keeps the consumer's.
  */
 export function mergeProps<Own extends object, Hook extends object>(
   own: (Own & Partial<Hook>) | undefined,
@@ -47,10 +51,25 @@ function mergeProp(key: string, ownValue: unknown, hookValue: unknown): unknown 
   }
 
   if (key === "style" && isStyle(ownValue) && isStyle(hookValue)) {
-    return { ...ownValue, ...hookValue };
+    return mergeStyles(ownValue, hookValue);
   }
 
   return hookValue;
+}
+
+function mergeStyles(own: CSSProperties, hook: CSSProperties): CSSProperties {
+  const merged = { ...own, ...hook };
+
+  if (hook.anchorName !== undefined && isDashedIdentList(own.anchorName)) {
+    merged.anchorName = `${hook.anchorName}, ${own.anchorName}`;
+  }
+
+  return merged;
+}
+
+// anchor-name takes either one keyword or a list of dashed idents, and the browser drops a declaration that mixes them
+function isDashedIdentList(value: string | undefined): value is string {
+  return value !== undefined && value.split(",").every((name) => dashedIdent.test(name.trim()));
 }
 
 function isFunction(value: unknown): value is (event: unknown) => void {

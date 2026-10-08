@@ -15,6 +15,11 @@ interface OverlayOwnProps {
   anchorName: string;
 
   /**
+   * Element to render: a `span` for text-only content that may sit inside a paragraph, or a `div`
+   */
+  as: "div" | "span";
+
+  /**
    * Whether the overlay is shown
    */
   open: boolean;
@@ -23,6 +28,12 @@ interface OverlayOwnProps {
    * Side of the trigger the overlay opens on. It flips to the opposite side when there is no room.
    */
   placement: OverlayPlacement;
+
+  /**
+   * How the overlay closes: `auto` also closes on Escape, on a click outside and when another `auto` overlay opens;
+   * `manual` only when `open` turns false
+   */
+  popover: "auto" | "manual";
 }
 
 type OverlayProps = OverlayOwnProps & Omit<BoxProps<"span">, "as" | "popover" | "ref" | keyof OverlayOwnProps>;
@@ -31,31 +42,44 @@ type OverlayProps = OverlayOwnProps & Omit<BoxProps<"span">, "as" | "popover" | 
  * Floating surface shared by the overlay components. It shows in the top layer beside its trigger but stays in place
  * in the DOM, so it inherits the theme and mode around it.
  */
-export function Overlay({ anchorName, className, open, placement, style, ...rest }: OverlayProps): JSX.Element {
-  const popover = useRef<HTMLSpanElement>(null);
+export function Overlay({
+  anchorName,
+  as,
+  className,
+  open,
+  placement,
+  popover,
+  style,
+  ...rest
+}: OverlayProps): JSX.Element {
+  const element = useRef<HTMLSpanElement>(null);
 
+  // Only when `open` changes: the browser's own opening or closing reaches `open` a task later, and syncing on a render
+  // in between would undo it
   useEffect(() => {
-    const element = popover.current;
+    const current = element.current;
 
     // Browsers inside the library's floor but below the overlay floor have no Popover API
-    if (element === null || !open || !("showPopover" in element)) {
+    if (current === null || !("showPopover" in current)) {
       return;
     }
 
-    element.showPopover();
+    const shown = current.matches(":popover-open");
 
-    return () => {
-      element.hidePopover();
-    };
+    if (open && !shown) {
+      current.showPopover();
+    } else if (!open && shown) {
+      current.hidePopover();
+    }
   }, [open]);
 
   return (
     <Box
       {...rest}
-      as="span"
+      as={as as "span"}
       className={clsx(styles.overlay, className)}
-      popover="manual"
-      ref={popover}
+      popover={popover}
+      ref={element}
       style={{ ...style, positionAnchor: anchorName }}
       data-placement={placement}
     />

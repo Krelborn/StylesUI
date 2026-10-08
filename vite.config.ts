@@ -13,12 +13,78 @@ const storybookModes = ["light", "dark"];
 const storybookThemes = ["default", "playful"];
 
 /**
+ * Thrown when a browser command cannot find what it acts on in the story's frame
+ */
+class StoryFrameError extends Error {
+  public override readonly name = "StoryFrameError";
+}
+
+/**
  * Moves the real pointer off the page, so the story about to render is not under it
  *
  * @param context the command context, holding the page the story runs in
  */
 const movePointerOffPage: BrowserCommand = async ({ page }) => {
   await page.mouse.move(-1000, -1000);
+};
+
+/**
+ * Presses a key with the real keyboard, which the browser trusts for its own behaviour, such as closing a popover on
+ * Escape
+ *
+ * @param context the command context, holding the page the story runs in
+ * @param key the key, as Playwright names it, such as "Escape"
+ */
+const pressKey: BrowserCommand<[key: string]> = async ({ page }, key) => {
+  await page.keyboard.press(key);
+};
+
+/**
+ * Clicks an element in the story's frame with the real pointer
+ *
+ * @param context the command context, holding the frame the story runs in
+ * @param testId the element's `data-testid`
+ */
+const clickByTestId: BrowserCommand<[testId: string]> = async ({ iframe }, testId) => {
+  await iframe.getByTestId(testId).click();
+};
+
+/**
+ * Clicks the bottom-right corner of the story's frame with the real pointer, away from the top-left where stories
+ * render
+ *
+ * @param context the command context, holding the frame the story runs in
+ */
+const clickPageCorner: BrowserCommand = async ({ iframe }) => {
+  const body = iframe.locator("body");
+  const box = await body.boundingBox();
+
+  if (box === null) {
+    throw new StoryFrameError("The story's frame has no body to click");
+  }
+
+  await body.click({ position: { x: box.width - 1, y: box.height - 1 } });
+};
+
+/**
+ * Holds the real primary pointer button down over an element in the story's frame, so the element matches `:active`
+ * until `releasePointer` runs
+ *
+ * @param context the command context, holding the page and the frame the story runs in
+ * @param testId the element's `data-testid`
+ */
+const holdPointerByTestId: BrowserCommand<[testId: string]> = async ({ iframe, page }, testId) => {
+  await iframe.getByTestId(testId).hover();
+  await page.mouse.down();
+};
+
+/**
+ * Releases the real primary pointer button where the pointer is
+ *
+ * @param context the command context, holding the page the story runs in
+ */
+const releasePointer: BrowserCommand = async ({ page }) => {
+  await page.mouse.up();
 };
 
 // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
@@ -101,7 +167,14 @@ export default defineConfig({
                 headless: true,
                 provider: playwright(),
                 instances: [{ browser: "chromium" as const }],
-                commands: { movePointerOffPage },
+                commands: {
+                  clickByTestId,
+                  clickPageCorner,
+                  holdPointerByTestId,
+                  movePointerOffPage,
+                  pressKey,
+                  releasePointer,
+                },
               },
             },
           };
