@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import type { ControlSize } from "../../forms";
-import { borderContrast, focusRingContrast, textContrast } from "../../test/colorContrast";
+import { borderContrast, focusRingContrast, resolvedColor, textContrast } from "../../test/colorContrast";
 import { Button } from "../Button";
 import { Cluster } from "../Cluster";
 import { Stack } from "../Stack";
@@ -11,16 +11,6 @@ import { Segment } from "./Segment";
 import { SegmentedControl } from "./SegmentedControl";
 
 const sizes: ControlSize[] = ["sm", "md", "lg"];
-
-function resolveColor(element: HTMLElement, color: string): string {
-  const probe = document.createElement("span");
-  probe.style.color = color;
-  element.append(probe);
-  const resolved = getComputedStyle(probe).color;
-  probe.remove();
-
-  return resolved;
-}
 
 function segmentOf(input: HTMLElement): HTMLElement {
   const segment = input.parentElement;
@@ -49,10 +39,10 @@ const transparent = "rgba(0, 0, 0, 0)";
 async function expectChecked(input: HTMLElement, text: HTMLElement): Promise<void> {
   const track = trackOf(input);
   const depth = parseFloat(getComputedStyle(track).getPropertyValue("--sui-control-depth"));
-  const fill = resolveColor(track, "var(--sui-color-primary)");
-  const border = resolveColor(track, "var(--sui-color-control-border)");
-  const lip = `${resolveColor(track, "var(--sui-color-shadow)")} 0px ${depth}px 0px 0px`;
-  const textColor = resolveColor(track, "var(--sui-color-on-primary)");
+  const fill = resolvedColor(track, "var(--sui-color-primary)");
+  const border = resolvedColor(track, "var(--sui-color-control-border)");
+  const lip = `${resolvedColor(track, "var(--sui-color-shadow)")} 0px ${depth}px 0px 0px`;
+  const textColor = resolvedColor(track, "var(--sui-color-on-primary)");
 
   await waitFor(() => {
     const style = getComputedStyle(input);
@@ -67,7 +57,7 @@ async function expectChecked(input: HTMLElement, text: HTMLElement): Promise<voi
 }
 
 async function expectUnchecked(input: HTMLElement, text: HTMLElement): Promise<void> {
-  const textColor = resolveColor(trackOf(input), "var(--sui-color-text)");
+  const textColor = resolvedColor(trackOf(input), "var(--sui-color-text)");
 
   await waitFor(() => {
     const style = getComputedStyle(input);
@@ -136,7 +126,7 @@ export const Default: Story = {
     const systemText = canvas.getByText("System");
     const track = trackOf(dark);
 
-    await expect(getComputedStyle(track).borderTopColor).toBe(resolveColor(track, "var(--sui-color-input-border)"));
+    await expect(getComputedStyle(track).borderTopColor).toBe(resolvedColor(track, "var(--sui-color-input-border)"));
     await expect(borderContrast(track)).toBeGreaterThanOrEqual(3);
     await expectChecked(system, systemText);
     await expectUnchecked(dark, darkText);
@@ -246,7 +236,7 @@ export const WithError: Story = {
     const track = trackOf(canvas.getByRole("radio", { name: "Light" }));
 
     await expect(group).toHaveAccessibleDescription("Choose an appearance");
-    await expect(getComputedStyle(track).borderTopColor).toBe(resolveColor(track, "var(--sui-color-danger-text)"));
+    await expect(getComputedStyle(track).borderTopColor).toBe(resolvedColor(track, "var(--sui-color-danger-text)"));
     await expect(borderContrast(track)).toBeGreaterThanOrEqual(3);
   },
 };
