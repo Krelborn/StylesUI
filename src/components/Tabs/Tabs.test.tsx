@@ -187,6 +187,19 @@ describe("Tabs", () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
+  it("must skip a hidden tab when an arrow key moves past it", async () => {
+    const { render, user } = setUpTest();
+    render({ hiddenValue: "issues" });
+    await user.tab();
+
+    await user.keyboard("{ArrowRight}");
+    const afterRight = document.activeElement;
+    await user.keyboard("{ArrowLeft}");
+
+    expect(afterRight).toBe(elements.tab("Wiki"));
+    expect(elements.tab("Code")).toHaveFocus();
+  });
+
   it("must not select a disabled tab when it is clicked", async () => {
     const { onValueChange, render, user } = setUpTest();
     render({ disabledValue: "issues" });
@@ -460,6 +473,7 @@ interface RenderOptions {
   activation?: TabsActivation;
   direction?: WritingDirection;
   disabledValue?: string;
+  hiddenValue?: string;
   orientation?: TabsOrientation;
   selection?: { defaultValue: string } | { value: string };
 }
@@ -472,6 +486,7 @@ function setUpTest() {
     activation,
     direction,
     disabledValue,
+    hiddenValue,
     orientation,
     selection = { defaultValue: "code" },
   }: RenderOptions = {}): void => {
@@ -480,7 +495,7 @@ function setUpTest() {
         <Tabs {...selection} activation={activation} onValueChange={onValueChange} orientation={orientation}>
           <TabList aria-label="Repository">
             {repositoryTabs.map(({ label, value }) => (
-              <Tab disabled={value === disabledValue} key={value} value={value}>
+              <Tab disabled={value === disabledValue} hidden={value === hiddenValue} key={value} value={value}>
                 {label}
               </Tab>
             ))}

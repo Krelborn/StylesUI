@@ -1,3 +1,5 @@
+import { idSegment } from "../../accessibility";
+
 /**
  * Builds the id of the tab for a value
  *
@@ -6,7 +8,7 @@
  * @returns an id unique to the value within its `Tabs`, whatever characters the value holds
  */
 export function tabId(baseId: string, value: string): string {
-  return `${baseId}-tab-${encodeURIComponent(value)}`;
+  return `${baseId}-tab-${idSegment(value)}`;
 }
 
 /**
@@ -17,5 +19,5 @@ export function tabId(baseId: string, value: string): string {
  * @returns an id unique to the value within its `Tabs`, whatever characters the value holds
  */
 export function panelId(baseId: string, value: string): string {
-  return `${baseId}-panel-${encodeURIComponent(value)}`;
+  return `${baseId}-panel-${idSegment(value)}`;
 }

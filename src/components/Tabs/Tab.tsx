@@ -101,7 +101,7 @@ export function Tab({
 
     const tabElements = Array.from(
       event.currentTarget.closest('[role="tablist"]')?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []
-    );
+    ).filter((tab) => tab.closest("[hidden], [inert]") === null);
     const target = targetIndexForKey({
       count: tabElements.length,
       currentIndex: tabElements.indexOf(event.currentTarget),
