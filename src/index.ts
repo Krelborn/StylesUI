@@ -44,6 +44,8 @@ export { Link } from "./components/Link";
 export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
 export { PageLayout } from "./components/PageLayout";
 export type { PageLayoutProps } from "./components/PageLayout";
+export { Popover, usePopover } from "./components/Popover";
+export type { PopoverProps, UsePopoverOptions, UsePopoverResult } from "./components/Popover";
 export { Prose } from "./components/Prose";
 export type { ProseProps, ProseSize } from "./components/Prose";
 export { Radio } from "./components/Radio";
