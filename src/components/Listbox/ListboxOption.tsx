@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { JSX, MouseEvent } from "react";
+import { useLayoutEffect } from "react";
 
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
@@ -51,6 +52,19 @@ export function ListboxOption({
   ...rest
 }: ListboxOptionProps): JSX.Element {
   const listbox = useListboxContext("ListboxOption");
+  const { setActiveValue } = listbox;
+  const active = listbox.activeValue === value;
+
+  // The listbox's aria-activedescendant names this option while it is active, so it lets go as the option unmounts
+  useLayoutEffect(() => {
+    if (!active) {
+      return undefined;
+    }
+
+    return () => {
+      setActiveValue((current) => (current === value ? null : current));
+    };
+  }, [active, setActiveValue, value]);
 
   function handleClick(event: MouseEvent<HTMLDivElement>): void {
     onClick?.(event);
@@ -79,7 +93,7 @@ export function ListboxOption({
       role="option"
       aria-disabled={disabled ? true : undefined}
       aria-selected={listbox.selectedValue === value}
-      data-active={listbox.activeValue === value ? "" : undefined}
+      data-active={active ? "" : undefined}
       data-text-value={textValue}
       data-value={value}
     />

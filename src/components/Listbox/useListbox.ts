@@ -1,11 +1,10 @@
 import type { FocusEvent, KeyboardEvent } from "react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import type { TypeAheadQuery } from "../../collections";
 import { extendTypeAheadQuery, targetIndexForKey, typeAheadTarget } from "../../collections";
 
 import type { ListboxContextValue } from "./ListboxContext";
-import { optionId } from "./optionId";
 import type { RenderedOption } from "./renderedOptions";
 import { renderedOptions } from "./renderedOptions";
 
@@ -36,8 +35,13 @@ interface UseListboxOptions {
  */
 export interface ListboxState extends ListboxContextValue {
   /**
-   * Makes the selected option, or the first, active as focus enters, and scrolls it into view unless a pointer started
-   * the focus
+   * Forgets a press as focus leaves, so the next focus scrolls
+   */
+  handleBlur: () => void;
+
+  /**
+   * Makes the selected option, or the first, active as focus enters, and scrolls it into view unless a press or a
+   * click caused the focus
    */
   handleFocus: (event: FocusEvent<HTMLDivElement>) => void;
 
@@ -47,14 +51,14 @@ export interface ListboxState extends ListboxContextValue {
   handleKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
 
   /**
-   * Notes that a pointer is down, so the focus it causes does not scroll
+   * Forgets a press the browser cancelled, so the next focus scrolls
    */
-  handlePointerDown: () => void;
+  handlePointerCancel: () => void;
 
   /**
-   * Notes that the pointer is up again
+   * Notes that a press has started, so the focus it causes does not scroll
    */
-  handlePointerUp: () => void;
+  handlePointerDown: () => void;
 }
 
 // `container` is missing from lib.dom's ScrollIntoViewOptions; browsers without it ignore it
@@ -73,18 +77,20 @@ const scrollOptions: NearestContainerScrollOptions = { block: "nearest", contain
 export function useListbox({ defaultValue, onAction, onValueChange, value }: UseListboxOptions): ListboxState {
   const baseId = useId();
   const typeAheadQuery = useRef<TypeAheadQuery | null>(null);
-  const pointerIsDown = useRef(false);
+  const pressInProgress = useRef(false);
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const [activeValue, setActiveValue] = useState<string | null>(null);
   const selectedValue = value === undefined ? uncontrolledValue : value;
+  const [previousSelectedValue, setPreviousSelectedValue] = useState(selectedValue);
 
-  // oxlint-disable-next-line react-hooks/exhaustive-deps -- any render can remove the active option
-  useEffect(() => {
-    if (activeValue !== null && document.getElementById(optionId(baseId, activeValue)) === null) {
-      // oxlint-disable-next-line react/set-state-in-effect -- only the rendered DOM shows the active option is gone
-      setActiveValue(null);
+  if (selectedValue !== previousSelectedValue) {
+    setPreviousSelectedValue(selectedValue);
+
+    // A cleared selection leaves the active option in place, as entering with nothing selected does
+    if (activeValue !== null && selectedValue !== null) {
+      setActiveValue(selectedValue);
     }
-  });
+  }
 
   function select(nextValue: string): void {
     if (nextValue === selectedValue) {
@@ -118,17 +124,17 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
     setActiveValue(entry?.value ?? null);
 
     // A click's target is already in view, and scrolling before the click lands would move another option under it
-    if (entry !== undefined && !pointerIsDown.current) {
+    if (entry !== undefined && !pressInProgress.current) {
       entry.element.scrollIntoView(scrollOptions);
     }
   }
 
   function handlePointerDown(): void {
-    pointerIsDown.current = true;
+    pressInProgress.current = true;
   }
 
-  function handlePointerUp(): void {
-    pointerIsDown.current = false;
+  function endPress(): void {
+    pressInProgress.current = false;
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
@@ -137,7 +143,7 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
     }
 
     const options = renderedOptions(event.currentTarget);
-    const activeIndex = options.findIndex((option) => option.value === (activeValue ?? selectedValue));
+    const activeIndex = startIndex(options, activeValue, selectedValue);
     const handled =
       handleCommandKey(event, options[activeIndex]) ||
       handleMoveKey(event.key, options, activeIndex) ||
@@ -207,7 +213,10 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
   }
 
   function choose(option: HTMLElement, optionValue: string, disabled: boolean): void {
+    // Marked as a press for the focus too, since a scripted click has no pointerdown before it
+    pressInProgress.current = true;
     option.closest<HTMLElement>('[role="listbox"]')?.focus();
+    pressInProgress.current = false;
     setActiveValue(optionValue);
 
     if (!disabled) {
@@ -220,10 +229,26 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
     activeValue,
     baseId,
     choose,
+    handleBlur: endPress,
     handleFocus,
     handleKeyDown,
+    handlePointerCancel: endPress,
     handlePointerDown,
-    handlePointerUp,
     selectedValue,
+    setActiveValue,
   };
+}
+
+/**
+ * Finds the option the keys move from
+ *
+ * @param options the rendered options
+ * @param activeValue the active option's value, or null for none
+ * @param selectedValue the selected option's value, or null for none
+ * @returns the active option's index, or the selected option's when the active one is not rendered; -1 for neither
+ */
+function startIndex(options: RenderedOption[], activeValue: string | null, selectedValue: string | null): number {
+  const activeIndex = options.findIndex((option) => option.value === activeValue);
+
+  return activeIndex === -1 ? options.findIndex((option) => option.value === selectedValue) : activeIndex;
 }

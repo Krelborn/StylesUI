@@ -43,12 +43,18 @@ export function renderedOptions(listbox: HTMLElement): RenderedOption[] {
  * Reads the text of the elements an option's `aria-labelledby` names
  *
  * @param option the option element
- * @returns their text, joined by spaces; undefined when it names no element in the document
+ * @returns their text, joined by spaces; undefined when it names no element in the option's document or shadow root
  */
 function labelledByText(option: HTMLElement): string | undefined {
+  const root = option.getRootNode();
+
+  if (!(root instanceof Document || root instanceof ShadowRoot)) {
+    return undefined;
+  }
+
   const labels = (option.getAttribute("aria-labelledby") ?? "")
     .split(/\s+/)
-    .map((id) => option.ownerDocument.getElementById(id))
+    .map((id) => root.getElementById(id))
     .filter((label) => label !== null);
 
   return labels.length === 0 ? undefined : labels.map((label) => label.textContent).join(" ");

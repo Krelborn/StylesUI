@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react";
 import { createContext } from "react";
 
 /**
@@ -28,6 +29,11 @@ export interface ListboxContextValue {
    * The selected option's value, or null for none
    */
   selectedValue: string | null;
+
+  /**
+   * Sets the value of the option keyboard focus is on, or null for none
+   */
+  setActiveValue: Dispatch<SetStateAction<string | null>>;
 }
 
 /**

@@ -1,7 +1,7 @@
-import { fireEvent, render as renderBase, screen } from "@testing-library/react";
+import { act, fireEvent, render as renderBase, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX } from "react";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
@@ -20,9 +20,9 @@ interface FruitListboxProps extends Pick<ListboxProps, "defaultValue" | "onActio
   disabledValue?: string;
 
   /**
-   * The fruits listed, in order
+   * The fruits listed, in order. Defaults to all four.
    */
-  shown: readonly string[];
+  shown?: readonly string[];
 }
 
 /**
@@ -33,7 +33,7 @@ function FruitListbox({
   disabledValue,
   onAction,
   onValueChange,
-  shown,
+  shown = fruits,
   value,
 }: FruitListboxProps): JSX.Element {
   const [actions, setActions] = useState<string[]>([]);
@@ -73,6 +73,85 @@ function FruitListbox({
 
 function logText(values: readonly string[]): string {
   return values.length === 0 ? "none" : values.join(", ");
+}
+
+/**
+ * Two pull request options, each labelled by its title and showing initials before it
+ */
+function PullRequestListbox(): JSX.Element {
+  return (
+    <Listbox aria-label="Pull requests">
+      <ListboxOption value="build" aria-labelledby="build-title">
+        <span aria-hidden="true">AL</span>
+        <span id="build-title">Fix the build</span>
+      </ListboxOption>
+      <ListboxOption value="listbox" aria-labelledby="listbox-title">
+        <span aria-hidden="true">MS</span>
+        <span id="listbox-title">Add a listbox</span>
+      </ListboxOption>
+    </Listbox>
+  );
+}
+
+interface FruitStore {
+  /**
+   * Whether the fruit is still listed
+   */
+  isListed: (fruit: string) => boolean;
+
+  /**
+   * Stops listing the fruit and tells every subscriber
+   */
+  remove: (fruit: string) => void;
+
+  /**
+   * Calls the listener whenever a fruit is removed, until the returned function is called
+   */
+  subscribe: (listener: () => void) => () => void;
+}
+
+/**
+ * Creates a store of listed fruits that each option reads for itself, so removing one re-renders only that option
+ */
+function createFruitStore(initialFruits: readonly string[]): FruitStore {
+  const listed = new Set(initialFruits);
+  const listeners = new Set<() => void>();
+
+  return {
+    isListed: (fruit) => listed.has(fruit),
+    remove: (fruit) => {
+      listed.delete(fruit);
+      listeners.forEach((listener) => listener());
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+
+interface StoredFruitOptionProps {
+  /**
+   * The fruit the option stands for
+   */
+  fruit: string;
+
+  /**
+   * The store that says whether the fruit is listed
+   */
+  store: FruitStore;
+}
+
+/**
+ * An option that renders only while its store lists its fruit
+ */
+function StoredFruitOption({ fruit, store }: StoredFruitOptionProps): JSX.Element | null {
+  const listed = useSyncExternalStore(store.subscribe, () => store.isListed(fruit));
+
+  return listed ? <ListboxOption value={fruit}>{fruit}</ListboxOption> : null;
 }
 
 describe("Listbox", () => {
@@ -222,23 +301,30 @@ describe("Listbox", () => {
 
   it("must match type-ahead on the title when an option is labelled by it", async () => {
     const { user } = setUpTest();
-    renderBase(
-      <Listbox aria-label="Pull requests">
-        <ListboxOption value="build" aria-labelledby="build-title">
-          <span aria-hidden="true">AL</span>
-          <span id="build-title">Fix the build</span>
-        </ListboxOption>
-        <ListboxOption value="listbox" aria-labelledby="listbox-title">
-          <span aria-hidden="true">MS</span>
-          <span id="listbox-title">Add a listbox</span>
-        </ListboxOption>
-      </Listbox>
-    );
+    renderBase(<PullRequestListbox />);
     await user.tab();
 
     await user.keyboard("a");
 
     expect(elements.option("Add a listbox")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("must match type-ahead on the title when the listbox renders in a shadow root", async () => {
+    const { user } = setUpTest();
+    const host = document.createElement("div");
+    document.body.append(host);
+    onTestFinished(() => {
+      host.remove();
+    });
+    const container = document.createElement("div");
+    host.attachShadow({ mode: "open" }).append(container);
+    renderBase(<PullRequestListbox />, { container });
+    const shadow = within(container);
+    await user.click(shadow.getByRole("option", { name: "Fix the build" }));
+
+    await user.keyboard("a");
+
+    expect(shadow.getByRole("option", { name: "Add a listbox" })).toHaveAttribute("aria-selected", "true");
   });
 
   it("must match type-ahead on textValue when an option gives one", async () => {
@@ -258,23 +344,32 @@ describe("Listbox", () => {
     expect(elements.option("Yellow: Banana")).toHaveAttribute("aria-selected", "true");
   });
 
-  it("must leave a letter alone when it is pressed with Meta", async () => {
-    const { render, user } = setUpTest();
-    render({ defaultValue: "Apple" });
+  it.each(["altKey", "ctrlKey", "metaKey"])(
+    "must leave a letter alone when it is pressed with %s",
+    async (modifier) => {
+      const { render, user } = setUpTest();
+      render({ defaultValue: "Apple" });
+      await user.tab();
+
+      const notPrevented = fireEvent.keyDown(elements.listbox, { key: "c", [modifier]: true });
+
+      expect(notPrevented).toBe(true);
+      expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+    }
+  );
+
+  it("must scroll the selected option into the nearest container when focus enters from the keyboard", async () => {
+    const { render, scrollIntoView, user } = setUpTest();
+    render({ defaultValue: "Cherry" });
+
     await user.tab();
 
-    const notPrevented = fireEvent.keyDown(elements.listbox, { key: "c", metaKey: true });
-
-    expect(notPrevented).toBe(true);
-    expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ block: "nearest", container: "nearest" });
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(elements.option("Cherry"));
   });
 
   it("must scroll the active option into the nearest container when a key moves it", async () => {
-    const { render, user } = setUpTest();
-    const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
-    onTestFinished(() => {
-      scrollIntoView.mockRestore();
-    });
+    const { render, scrollIntoView, user } = setUpTest();
     render({ defaultValue: "Apple" });
     await user.tab();
 
@@ -285,16 +380,59 @@ describe("Listbox", () => {
   });
 
   it("must not scroll when it first renders or when an option is clicked", async () => {
-    const { render, user } = setUpTest();
-    const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
-    onTestFinished(() => {
-      scrollIntoView.mockRestore();
-    });
+    const { render, scrollIntoView, user } = setUpTest();
     render({ defaultValue: "Cherry" });
 
     await user.click(elements.option("Banana"));
 
     expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("must not scroll when a touch taps an option of an unfocused listbox", async () => {
+    const { render, scrollIntoView, user } = setUpTest();
+    render({ defaultValue: "Cherry" });
+
+    await user.pointer({ keys: "[TouchA]", target: elements.option("Banana") });
+
+    expect(elements.option("Banana")).toHaveAttribute("aria-selected", "true");
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("must not scroll when a script clicks an option of an unfocused listbox", () => {
+    const { render, scrollIntoView } = setUpTest();
+    render({ defaultValue: "Cherry" });
+
+    fireEvent.click(elements.option("Banana"));
+
+    expect(elements.listbox).toHaveFocus();
+    expect(elements.option("Banana")).toHaveAttribute("aria-selected", "true");
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it("must scroll when focus enters from the keyboard after a press on an option is cancelled", async () => {
+    const { render, scrollIntoView, user } = setUpTest();
+    render({ defaultValue: "Cherry" });
+    fireEvent.pointerDown(elements.option("Banana"));
+    fireEvent.pointerCancel(elements.option("Banana"));
+
+    await user.tab();
+
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(elements.option("Cherry"));
+  });
+
+  it("must scroll when focus returns from the keyboard after a press released outside the listbox", async () => {
+    const { render, scrollIntoView, user } = setUpTest();
+    render({ defaultValue: "Cherry" });
+    await user.pointer([
+      { keys: "[MouseLeft>]", target: elements.option("Banana") },
+      { keys: "[/MouseLeft]", target: document.body },
+    ]);
+    await user.tab();
+
+    await user.tab({ shift: true });
+
+    expect(elements.listbox).toHaveFocus();
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(elements.option("Cherry"));
   });
 
   it("must prevent the default action of a key when the listbox handles it", async () => {
@@ -317,19 +455,43 @@ describe("Listbox", () => {
     expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
   });
 
-  it("must stop pointing at an active option that is removed and still move when a key is pressed", async () => {
+  it("must make the new selected option active when value changes while focused", async () => {
     const { render, user } = setUpTest();
-    const { rerender } = render({ defaultValue: "Banana", shown: ["Apple", "Banana", "Cherry"] });
+    const { rerender } = render({ value: "Apple" });
     await user.tab();
-    await user.keyboard("{ArrowDown}");
 
-    rerender(["Apple", "Banana"]);
-    const activeAfterRemoval = elements.listbox.getAttribute("aria-activedescendant");
-    await user.keyboard("{ArrowUp}");
+    rerender({ value: "Cherry" });
 
-    expect(activeAfterRemoval).toBeNull();
-    expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Cherry").id);
   });
+
+  it("must keep the active option and select none when value changes to null while focused", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ value: "Banana" });
+    await user.tab();
+
+    rerender({ value: null });
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Banana").id);
+    expect(screen.queryByRole("option", { selected: true })).toBeNull();
+  });
+
+  it.each([{ strictMode: false }, { strictMode: true }])(
+    "must stop pointing at an active option that is removed and still move when a key is pressed, strictMode $strictMode",
+    async ({ strictMode }) => {
+      const { render, user } = setUpTest();
+      const { rerender } = render({ defaultValue: "Banana", shown: ["Apple", "Banana", "Cherry"], strictMode });
+      await user.tab();
+      await user.keyboard("{ArrowDown}");
+
+      rerender({ shown: ["Apple", "Banana"] });
+      const activeAfterRemoval = elements.listbox.getAttribute("aria-activedescendant");
+      await user.keyboard("{ArrowUp}");
+
+      expect(activeAfterRemoval).toBeNull();
+      expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+    }
+  );
 
   it("must move from the selected option when the active option is removed but the selected one is not", async () => {
     const { render, user } = setUpTest();
@@ -337,12 +499,46 @@ describe("Listbox", () => {
     await user.tab();
     await user.keyboard("{ArrowDown}");
 
-    rerender(["Apple", "Banana", "Cherry"]);
+    rerender({ shown: ["Apple", "Banana", "Cherry"] });
     const activeAfterRemoval = elements.listbox.getAttribute("aria-activedescendant");
     await user.keyboard("{ArrowDown}");
 
     expect(activeAfterRemoval).toBeNull();
     expect(elements.option("Banana")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("must stop pointing at an active option when the option removes itself without the listbox rendering", async () => {
+    const { user } = setUpTest();
+    const store = createFruitStore(["Apple", "Banana", "Cherry"]);
+    renderBase(
+      <Listbox defaultValue="Banana" aria-label="Fruit">
+        {["Apple", "Banana", "Cherry"].map((fruit) => (
+          <StoredFruitOption fruit={fruit} key={fruit} store={store} />
+        ))}
+      </Listbox>
+    );
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+
+    act(() => {
+      store.remove("Cherry");
+    });
+    const activeAfterRemoval = elements.listbox.getAttribute("aria-activedescendant");
+    await user.keyboard("{ArrowUp}");
+
+    expect(activeAfterRemoval).toBeNull();
+    expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("must keep the active option when the list re-renders with it still listed", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ defaultValue: "Apple", disabledValue: "Apricot" });
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+
+    rerender({ shown: [...fruits] });
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apricot").id);
   });
 
   it("must throw a MissingContextError when an option renders outside Listbox", () => {
@@ -366,28 +562,33 @@ describe("Listbox", () => {
   });
 });
 
-interface RenderOptions extends Pick<ListboxProps, "defaultValue" | "value"> {
-  disabledValue?: string;
-  shown?: readonly string[];
+type FruitListOptions = Omit<FruitListboxProps, "onAction" | "onValueChange">;
+
+interface RenderOptions extends FruitListOptions {
+  strictMode?: boolean;
 }
 
 function setUpTest() {
   const user = userEvent.setup();
   const onAction = vi.fn();
   const onValueChange = vi.fn();
+  const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+  onTestFinished(() => {
+    scrollIntoView.mockRestore();
+  });
 
-  const render = ({ shown = fruits, ...options }: RenderOptions = {}) => {
-    const listboxFor = (shownFruits: readonly string[]): JSX.Element => (
-      <FruitListbox {...options} onAction={onAction} onValueChange={onValueChange} shown={shownFruits} />
+  const render = ({ strictMode = false, ...initialOptions }: RenderOptions = {}) => {
+    const listboxFor = (options: FruitListOptions): JSX.Element => (
+      <FruitListbox {...options} onAction={onAction} onValueChange={onValueChange} />
     );
-    const { rerender } = renderBase(listboxFor(shown));
+    const { rerender } = renderBase(listboxFor(initialOptions), { reactStrictMode: strictMode });
 
     return {
-      rerender: (shownFruits: readonly string[]): void => rerender(listboxFor(shownFruits)),
+      rerender: (changes: FruitListOptions): void => rerender(listboxFor({ ...initialOptions, ...changes })),
     };
   };
 
-  return { onAction, onValueChange, render, user };
+  return { onAction, onValueChange, render, scrollIntoView, user };
 }
 
 const elements = {
