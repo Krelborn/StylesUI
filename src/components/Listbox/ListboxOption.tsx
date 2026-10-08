@@ -14,7 +14,7 @@ import { useListboxContext } from "./useListboxContext";
  */
 export interface ListboxOptionProps extends Omit<
   BoxProps<"div">,
-  "aria-disabled" | "aria-selected" | "as" | "id" | "role"
+  "aria-disabled" | "aria-selected" | "as" | "id" | "role" | "tabIndex"
 > {
   /**
    * Whether the option cannot be selected. A disabled option is still reached with the arrow keys, so it is read.
@@ -37,7 +37,8 @@ export interface ListboxOptionProps extends Omit<
 /**
  * One option in a `Listbox`. For a rich option, name it with `aria-labelledby` pointing at its title and describe it
  * with `aria-describedby`. Your `onClick` and `onDoubleClick` run first; preventing their default stops the option
- * handling them.
+ * handling them. To leave an option out, do not render it or give it `hidden`: an option hidden only by CSS can still
+ * be reached with the keyboard.
  *
  * @example
  * <ListboxOption aria-describedby={metaId} aria-labelledby={titleId} value={pullRequest.id}>…</ListboxOption>

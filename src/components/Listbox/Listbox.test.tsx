@@ -740,6 +740,19 @@ describe("Listbox", () => {
     expect(screen.getByRole("listbox")).toBeInTheDocument();
   });
 
+  it("must reject tabIndex when it is given to an option", () => {
+    renderBase(
+      <Listbox aria-label="Fruit">
+        {/* @ts-expect-error focus stays on the listbox, so an option is never its own tab stop */}
+        <ListboxOption tabIndex={-1} value="apple">
+          Apple
+        </ListboxOption>
+      </Listbox>
+    );
+
+    expect(screen.getByRole("option", { name: "Apple" })).toBeInTheDocument();
+  });
+
   it("must transition only colours when an option changes state", () => {
     const properties = transitionedProperties(listboxCss);
 
