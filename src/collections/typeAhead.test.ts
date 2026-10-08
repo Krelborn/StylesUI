@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extendTypeAheadQuery, typeAheadTarget } from "./typeAhead";
+import { extendTypeAheadQuery, isTypeAheadQueryLive, typeAheadTarget } from "./typeAhead";
 
 const fruits = ["Apple", "apricot", "Banana", "Cherry", "Blueberry"];
 
@@ -18,6 +18,20 @@ describe("extendTypeAheadQuery", () => {
   });
 });
 
+describe("isTypeAheadQueryLive", () => {
+  it("must be false when there is no query", () => {
+    expect(isTypeAheadQueryLive(null, 1000)).toBe(false);
+  });
+
+  it("must be true when the last character came within 500ms", () => {
+    expect(isTypeAheadQueryLive({ text: "a", time: 1000 }, 1500)).toBe(true);
+  });
+
+  it("must be false when the last character came more than 500ms before", () => {
+    expect(isTypeAheadQueryLive({ text: "a", time: 1000 }, 1501)).toBe(false);
+  });
+});
+
 describe("typeAheadTarget", () => {
   it("must find the next label starting with the character when one character is typed", () => {
     expect(typeAheadTarget(fruits, 0, "a")).toBe(1);
@@ -30,6 +44,10 @@ describe("typeAheadTarget", () => {
 
   it("must wrap round to the start when nothing after the current label matches", () => {
     expect(typeAheadTarget(fruits, 4, "b")).toBe(2);
+  });
+
+  it("must start after the current label when the one character typed is outside the Basic Multilingual Plane", () => {
+    expect(typeAheadTarget(["🍎 Apple", "🍌 Banana", "🍎 Crab apple"], 0, "🍎")).toBe(2);
   });
 
   it("must keep the current label when longer text still matches it", () => {

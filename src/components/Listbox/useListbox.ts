@@ -2,7 +2,7 @@ import type { FocusEvent, KeyboardEvent } from "react";
 import { useId, useRef, useState } from "react";
 
 import type { TypeAheadQuery } from "../../collections";
-import { extendTypeAheadQuery, targetIndexForKey, typeAheadTarget } from "../../collections";
+import { extendTypeAheadQuery, isTypeAheadQueryLive, targetIndexForKey, typeAheadTarget } from "../../collections";
 
 import type { ListboxContextValue } from "./ListboxContext";
 import type { RenderedOption } from "./renderedOptions";
@@ -35,7 +35,7 @@ interface UseListboxOptions {
  */
 export interface ListboxState extends ListboxContextValue {
   /**
-   * Forgets a press as focus leaves, so the next focus scrolls
+   * Notes that focus has left, and forgets a press, so the next focus scrolls
    */
   handleBlur: () => void;
 
@@ -78,6 +78,8 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
   const baseId = useId();
   const typeAheadQuery = useRef<TypeAheadQuery | null>(null);
   const pressInProgress = useRef(false);
+  const focusedListbox = useRef<HTMLElement | null>(null);
+  const lastActiveIndex = useRef<number | null>(null);
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const [activeValue, setActiveValue] = useState<string | null>(null);
   const selectedValue = value === undefined ? uncontrolledValue : value;
@@ -94,12 +96,34 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
     onValueChange?.(nextValue);
   }
 
-  function moveTo(option: RenderedOption): void {
-    setActiveValue(option.value);
+  function activate(options: RenderedOption[], index: number): void {
+    setActiveValue(options[index].value);
+    lastActiveIndex.current = index;
+  }
+
+  function moveTo(options: RenderedOption[], index: number): void {
+    const option = options[index];
+
+    activate(options, index);
     option.element.scrollIntoView(scrollOptions);
 
     if (!option.disabled) {
       select(option.value);
+    }
+  }
+
+  function claim(optionValue: string): void {
+    const listbox = focusedListbox.current;
+
+    if (listbox === null) {
+      return;
+    }
+
+    const options = renderedOptions(listbox);
+    const index = options.findIndex((option) => option.value === optionValue);
+
+    if (index !== -1) {
+      activate(options, index);
     }
   }
 
@@ -108,15 +132,31 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
       return;
     }
 
+    focusedListbox.current = event.currentTarget;
     const options = renderedOptions(event.currentTarget);
-    const entry = options.find((option) => option.value === selectedValue) ?? options[0];
 
-    setActiveValue(entry?.value ?? null);
+    if (options.length === 0) {
+      setActiveValue(null);
+
+      return;
+    }
+
+    const entryIndex = Math.max(
+      options.findIndex((option) => option.value === selectedValue),
+      0
+    );
+
+    activate(options, entryIndex);
 
     // A click's target is already in view, and scrolling before the click lands would move another option under it
-    if (entry !== undefined && !pressInProgress.current) {
-      entry.element.scrollIntoView(scrollOptions);
+    if (!pressInProgress.current) {
+      options[entryIndex].element.scrollIntoView(scrollOptions);
     }
+  }
+
+  function handleBlur(): void {
+    focusedListbox.current = null;
+    endPress();
   }
 
   function handlePointerDown(): void {
@@ -134,65 +174,74 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
 
     const options = renderedOptions(event.currentTarget);
     const activeIndex = startIndex(options, activeValue, selectedValue);
+    const time = Date.now();
     const handled =
-      handleCommandKey(event, options[activeIndex]) ||
+      handleEnter(event, options[activeIndex]) ||
+      handleSpace(event.key, options[activeIndex], time) ||
       handleMoveKey(event.key, options, activeIndex) ||
-      handleTypeAhead(event.key, options, activeIndex);
+      handleTypeAhead(event.key, options, activeIndex, time);
 
     if (handled) {
       event.preventDefault();
     }
   }
 
-  function handleCommandKey(event: KeyboardEvent<HTMLDivElement>, active: RenderedOption | undefined): boolean {
-    if (event.key === "Enter") {
-      if (!event.repeat && active !== undefined && !active.disabled) {
-        onAction?.(active.value);
-      }
-
-      return true;
+  function handleEnter(event: KeyboardEvent<HTMLDivElement>, active: RenderedOption | undefined): boolean {
+    if (event.key !== "Enter") {
+      return false;
     }
 
-    if (event.key === " ") {
-      if (active !== undefined && !active.disabled) {
-        select(active.value);
-      }
-
-      return true;
+    if (!event.repeat && active !== undefined && !active.disabled) {
+      onAction?.(active.value);
     }
 
-    return false;
+    return true;
+  }
+
+  function handleSpace(key: string, active: RenderedOption | undefined, time: number): boolean {
+    if (key !== " " || isTypeAheadQueryLive(typeAheadQuery.current, time)) {
+      return false;
+    }
+
+    if (active !== undefined && !active.disabled) {
+      select(active.value);
+    }
+
+    return true;
   }
 
   function handleMoveKey(key: string, options: RenderedOption[], activeIndex: number): boolean {
-    const target = targetIndexForKey({
-      count: options.length,
-      currentIndex: activeIndex,
-      key,
-      orientation: "vertical",
-      wraps: false,
-    });
+    const resumedIndex = activeIndex === -1 ? resumeIndex(key, options.length, lastActiveIndex.current) : null;
+    const target =
+      resumedIndex ??
+      targetIndexForKey({
+        count: options.length,
+        currentIndex: activeIndex,
+        key,
+        orientation: "vertical",
+        wraps: false,
+      });
 
     if (target === null) {
       return false;
     }
 
-    moveTo(options[target]);
+    moveTo(options, target);
 
     return true;
   }
 
-  function handleTypeAhead(key: string, options: RenderedOption[], activeIndex: number): boolean {
+  function handleTypeAhead(key: string, options: RenderedOption[], activeIndex: number, time: number): boolean {
     if (Array.from(key).length !== 1) {
       return false;
     }
 
-    typeAheadQuery.current = extendTypeAheadQuery(typeAheadQuery.current, key, Date.now());
+    typeAheadQuery.current = extendTypeAheadQuery(typeAheadQuery.current, key, time);
     const labels = options.map((option) => option.textValue);
     const target = typeAheadTarget(labels, activeIndex, typeAheadQuery.current.text);
 
     if (target !== null) {
-      moveTo(options[target]);
+      moveTo(options, target);
     }
 
     return true;
@@ -207,7 +256,7 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
     pressInProgress.current = true;
     option.closest<HTMLElement>('[role="listbox"]')?.focus();
     pressInProgress.current = false;
-    setActiveValue(optionValue);
+    claim(optionValue);
 
     if (!disabled) {
       select(optionValue);
@@ -219,7 +268,8 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
     activeValue,
     baseId,
     choose,
-    handleBlur: endPress,
+    claim,
+    handleBlur,
     handleFocus,
     handleKeyDown,
     handlePointerCancel: endPress,
@@ -241,4 +291,30 @@ function startIndex(options: RenderedOption[], activeValue: string | null, selec
   const activeIndex = options.findIndex((option) => option.value === activeValue);
 
   return activeIndex === -1 ? options.findIndex((option) => option.value === selectedValue) : activeIndex;
+}
+
+/**
+ * Finds where Down or Up goes when neither the active nor the selected option is rendered, such as after a refresh
+ * dropped them, so the keys carry on from where the active option was
+ *
+ * @param key the pressed key
+ * @param count how many options are rendered
+ * @param lastActiveIndex the index the active option had when it was last set, or null when none has been
+ * @returns for Down, the option now at that index; for Up, the one before it; each clamped to the list. Null for any
+ *   other key, for an empty list, or when no option has been active.
+ */
+function resumeIndex(key: string, count: number, lastActiveIndex: number | null): number | null {
+  if (lastActiveIndex === null || count === 0) {
+    return null;
+  }
+
+  if (key === "ArrowDown") {
+    return Math.min(lastActiveIndex, count - 1);
+  }
+
+  if (key === "ArrowUp") {
+    return Math.min(Math.max(lastActiveIndex - 1, 0), count - 1);
+  }
+
+  return null;
 }

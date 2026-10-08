@@ -22,6 +22,11 @@ interface FruitListboxProps extends Pick<ListboxProps, "defaultValue" | "onActio
   disabledValue?: string;
 
   /**
+   * Goes before each option's key, so changing it remounts every option, as a refresh that re-keys its rows does
+   */
+  keyPrefix?: string;
+
+  /**
    * The fruits listed, in order. Defaults to all four.
    */
   shown?: readonly string[];
@@ -33,6 +38,7 @@ interface FruitListboxProps extends Pick<ListboxProps, "defaultValue" | "onActio
 function FruitListbox({
   defaultValue,
   disabledValue,
+  keyPrefix = "",
   onAction,
   onValueChange,
   shown = fruits,
@@ -61,7 +67,7 @@ function FruitListbox({
         aria-label="Fruit"
       >
         {shown.map((fruit) => (
-          <ListboxOption disabled={fruit === disabledValue} key={fruit} value={fruit}>
+          <ListboxOption disabled={fruit === disabledValue} key={keyPrefix + fruit} value={fruit}>
             {fruit}
           </ListboxOption>
         ))}
@@ -265,6 +271,26 @@ describe("Listbox", () => {
     expect(onAction).toHaveBeenCalledWith("Cherry");
   });
 
+  it("must not call onAction when Enter is pressed on an active disabled option", async () => {
+    const { render, user } = setUpTest();
+    render({ defaultValue: "Apple", disabledValue: "Apricot" });
+    await user.tab();
+    await user.keyboard("{ArrowDown}");
+
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByText("Actions: none")).toBeInTheDocument();
+  });
+
+  it("must not call onAction when a disabled option is double-clicked", async () => {
+    const { render, user } = setUpTest();
+    render({ disabledValue: "Apricot" });
+
+    await user.dblClick(elements.option("Apricot"));
+
+    expect(screen.getByText("Actions: none")).toBeInTheDocument();
+  });
+
   it("must select an option and focus the listbox when the option is clicked", async () => {
     const { onValueChange, render, user } = setUpTest();
     render();
@@ -307,6 +333,38 @@ describe("Listbox", () => {
     await user.keyboard("c");
 
     expect(elements.option("Cherry")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("must add Space to the type-ahead query when it comes within 500ms of the last character", async () => {
+    const { user } = setUpTest();
+    renderBase(
+      <Listbox aria-label="Pull requests">
+        <ListboxOption value="listbox">Add a listbox</ListboxOption>
+        <ListboxOption value="build">Fix the build</ListboxOption>
+        <ListboxOption value="tests">Fix the tests</ListboxOption>
+      </Listbox>
+    );
+    await user.tab();
+
+    await user.keyboard("fix the t");
+
+    expect(elements.option("Fix the tests")).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("must select the active option when Space comes more than 500ms after the last character", async () => {
+    const { render, user } = setUpTest();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    render();
+    await user.tab();
+    await user.keyboard("z");
+
+    vi.advanceTimersByTime(501);
+    await user.keyboard(" ");
+
+    expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
   });
 
   it("must match type-ahead on the title when an option is labelled by it", async () => {
@@ -373,6 +431,18 @@ describe("Listbox", () => {
     render({ defaultValue: "Cherry" });
 
     await user.tab();
+
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ block: "nearest", container: "nearest" });
+    expect(scrollIntoView.mock.contexts.at(-1)).toBe(elements.option("Cherry"));
+  });
+
+  it("must scroll the selected option into the nearest container when a script focuses the listbox", () => {
+    const { render, scrollIntoView } = setUpTest();
+    render({ defaultValue: "Cherry" });
+
+    act(() => {
+      elements.listbox.focus();
+    });
 
     expect(scrollIntoView).toHaveBeenLastCalledWith({ block: "nearest", container: "nearest" });
     expect(scrollIntoView.mock.contexts.at(-1)).toBe(elements.option("Cherry"));
@@ -497,8 +567,58 @@ describe("Listbox", () => {
     expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apple").id);
   });
 
+  it("must leave the active option alone when value changes after focus has left", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ value: "Apple" });
+    await user.tab();
+    await user.tab();
+
+    rerender({ value: "Cherry" });
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apple").id);
+  });
+
+  it("must make the neighbour active when one render removes the active option and moves value to it", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ value: "Banana" });
+    await user.tab();
+
+    rerender({ shown: ["Apple", "Apricot", "Cherry"], value: "Cherry" });
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Cherry").id);
+  });
+
+  it("must keep the selected option active when it remounts under a new key while focused", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ defaultValue: "Banana" });
+    await user.tab();
+
+    rerender({ keyPrefix: "refreshed-" });
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Banana").id);
+  });
+
+  it.each([
+    { expected: "Cherry", key: "{ArrowDown}", removed: "Banana" },
+    { expected: "Apricot", key: "{ArrowUp}", removed: "Banana" },
+    { expected: "Banana", key: "{ArrowDown}", removed: "Cherry" },
+  ])(
+    "must move to $expected when $key is pressed after the selected $removed is removed",
+    async ({ expected, key, removed }) => {
+      const { render, user } = setUpTest();
+      const { rerender } = render({ value: removed });
+      await user.tab();
+
+      rerender({ shown: fruits.filter((fruit) => fruit !== removed) });
+      await user.keyboard(key);
+
+      expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option(expected).id);
+      expect(screen.getByText(`Changes: ${expected}`)).toBeInTheDocument();
+    }
+  );
+
   it.each([{ strictMode: false }, { strictMode: true }])(
-    "must stop pointing at a removed active option and still move when a key is pressed, strictMode $strictMode",
+    "must stop pointing at a removed active option and move from where it was when a key is pressed, strictMode $strictMode",
     async ({ strictMode }) => {
       const { render, user } = setUpTest();
       const { rerender } = render({ defaultValue: "Banana", shown: ["Apple", "Banana", "Cherry"], strictMode });
@@ -510,7 +630,7 @@ describe("Listbox", () => {
       await user.keyboard("{ArrowUp}");
 
       expect(activeAfterRemoval).toBeNull();
-      expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+      expect(elements.option("Banana")).toHaveAttribute("aria-selected", "true");
     }
   );
 
@@ -548,7 +668,7 @@ describe("Listbox", () => {
     await user.keyboard("{ArrowUp}");
 
     expect(activeAfterRemoval).toBeNull();
-    expect(elements.option("Apple")).toHaveAttribute("aria-selected", "true");
+    expect(elements.option("Banana")).toHaveAttribute("aria-selected", "true");
   });
 
   it("must keep the active option when the list re-renders with it still listed", async () => {

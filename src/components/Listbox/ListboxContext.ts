@@ -26,6 +26,11 @@ export interface ListboxContextValue {
   choose: (option: HTMLElement, value: string, disabled: boolean) => void;
 
   /**
+   * Makes the option with this value active while the listbox has focus, as a newly selected option does
+   */
+  claim: (value: string) => void;
+
+  /**
    * The selected option's value, or null for none
    */
   selectedValue: string | null;

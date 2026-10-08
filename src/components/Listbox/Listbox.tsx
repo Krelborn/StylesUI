@@ -58,8 +58,9 @@ export type ListboxProps = ListboxOwnProps &
 /**
  * A list of options with one selected, following the WAI-ARIA listbox pattern, for a list whose selection shows
  * details. It is one tab stop. The arrow keys, Home, End and type-ahead move the selection; Space selects the active
- * option; Enter or a double-click calls `onAction`. Name it with `aria-label` or `aria-labelledby`. Options hold no
- * interactive content. Your `onKeyDown` runs first; preventing its default stops the listbox handling the key.
+ * option, or joins type-ahead text typed within the last 500ms; Enter or a double-click calls `onAction`. Name it with
+ * `aria-label` or `aria-labelledby`. Options hold no interactive content. Your `onKeyDown` runs first; preventing its
+ * default stops the listbox handling the key.
  *
  * @example
  * <Listbox aria-label="Needs you" onAction={open} onValueChange={select} value={selectedId}>
@@ -82,7 +83,7 @@ export function Listbox({
   ...rest
 }: ListboxProps): JSX.Element {
   const listbox = useListbox({ defaultValue, onAction, onValueChange, value });
-  const { act, activeValue, baseId, choose, selectedValue, setActiveValue } = listbox;
+  const { act, activeValue, baseId, choose, claim, selectedValue, setActiveValue } = listbox;
 
   function handleBlur(event: FocusEvent<HTMLDivElement>): void {
     onBlur?.(event);
@@ -113,7 +114,7 @@ export function Listbox({
   }
 
   return (
-    <ListboxContext.Provider value={{ act, activeValue, baseId, choose, selectedValue, setActiveValue }}>
+    <ListboxContext.Provider value={{ act, activeValue, baseId, choose, claim, selectedValue, setActiveValue }}>
       <Box
         {...rest}
         className={clsx(styles.listbox, className)}
