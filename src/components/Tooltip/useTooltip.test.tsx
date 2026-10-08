@@ -346,6 +346,7 @@ describe("useTooltip", () => {
     const { user } = setUpTest();
     render(<Example />);
     await user.tab();
+    expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
 
     await user.keyboard(key);
 

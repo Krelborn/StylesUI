@@ -5,10 +5,13 @@ import { expect, userEvent, waitFor } from "storybook/test";
 
 import type { OverlayPlacement } from "../../overlays";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Checkbox } from "../Checkbox";
+import { Field } from "../Field";
 import { Stack } from "../Stack";
+import { TextInput } from "../TextInput";
 
 import { Tooltip } from "./Tooltip";
 import type { UseTooltipOptions } from "./useTooltip";
@@ -105,6 +108,20 @@ function ControlledTooltip(): JSX.Element {
         <Tooltip {...tooltip.getOverlayProps()}>Sends to all subscribers</Tooltip>
       </Box>
     </Stack>
+  );
+}
+
+/**
+ * A text field described by a tooltip
+ */
+function DisplayNameField(): JSX.Element {
+  const tooltip = useTooltip();
+
+  return (
+    <Field label="Display name">
+      <TextInput {...tooltip.getTriggerProps()} data-testid="display-name" />
+      <Tooltip {...tooltip.getOverlayProps()}>Use the name people know you by</Tooltip>
+    </Field>
   );
 }
 
@@ -376,5 +393,26 @@ export const PointerInteraction: Story = {
 
     await userEvent.unhover(tooltip);
     await waitFor(() => expect(canvas.queryByRole("tooltip")).toBeNull());
+  },
+};
+
+/**
+ * A text field matches `:focus-visible` however it takes focus, so clicking into it shows its tooltip, which stays open
+ */
+export const TextFieldTrigger: Story = {
+  render: () => <DisplayNameField />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.clickByTestId("display-name");
+    await expect(canvas.getByRole("textbox", { name: "Display name" })).toHaveFocus();
+    const tooltip = await canvas.findByRole("tooltip", { name: "Use the name people know you by" });
+
+    await wait(500);
+    await expect(tooltip).toBeVisible();
   },
 };

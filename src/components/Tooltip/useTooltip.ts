@@ -2,6 +2,7 @@ import type {
   CSSProperties,
   FocusEvent,
   FocusEventHandler,
+  MouseEvent,
   MouseEventHandler,
   PointerEvent,
   PointerEventHandler,
@@ -76,7 +77,7 @@ interface TooltipTriggerProps {
   onBlur: FocusEventHandler<HTMLElement>;
 
   /**
-   * Hides the tooltip, also when the keyboard presses the trigger
+   * Hides the tooltip when the keyboard presses the trigger
    */
   onClick: MouseEventHandler<HTMLElement>;
 
@@ -216,6 +217,14 @@ export function useTooltip({
     overlay.hide();
   }
 
+  function handleClick(event: MouseEvent<HTMLElement>): void {
+    // detail counts pointer presses, so 0 is a keyboard press. A pointer press already hid the tooltip at pointerdown,
+    // and a text field it focused has shown the tooltip again since.
+    if (event.detail === 0) {
+      overlay.hide();
+    }
+  }
+
   const overlayProps: TooltipOverlayProps = {
     anchorName: overlay.anchorName,
     id: overlay.id,
@@ -227,7 +236,7 @@ export function useTooltip({
   const triggerProps: TooltipTriggerProps = {
     ...(relationship === "label" ? { "aria-labelledby": overlay.id } : { "aria-describedby": overlay.id }),
     onBlur: handleBlur,
-    onClick: overlay.hide,
+    onClick: handleClick,
     onFocus: handleFocus,
     onPointerDown: overlay.hide,
     onPointerEnter: handleTriggerPointerEnter,
