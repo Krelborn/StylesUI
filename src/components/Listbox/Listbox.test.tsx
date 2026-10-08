@@ -602,6 +602,8 @@ describe("Listbox", () => {
     { expected: "Cherry", key: "{ArrowDown}", removed: "Banana" },
     { expected: "Apricot", key: "{ArrowUp}", removed: "Banana" },
     { expected: "Banana", key: "{ArrowDown}", removed: "Cherry" },
+    { expected: "Apple", key: "{Home}", removed: "Banana" },
+    { expected: "Cherry", key: "{End}", removed: "Banana" },
   ])(
     "must move to $expected when $key is pressed after the selected $removed is removed",
     async ({ expected, key, removed }) => {
