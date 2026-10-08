@@ -16,6 +16,11 @@ declare module "vitest/browser" {
     clickPageCorner: () => Promise<void>;
 
     /**
+     * Holds the real primary pointer button down over the element with the given `data-testid` in the story's frame
+     */
+    holdPointerByTestId: (testId: string) => Promise<void>;
+
+    /**
      * Moves the real pointer off the page
      */
     movePointerOffPage: () => Promise<void>;
@@ -24,13 +29,20 @@ declare module "vitest/browser" {
      * Presses a key with the real keyboard
      */
     pressKey: (key: string) => Promise<void>;
+
+    /**
+     * Releases the real primary pointer button
+     */
+    releasePointer: () => Promise<void>;
   }
 }
 
 registerTrustedInput({
   clickByTestId: (testId) => commands.clickByTestId(testId),
   clickPageCorner: () => commands.clickPageCorner(),
+  holdPointerByTestId: (testId) => commands.holdPointerByTestId(testId),
   pressKey: (key) => commands.pressKey(key),
+  releasePointer: () => commands.releasePointer(),
 });
 
 // Chromium on Linux can apply :hover to whatever a story renders under the pointer, without the pointer moving

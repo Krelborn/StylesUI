@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { childrenArgType } from "../../docs/argTypes";
-import { focusRingContrast, textContrast } from "../../test/colorContrast";
+import { focusRingContrast, resolvedColor, textContrast } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Card } from "../Card";
 import { Kbd } from "../Kbd";
@@ -88,12 +89,35 @@ export const Ghost: Story = {
   args: {
     variant: "ghost",
   },
+  render: (args) => <Button {...args} data-testid="ghost" />,
   play: async ({ canvas }) => {
     const button = canvas.getByRole("button", { name: "Button" });
     const style = getComputedStyle(button);
 
     await expect(style.getPropertyValue("--sui-button-depth").trim()).toBe("0px");
     await expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const pressedFill = resolvedColor(button, "var(--sui-color-secondary)");
+    const pressedText = resolvedColor(button, "var(--sui-color-on-secondary)");
+
+    // Synthetic pointer events never apply :active
+    await input.holdPointerByTestId("ghost");
+
+    try {
+      await waitFor(() => {
+        expect(style.backgroundColor).toBe(pressedFill);
+        expect(style.color).toBe(pressedText);
+      });
+      await expect(textContrast(button)).toBeGreaterThanOrEqual(4.5);
+    } finally {
+      await input.releasePointer();
+    }
   },
 };
 
@@ -129,6 +153,9 @@ export const Busy: Story = {
     </Row>
   ),
   play: async ({ args, canvas }) => {
+    // After the Ghost story's trusted press, focus from userEvent.tab() only matches :focus-visible once a trusted key
+    // has been pressed
+    await trustedInput()?.pressKey("Shift");
     const [busy, idle] = canvas.getAllByRole("button", { name: "Save changes" });
     const spinner = busy.querySelector("svg");
 
@@ -201,6 +228,9 @@ export const KeyboardInteraction: Story = {
     </Box>
   ),
   play: async ({ args, canvas }) => {
+    // After the Ghost story's trusted press, focus from userEvent.tab() only matches :focus-visible once a trusted key
+    // has been pressed
+    await trustedInput()?.pressKey("Shift");
     const save = canvas.getByRole("button", { name: "Save" });
     const cancel = canvas.getByRole("button", { name: "Cancel" });
 

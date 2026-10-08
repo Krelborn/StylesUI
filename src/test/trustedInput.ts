@@ -14,10 +14,21 @@ export interface TrustedInput {
   clickPageCorner: () => Promise<void>;
 
   /**
+   * Holds the primary pointer button down over the element with the given `data-testid` in the story's frame, so it
+   * matches `:active` until `releasePointer` runs
+   */
+  holdPointerByTestId: (testId: string) => Promise<void>;
+
+  /**
    * Presses a key, named as Playwright names it, such as "Escape". The key goes to whatever has focus in the story's
    * frame.
    */
   pressKey: (key: string) => Promise<void>;
+
+  /**
+   * Releases the primary pointer button that `holdPointerByTestId` holds down
+   */
+  releasePointer: () => Promise<void>;
 }
 
 let registeredInput: TrustedInput | null = null;

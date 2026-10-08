@@ -66,6 +66,27 @@ const clickPageCorner: BrowserCommand = async ({ iframe }) => {
   await body.click({ position: { x: box.width - 1, y: box.height - 1 } });
 };
 
+/**
+ * Holds the real primary pointer button down over an element in the story's frame, so the element matches `:active`
+ * until `releasePointer` runs
+ *
+ * @param context the command context, holding the page and the frame the story runs in
+ * @param testId the element's `data-testid`
+ */
+const holdPointerByTestId: BrowserCommand<[testId: string]> = async ({ iframe, page }, testId) => {
+  await iframe.getByTestId(testId).hover();
+  await page.mouse.down();
+};
+
+/**
+ * Releases the real primary pointer button where the pointer is
+ *
+ * @param context the command context, holding the page the story runs in
+ */
+const releasePointer: BrowserCommand = async ({ page }) => {
+  await page.mouse.up();
+};
+
 // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
 // Imported by .storybook/main.ts, which fallow's ignorePatterns excludes from analysis
 // fallow-ignore-next-line unused-export
@@ -146,7 +167,14 @@ export default defineConfig({
                 headless: true,
                 provider: playwright(),
                 instances: [{ browser: "chromium" as const }],
-                commands: { clickByTestId, clickPageCorner, movePointerOffPage, pressKey },
+                commands: {
+                  clickByTestId,
+                  clickPageCorner,
+                  holdPointerByTestId,
+                  movePointerOffPage,
+                  pressKey,
+                  releasePointer,
+                },
               },
             },
           };
