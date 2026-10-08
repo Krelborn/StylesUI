@@ -11,11 +11,12 @@ const opaqueWhite: Rgba = { alpha: 1, blue: 255, green: 255, red: 255 };
  * Measures the WCAG contrast ratio between an element's focus outline and the colours beside it. WCAG 1.4.11 requires
  * at least 3:1 for a focus indicator.
  *
- * Needs a real browser; throws under jsdom. Throws if the element has no drawn outline, or if the outline straddles
- * the element's edge. A ring outside the element (an `outline-offset` of 0 or more) is measured against the
- * background behind the element. A ring wholly inside it (an offset of at most minus the outline width) is measured
- * against both the element's own background and the background behind it, and the lower ratio is returned; nothing
- * inside the element may cover the ring.
+ * Needs a real browser; throws under jsdom. Throws if the element has no drawn outline, if it shows the browser's
+ * default ring (`outline-style: auto`), whose colours cannot be read, or if the outline straddles the element's edge.
+ * A ring clear of the element (a positive `outline-offset`) is measured against the background behind the element. A
+ * ring touching its edge (an offset of 0) or wholly inside it (an offset of at most minus the outline width) is
+ * measured against both the element's own background and the background behind it, and the lower ratio is returned;
+ * nothing inside the element may cover an inset ring.
  *
  * @param element the focused element
  * @returns the contrast ratio, from 1 to 21
@@ -25,6 +26,10 @@ export function focusRingContrast(element: HTMLElement): number {
 
   if (style.outlineStyle === "none" || parseFloat(style.outlineWidth) === 0) {
     throw new Error("focusRingContrast requires a drawn outline; this element has no outline");
+  }
+
+  if (style.outlineStyle === "auto") {
+    throw new Error("focusRingContrast cannot measure the browser's default ring; give the element an outline style");
   }
 
   const ring = toRgba(style.outlineColor);
@@ -96,11 +101,11 @@ function backgroundsBesideRing(element: HTMLElement, style: CSSStyleDeclaration)
   const outlineOffset = parseFloat(style.outlineOffset);
   const behind = backgroundBehind(element);
 
-  if (outlineOffset >= 0) {
+  if (outlineOffset > 0) {
     return [behind];
   }
 
-  if (outlineOffset + parseFloat(style.outlineWidth) > 0) {
+  if (outlineOffset < 0 && outlineOffset + parseFloat(style.outlineWidth) > 0) {
     throw new Error("focusRingContrast cannot measure a ring that straddles the element's edge");
   }
 
