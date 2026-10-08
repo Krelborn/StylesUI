@@ -103,11 +103,20 @@
   opacity: 0.5;
 }
 
-/* The content stays in place, transparent, so the button keeps its width and its accessible name */
+/* The content stays in place, hidden, so the button keeps its width and its accessible name */
 .button[data-busy] {
-  position: relative;
   color: transparent;
   cursor: progress;
+}
+
+/* color: transparent does not reach a child with colours of its own */
+.button[data-busy] > :not(.spinner) {
+  opacity: 0;
+}
+
+/* Zero specificity, so a consumer's class can position a busy button */
+:where(.button[data-busy]) {
+  position: relative;
 }
 
 /* currentColor is transparent on a busy button, so the spinner takes the button's text colour directly */
@@ -136,7 +145,7 @@
     forced-color-adjust: none;
   }
 
-  /* forced-color-adjust: none keeps the theme's focus ring colour, which can match the fill */
+  /* forced-color-adjust: none stops the browser forcing the focus ring to a system colour, so the ring is set here */
   .button[data-busy]:focus-visible {
     outline-color: Highlight;
   }

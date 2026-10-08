@@ -179,8 +179,8 @@ export const Busy: Story = {
     const spinner = findInside(busy, ":scope > svg");
 
     await expect(busy).toHaveAttribute("aria-disabled", "true");
-    await expect(getComputedStyle(findInside(busy, ":scope > span")).visibility).toBe("hidden");
-    await expect(getComputedStyle(findInside(idle, ":scope > span")).visibility).toBe("visible");
+    await expect(getComputedStyle(findInside(busy, ":scope > span")).opacity).toBe("0");
+    await expect(getComputedStyle(findInside(idle, ":scope > span")).opacity).toBe("1");
     await expect(getComputedStyle(spinner).color).not.toBe("rgba(0, 0, 0, 0)");
     await expect(busy.getBoundingClientRect().width).toBeCloseTo(idle.getBoundingClientRect().width, 0);
     await expect(busy.getBoundingClientRect().height).toBeCloseTo(idle.getBoundingClientRect().height, 0);

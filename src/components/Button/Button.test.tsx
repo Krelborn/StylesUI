@@ -158,6 +158,23 @@ describe("Button", () => {
     expect(reducedMotionBlock).not.toContain("rotate");
   });
 
+  it("must paint a busy button with ButtonFace and opt out of forced colours when forced colours are active", () => {
+    const forcedColorsBlock = buttonCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+    const busyRule = forcedColorsBlock.match(/\.button\[data-busy\] \{(.*?)\}/s)?.[1] ?? "";
+    const declarations = busyRule.split(";").map((declaration) => declaration.trim());
+
+    expect(declarations).toContain("forced-color-adjust: none");
+    expect(declarations).toContain("background-color: ButtonFace");
+  });
+
+  it("must let a consumer's class position a busy button when it sets position", () => {
+    const positionRule = buttonCss.match(/:where\(\.button\[data-busy\]\) \{(.*?)\}/s)?.[1] ?? "";
+    const busyRule = buttonCss.match(/^\.button\[data-busy\] \{(.*?)\}/ms)?.[1] ?? "";
+
+    expect(positionRule.trim()).toBe("position: relative;");
+    expect(busyRule).not.toContain("position");
+  });
+
   it("must merge className when one is given", () => {
     render(<Button className="custom">Save</Button>);
 
