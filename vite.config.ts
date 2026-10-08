@@ -21,6 +21,34 @@ const movePointerOffPage: BrowserCommand = async ({ page }) => {
   await page.mouse.move(-1000, -1000);
 };
 
+/**
+ * Presses a key with the real keyboard, which the browser trusts for its own behaviour, such as closing a popover on
+ * Escape
+ *
+ * @param context the command context, holding the page the story runs in
+ * @param key the key, as Playwright names it, such as "Escape"
+ */
+const pressKey: BrowserCommand<[key: string]> = async ({ page }, key) => {
+  await page.keyboard.press(key);
+};
+
+/**
+ * Clicks the bottom-right corner of the story's frame with the real pointer, away from the top-left where stories
+ * render
+ *
+ * @param context the command context, holding the frame the story runs in
+ */
+const clickPageCorner: BrowserCommand = async ({ iframe }) => {
+  const body = iframe.locator("body");
+  const box = await body.boundingBox();
+
+  if (box === null) {
+    throw new Error("The story's frame has no body to click");
+  }
+
+  await body.click({ position: { x: box.width - 1, y: box.height - 1 } });
+};
+
 // Matches the light-dark() support floor; a lower target makes lightningcss rewrite light-dark() into fallback variables that break theme nesting
 // Imported by .storybook/main.ts, which fallow's ignorePatterns excludes from analysis
 // fallow-ignore-next-line unused-export
@@ -101,7 +129,7 @@ export default defineConfig({
                 headless: true,
                 provider: playwright(),
                 instances: [{ browser: "chromium" as const }],
-                commands: { movePointerOffPage },
+                commands: { clickPageCorner, movePointerOffPage, pressKey },
               },
             },
           };
