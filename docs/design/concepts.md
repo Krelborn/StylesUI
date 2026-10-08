@@ -179,6 +179,8 @@ Tabs follows the WAI-ARIA tabs pattern. `Tabs` holds the selection, controlled w
 
 ### Buttons
 
+A ghost Button has no fill or border at rest. Hovering tints it with its text colour at 8% and pressing at 16%, laid over whatever is behind it, so both states show on the page, on a surface and on any tint, and its text keeps its colour. A fixed fill would vanish on a background of the same colour.
+
 A busy Button (`busy`) is running its action. It is `aria-disabled`, so it stays in the tab order, and it ignores clicks and a form's submission, including Enter in a field. Its content stays in place but hidden, so it keeps its width and its accessible name: the text is transparent and every child element has `opacity: 0`, which also hides a child with colours of its own, such as a Kbd, a Counter or an icon. A Spinner in the button's text colour covers it. The spinner rotates; under reduced motion it pulses its opacity. A button's children are presentational, so the spinner cannot announce itself: pair `busy` with a status message for the outcome, as for an Alert. A busy button does not lift on hover or press down.
 
 Under forced colours a transparent label would be replaced by a system colour that shows through the spinner, so a busy Button sets `forced-color-adjust: none` and draws a `ButtonFace` fill, a `ButtonBorder` border, a transparent label and no shadow. Its focus ring is `Highlight`, because `forced-color-adjust: none` stops the browser forcing the ring to a system colour, and its spinner is `ButtonText`.

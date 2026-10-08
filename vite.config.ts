@@ -79,6 +79,16 @@ const holdPointerByTestId: BrowserCommand<[testId: string]> = async ({ iframe, p
 };
 
 /**
+ * Moves the real pointer over an element in the story's frame, so the element matches `:hover`
+ *
+ * @param context the command context, holding the frame the story runs in
+ * @param testId the element's `data-testid`
+ */
+const hoverByTestId: BrowserCommand<[testId: string]> = async ({ iframe }, testId) => {
+  await iframe.getByTestId(testId).hover();
+};
+
+/**
  * Releases the real primary pointer button where the pointer is
  *
  * @param context the command context, holding the page the story runs in
@@ -171,6 +181,7 @@ export default defineConfig({
                   clickByTestId,
                   clickPageCorner,
                   holdPointerByTestId,
+                  hoverByTestId,
                   movePointerOffPage,
                   pressKey,
                   releasePointer,

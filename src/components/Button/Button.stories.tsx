@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { childrenArgType } from "../../docs/argTypes";
-import { focusRingContrast, resolvedColor, textContrast } from "../../test/colorContrast";
+import { fillContrast, focusRingContrast, textContrast } from "../../test/colorContrast";
+import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Card } from "../Card";
@@ -26,6 +27,55 @@ function findKbd(button: HTMLElement): HTMLElement {
   }
 
   return kbd;
+}
+
+// About the step from white to gray-100, the faintest change of fill that still reads as a new state
+const distinctFillContrast = 1.1;
+
+/**
+ * Waits for a button's fill to finish changing into the state the real pointer has just put it in
+ *
+ * @param button the button under the pointer
+ * @param state the pseudo-class the pointer applies
+ * @returns the button's background colour in that state
+ */
+async function settledFill(button: HTMLElement, state: ":active" | ":hover"): Promise<string> {
+  await waitFor(() => expect(button.matches(state)).toBe(true));
+  await Promise.all(button.getAnimations().map((animation) => animation.finished));
+
+  return getComputedStyle(button).backgroundColor;
+}
+
+/**
+ * Hovers and then presses a button with the real pointer, and checks that rest, hover and press are three fills that
+ * can be told apart, each keeping the text readable
+ *
+ * @param input the trusted input that moves and presses the pointer
+ * @param button the button
+ * @param testId the button's `data-testid`
+ */
+async function expectDistinctPointerStates(input: TrustedInput, button: HTMLElement, testId: string): Promise<void> {
+  await input.hoverByTestId(testId);
+  const hovered = await settledFill(button, ":hover");
+
+  await expect(textContrast(button), `${testId} hovered text`).toBeGreaterThanOrEqual(4.5);
+  await expect(fillContrast(button, "transparent", hovered), `${testId} rest to hover`).toBeGreaterThanOrEqual(
+    distinctFillContrast
+  );
+
+  // Synthetic pointer events never apply :active
+  await input.holdPointerByTestId(testId);
+
+  try {
+    const pressed = await settledFill(button, ":active");
+
+    await expect(textContrast(button), `${testId} pressed text`).toBeGreaterThanOrEqual(4.5);
+    await expect(fillContrast(button, hovered, pressed), `${testId} hover to press`).toBeGreaterThanOrEqual(
+      distinctFillContrast
+    );
+  } finally {
+    await input.releasePointer();
+  }
 }
 
 const meta = {
@@ -82,41 +132,38 @@ export const Outline: Story = {
 };
 
 /**
- * No border, and no fill until hovered, for quiet actions in toolbars and status bars. It stays flat in every theme,
- * and fills with the secondary colour while pressed.
+ * No border, and no fill until hovered, for quiet actions in toolbars and status bars. It stays flat in every theme.
+ * Hovering and pressing tint it with its text colour, so both show on the page, on a surface and on any tint.
  */
 export const Ghost: Story = {
   args: {
     variant: "ghost",
   },
-  render: (args) => <Button {...args} data-testid="ghost" />,
+  render: (args) => (
+    <Row gap={2}>
+      <Button {...args} data-testid="ghost-on-page">
+        On the page
+      </Button>
+      <Card padding="sm">
+        <Button {...args} data-testid="ghost-on-surface">
+          On a surface
+        </Button>
+      </Card>
+    </Row>
+  ),
   play: async ({ canvas }) => {
-    const button = canvas.getByRole("button", { name: "Button" });
-    const style = getComputedStyle(button);
-
-    await expect(style.getPropertyValue("--sui-button-depth").trim()).toBe("0px");
-    await expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-
     const input = trustedInput();
 
-    if (input === null) {
-      return;
-    }
+    for (const testId of ["ghost-on-page", "ghost-on-surface"]) {
+      const button = canvas.getByTestId(testId);
+      const style = getComputedStyle(button);
 
-    const pressedFill = resolvedColor(button, "var(--sui-color-secondary)");
-    const pressedText = resolvedColor(button, "var(--sui-color-on-secondary)");
+      await expect(style.getPropertyValue("--sui-button-depth").trim()).toBe("0px");
+      await expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
 
-    // Synthetic pointer events never apply :active
-    await input.holdPointerByTestId("ghost");
-
-    try {
-      await waitFor(() => {
-        expect(style.backgroundColor).toBe(pressedFill);
-        expect(style.color).toBe(pressedText);
-      });
-      await expect(textContrast(button)).toBeGreaterThanOrEqual(4.5);
-    } finally {
-      await input.releasePointer();
+      if (input !== null) {
+        await expectDistinctPointerStates(input, button, testId);
+      }
     }
   },
 };

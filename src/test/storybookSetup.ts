@@ -21,6 +21,11 @@ declare module "vitest/browser" {
     holdPointerByTestId: (testId: string) => Promise<void>;
 
     /**
+     * Moves the real pointer over the element with the given `data-testid` in the story's frame
+     */
+    hoverByTestId: (testId: string) => Promise<void>;
+
+    /**
      * Moves the real pointer off the page
      */
     movePointerOffPage: () => Promise<void>;
@@ -41,6 +46,7 @@ registerTrustedInput({
   clickByTestId: (testId) => commands.clickByTestId(testId),
   clickPageCorner: () => commands.clickPageCorner(),
   holdPointerByTestId: (testId) => commands.holdPointerByTestId(testId),
+  hoverByTestId: (testId) => commands.hoverByTestId(testId),
   pressKey: (key) => commands.pressKey(key),
   releasePointer: () => commands.releasePointer(),
 });

@@ -48,9 +48,10 @@
   --sui-button-border: var(--sui-color-primary, #2563eb);
 }
 
+/* Hover and press tint whatever is behind the button, since a fixed fill can match the surface it sits on */
 .button[data-variant="ghost"] {
   --sui-button-bg: transparent;
-  --sui-button-bg-hover: var(--sui-color-secondary-subtle, #f3f4f6);
+  --sui-button-bg-hover: color-mix(in srgb, var(--sui-button-fg) 8%, transparent);
   --sui-button-fg: var(--sui-color-text, #111827);
   --sui-button-border: transparent;
   --sui-button-depth: 0px;
@@ -89,8 +90,7 @@
 }
 
 .button[data-variant="ghost"]:active:not(:disabled, [data-busy]) {
-  background-color: var(--sui-color-secondary, #e5e7eb);
-  color: var(--sui-color-on-secondary, #111827);
+  background-color: color-mix(in srgb, var(--sui-button-fg) 16%, transparent);
 }
 
 .button:focus-visible {

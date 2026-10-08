@@ -83,6 +83,27 @@ export function textContrast(element: HTMLElement, background?: string): number 
 }
 
 /**
+ * Measures the WCAG contrast ratio between two fills an element can show, such as its resting and hovered
+ * backgrounds, each painted over the background behind the element. WCAG sets no minimum for a change of state; a
+ * ratio near 1 means the two cannot be told apart.
+ *
+ * Needs a real browser; throws under jsdom.
+ *
+ * @param element the element whose fills are compared
+ * @param first a CSS colour, such as a computed `backgroundColor`; resolved in the element's scope
+ * @param second a CSS colour, resolved the same way
+ * @returns the contrast ratio, from 1 to 21
+ */
+export function fillContrast(element: HTMLElement, first: string, second: string): number {
+  const behind = backgroundBehind(element);
+  const [firstFill, secondFill] = [first, second].map((fill) =>
+    composite(toRgba(computedInProbe(element, "backgroundColor", fill)), behind)
+  );
+
+  return contrastRatio(firstFill, secondFill);
+}
+
+/**
  * Resolves a CSS colour in an element's scope to the string the browser reports for a computed
  * `color`, so it can be compared with `getComputedStyle(...).color` and the like.
  *
