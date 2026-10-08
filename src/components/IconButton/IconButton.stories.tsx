@@ -83,6 +83,15 @@ const meta = {
       options: sizes,
       table: { defaultValue: { summary: "md" }, type: { summary: '"sm" | "md" | "lg"' } },
     },
+    variant: {
+      control: "select",
+      description: "Visual style. The default, `ghost`, has no border and no fill until it is hovered.",
+      options: variants,
+      table: {
+        defaultValue: { summary: "ghost" },
+        type: { summary: '"ghost" | "outline" | "primary" | "secondary"' },
+      },
+    },
   },
   parameters: {
     a11y: { test: "error" },

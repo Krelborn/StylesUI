@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { JSX, ReactNode } from "react";
+import { useId } from "react";
 
 import type { OverlayPlacement } from "../../overlays";
 import { Box } from "../Box";
@@ -49,7 +50,8 @@ export interface IconButtonProps extends Omit<ButtonProps, "aria-label" | "aria-
 /**
  * A square button showing only an icon, named by a tooltip that shows on hover and keyboard focus. Use a `Button` with
  * text when the label fits. A native `disabled` button cannot take focus, so keyboard users never see its tooltip:
- * prefer `aria-disabled` when they need it.
+ * prefer `aria-disabled` when they need it. With `aria-disabled` the button still calls `onClick`, so ignore presses
+ * there and show the state yourself.
  *
  * @example
  * <IconButton busy={isSyncing} label="Refresh" onClick={refresh} shortcut="⌘R" aria-keyshortcuts="Meta+R">
@@ -66,17 +68,28 @@ export function IconButton({
   ...rest
 }: IconButtonProps): JSX.Element {
   const tooltip = useTooltip({ placement, relationship: "label" });
+  // Chromium reads the aria-hidden shortcut of a closed tooltip into the name of a button that points at the whole
+  // tooltip, so the name points at the label alone
+  const labelId = useId();
+  const hasShortcut = shortcut !== undefined && shortcut !== "";
 
   return (
     <>
-      <Button {...tooltip.getTriggerProps(rest)} className={clsx(styles.iconButton, className)} variant={variant}>
+      <Button
+        {...tooltip.getTriggerProps(rest)}
+        className={clsx(styles.iconButton, className)}
+        variant={variant}
+        aria-labelledby={labelId}
+      >
         <Box as="span" className={styles.icon} aria-hidden={true}>
           {children}
         </Box>
       </Button>
       <Tooltip {...tooltip.getOverlayProps()}>
-        {label}
-        {shortcut !== undefined && (
+        <Box as="span" id={labelId}>
+          {label}
+        </Box>
+        {hasShortcut && (
           <Kbd className={styles.shortcut} aria-hidden={true}>
             {shortcut}
           </Kbd>

@@ -33,14 +33,30 @@ describe("IconButton", () => {
     expect(tooltip).toHaveTextContent("⌘R");
   });
 
-  it("must leave the shortcut out of the accessible name when one is given", () => {
+  it("must name the button by the label alone when a shortcut is given", () => {
     render(
       <IconButton label="Refresh" shortcut="⌘R">
         ↻
       </IconButton>
     );
 
-    expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
+    const nameElement = document.getElementById(
+      screen.getByRole("button", { name: "Refresh" }).getAttribute("aria-labelledby") ?? ""
+    );
+    expect(nameElement?.textContent).toBe("Refresh");
+  });
+
+  it("must show no shortcut when the shortcut is an empty string", async () => {
+    const user = userEvent.setup();
+    render(
+      <IconButton label="Refresh" shortcut="">
+        ↻
+      </IconButton>
+    );
+
+    await user.tab();
+
+    expect((await screen.findByRole("tooltip")).querySelector("kbd")).toBeNull();
   });
 
   it("must pass aria-keyshortcuts to the button when it is given", () => {
