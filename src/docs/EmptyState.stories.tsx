@@ -13,8 +13,8 @@ import { Text } from "../components/Text";
 
 const paneStyle: CSSProperties = {
   blockSize: "20rem",
-  border: "var(--sui-border-width) solid var(--sui-color-border)",
-  borderRadius: "var(--sui-radius-md)",
+  border: "var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db)",
+  borderRadius: "var(--sui-radius-md, 4px)",
 };
 
 const meta = {
