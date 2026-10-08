@@ -14,6 +14,11 @@
   block-size: 100%;
 }
 
+/* A busy button only makes its content transparent, which leaves an icon with colours of its own showing */
+.iconButton[data-busy] .icon {
+  visibility: hidden;
+}
+
 .shortcut {
   margin-inline-start: var(--sui-space-2, 0.5rem);
 }
