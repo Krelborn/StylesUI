@@ -12,10 +12,10 @@ const opaqueWhite: Rgba = { alpha: 1, blue: 255, green: 255, red: 255 };
  * at least 3:1 for a focus indicator.
  *
  * Needs a real browser; throws under jsdom. Throws if the element has no drawn outline, or if the outline straddles
- * the element's edge. A ring outside the element (a positive `outline-offset`) is measured against the background
- * behind the element. A ring wholly inside it (an offset of at most minus the outline width) is measured against both
- * the element's own background and the background behind it, and the lower ratio is returned; nothing inside the
- * element may cover the ring.
+ * the element's edge. A ring outside the element (an `outline-offset` of 0 or more) is measured against the
+ * background behind the element. A ring wholly inside it (an offset of at most minus the outline width) is measured
+ * against both the element's own background and the background behind it, and the lower ratio is returned; nothing
+ * inside the element may cover the ring.
  *
  * @param element the focused element
  * @returns the contrast ratio, from 1 to 21
@@ -96,7 +96,7 @@ function backgroundsBesideRing(element: HTMLElement, style: CSSStyleDeclaration)
   const outlineOffset = parseFloat(style.outlineOffset);
   const behind = backgroundBehind(element);
 
-  if (outlineOffset > 0) {
+  if (outlineOffset >= 0) {
     return [behind];
   }
 

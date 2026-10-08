@@ -66,14 +66,20 @@
   outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
 }
 
-/* Opacity on the option would dim its focus ring too, so its text is dimmed by colour and its elements by opacity */
 .option[aria-disabled="true"] {
-  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
   cursor: not-allowed;
 }
 
+/*
+ * Opacity on the option would dim its focus ring too, so its text is dimmed by colour and its elements by opacity. A
+ * disabled option that a value selects anyway keeps the selection's look.
+ */
+.option[aria-disabled="true"]:not([aria-selected="true"]) {
+  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
+}
+
 /* Back to the undimmed colour, which the opacity halves; without specificity, so a child's own colour still wins */
-:where(.option[aria-disabled="true"]) > * {
+:where(.option[aria-disabled="true"]:not([aria-selected="true"])) > * {
   color: var(--sui-color-text, #111827);
   opacity: 0.5;
 }
@@ -93,7 +99,7 @@
     background-color: Highlight;
   }
 
-  .option[aria-disabled="true"] {
+  .option[aria-disabled="true"]:not([aria-selected="true"]) {
     color: GrayText;
   }
 }

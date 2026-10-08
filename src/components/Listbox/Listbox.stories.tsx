@@ -119,6 +119,15 @@ function ControlledListbox(): JSX.Element {
 }
 
 /**
+ * Waits for an element's running transitions to finish, so its colours are read at rest rather than on their way
+ *
+ * @param element the element whose transitions are awaited
+ */
+async function waitForTransitions(element: HTMLElement): Promise<void> {
+  await Promise.all(element.getAnimations().map((animation) => animation.finished));
+}
+
+/**
  * Asserts that an option lies inside a scrolling listbox, clear of the focus ring drawn inside the listbox's edge
  *
  * @param option the option
@@ -336,6 +345,7 @@ export const InactiveWindow: Story = {
     const unfocusedBackground = getComputedStyle(selected).backgroundColor;
 
     await userEvent.tab();
+    await waitForTransitions(selected);
     await expect(getComputedStyle(selected).backgroundColor).toBe(unfocusedBackground);
     await expect(textContrast(selected)).toBeGreaterThanOrEqual(4.5);
   },
@@ -369,12 +379,15 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard("{ArrowDown}");
     const third = canvas.getByRole("option", { name: "acme/service-3" });
     await expect(third).toHaveAttribute("aria-selected", "true");
-    await waitFor(() => expect(textContrast(third)).toBeGreaterThanOrEqual(4.5));
+    await waitForTransitions(third);
+    await expect(textContrast(third)).toBeGreaterThanOrEqual(4.5);
 
     await userEvent.keyboard("{Enter}");
     await expect(args.onAction).toHaveBeenCalledWith("acme/service-3");
 
     await userEvent.tab();
-    await waitFor(() => expect(textContrast(third)).toBeGreaterThanOrEqual(4.5));
+    await expect(canvas.getByRole("button", { name: "After the list" })).toHaveFocus();
+    await waitForTransitions(third);
+    await expect(textContrast(third)).toBeGreaterThanOrEqual(4.5);
   },
 };
