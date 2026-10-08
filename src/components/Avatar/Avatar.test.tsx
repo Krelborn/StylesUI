@@ -86,6 +86,12 @@ describe("Avatar", () => {
     expect(screen.getByRole("img", { name: "Pat Lee, reviewer" })).toBeInTheDocument();
   });
 
+  it.each(["", " "])("must take its name from name when aria-label is '%s'", (label) => {
+    render(<Avatar name="Pat Lee" aria-label={label} />);
+
+    expect(screen.getByRole("img", { name: "Pat Lee" })).toBeInTheDocument();
+  });
+
   it("must be hidden from assistive technology when aria-hidden is set", () => {
     render(<Avatar name="Pat Lee" aria-hidden={true} />);
 

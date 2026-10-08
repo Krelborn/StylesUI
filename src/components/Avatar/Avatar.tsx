@@ -18,8 +18,8 @@ export type AvatarSize = "lg" | "md" | "sm" | "xs";
  */
 export interface AvatarProps extends Omit<BoxProps<"span">, "as" | "children" | "dangerouslySetInnerHTML" | "role"> {
   /**
-   * The person's or team's name. It names the avatar for screen readers, unless `aria-label` replaces it, and gives
-   * the initials shown when there is no image.
+   * The person's or team's name. It names the avatar for screen readers, unless a non-blank `aria-label` replaces it,
+   * and gives the initials shown when there is no image.
    */
   name: string;
 
@@ -54,6 +54,7 @@ export function Avatar({
   const initials = initialsOf(name);
   const shownInitials = size === "xs" ? (Array.from(initials)[0] ?? "") : initials;
   const showsImage = src !== undefined && src !== "" && !failedSources.has(src);
+  const label = ariaLabel === undefined || ariaLabel.trim() === "" ? name : ariaLabel;
 
   return (
     <Box
@@ -62,7 +63,7 @@ export function Avatar({
       className={clsx(styles.avatar, className)}
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an img element cannot show initials in place of a missing image
       role="img"
-      aria-label={ariaLabel ?? name}
+      aria-label={label}
       data-size={size}
     >
       {showsImage ? (
