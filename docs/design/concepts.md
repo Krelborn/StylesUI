@@ -87,6 +87,8 @@ Link is an anchor in the primary colour with an underline. `underline="hover"` s
 
 SkipLink is an anchor to a fragment. It stays out of sight until it takes keyboard focus, then shows pinned to the top-left of the page. Render it first in the page.
 
+NavList is a named navigation landmark holding a list. NavListGroup puts a muted `xs` heading, at the level the page outline needs, above a nested list that the heading names. NavListItem renders a link by default, a button for switching views inside one window, or a router's link component, and every prop goes to that element. A button item defaults to `type="button"`, so it never submits a surrounding form. Trailing content such as a Counter is separated from the label by a space, so it is read after it. A trailing slot that renders nothing, such as a Counter of 0, takes no room. A long label wraps inside its item, even where it has no break to wrap at, and leaves the trailing content in view. The current item is marked with a native `aria-current` (any value but `"false"`): primary text on the primary tint, bold, with a primary bar on its start edge, cues beyond colour that keep it above 3:1. The bar springs in; under reduced motion it does not move, and under forced colours it is `Highlight`. The list is padded so focus rings are not clipped inside a scrolling sidebar.
+
 ### Prose
 
 Prose styles the raw HTML inside it (headings, paragraphs, links, lists, quotes, code, images, figures and tables) for content that can't be written one component per element, such as rendered markdown. Headings follow Heading's level sizes and links look like Link. Code blocks wrap rather than scroll, because CSS cannot add the `tabindex` a scrolling region needs to be reachable by keyboard.

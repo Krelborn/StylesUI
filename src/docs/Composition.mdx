@@ -34,11 +34,13 @@ component renders:
 - **One fixed element**: `Alert` (`div`), `Avatar` and `AvatarGroup` (`span`), `Button` (`button`),
   `Code` (`code`), `Counter` (`span`), `Divider` (`hr`), `Fieldset`, `RadioGroup` and
   `SegmentedControl` (`fieldset`), `Heading` (`h1` to `h6`, from `level`),
-  `IconButton` (`button`, followed by its tooltip), `Kbd` (`kbd`), `Popover` (`div`),
-  `Select` (`select`), `SkipLink` (`a`), `StatusDot` (`span`), `Tabs`, `TabList` and `TabPanel`
-  (`div`), `Tab` (`button`), `Textarea` (`textarea`), `TextInput` (`input`) and `Tooltip` (`span`).
+  `IconButton` (`button`, followed by its tooltip), `Kbd` (`kbd`), `NavList` (`nav`),
+  `NavListGroup` (`li`), `Popover` (`div`), `Select` (`select`), `SkipLink` (`a`),
+  `StatusDot` (`span`), `Tabs`, `TabList` and `TabPanel` (`div`), `Tab` (`button`),
+  `Textarea` (`textarea`), `TextInput` (`input`) and `Tooltip` (`span`).
 - **An `input` inside the `label` that names it**: `Checkbox`, `Radio`, `Segment` and `Switch`.
-- **An `a`, or a component that renders one**: `Link`.
+- **An `a`, or a component that renders one**: `Link`. `NavListItem` takes the same, or a `button`, and
+  renders it inside an `li`.
 
 A fixed-element component leaves out the native props it replaces, such as `size` on `TextInput`
 and `Select`. On `Checkbox`, `Radio`, `Segment` and `Switch`, `className` and `style` go to the
@@ -72,6 +74,9 @@ Two limits come from how the component's props are read:
 If your own `jsx-a11y` lint settings map `Link` to `a`, the `anchor-is-valid` rule reports a `Link`
 whose destination is the component's own prop, because it has no `href`, so disable the rule on
 that line.
+
+`NavListItem` takes a router's link component in `as` in the same way, with the same `className`
+rule and the same limits.
 
 ## Raw HTML in Prose
 
