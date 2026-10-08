@@ -55,6 +55,16 @@ function RenderPropLink({ children, to }: RenderPropLinkProps): JSX.Element {
 }
 
 /**
+ * Chooses an item's element at runtime, as a wrapper component might
+ *
+ * @param isLink whether the item links somewhere
+ * @returns `a` for a link, otherwise `button`
+ */
+function itemElement(isLink: boolean): "a" | "button" {
+  return isLink ? "a" : "button";
+}
+
+/**
  * A button item that shows how many times it was clicked
  */
 function ClickCounter(): JSX.Element {
@@ -271,6 +281,28 @@ describe("NavList", () => {
       <NavListItem as={RenderPropLink} to="/settings">
         {/* @ts-expect-error the item renders its children as a label, so a render function is never called */}
         {() => "Settings"}
+      </NavListItem>
+    );
+
+    expect(isValidElement(element)).toBe(true);
+  });
+
+  it("must accept an element chosen at runtime when as may be a link or a button", () => {
+    render(
+      <NavList aria-label="Lists">
+        {/* oxlint-disable-next-line jsx-a11y/anchor-is-valid -- as is chosen at runtime, and here it is a button */}
+        <NavListItem as={itemElement(false)}>Inbox</NavListItem>
+      </NavList>
+    );
+
+    expect(screen.getByRole("button", { name: "Inbox" })).toBeInTheDocument();
+  });
+
+  it("must reject a link's props when as may be a button", () => {
+    const element = (
+      // @ts-expect-error href belongs to a link, and as may be a button
+      <NavListItem as={itemElement(false)} href="#inbox">
+        Inbox
       </NavListItem>
     );
 

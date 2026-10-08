@@ -39,22 +39,32 @@ interface NavListItemElementOwnProps<E extends NavListItemElement> {
   className?: string;
 }
 
+// The props one native element has and the other lacks, typed never so an `as` that may be either rejects them
+type PropsOnlyOn<Element extends "a" | "button", Other extends "a" | "button"> = {
+  [Name in Exclude<keyof ComponentPropsWithRef<Element>, keyof ComponentPropsWithRef<Other>>]?: never;
+};
+
 // ComponentPropsWithRef<E> cannot be used: it requires an ElementType, which a component with `never` props is not
 type NavListItemElementProps<E extends NavListItemElement> =
   E extends JSXElementConstructor<infer Props>
     ? Props
     : E extends "button"
-      ? ComponentPropsWithRef<"button">
-      : ComponentPropsWithRef<"a">;
+      ? ComponentPropsWithRef<"button"> & PropsOnlyOn<"a", "button">
+      : ComponentPropsWithRef<"a"> & PropsOnlyOn<"button", "a">;
 
 // Omit on its own keeps only the props every member of a union has, which loses a component's union props
 type OmitFromEach<Props, Name extends PropertyKey> = Props extends unknown ? Omit<Props, Name> : never;
 
 /**
  * Props for `NavListItem`: `children` and `trailing` plus every other prop of the link, button or component given in
- * `as`, except `dangerouslySetInnerHTML`
+ * `as`, except `dangerouslySetInnerHTML`. When `as` may be either a link or a button, only props both accept are
+ * allowed.
  */
-export type NavListItemProps<E extends NavListItemElement = "a"> = NavListItemOwnProps &
+export type NavListItemProps<E extends NavListItemElement = "a"> =
+  // Distributed over E, so an `as` that may be either element accepts only props that suit each one
+  E extends NavListItemElement ? NavListItemPropsFor<E> : never;
+
+type NavListItemPropsFor<E extends NavListItemElement> = NavListItemOwnProps &
   NavListItemElementOwnProps<E> &
   OmitFromEach<
     NavListItemElementProps<E>,
