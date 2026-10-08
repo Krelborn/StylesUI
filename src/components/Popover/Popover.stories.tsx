@@ -9,6 +9,7 @@ import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Cluster } from "../Cluster";
+import { IconButton } from "../IconButton";
 import { Link } from "../Link";
 import { Stack } from "../Stack";
 import { StatusDot } from "../StatusDot";
@@ -121,6 +122,35 @@ function ControlledPopover(): JSX.Element {
       </Box>
       <Text>{`Open: ${open ? "yes" : "no"}`}</Text>
     </Stack>
+  );
+}
+
+/**
+ * An icon-only button, named by its own tooltip, that opens the list of problems
+ */
+function IconTriggerPopover(): JSX.Element {
+  const popover = usePopover();
+
+  return (
+    <>
+      <IconButton {...popover.getTriggerProps()} label="Problems">
+        <Box
+          as="svg"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          viewBox="0 0 24 24"
+        >
+          <Box as="path" d="M12 3 2 21h20Z" />
+          <Box as="path" d="M12 10v4M12 17v.01" />
+        </Box>
+      </IconButton>
+      <Popover {...popover.getOverlayProps()}>
+        <Text as="p">Checks failed on #42</Text>
+      </Popover>
+    </>
   );
 }
 
@@ -393,6 +423,36 @@ export const KeyboardInteraction: Story = {
 
     await input.pressKey("Escape");
     await waitFor(() => expect(link).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
+ * An `IconButton` can open a popover. Pressing it hides its tooltip, so a single Escape closes the popover and leaves
+ * focus on the button.
+ */
+export const IconButtonTrigger: Story = {
+  render: () => <IconTriggerPopover />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Problems" });
+
+    await input.pressKey("Tab");
+    await expect(trigger).toHaveFocus();
+    await expect(await canvas.findByRole("tooltip", { name: "Problems" })).toBeInTheDocument();
+
+    await input.pressKey("Enter");
+    const problem = await canvas.findByText("Checks failed on #42");
+    await waitFor(() => expect(problem).toBeVisible());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(problem).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
   },

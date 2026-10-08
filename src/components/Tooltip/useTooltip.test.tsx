@@ -339,6 +339,20 @@ describe("useTooltip", () => {
     expect(elements.visibleTooltip).toBeNull();
   });
 
+  it.each([
+    { key: "{Enter}", name: "Enter" },
+    { key: " ", name: "Space" },
+  ])("must hide the tooltip and keep focus on the trigger when $name presses the trigger", async ({ key }) => {
+    const { user } = setUpTest();
+    render(<Example />);
+    await user.tab();
+
+    await user.keyboard(key);
+
+    expect(elements.visibleTooltip).toBeNull();
+    expect(elements.publishButton).toHaveFocus();
+  });
+
   it("must not show the tooltip when the trigger is touched", async () => {
     const { advance, user } = setUpTest();
     render(<Example />);

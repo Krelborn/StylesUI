@@ -1,4 +1,11 @@
-import type { CSSProperties, FocusEvent, FocusEventHandler, PointerEvent, PointerEventHandler } from "react";
+import type {
+  CSSProperties,
+  FocusEvent,
+  FocusEventHandler,
+  MouseEventHandler,
+  PointerEvent,
+  PointerEventHandler,
+} from "react";
 import { useEffect, useEffectEvent, useRef } from "react";
 
 import type { OverlayDelay, OverlayPlacement } from "../../overlays";
@@ -67,6 +74,11 @@ interface TooltipTriggerProps {
    * Hides the tooltip
    */
   onBlur: FocusEventHandler<HTMLElement>;
+
+  /**
+   * Hides the tooltip, also when the keyboard presses the trigger
+   */
+  onClick: MouseEventHandler<HTMLElement>;
 
   /**
    * Shows the tooltip when focus arrives from the keyboard
@@ -215,6 +227,7 @@ export function useTooltip({
   const triggerProps: TooltipTriggerProps = {
     ...(relationship === "label" ? { "aria-labelledby": overlay.id } : { "aria-describedby": overlay.id }),
     onBlur: handleBlur,
+    onClick: overlay.hide,
     onFocus: handleFocus,
     onPointerDown: overlay.hide,
     onPointerEnter: handleTriggerPointerEnter,
