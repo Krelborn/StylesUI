@@ -1,0 +1,29 @@
+.spinner {
+  inline-size: 1em;
+  block-size: 1em;
+  animation: rotate 800ms linear infinite;
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: pulse 1600ms ease-in-out infinite;
+  }
+}
+
+@media (forced-colors: active) {
+  .spinner {
+    color: ButtonText;
+  }
+}

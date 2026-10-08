@@ -1,8 +1,9 @@
-import type { JSX } from "react";
+import type { JSX, MouseEvent } from "react";
 import { clsx } from "clsx";
 
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
+import { Spinner } from "../Spinner";
 
 import styles from "./Button.module.css";
 
@@ -22,6 +23,13 @@ export type ButtonVariant = "ghost" | "outline" | "primary" | "secondary";
  */
 export interface ButtonProps extends Omit<BoxProps<"button">, "as"> {
   /**
+   * Whether the button's action is running. A busy button shows a spinner in place of its content, keeps its width
+   * and accessible name, stays focusable, and ignores presses, including a form's submission. The spinner is not
+   * announced, so pair `busy` with a status message that announces the outcome. Defaults to `false`.
+   */
+  busy?: boolean;
+
+  /**
    * Button size. Defaults to `md`.
    */
   size?: ButtonSize;
@@ -37,22 +45,45 @@ export interface ButtonProps extends Omit<BoxProps<"button">, "as"> {
  *
  * @example
  * <Button onClick={save} variant="secondary">Save</Button>
+ *
+ * @example
+ * <Button busy={isSaving} type="submit">Save</Button>
  */
 export function Button({
+  "aria-disabled": ariaDisabled,
+  busy = false,
+  children,
   className,
+  onClick,
   size = "md",
   type = "button",
   variant = "primary",
   ...rest
 }: ButtonProps): JSX.Element {
+  function handleClick(event: MouseEvent<HTMLButtonElement>): void {
+    if (busy) {
+      event.preventDefault();
+
+      return;
+    }
+
+    onClick?.(event);
+  }
+
   return (
     <Box
       {...rest}
       as="button"
       className={clsx(styles.button, className)}
+      onClick={handleClick}
       type={type}
+      aria-disabled={busy ? true : ariaDisabled}
+      data-busy={busy ? "" : undefined}
       data-size={size}
       data-variant={variant}
-    />
+    >
+      {children}
+      {busy && <Spinner className={styles.spinner} />}
+    </Box>
   );
 }

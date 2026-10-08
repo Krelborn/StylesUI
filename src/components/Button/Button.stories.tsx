@@ -5,6 +5,7 @@ import { childrenArgType } from "../../docs/argTypes";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 import { Card } from "../Card";
+import { Row } from "../Row";
 
 import { Button } from "./Button";
 
@@ -84,6 +85,39 @@ export const Ghost: Story = {
 export const Disabled: Story = {
   args: {
     disabled: true,
+  },
+};
+
+/**
+ * A busy button shows a spinner in place of its label and keeps its width. It stays focusable and keeps its name, but
+ * ignores presses. Pair it with a status message that announces the outcome.
+ */
+export const Busy: Story = {
+  args: {
+    busy: true,
+    children: "Save changes",
+  },
+  render: (args) => (
+    <Row gap={2}>
+      <Button {...args} />
+      <Button variant={args.variant}>Save changes</Button>
+    </Row>
+  ),
+  play: async ({ args, canvas }) => {
+    const [busy, idle] = canvas.getAllByRole("button", { name: "Save changes" });
+    const spinner = busy.querySelector("svg");
+
+    await expect(busy).toHaveAttribute("aria-disabled", "true");
+    await expect(spinner).not.toBeNull();
+    await expect(getComputedStyle(spinner as SVGElement).color).not.toBe("rgba(0, 0, 0, 0)");
+    await expect(busy.getBoundingClientRect().width).toBeCloseTo(idle.getBoundingClientRect().width, 0);
+
+    await userEvent.tab();
+    await expect(busy).toHaveFocus();
+    await expect(focusRingContrast(busy)).toBeGreaterThanOrEqual(3);
+
+    await userEvent.click(busy);
+    await expect(args.onClick).not.toHaveBeenCalled();
   },
 };
 
