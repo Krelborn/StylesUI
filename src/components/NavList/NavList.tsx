@@ -19,7 +19,7 @@ export type NavListProps = RequiredAccessibleName & Omit<BoxProps<"nav">, "aria-
  * @example
  * <NavList aria-label="Lists">
  *   <NavListGroup headingLevel={2} title="For review">
- *     <NavListItem aria-current="page" href="/needs-you">Needs you</NavListItem>
+ *     <NavListItem href="/needs-you" aria-current="page">Needs you</NavListItem>
  *   </NavListGroup>
  * </NavList>
  */

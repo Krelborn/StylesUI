@@ -47,6 +47,29 @@ function ClickCounter(): JSX.Element {
   );
 }
 
+/**
+ * A button item inside a form that shows how many times the form was submitted
+ */
+function SubmissionCounter(): JSX.Element {
+  const [submissions, setSubmissions] = useState(0);
+
+  return (
+    <>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSubmissions((previous) => previous + 1);
+        }}
+      >
+        <NavList aria-label="Lists">
+          <NavListItem as="button">Needs you</NavListItem>
+        </NavList>
+      </form>
+      <p>{`Submissions: ${submissions}`}</p>
+    </>
+  );
+}
+
 describe("NavList", () => {
   it("must be a navigation landmark named by aria-label when it renders", () => {
     render(
@@ -91,6 +114,15 @@ describe("NavList", () => {
 
     expect(screen.getByText("Clicks: 1")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Needs you" })).toHaveAttribute("type", "button");
+  });
+
+  it("must not submit a surrounding form when as is button", async () => {
+    const user = userEvent.setup();
+    render(<SubmissionCounter />);
+
+    await user.click(screen.getByRole("button", { name: "Needs you" }));
+
+    expect(screen.getByText("Submissions: 0")).toBeInTheDocument();
   });
 
   it("must pass className to a component given in as when it renders", () => {
@@ -142,6 +174,56 @@ describe("NavList", () => {
     );
 
     expect(screen.getByRole("button", { name: "Needs you" })).toBeInTheDocument();
+  });
+
+  it.each([null, false])("must add nothing after the label when trailing is %s", (trailing) => {
+    render(
+      <NavList aria-label="Lists">
+        <NavListItem as="button" trailing={trailing}>
+          Needs you
+        </NavListItem>
+      </NavList>
+    );
+
+    expect(screen.getByRole("button", { name: "Needs you" }).textContent).toBe("Needs you");
+  });
+
+  it("must reject href when as is button", () => {
+    render(
+      <NavList aria-label="Lists">
+        {/* @ts-expect-error a button has no href */}
+        <NavListItem as="button" href="#inbox">
+          Inbox
+        </NavListItem>
+      </NavList>
+    );
+
+    expect(screen.getByRole("button", { name: "Inbox" })).toBeInTheDocument();
+  });
+
+  it("must reject as when it is an element other than a or button", () => {
+    render(
+      <NavList aria-label="Lists">
+        {/* @ts-expect-error NavListItem renders a link, a button or a component, never another element */}
+        <NavListItem as="div">Settings</NavListItem>
+      </NavList>
+    );
+
+    expect(screen.getByText("Settings")).toBeInTheDocument();
+  });
+
+  it("must reject a component when a prop it requires is missing", () => {
+    render(
+      <NavList aria-label="Lists">
+        {
+          // @ts-expect-error RouterLink requires to
+          // oxlint-disable-next-line jsx-a11y/anchor-is-valid -- the missing destination is what the type check rejects
+          <NavListItem as={RouterLink}>Settings</NavListItem>
+        }
+      </NavList>
+    );
+
+    expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
   });
 
   it("must reject a navigation list when it has no name", () => {

@@ -56,10 +56,10 @@ export type NavListItemProps<E extends NavListItemElement = "a"> = NavListItemOw
  * with `aria-current` (`"page"` for a link, `"true"` for a view switched by a button).
  *
  * @example
- * <NavListItem aria-current="page" href="/needs-you" trailing={<Counter count={3} />}>Needs you</NavListItem>
+ * <NavListItem href="/needs-you" trailing={<Counter count={3} />} aria-current="page">Needs you</NavListItem>
  *
  * @example
- * <NavListItem aria-current={view === "mine"} as="button" onClick={() => setView("mine")}>Mine</NavListItem>
+ * <NavListItem as="button" onClick={() => setView("mine")} aria-current={view === "mine"}>Mine</NavListItem>
  */
 export function NavListItem<E extends NavListItemElement = "a">({
   as,
