@@ -137,6 +137,7 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
 
     if (options.length === 0) {
       setActiveValue(null);
+      lastActiveIndex.current = null;
 
       return;
     }

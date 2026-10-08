@@ -105,11 +105,14 @@
   }
 
   /*
-   * Forced colours turn the colour reset above into CanvasText, so element children take the option's GrayText instead,
-   * which marks them disabled without the opacity
+   * Forced colours turn every colour inside the option into CanvasText, its elements' own colours too, so everything in
+   * it takes GrayText, which marks it disabled without the opacity
    */
-  :where(.option[aria-disabled="true"]:not([aria-selected="true"])) > * {
+  .option[aria-disabled="true"]:not([aria-selected="true"]) * {
     color: GrayText;
+  }
+
+  :where(.option[aria-disabled="true"]:not([aria-selected="true"])) > * {
     opacity: 1;
   }
 }

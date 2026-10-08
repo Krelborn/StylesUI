@@ -578,6 +578,20 @@ describe("Listbox", () => {
     expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apple").id);
   });
 
+  it("must move to the first option when Down is pressed after options load into a listbox focus entered empty", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ value: "Cherry" });
+    await user.tab();
+    await user.tab();
+    rerender({ shown: [] });
+    await user.tab({ shift: true });
+
+    rerender({ shown: ["Apple", "Apricot", "Banana"] });
+    await user.keyboard("{ArrowDown}");
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apple").id);
+  });
+
   it("must make the neighbour active when one render removes the active option and moves value to it", async () => {
     const { render, user } = setUpTest();
     const { rerender } = render({ value: "Banana" });
@@ -719,13 +733,12 @@ describe("Listbox", () => {
     expect(declarations).toContain("forced-color-adjust: none");
   });
 
-  it("must show a disabled option's element children in GrayText at full opacity when forced colours are active", () => {
-    const declarations = forcedColorsDeclarations(
-      ':where(.option[aria-disabled="true"]:not([aria-selected="true"])) > *'
-    );
+  it("must show everything in a disabled option in GrayText at full opacity when forced colours are active", () => {
+    const descendants = forcedColorsDeclarations('.option[aria-disabled="true"]:not([aria-selected="true"]) *');
+    const children = forcedColorsDeclarations(':where(.option[aria-disabled="true"]:not([aria-selected="true"])) > *');
 
-    expect(declarations).toContain("color: GrayText");
-    expect(declarations).toContain("opacity: 1");
+    expect(descendants).toContain("color: GrayText");
+    expect(children).toContain("opacity: 1");
   });
 });
 
