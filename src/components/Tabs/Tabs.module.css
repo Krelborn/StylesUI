@@ -168,8 +168,14 @@
   .tab[data-variant="pill"][aria-selected="true"] {
     border-color: Highlight;
     background-color: Highlight;
+    box-shadow: none;
     color: HighlightText;
     forced-color-adjust: none;
+  }
+
+  /* forced-color-adjust: none keeps the theme's focus ring colour, which can match the fill */
+  .tab[data-variant="pill"][aria-selected="true"]:focus-visible {
+    outline-color: Highlight;
   }
 
   .tab[aria-disabled="true"] {
