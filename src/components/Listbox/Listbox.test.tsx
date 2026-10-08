@@ -5,10 +5,12 @@ import { useState, useSyncExternalStore } from "react";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
+import { transitionedProperties } from "../../test/transitionedProperties";
 import { Button } from "../Button";
 
 import type { ListboxProps } from "./Listbox";
 import { Listbox } from "./Listbox";
+import listboxCss from "./Listbox.module.css?raw";
 import { ListboxOption } from "./ListboxOption";
 
 const fruits = ["Apple", "Apricot", "Banana", "Cherry"];
@@ -578,6 +580,23 @@ describe("Listbox", () => {
     );
 
     expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
+
+  it("must transition only colours when an option changes state", () => {
+    const properties = transitionedProperties(listboxCss);
+
+    expect(properties.every((property) => property === "background-color" || property === "color")).toBe(true);
+    expect(properties).not.toHaveLength(0);
+  });
+
+  it("must fill the selected option with Highlight and opt out of forced colours when forced colours are active", () => {
+    const forcedColorsBlock = listboxCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+    const selectedRule = forcedColorsBlock.match(/\.option\[aria-selected="true"\],[^{]*\{(.*?)\}/s)?.[1] ?? "";
+    const declarations = selectedRule.split(";").map((declaration) => declaration.trim());
+
+    expect(declarations).toContain("background-color: Highlight");
+    expect(declarations).toContain("color: HighlightText");
+    expect(declarations).toContain("forced-color-adjust: none");
   });
 });
 

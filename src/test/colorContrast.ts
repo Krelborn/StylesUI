@@ -8,12 +8,14 @@ interface Rgba {
 const opaqueWhite: Rgba = { alpha: 1, blue: 255, green: 255, red: 255 };
 
 /**
- * Measures the WCAG contrast ratio between an element's focus outline and the background behind the
- * element. WCAG 1.4.11 requires at least 3:1 for a focus indicator.
+ * Measures the WCAG contrast ratio between an element's focus outline and the colours beside it. WCAG 1.4.11 requires
+ * at least 3:1 for a focus indicator.
  *
- * Needs a real browser; throws under jsdom. Throws if the element has no drawn outline, or if
- * `outline-offset` isn't greater than 0 — the measurement assumes the ring sits clear of the
- * element, so the element's own background isn't adjacent to it.
+ * Needs a real browser; throws under jsdom. Throws if the element has no drawn outline, or if the outline straddles
+ * the element's edge. A ring outside the element (a positive `outline-offset`) is measured against the background
+ * behind the element. A ring wholly inside it (an offset of at most minus the outline width) is measured against both
+ * the element's own background and the background behind it, and the lower ratio is returned; nothing inside the
+ * element may cover the ring.
  *
  * @param element the focused element
  * @returns the contrast ratio, from 1 to 21
@@ -25,13 +27,12 @@ export function focusRingContrast(element: HTMLElement): number {
     throw new Error("focusRingContrast requires a drawn outline; this element has no outline");
   }
 
-  if (!(parseFloat(style.outlineOffset) > 0)) {
-    throw new Error("focusRingContrast requires a positive outline-offset so the ring sits clear of the element");
-  }
+  const ring = toRgba(style.outlineColor);
+  const ratios = backgroundsBesideRing(element, style).map((background) =>
+    contrastRatio(composite(ring, background), background)
+  );
 
-  const background = backgroundBehind(element);
-
-  return contrastRatio(composite(toRgba(style.outlineColor), background), background);
+  return Math.min(...ratios);
 }
 
 /**
@@ -89,6 +90,21 @@ export function textContrast(element: HTMLElement, background?: string): number 
  */
 export function resolvedColor(element: HTMLElement, color: string): string {
   return computedInProbe(element, "color", color);
+}
+
+function backgroundsBesideRing(element: HTMLElement, style: CSSStyleDeclaration): Rgba[] {
+  const outlineOffset = parseFloat(style.outlineOffset);
+  const behind = backgroundBehind(element);
+
+  if (outlineOffset > 0) {
+    return [behind];
+  }
+
+  if (outlineOffset + parseFloat(style.outlineWidth) > 0) {
+    throw new Error("focusRingContrast cannot measure a ring that straddles the element's edge");
+  }
+
+  return [composite(toRgba(style.backgroundColor), behind), behind];
 }
 
 function backgroundBehind(element: HTMLElement): Rgba {

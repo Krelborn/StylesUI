@@ -50,6 +50,7 @@ const textPairs: readonly ColourPair[] = [
 const focusRingBackgrounds = [
   "background",
   "surface",
+  "secondary-subtle",
   "shadow",
   "danger-subtle",
   "success-subtle",
@@ -111,8 +112,8 @@ export const TextPairs: Story = {
 };
 
 /**
- * The focus ring keeps at least 3:1 against the page, a surface, each status subtle, and the
- * shadow-coloured lip a button's ring crosses in themes where controls have depth
+ * The focus ring keeps at least 3:1 against the page, a surface, the secondary subtle tint a hovered listbox option
+ * takes, each status subtle, and the shadow-coloured lip a button's ring crosses in themes where controls have depth
  */
 export const FocusRing: Story = {
   render: () => (
