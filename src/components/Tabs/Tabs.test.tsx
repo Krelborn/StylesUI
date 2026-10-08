@@ -187,9 +187,9 @@ describe("Tabs", () => {
     expect(onValueChange).not.toHaveBeenCalled();
   });
 
-  it("must skip a hidden tab when an arrow key moves past it", async () => {
+  it("must skip a tab inside an inert element when an arrow key moves past it", async () => {
     const { render, user } = setUpTest();
-    render({ hiddenValue: "issues" });
+    render({ inertValue: "issues" });
     await user.tab();
 
     await user.keyboard("{ArrowRight}");
@@ -455,6 +455,25 @@ describe("Tabs", () => {
     );
   });
 
+  it("must reject hidden and inert when they are given to a tab", () => {
+    renderBase(
+      <Tabs defaultValue="code">
+        <TabList aria-label="Repository">
+          {/* @ts-expect-error a hidden selected tab would leave the tab list without a tab stop */}
+          <Tab hidden={true} value="code">
+            Code
+          </Tab>
+          {/* @ts-expect-error an inert tab cannot take focus */}
+          <Tab inert={true} value="issues">
+            Issues
+          </Tab>
+        </TabList>
+      </Tabs>
+    );
+
+    expect(screen.getAllByRole("tab", { hidden: true })).toHaveLength(2);
+  });
+
   it("must reject role when it is given to a tab", () => {
     renderBase(
       <Tabs defaultValue="code">
@@ -473,7 +492,7 @@ interface RenderOptions {
   activation?: TabsActivation;
   direction?: WritingDirection;
   disabledValue?: string;
-  hiddenValue?: string;
+  inertValue?: string;
   orientation?: TabsOrientation;
   selection?: { defaultValue: string } | { value: string };
 }
@@ -486,7 +505,7 @@ function setUpTest() {
     activation,
     direction,
     disabledValue,
-    hiddenValue,
+    inertValue,
     orientation,
     selection = { defaultValue: "code" },
   }: RenderOptions = {}): void => {
@@ -494,11 +513,21 @@ function setUpTest() {
       <div dir={direction}>
         <Tabs {...selection} activation={activation} onValueChange={onValueChange} orientation={orientation}>
           <TabList aria-label="Repository">
-            {repositoryTabs.map(({ label, value }) => (
-              <Tab disabled={value === disabledValue} hidden={value === hiddenValue} key={value} value={value}>
-                {label}
-              </Tab>
-            ))}
+            {repositoryTabs.map(({ label, value }) => {
+              const tab = (
+                <Tab disabled={value === disabledValue} key={value} value={value}>
+                  {label}
+                </Tab>
+              );
+
+              return value === inertValue ? (
+                <span inert={true} key={value}>
+                  {tab}
+                </span>
+              ) : (
+                tab
+              );
+            })}
           </TabList>
           {repositoryTabs.map(({ label, value }) => (
             <TabPanel key={value} value={value}>

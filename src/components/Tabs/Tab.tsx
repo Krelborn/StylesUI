@@ -11,7 +11,7 @@ import styles from "./Tabs.module.css";
 import { useTabsContext } from "./useTabsContext";
 
 /**
- * Props for `Tab`: its own props plus every native button prop except those the tab pattern sets
+ * Props for `Tab`: its own props plus every native button prop except `hidden`, `inert` and those the tab pattern sets
  */
 export interface TabProps extends Omit<
   BoxProps<"button">,
@@ -20,7 +20,9 @@ export interface TabProps extends Omit<
   | "aria-selected"
   | "as"
   | "disabled"
+  | "hidden"
   | "id"
+  | "inert"
   | "role"
   | "tabIndex"
   | "type"
@@ -42,7 +44,7 @@ export interface TabProps extends Omit<
  * One tab in a `TabList`. The arrow keys move between tabs, wrapping at both ends, and Home and End go to the first
  * and last. Your `onBlur`, `onClick`, `onFocus`, `onKeyDown`, `onPointerCancel` and `onPointerDown` run first;
  * preventing a click's or key's default stops the tab handling it. A disabled tab ignores clicks, so your `onClick`
- * does not run for it.
+ * does not run for it. To leave a tab out, do not render it: a hidden selected tab would leave the list no tab stop.
  *
  * @example
  * <Tab value="issues">Issues</Tab>
