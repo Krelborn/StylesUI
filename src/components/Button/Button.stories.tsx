@@ -4,6 +4,7 @@ import { expect, fn, userEvent } from "storybook/test";
 import { childrenArgType } from "../../docs/argTypes";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
+import { Card } from "../Card";
 
 import { Button } from "./Button";
 
@@ -61,6 +62,23 @@ export const Outline: Story = {
 };
 
 /**
+ * No border, and no fill until hovered, for quiet actions in toolbars and status bars. It stays flat in every theme,
+ * and fills with the secondary colour while pressed.
+ */
+export const Ghost: Story = {
+  args: {
+    variant: "ghost",
+  },
+  play: async ({ canvas }) => {
+    const button = canvas.getByRole("button", { name: "Button" });
+    const style = getComputedStyle(button);
+
+    await expect(style.getPropertyValue("--sui-button-depth").trim()).toBe("0px");
+    await expect(style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+/**
  * A disabled button is skipped by the keyboard and ignores clicks
  */
 export const Disabled: Story = {
@@ -87,10 +105,14 @@ export const Sizes: Story = {
  */
 export const HoverContrast: Story = {
   render: () => (
-    <Box style={{ display: "flex", gap: "0.5rem" }}>
+    <Box style={{ alignItems: "center", display: "flex", gap: "0.5rem" }}>
       <Button variant="primary">Primary</Button>
       <Button variant="secondary">Secondary</Button>
       <Button variant="outline">Outline</Button>
+      <Button variant="ghost">Ghost</Button>
+      <Card padding="sm">
+        <Button variant="ghost">Ghost on a card</Button>
+      </Card>
     </Box>
   ),
   // axe only sees the resting state, so the hover background is measured directly

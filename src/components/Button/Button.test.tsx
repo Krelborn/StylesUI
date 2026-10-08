@@ -29,10 +29,22 @@ describe("Button", () => {
     expect(button).toHaveAttribute("data-size", "md");
   });
 
-  it.each(["primary", "secondary", "outline"] as const)("must apply the %s variant when it is set", (variant) => {
-    render(<Button variant={variant}>Save</Button>);
+  it.each(["ghost", "outline", "primary", "secondary"] as const)(
+    "must apply the %s variant when it is set",
+    (variant) => {
+      render(<Button variant={variant}>Save</Button>);
 
-    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("data-variant", variant);
+      expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("data-variant", variant);
+    }
+  );
+
+  it("must fill a ghost button with the secondary pairing when it is pressed", () => {
+    const pressedGhostRule =
+      buttonCss.match(/\.button\[data-variant="ghost"\]:active:not\(:disabled\) \{(.*?)\}/s)?.[1] ?? "";
+    const declarations = pressedGhostRule.split(";").map((declaration) => declaration.trim());
+
+    expect(declarations).toContain("background-color: var(--sui-color-secondary, #e5e7eb)");
+    expect(declarations).toContain("color: var(--sui-color-on-secondary, #111827)");
   });
 
   it.each(["sm", "md", "lg"] as const)("must apply the %s size when it is set", (size) => {

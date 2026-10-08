@@ -4,6 +4,7 @@ import * as BoxStories from "../components/Box/Box.stories";
 import * as CardStories from "../components/Card/Card.stories";
 import * as LinkStories from "../components/Link/Link.stories";
 import * as ProseStories from "../components/Prose/Prose.stories";
+import * as EmptyStateStories from "./EmptyState.stories";
 
 <Meta title="Guides/Composition" />
 
@@ -84,6 +85,41 @@ element, such as rendered markdown. Components and prose mix, with these rules:
 - `size` scales the body text only. Headings keep the size of their level.
 
 <Canvas of={ProseStories.WithComponents} />
+
+## Empty states
+
+StylesUI has no empty-state component, because the layout components already make one. When a list or a pane has
+nothing to show, say so with a heading and a sentence of muted text. When the user can do something about it, add an
+action:
+
+- `Cover` with `minimumHeight="100%"` centres the message vertically in its pane, which needs a set height, such as a
+  flex or grid item or a fixed `blockSize`;
+- `Center` with `intrinsic={true}` and `width="prose"` centres it horizontally at a readable width, and
+  `textAlign: "center"` centres its lines;
+- a `Stack` with `align="center"` holds the `Heading`, the muted `Text` and the action.
+
+```tsx
+<Cover minimumHeight="100%">
+  <Center intrinsic={true} style={{ textAlign: "center" }} width="prose">
+    <Stack align="center" gap={2}>
+      <Heading level={2} size="lg">
+        No pull requests yet
+      </Heading>
+      <Text as="p" tone="muted">
+        Connect a repository to see the pull requests waiting for your review.
+      </Text>
+      <Button>Connect a repository</Button>
+    </Stack>
+  </Center>
+</Cover>
+```
+
+<Canvas of={EmptyStateStories.WithAction} />
+
+Choose the heading level from where the empty state sits in the page outline, as for any heading. An empty state in
+a pane under a level 2 heading takes level 3. `size` keeps it the same size whatever its level.
+
+<Canvas of={EmptyStateStories.NoResults} />
 
 ## Class names and styles
 

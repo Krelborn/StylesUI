@@ -33,3 +33,7 @@
 .heading[data-size="3xl"] {
   font-size: var(--sui-font-size-3xl, 1.875rem);
 }
+
+.heading[data-tone="muted"] {
+  color: var(--sui-color-text-muted, #4b5563);
+}

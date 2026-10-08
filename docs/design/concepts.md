@@ -59,7 +59,7 @@ A theme sets every semantic token: primary, secondary and status colours, surfac
 
 ### Motion
 
-Controls with depth (`--sui-control-depth` above `0px`) sit on a lip in the shadow colour, rise on hover and press down into the lip, easing with `--sui-motion-spring`. Hover movement only applies on devices that can hover, and under `prefers-reduced-motion: reduce` only colours transition, so state changes are instant.
+Controls with depth (`--sui-control-depth` above `0px`) sit on a lip in the shadow colour, rise on hover and press down into the lip, easing with `--sui-motion-spring`. Hover movement only applies on devices that can hover, and under `prefers-reduced-motion: reduce` only colours transition, so state changes are instant. A ghost Button has no lip in any theme: it has nothing to raise, so it changes colour only.
 
 A `Checkbox`, `Radio` or `Switch` moves its mark with the same spring when it is checked. Unchecking uses a plain 120ms ease-out, because a spring on the way out would overshoot. Under `prefers-reduced-motion: reduce` only its colours transition. In `default` the spring is a plain 120ms ease-out, so the Switch thumb slides and the Checkbox and Radio marks scale without a bounce.
 

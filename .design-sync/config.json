@@ -18,7 +18,8 @@
     "Themeshowcase": "Theme",
     "Tokens": null,
     "Blogpage": null,
-    "Contactform": null
+    "Contactform": null,
+    "Emptystate": null
   },
   "overrides": {
     "Center": {
