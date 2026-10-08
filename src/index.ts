@@ -36,6 +36,8 @@ export { Grid } from "./components/Grid";
 export type { GridProps } from "./components/Grid";
 export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
+export { IconButton } from "./components/IconButton";
+export type { IconButtonProps } from "./components/IconButton";
 export { Kbd } from "./components/Kbd";
 export type { KbdProps } from "./components/Kbd";
 export { Link } from "./components/Link";

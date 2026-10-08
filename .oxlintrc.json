@@ -15,6 +15,7 @@
         "Counter": "span",
         "Divider": "hr",
         "Fieldset": "fieldset",
+        "IconButton": "button",
         "Kbd": "kbd",
         "Link": "a",
         "Radio": "input",

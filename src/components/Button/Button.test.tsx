@@ -1,9 +1,13 @@
+import type { FormEvent } from "react";
 import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";
+import { Box } from "../Box";
+import spinnerCss from "../Spinner/Spinner.module.css?raw";
+import { TextInput } from "../TextInput";
 
 import { Button } from "./Button";
 import buttonCss from "./Button.module.css?raw";
@@ -40,7 +44,7 @@ describe("Button", () => {
 
   it("must fill a ghost button with the secondary pairing when it is pressed", () => {
     const pressedGhostRule =
-      buttonCss.match(/\.button\[data-variant="ghost"\]:active:not\(:disabled\) \{(.*?)\}/s)?.[1] ?? "";
+      buttonCss.match(/\.button\[data-variant="ghost"\]:active:not\(:disabled, \[data-busy\]\) \{(.*?)\}/s)?.[1] ?? "";
     const declarations = pressedGhostRule.split(";").map((declaration) => declaration.trim());
 
     expect(declarations).toContain("background-color: var(--sui-color-secondary, #e5e7eb)");
@@ -75,6 +79,100 @@ describe("Button", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(handleClick).not.toHaveBeenCalled();
+  });
+
+  it("must not call onClick when the button is busy", async () => {
+    const user = userEvent.setup();
+    const handleClick = vi.fn();
+    render(
+      <Button busy={true} onClick={handleClick}>
+        Save
+      </Button>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(handleClick).not.toHaveBeenCalled();
+  });
+
+  it("must not submit its form when the button is busy and pressed", async () => {
+    const user = userEvent.setup();
+    const handleSubmit = vi.fn((event: FormEvent) => event.preventDefault());
+    render(
+      <Box as="form" onSubmit={handleSubmit} aria-label="Profile">
+        <Button busy={true} type="submit">
+          Save
+        </Button>
+      </Box>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
+  it("must not submit its form when Enter is pressed in a field while the submit button is busy", async () => {
+    const user = userEvent.setup();
+    const handleSubmit = vi.fn((event: FormEvent) => event.preventDefault());
+    render(
+      <Box as="form" onSubmit={handleSubmit} aria-label="Profile">
+        <TextInput aria-label="Name" />
+        <Button busy={true} type="submit">
+          Save
+        </Button>
+      </Box>
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Name" }), "Pat{Enter}");
+
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
+  it("must stay focusable and be marked disabled when it is busy", async () => {
+    const user = userEvent.setup();
+    render(<Button busy={true}>Save</Button>);
+
+    await user.tab();
+
+    expect(screen.getByRole("button", { name: "Save" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("must keep its accessible name when it is busy", () => {
+    render(<Button busy={true}>Save changes</Button>);
+
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeInTheDocument();
+  });
+
+  it("must keep the consumer's aria-disabled when it is not busy", () => {
+    render(<Button aria-disabled={true}>Save</Button>);
+
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("must pulse the spinner instead of rotating it when reduced motion is requested", () => {
+    const reducedMotionBlock = spinnerCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(reducedMotionBlock).toContain("animation:");
+    expect(reducedMotionBlock).toContain("pulse");
+    expect(reducedMotionBlock).not.toContain("rotate");
+  });
+
+  it("must paint a busy button with ButtonFace and opt out of forced colours when forced colours are active", () => {
+    const forcedColorsBlock = buttonCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+    const busyRule = forcedColorsBlock.match(/\.button\[data-busy\] \{(.*?)\}/s)?.[1] ?? "";
+    const declarations = busyRule.split(";").map((declaration) => declaration.trim());
+
+    expect(declarations).toContain("forced-color-adjust: none");
+    expect(declarations).toContain("background-color: ButtonFace");
+  });
+
+  it("must let a consumer's class position a busy button when it sets position", () => {
+    const positionRule = buttonCss.match(/:where\(\.button\[data-busy\]\) \{(.*?)\}/s)?.[1] ?? "";
+    const busyRule = buttonCss.match(/^\.button\[data-busy\] \{(.*?)\}/ms)?.[1] ?? "";
+
+    expect(positionRule.trim()).toBe("position: relative;");
+    expect(busyRule).not.toContain("position");
   });
 
   it("must merge className when one is given", () => {

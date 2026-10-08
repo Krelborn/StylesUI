@@ -5,8 +5,27 @@ import { childrenArgType } from "../../docs/argTypes";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { Box } from "../Box";
 import { Card } from "../Card";
+import { Kbd } from "../Kbd";
+import { Row } from "../Row";
 
 import { Button } from "./Button";
+
+/**
+ * Finds the key a button holds
+ *
+ * @param button the button to search
+ * @returns the button's `kbd` element
+ * @throws when the button holds no `kbd`
+ */
+function findKbd(button: HTMLElement): HTMLElement {
+  const kbd = button.querySelector("kbd");
+
+  if (kbd === null) {
+    throw new Error("The button holds no kbd");
+  }
+
+  return kbd;
+}
 
 const meta = {
   title: "Actions/Button",
@@ -84,6 +103,48 @@ export const Ghost: Story = {
 export const Disabled: Story = {
   args: {
     disabled: true,
+  },
+};
+
+/**
+ * A busy button shows a spinner in place of everything it holds, even a child with colours of its own, and keeps its
+ * width. It stays focusable and keeps its name, but ignores presses. Pair it with a status message that announces the
+ * outcome.
+ */
+export const Busy: Story = {
+  args: {
+    busy: true,
+    children: "Save changes",
+  },
+  render: (args) => (
+    <Row gap={2}>
+      <Button {...args}>
+        {args.children}
+        <Kbd aria-hidden={true}>⌘S</Kbd>
+      </Button>
+      <Button variant={args.variant}>
+        Save changes
+        <Kbd aria-hidden={true}>⌘S</Kbd>
+      </Button>
+    </Row>
+  ),
+  play: async ({ args, canvas }) => {
+    const [busy, idle] = canvas.getAllByRole("button", { name: "Save changes" });
+    const spinner = busy.querySelector("svg");
+
+    await expect(busy).toHaveAttribute("aria-disabled", "true");
+    await expect(spinner).not.toBeNull();
+    await expect(getComputedStyle(findKbd(busy)).opacity).toBe("0");
+    await expect(getComputedStyle(findKbd(idle)).opacity).toBe("1");
+    await expect(getComputedStyle(spinner as SVGElement).color).not.toBe("rgba(0, 0, 0, 0)");
+    await expect(busy.getBoundingClientRect().width).toBeCloseTo(idle.getBoundingClientRect().width, 0);
+
+    await userEvent.tab();
+    await expect(busy).toHaveFocus();
+    await expect(focusRingContrast(busy)).toBeGreaterThanOrEqual(3);
+
+    await userEvent.click(busy);
+    await expect(args.onClick).not.toHaveBeenCalled();
   },
 };
 
