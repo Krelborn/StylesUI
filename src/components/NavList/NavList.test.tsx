@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ComponentPropsWithRef, JSX } from "react";
-import { useState } from "react";
+import type { ComponentPropsWithRef, JSX, ReactNode } from "react";
+import { isValidElement, useState } from "react";
 import { describe, expect, it } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";
@@ -27,6 +27,29 @@ function RouterLink({ children, to, ...rest }: RouterLinkProps): JSX.Element {
   return (
     <Box {...rest} as="a" href={`#${to}`}>
       {children}
+    </Box>
+  );
+}
+
+interface RenderPropLinkProps {
+  /**
+   * Called with whether the route is current, to render the link's content
+   */
+  children: (isCurrent: boolean) => ReactNode;
+
+  /**
+   * Route to navigate to
+   */
+  to: string;
+}
+
+/**
+ * Stand-in for a router's link whose content is a render function
+ */
+function RenderPropLink({ children, to }: RenderPropLinkProps): JSX.Element {
+  return (
+    <Box as="a" href={`#${to}`}>
+      {children(false)}
     </Box>
   );
 }
@@ -142,6 +165,19 @@ describe("NavList", () => {
     expect(link).toHaveClass("custom");
   });
 
+  it("must render a node as the label when the item is a router link", () => {
+    render(
+      <NavList aria-label="Lists">
+        {/* oxlint-disable-next-line jsx-a11y/anchor-is-valid -- to is the destination, in place of href */}
+        <NavListItem as={RouterLink} to="/settings">
+          <em>Account</em> settings
+        </NavListItem>
+      </NavList>
+    );
+
+    expect(screen.getByRole("link", { name: "Account settings" })).toHaveAttribute("href", "#/settings");
+  });
+
   it.each(["page", "true", "false"] as const)("must pass aria-current='%s' to the link when it is given", (current) => {
     render(
       <NavList aria-label="Lists">
@@ -226,6 +262,50 @@ describe("NavList", () => {
     );
 
     expect(screen.getByRole("link", { name: "Settings" })).toBeInTheDocument();
+  });
+
+  it("must reject a render function as the label when the component given in as takes one", () => {
+    // Built without rendering, since the item would render the function in its label rather than call it
+    const element = (
+      // oxlint-disable-next-line jsx-a11y/anchor-is-valid -- to is the destination, in place of href
+      <NavListItem as={RenderPropLink} to="/settings">
+        {/* @ts-expect-error the item renders its children as a label, so a render function is never called */}
+        {() => "Settings"}
+      </NavListItem>
+    );
+
+    expect(isValidElement(element)).toBe(true);
+  });
+
+  it("must reject dangerouslySetInnerHTML on an item when it is given", () => {
+    // Built without rendering, since React throws when an element is given inner HTML and children
+    const elements = [
+      // @ts-expect-error the item renders its own label inside the link
+      <NavListItem dangerouslySetInnerHTML={{ __html: "Inbox" }} href="#inbox" key="link" aria-label="Inbox" />,
+      // @ts-expect-error the item renders its own label inside the button
+      <NavListItem as="button" dangerouslySetInnerHTML={{ __html: "Inbox" }} key="button" aria-label="Inbox" />,
+      // @ts-expect-error the item renders its own label inside the component
+      // oxlint-disable-next-line jsx-a11y/anchor-is-valid -- to is the destination, in place of href
+      <NavListItem as={RouterLink} dangerouslySetInnerHTML={{ __html: "Inbox" }} key="component" to="/inbox" />,
+    ];
+
+    expect(elements.every(isValidElement)).toBe(true);
+  });
+
+  it("must reject dangerouslySetInnerHTML on a group when it is given", () => {
+    // Built without rendering, since React throws when an li is given inner HTML and children
+    // @ts-expect-error the group renders its own heading and list inside the li
+    const element = <NavListGroup dangerouslySetInnerHTML={{ __html: "Inbox" }} headingLevel={2} title="For review" />;
+
+    expect(isValidElement(element)).toBe(true);
+  });
+
+  it("must reject dangerouslySetInnerHTML on a navigation list when it is given", () => {
+    // Built without rendering, since React throws when a nav is given inner HTML and children
+    // @ts-expect-error the navigation list renders its own list inside the nav
+    const element = <NavList dangerouslySetInnerHTML={{ __html: "Inbox" }} aria-label="Lists" />;
+
+    expect(isValidElement(element)).toBe(true);
   });
 
   it("must reject a navigation list when it has no name", () => {

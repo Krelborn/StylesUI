@@ -8,9 +8,11 @@ import { Box } from "../Box";
 import styles from "./NavList.module.css";
 
 /**
- * Props for `NavList`: a required `aria-label` or `aria-labelledby` and every other `nav` prop
+ * Props for `NavList`: a required `aria-label` or `aria-labelledby` and every other `nav` prop except
+ * `dangerouslySetInnerHTML`
  */
-export type NavListProps = RequiredAccessibleName & Omit<BoxProps<"nav">, "aria-label" | "aria-labelledby" | "as">;
+export type NavListProps = RequiredAccessibleName &
+  Omit<BoxProps<"nav">, "aria-label" | "aria-labelledby" | "as" | "dangerouslySetInnerHTML">;
 
 /**
  * A navigation landmark holding a list of `NavListItem`s, optionally in `NavListGroup`s, such as an app's sidebar.

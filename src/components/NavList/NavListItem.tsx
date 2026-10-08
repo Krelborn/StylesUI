@@ -16,6 +16,12 @@ export type NavListItemElement = "a" | "button" | JSXElementConstructor<never>;
 
 interface NavListItemOwnProps {
   /**
+   * The label. It is never a render function, even when the component given in `as` takes one, because the item
+   * renders it inside a `span`.
+   */
+  children?: ReactNode;
+
+  /**
    * Shown after the label, such as a `Counter`. A space separates it from the label, so it is read after it.
    */
   trailing?: ReactNode;
@@ -45,16 +51,21 @@ type NavListItemElementProps<E extends NavListItemElement> =
 type OmitFromEach<Props, Name extends PropertyKey> = Props extends unknown ? Omit<Props, Name> : never;
 
 /**
- * Props for `NavListItem`: `trailing` plus every prop of the link, button or component given in `as`
+ * Props for `NavListItem`: `children` and `trailing` plus every other prop of the link, button or component given in
+ * `as`, except `dangerouslySetInnerHTML`
  */
 export type NavListItemProps<E extends NavListItemElement = "a"> = NavListItemOwnProps &
   NavListItemElementOwnProps<E> &
-  OmitFromEach<NavListItemElementProps<E>, keyof NavListItemOwnProps | keyof NavListItemElementOwnProps<E>>;
+  OmitFromEach<
+    NavListItemElementProps<E>,
+    "dangerouslySetInnerHTML" | keyof NavListItemOwnProps | keyof NavListItemElementOwnProps<E>
+  >;
 
 /**
- * One item in a `NavList`. Every prop but `trailing` goes to the link, button or component given in `as`, not the list
- * item around it. A component given in `as` must pass the `className` it is given on to its anchor, or the item is
- * unstyled. Mark the current item with `aria-current` (`"page"` for a link, `"true"` for a view switched by a button).
+ * One item in a `NavList`. Every prop but `children` and `trailing` goes to the link, button or component given in
+ * `as`, not the list item around it. A component given in `as` must pass the `className` it is given on to its anchor,
+ * or the item is unstyled. Mark the current item with `aria-current` (`"page"` for a link, `"true"` for a view
+ * switched by a button).
  *
  * @example
  * <NavListItem href="/needs-you" trailing={<Counter count={3} />} aria-current="page">Needs you</NavListItem>

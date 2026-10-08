@@ -10,9 +10,9 @@ import { Heading } from "../Heading";
 import styles from "./NavList.module.css";
 
 /**
- * Props for `NavListGroup`: its own props plus every `li` prop except `title`
+ * Props for `NavListGroup`: its own props plus every `li` prop except `dangerouslySetInnerHTML` and `title`
  */
-export interface NavListGroupProps extends Omit<BoxProps<"li">, "as" | "title"> {
+export interface NavListGroupProps extends Omit<BoxProps<"li">, "as" | "dangerouslySetInnerHTML" | "title"> {
   /**
    * The group's heading level, which the page outline decides: in a sidebar beside the page's `h1`, usually 2
    */
