@@ -18,6 +18,8 @@
         "IconButton": "button",
         "Kbd": "kbd",
         "Link": "a",
+        "Listbox": "div",
+        "ListboxOption": "div",
         "NavList": "nav",
         "NavListGroup": "li",
         "NavListItem": "a",
