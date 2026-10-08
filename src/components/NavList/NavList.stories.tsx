@@ -92,6 +92,18 @@ function ViewSwitcher(): JSX.Element {
   );
 }
 
+/**
+ * Measures how far a focus ring reaches beyond the focused element's box
+ *
+ * @param element the focused element
+ * @returns the ring's width plus its offset, in pixels
+ */
+function ringReach(element: HTMLElement): number {
+  const style = getComputedStyle(element);
+
+  return parseFloat(style.outlineWidth) + parseFloat(style.outlineOffset);
+}
+
 const meta = {
   title: "Navigation/NavList",
   component: NavList,
@@ -137,8 +149,8 @@ export const Default: Story = {
 };
 
 /**
- * Groups under muted headings, each naming its list, with counts after the labels. A long label wraps inside its item
- * and leaves the count in view.
+ * Groups under muted headings, each naming its list, with counts after the labels. A long label wraps inside its item,
+ * even where it has no break to wrap at, and leaves the count in view. A count of zero shows nothing and takes no room.
  */
 export const Grouped: Story = {
   render: () => (
@@ -149,25 +161,34 @@ export const Grouped: Story = {
             Needs you
           </NavListItem>
           <NavListItem href="#other-open" trailing={<Counter count={12} />}>
-            Other open pull requests in every repository
+            Other open in krelborn_stylesui_components_navlist_navlistitem
           </NavListItem>
         </NavListGroup>
         <NavListGroup headingLevel={2} title="Yours">
           <NavListItem href="#mine" trailing={<Counter count={1} />}>
             Mine
           </NavListItem>
+          <NavListItem href="#archived" trailing={<Counter count={0} />}>
+            Archived
+          </NavListItem>
         </NavListGroup>
       </NavList>
     </Box>
   ),
   play: async ({ canvas }) => {
-    const nav = canvas.getByRole("navigation", { name: "Lists" }).getBoundingClientRect();
-    const count = canvas.getByText("12").getBoundingClientRect();
+    const navBox = canvas.getByRole("navigation", { name: "Lists" }).getBoundingClientRect();
+    const longLabel = canvas.getByText("Other open in krelborn_stylesui_components_navlist_navlistitem");
+    const countBox = canvas.getByText("12").getBoundingClientRect();
+    const archived = canvas.getByRole("link", { name: "Archived" });
+    const archivedContentRight =
+      archived.getBoundingClientRect().right - parseFloat(getComputedStyle(archived).paddingRight);
 
     await expect(canvas.getByRole("list", { name: "For review" })).toBeInTheDocument();
     await expect(canvas.getByRole("link", { name: "Needs you 3" })).toBeInTheDocument();
     await expect(textContrast(canvas.getByRole("heading", { name: "Yours" }))).toBeGreaterThanOrEqual(4.5);
-    await expect(count.right).toBeLessThanOrEqual(nav.right);
+    await expect(longLabel.scrollWidth).toBeLessThanOrEqual(longLabel.clientWidth);
+    await expect(countBox.right).toBeLessThanOrEqual(navBox.right);
+    await expect(canvas.getByText("Archived").getBoundingClientRect().right).toBeCloseTo(archivedContentRight, 1);
   },
 };
 
@@ -214,7 +235,7 @@ export const AsComponent: Story = {
 export const KeyboardInteraction: Story = {
   render: () => <ActivatableLinks />,
   play: async ({ canvas }) => {
-    const nav = canvas.getByRole("navigation", { name: "Documentation" }).getBoundingClientRect();
+    const navBox = canvas.getByRole("navigation", { name: "Documentation" }).getBoundingClientRect();
     const first = canvas.getByRole("link", { name: "Getting started" });
     const second = canvas.getByRole("link", { name: "Theming" });
 
@@ -223,17 +244,22 @@ export const KeyboardInteraction: Story = {
     await expect(first.matches(":focus-visible")).toBe(true);
     await expect(focusRingContrast(first)).toBeGreaterThanOrEqual(3);
 
-    const firstStyle = getComputedStyle(first);
-    const ringReach = parseFloat(firstStyle.outlineWidth) + parseFloat(firstStyle.outlineOffset);
     const firstBox = first.getBoundingClientRect();
+    const firstReach = ringReach(first);
 
-    await expect(firstBox.left - ringReach).toBeGreaterThanOrEqual(nav.left);
-    await expect(firstBox.top - ringReach).toBeGreaterThanOrEqual(nav.top);
+    await expect(firstBox.left - firstReach).toBeGreaterThanOrEqual(navBox.left);
+    await expect(firstBox.top - firstReach).toBeGreaterThanOrEqual(navBox.top);
 
     await userEvent.tab();
     await expect(second).toHaveFocus();
     await expect(getComputedStyle(second, "::before").transform).toBe("matrix(1, 0, 0, 0, 0, 0)");
     await expect(Number(getComputedStyle(second).fontWeight)).toBeLessThan(700);
+
+    const secondBox = second.getBoundingClientRect();
+    const secondReach = ringReach(second);
+
+    await expect(secondBox.right + secondReach).toBeLessThanOrEqual(navBox.right);
+    await expect(secondBox.bottom + secondReach).toBeLessThanOrEqual(navBox.bottom);
 
     await userEvent.keyboard("{Enter}");
     await expect(canvas.getByText("Activated: Theming")).toBeInTheDocument();

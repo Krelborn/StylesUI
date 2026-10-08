@@ -26,6 +26,8 @@
 }
 
 .item {
+  /* A component given in `as` is not rendered through Box, which sets this for an anchor */
+  box-sizing: border-box;
   position: relative;
   display: flex;
   align-items: center;
@@ -87,6 +89,10 @@
 
 .trailing {
   flex: none;
+}
+
+.trailing:empty {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

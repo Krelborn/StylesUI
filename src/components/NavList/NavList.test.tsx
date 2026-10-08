@@ -256,5 +256,16 @@ describe("NavList", () => {
     const reducedMotionBlock = navListCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
 
     expect(transitionedProperties(reducedMotionBlock)).toEqual(["none"]);
+    expect(reducedMotionBlock).toContain(".item::before");
+    expect(reducedMotionBlock).toContain('.item[aria-current]:not([aria-current="false"])::before');
+  });
+
+  it("must draw the current bar in Highlight when forced colours are active", () => {
+    const forcedColorsBlock = navListCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+    const barRule = forcedColorsBlock.match(/::before \{(.*?)\}/s)?.[1] ?? "";
+    const declarations = barRule.split(";").map((declaration) => declaration.trim());
+
+    expect(declarations).toContain("background-color: Highlight");
+    expect(declarations).toContain("forced-color-adjust: none");
   });
 });
