@@ -23,6 +23,10 @@
         "SkipLink": "a",
         "StatusDot": "span",
         "Switch": "input",
+        "Tab": "button",
+        "TabList": "div",
+        "TabPanel": "div",
+        "Tabs": "div",
         "Textarea": "textarea",
         "TextInput": "input",
         "Tooltip": "span"

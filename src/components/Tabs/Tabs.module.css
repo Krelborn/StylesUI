@@ -1,0 +1,184 @@
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-3, 0.75rem);
+}
+
+.tabs[data-orientation="vertical"] {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.tabList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sui-space-1, 0.25rem);
+}
+
+.tabList[aria-orientation="vertical"] {
+  flex: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.tabList[data-variant="underline"] {
+  border-block-end: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+}
+
+.tabList[data-variant="underline"][aria-orientation="vertical"] {
+  border-block-end: 0;
+  border-inline-end: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+}
+
+.tab {
+  --sui-tab-padding-x: var(--sui-space-4, 1rem);
+  --sui-tab-padding-y: var(--sui-space-2, 0.5rem);
+  --sui-tab-font-size: var(--sui-font-size-md, 1rem);
+  --sui-tab-indicator: calc(var(--sui-border-width, 1px) * 2);
+  --sui-tab-spring: var(--sui-motion-spring, 120ms ease-out);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sui-tab-padding-y) var(--sui-tab-padding-x);
+  border: var(--sui-border-width, 1px) solid transparent;
+  background-color: transparent;
+  color: var(--sui-color-text-muted, #4b5563);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-tab-font-size);
+  font-weight: var(--sui-font-weight-control, 500);
+  line-height: var(--sui-line-height-tight, 1.25);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.tab[data-size="sm"] {
+  --sui-tab-padding-x: var(--sui-space-3, 0.75rem);
+  --sui-tab-padding-y: var(--sui-space-1, 0.25rem);
+  --sui-tab-font-size: var(--sui-font-size-sm, 0.875rem);
+}
+
+.tab[data-size="lg"] {
+  --sui-tab-padding-x: var(--sui-space-6, 1.5rem);
+  --sui-tab-padding-y: var(--sui-space-3, 0.75rem);
+  --sui-tab-font-size: var(--sui-font-size-lg, 1.125rem);
+}
+
+.tab:hover:not([aria-disabled="true"]),
+.tab[aria-selected="true"] {
+  color: var(--sui-color-text, #111827);
+}
+
+/* The bar covers the tab's own transparent border and the tab list's rule below it */
+.tab[data-variant="underline"]::after {
+  position: absolute;
+  inset-block-end: calc(var(--sui-border-width, 1px) * -2);
+  inset-inline: 0;
+  block-size: var(--sui-tab-indicator);
+  background-color: var(--sui-color-primary, #2563eb);
+  content: "";
+  transform: scale(0);
+  transition: transform 120ms ease-out;
+}
+
+.tabList[aria-orientation="vertical"] .tab[data-variant="underline"]::after {
+  inset-block: 0;
+  inset-inline: auto calc(var(--sui-border-width, 1px) * -2);
+  inline-size: var(--sui-tab-indicator);
+  block-size: auto;
+}
+
+/* A spring on the way out would overshoot to a negative scale, so only selecting bounces */
+.tab[data-variant="underline"][aria-selected="true"]::after {
+  transform: scale(1);
+  transition: transform var(--sui-tab-spring);
+}
+
+.tab[data-variant="pill"] {
+  border-radius: var(--sui-radius-control, 4px);
+}
+
+.tab[data-variant="pill"]:hover:not([aria-disabled="true"], [aria-selected="true"]) {
+  background-color: var(--sui-color-secondary-subtle, #f3f4f6);
+}
+
+.tab[data-variant="pill"][aria-selected="true"] {
+  border-color: var(--sui-color-control-border, transparent);
+  background-color: var(--sui-color-primary, #2563eb);
+  box-shadow: 0 var(--sui-control-depth, 0px) 0 var(--sui-color-shadow, transparent);
+  color: var(--sui-color-on-primary, #fff);
+  transform: translateY(calc(var(--sui-control-depth, 0px) / -2));
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    box-shadow var(--sui-tab-spring),
+    transform var(--sui-tab-spring);
+}
+
+.tab[aria-disabled="true"] {
+  color: color-mix(in srgb, var(--sui-color-text-muted, #4b5563) 50%, transparent);
+  cursor: not-allowed;
+}
+
+.tab:focus-visible,
+.tabPanel:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+.tabPanel {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.tabPanel[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tab,
+  .tab[data-variant="pill"][aria-selected="true"] {
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease;
+  }
+
+  .tab[data-variant="underline"]::after,
+  .tab[data-variant="underline"][aria-selected="true"]::after {
+    transition: none;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the selected state */
+@media (forced-colors: active) {
+  .tab[data-variant="underline"]::after {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  /* Left automatic, the browser draws a Canvas backplate behind the label that hides HighlightText */
+  .tab[data-variant="pill"][aria-selected="true"] {
+    border-color: Highlight;
+    background-color: Highlight;
+    box-shadow: none;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  /* forced-color-adjust: none keeps the theme's focus ring colour, which can match the fill */
+  .tab[data-variant="pill"][aria-selected="true"]:focus-visible {
+    outline-color: Highlight;
+  }
+
+  .tab[aria-disabled="true"] {
+    color: GrayText;
+  }
+}

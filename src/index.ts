@@ -64,6 +64,16 @@ export { Switch } from "./components/Switch";
 export type { SwitchProps } from "./components/Switch";
 export { Switcher } from "./components/Switcher";
 export type { SwitcherProps } from "./components/Switcher";
+export { Tab, TabList, TabPanel, Tabs } from "./components/Tabs";
+export type {
+  TabListProps,
+  TabPanelProps,
+  TabProps,
+  TabsActivation,
+  TabsOrientation,
+  TabsProps,
+  TabsVariant,
+} from "./components/Tabs";
 export { Text } from "./components/Text";
 export type { TextProps, TextSize, TextTone, TextWeight } from "./components/Text";
 export { Textarea } from "./components/Textarea";
