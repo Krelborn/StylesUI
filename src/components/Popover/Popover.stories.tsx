@@ -375,6 +375,32 @@ export const LightDismiss: Story = {
 };
 
 /**
+ * A click on another button closes the popover, and it stays closed when that button's handler renders the popover's
+ * owner again
+ */
+export const OutsideClickRendersOwner: Story = {
+  render: () => <CountingOwnerPopover />,
+  play: async ({ canvas }) => {
+    const trigger = canvas.getByRole("button", { name: "Show details" });
+
+    await userEvent.click(trigger);
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.clickByTestId("count");
+    await expect(await canvas.findByText("Clicks: 1")).toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
+    await expect(link).not.toBeVisible();
+  },
+};
+
+/**
  * Opening one popover closes any other, and the other's button stops being marked expanded
  */
 export const OneAtATime: Story = {
@@ -403,6 +429,9 @@ export const OneAtATime: Story = {
  */
 export const KeyboardInteraction: Story = {
   play: async ({ canvas }) => {
+    // After a trusted click in an earlier story, focus from userEvent.tab() only matches :focus-visible once a trusted
+    // key has been pressed
+    await trustedInput()?.pressKey("Shift");
     const trigger = canvas.getByRole("button", { name: "Show details" });
 
     await userEvent.tab();
@@ -461,31 +490,5 @@ export const IconButtonTrigger: Story = {
     await waitFor(() => expect(problem).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
-  },
-};
-
-/**
- * A click on another button closes the popover, and it stays closed when that button's handler renders the popover's
- * owner again
- */
-export const OutsideClickRendersOwner: Story = {
-  render: () => <CountingOwnerPopover />,
-  play: async ({ canvas }) => {
-    const trigger = canvas.getByRole("button", { name: "Show details" });
-
-    await userEvent.click(trigger);
-    const link = await canvas.findByRole("link", { name: "Open pull request" });
-    await waitFor(() => expect(link).toBeVisible());
-
-    const input = trustedInput();
-
-    if (input === null) {
-      return;
-    }
-
-    await input.clickByTestId("count");
-    await expect(await canvas.findByText("Clicks: 1")).toBeInTheDocument();
-    await waitFor(() => expect(trigger).toHaveAttribute("aria-expanded", "false"));
-    await expect(link).not.toBeVisible();
   },
 };
