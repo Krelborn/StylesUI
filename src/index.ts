@@ -42,6 +42,8 @@ export { Kbd } from "./components/Kbd";
 export type { KbdProps } from "./components/Kbd";
 export { Link } from "./components/Link";
 export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
+export { NavList, NavListGroup, NavListItem } from "./components/NavList";
+export type { NavListGroupProps, NavListItemElement, NavListItemProps, NavListProps } from "./components/NavList";
 export { PageLayout } from "./components/PageLayout";
 export type { PageLayoutProps } from "./components/PageLayout";
 export { Popover, usePopover } from "./components/Popover";
