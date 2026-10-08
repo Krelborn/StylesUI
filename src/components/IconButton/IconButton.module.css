@@ -1,0 +1,19 @@
+/* [data-size], which every Button has, puts this rule above Button's base padding whichever stylesheet loads first */
+.iconButton[data-size] {
+  padding: var(--sui-button-padding-y);
+}
+
+.icon {
+  display: inline-flex;
+  inline-size: 1.25em;
+  block-size: 1.25em;
+}
+
+.icon > svg {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.shortcut {
+  margin-inline-start: var(--sui-space-2, 0.5rem);
+}
