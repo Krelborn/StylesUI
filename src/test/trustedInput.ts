@@ -20,6 +20,11 @@ export interface TrustedInput {
   holdPointerByTestId: (testId: string) => Promise<void>;
 
   /**
+   * Moves the pointer over the element with the given `data-testid` in the story's frame, so it matches `:hover`
+   */
+  hoverByTestId: (testId: string) => Promise<void>;
+
+  /**
    * Presses a key, named as Playwright names it, such as "Escape". The key goes to whatever has focus in the story's
    * frame.
    */
