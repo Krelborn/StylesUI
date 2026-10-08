@@ -1,0 +1,48 @@
+.avatar {
+  --sui-avatar-size: 2rem;
+  --sui-avatar-font-scale: 0.4;
+  --sui-avatar-outline-width: var(--sui-border-width, 1px);
+
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  inline-size: var(--sui-avatar-size);
+  block-size: var(--sui-avatar-size);
+  overflow: hidden;
+  border-radius: 50%;
+  outline: var(--sui-avatar-outline-width) solid var(--sui-color-control-border, transparent);
+  outline-offset: calc(var(--sui-avatar-outline-width) * -1);
+  background-color: var(--sui-color-secondary, #e5e7eb);
+  color: var(--sui-color-on-secondary, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: calc(var(--sui-avatar-size) * var(--sui-avatar-font-scale));
+  font-weight: var(--sui-font-weight-bold, 700);
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.avatar[data-size="xs"] {
+  --sui-avatar-size: 1rem;
+  --sui-avatar-font-scale: 0.55;
+  --sui-avatar-outline-width: min(var(--sui-border-width, 1px), 1px);
+}
+
+.avatar[data-size="sm"] {
+  --sui-avatar-size: 1.5rem;
+}
+
+.avatar[data-size="lg"] {
+  --sui-avatar-size: 3rem;
+}
+
+.image {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+@media (forced-colors: active) {
+  .avatar {
+    outline-color: CanvasText;
+  }
+}

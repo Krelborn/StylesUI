@@ -37,7 +37,7 @@ Each status (`danger`, `success`, `warning`, `info`) has three grades:
 #### Borders
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
-- `--sui-color-control-border`: the outline of `Button`, `Badge` and a checked `Checkbox`, `Radio` or `Switch`. Transparent in `default`.
+- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge` and a checked `Checkbox`, `Radio` or `Switch`. Transparent in `default`.
 - `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background and a surface (WCAG 1.4.11).
 
 ### Token tiers
@@ -108,6 +108,12 @@ Alert and Badge use the status grades. An Alert draws its border, icon and title
 Counter is a Badge shaped as a pill, at least 1.25rem across, with fixed-width digits. A count above `max` shows as the maximum followed by "+" ("99+"), and a count equal to `max` shows as it is. It marks a lower bound with `capped` ("30+"), and adds `hiddenSuffix` for screen readers only. It renders nothing below 1.
 
 StatusDot is a small circle in `currentColor`. Its tones use the status text grades, primary, and `--sui-color-input-border` for neutral, so every dot keeps 3:1 against the page and a surface (WCAG 1.4.11). The status fills do not all reach 3:1: in the default light theme warning on white is 1.92:1. `ring` draws only the border, so a ring and a solid dot differ by shape as well as colour. `--sui-status-dot-color`, set on a container, gives every dot inside it that colour in place of its tone's: StatusDot reads it without declaring it, and `currentColor` takes the container's text colour, for a selected row filled with the primary colour, where no tone keeps 3:1. With a `label` the dot is an image named by it; without one, or with an empty one, it is hidden from assistive technology, so put text beside a dot that carries meaning. Under forced colours a dot takes the surrounding text colour (`CanvasText` on the page, `HighlightText` on a selection) and ignores its tone and `--sui-status-dot-color`; a solid dot is filled by its border, because forced colours replace a background colour.
+
+### Avatars
+
+Avatar is an image named by `name`, drawn as the person's picture or their initials on the secondary colour. A picture that fails to load gives way to the initials, and that URL is not requested again while the Avatar stays mounted, even if `src` changes to another URL and back. An empty `src` counts as missing, so the initials show. Initials are the first letters of the first two words, or the first two letters of a single word, splitting on anything that is not a letter, mark or digit in any script, so "@plee" gives "PL" and "acme/web-team" gives "AW". An `xs` avatar shows one letter. Its outline is `--sui-color-control-border`, invisible in `default` and an ink ring in `playful`. Under forced colours the outline is `CanvasText`, and it is what separates grouped avatars once forced colours drop the ring's box-shadow. When the name is printed beside it, the avatar takes `aria-hidden` so the name is read once.
+
+AvatarGroup is a named group of avatars that overlap by a quarter of their size, each ringed in `--sui-avatar-group-ring` (the page background by default) at `--sui-avatar-group-ring-width` (2px by default). AvatarGroup reads both without declaring them, so an ancestor can set them for every group inside it. A Card does not set them, so the ring on a Card is the page background unless you set `--sui-avatar-group-ring` on the Card (or another ancestor) to `var(--sui-color-surface)`. `max` is at least 1, so a group never shows a count alone. Past `max`, avatars are hidden on screen inside VisuallyHidden, so screen readers still read every name, and a muted "+n" that they skip stands in for them. A group with no more avatars than `max` shows no count.
 
 ### Forms
 
