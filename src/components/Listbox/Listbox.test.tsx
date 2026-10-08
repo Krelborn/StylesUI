@@ -167,6 +167,14 @@ describe("Listbox", () => {
     expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
   });
 
+  it("must have no active option when focus has not entered", () => {
+    const { render } = setUpTest();
+
+    render({ defaultValue: "Banana" });
+
+    expect(elements.listbox).not.toHaveAttribute("aria-activedescendant");
+  });
+
   it("must make the selected option active when focus enters", async () => {
     const { render, user } = setUpTest();
     render({ defaultValue: "Banana" });
@@ -476,8 +484,19 @@ describe("Listbox", () => {
     expect(screen.queryByRole("option", { selected: true })).toBeNull();
   });
 
+  it("must keep pointing at a rendered option when value changes to one the list does not show", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render({ value: "Apple" });
+    await user.tab();
+    await user.tab();
+
+    rerender({ value: "Durian" });
+
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apple").id);
+  });
+
   it.each([{ strictMode: false }, { strictMode: true }])(
-    "must stop pointing at an active option that is removed and still move when a key is pressed, strictMode $strictMode",
+    "must stop pointing at a removed active option and still move when a key is pressed, strictMode $strictMode",
     async ({ strictMode }) => {
       const { render, user } = setUpTest();
       const { rerender } = render({ defaultValue: "Banana", shown: ["Apple", "Banana", "Cherry"], strictMode });
@@ -507,7 +526,7 @@ describe("Listbox", () => {
     expect(elements.option("Banana")).toHaveAttribute("aria-selected", "true");
   });
 
-  it("must stop pointing at an active option when the option removes itself without the listbox rendering", async () => {
+  it("must stop pointing at an active option when it removes itself without the listbox rendering", async () => {
     const { user } = setUpTest();
     const store = createFruitStore(["Apple", "Banana", "Cherry"]);
     renderBase(

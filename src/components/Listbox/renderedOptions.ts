@@ -47,14 +47,10 @@ export function renderedOptions(listbox: HTMLElement): RenderedOption[] {
  */
 function labelledByText(option: HTMLElement): string | undefined {
   const root = option.getRootNode();
-
-  if (!(root instanceof Document || root instanceof ShadowRoot)) {
-    return undefined;
-  }
-
+  const scope = root instanceof ShadowRoot ? root : option.ownerDocument;
   const labels = (option.getAttribute("aria-labelledby") ?? "")
     .split(/\s+/)
-    .map((id) => root.getElementById(id))
+    .map((id) => scope.getElementById(id))
     .filter((label) => label !== null);
 
   return labels.length === 0 ? undefined : labels.map((label) => label.textContent).join(" ");

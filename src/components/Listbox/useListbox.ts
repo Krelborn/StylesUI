@@ -81,16 +81,6 @@ export function useListbox({ defaultValue, onAction, onValueChange, value }: Use
   const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
   const [activeValue, setActiveValue] = useState<string | null>(null);
   const selectedValue = value === undefined ? uncontrolledValue : value;
-  const [previousSelectedValue, setPreviousSelectedValue] = useState(selectedValue);
-
-  if (selectedValue !== previousSelectedValue) {
-    setPreviousSelectedValue(selectedValue);
-
-    // A cleared selection leaves the active option in place, as entering with nothing selected does
-    if (activeValue !== null && selectedValue !== null) {
-      setActiveValue(selectedValue);
-    }
-  }
 
   function select(nextValue: string): void {
     if (nextValue === selectedValue) {

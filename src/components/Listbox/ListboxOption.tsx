@@ -54,6 +54,7 @@ export function ListboxOption({
   const listbox = useListboxContext("ListboxOption");
   const { setActiveValue } = listbox;
   const active = listbox.activeValue === value;
+  const selected = listbox.selectedValue === value;
 
   // The listbox's aria-activedescendant names this option while it is active, so it lets go as the option unmounts
   useLayoutEffect(() => {
@@ -65,6 +66,14 @@ export function ListboxOption({
       setActiveValue((current) => (current === value ? null : current));
     };
   }, [active, setActiveValue, value]);
+
+  // A new selection, such as a controlled value set outside, moves the active option here when the listbox has one, so
+  // only a rendered option ever becomes active
+  useLayoutEffect(() => {
+    if (selected) {
+      setActiveValue((current) => (current === null ? null : value));
+    }
+  }, [selected, setActiveValue, value]);
 
   function handleClick(event: MouseEvent<HTMLDivElement>): void {
     onClick?.(event);
@@ -92,7 +101,7 @@ export function ListboxOption({
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an option element cannot hold rich content
       role="option"
       aria-disabled={disabled ? true : undefined}
-      aria-selected={listbox.selectedValue === value}
+      aria-selected={selected}
       data-active={active ? "" : undefined}
       data-text-value={textValue}
       data-value={value}
