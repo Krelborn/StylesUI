@@ -1,3 +1,5 @@
+import { idSegment } from "../../accessibility";
+
 /**
  * Builds the id of the option for a value
  *
@@ -6,5 +8,5 @@
  * @returns an id unique to the value within its `Listbox`, whatever characters the value holds
  */
 export function optionId(baseId: string, value: string): string {
-  return `${baseId}-option-${encodeURIComponent(value)}`;
+  return `${baseId}-option-${idSegment(value)}`;
 }

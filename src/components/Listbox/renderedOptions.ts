@@ -28,10 +28,15 @@ export interface RenderedOption {
  * Reads the options a listbox renders
  *
  * @param listbox the listbox element
- * @returns each option in document order, with its value, its type-ahead text and whether it is disabled
+ * @returns each option that is not hidden or inert, in document order, with its value, its type-ahead text and
+ *   whether it is disabled
  */
 export function renderedOptions(listbox: HTMLElement): RenderedOption[] {
-  return Array.from(listbox.querySelectorAll<HTMLElement>('[role="option"]'), (element) => ({
+  const options = Array.from(listbox.querySelectorAll<HTMLElement>('[role="option"]')).filter(
+    (element) => element.closest("[hidden], [inert]") === null
+  );
+
+  return options.map((element) => ({
     disabled: element.getAttribute("aria-disabled") === "true",
     element,
     textValue: element.dataset.textValue ?? labelledByText(element) ?? element.textContent ?? "",

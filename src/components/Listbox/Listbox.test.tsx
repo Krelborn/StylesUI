@@ -22,6 +22,11 @@ interface FruitListboxProps extends Pick<ListboxProps, "defaultValue" | "onActio
   disabledValue?: string;
 
   /**
+   * The fruit whose option is hidden
+   */
+  hiddenValue?: string;
+
+  /**
    * Goes before each option's key, so changing it remounts every option, as a refresh that re-keys its rows does
    */
   keyPrefix?: string;
@@ -38,6 +43,7 @@ interface FruitListboxProps extends Pick<ListboxProps, "defaultValue" | "onActio
 function FruitListbox({
   defaultValue,
   disabledValue,
+  hiddenValue,
   keyPrefix = "",
   onAction,
   onValueChange,
@@ -67,7 +73,12 @@ function FruitListbox({
         aria-label="Fruit"
       >
         {shown.map((fruit) => (
-          <ListboxOption disabled={fruit === disabledValue} key={keyPrefix + fruit} value={fruit}>
+          <ListboxOption
+            disabled={fruit === disabledValue}
+            hidden={fruit === hiddenValue}
+            key={keyPrefix + fruit}
+            value={fruit}
+          >
             {fruit}
           </ListboxOption>
         ))}
@@ -280,6 +291,17 @@ describe("Listbox", () => {
     await user.keyboard("{Enter}");
 
     expect(screen.getByText("Actions: none")).toBeInTheDocument();
+  });
+
+  it("must skip a hidden option when an arrow key or type-ahead moves past it", async () => {
+    const { render, user } = setUpTest();
+    render({ defaultValue: "Apple", hiddenValue: "Apricot" });
+    await user.tab();
+
+    await user.keyboard("{ArrowDown}{Home}a");
+
+    expect(screen.getByText("Changes: Banana, Apple")).toBeInTheDocument();
+    expect(elements.listbox).toHaveAttribute("aria-activedescendant", elements.option("Apple").id);
   });
 
   it("must not call onAction when a disabled option is double-clicked", async () => {
