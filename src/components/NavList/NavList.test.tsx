@@ -4,10 +4,12 @@ import type { ComponentPropsWithRef, JSX } from "react";
 import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
+import { transitionedProperties } from "../../test/transitionedProperties";
 import { Box } from "../Box";
 import { Counter } from "../Counter";
 
 import { NavList } from "./NavList";
+import navListCss from "./NavList.module.css?raw";
 import { NavListGroup } from "./NavListGroup";
 import { NavListItem } from "./NavListItem";
 
@@ -248,5 +250,11 @@ describe("NavList", () => {
     );
 
     expect(screen.getByRole("list", { name: "For review" })).toBeInTheDocument();
+  });
+
+  it("must not move the current bar when reduced motion is requested", () => {
+    const reducedMotionBlock = navListCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(transitionedProperties(reducedMotionBlock)).toEqual(["none"]);
   });
 });
