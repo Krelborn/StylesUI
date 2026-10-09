@@ -179,12 +179,15 @@ export const StrokeWeight: Story = {
 export const InIconButton: Story = {
   render: () => (
     <Cluster>
+      {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label -- IconButton's label names it */}
       <IconButton label="Close">
         <CloseIcon data-testid="close-icon" />
       </IconButton>
+      {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label -- IconButton's label names it */}
       <IconButton label="Refresh">
         <RefreshIcon data-testid="refresh-icon" />
       </IconButton>
+      {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label -- IconButton's label names it */}
       <IconButton busy={true} label="Refreshing">
         <RefreshIcon />
       </IconButton>
