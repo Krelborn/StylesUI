@@ -27,6 +27,7 @@
         "Popover": "div",
         "Radio": "input",
         "RadioGroup": "fieldset",
+        "RefreshIcon": "svg",
         "Segment": "input",
         "SegmentedControl": "fieldset",
         "Select": "select",

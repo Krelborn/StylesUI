@@ -3,8 +3,12 @@ import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 
 import { CloseIcon } from "./CloseIcon";
+import { RefreshIcon } from "./RefreshIcon";
 
-const icons = [{ Component: CloseIcon, name: "CloseIcon" }];
+const icons = [
+  { Component: CloseIcon, name: "CloseIcon" },
+  { Component: RefreshIcon, name: "RefreshIcon" },
+];
 
 describe("icons", () => {
   it.each(icons)("must be an image named by the label when $name has a label", ({ Component }) => {
