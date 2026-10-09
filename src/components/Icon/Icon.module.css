@@ -6,3 +6,7 @@
   vertical-align: -0.125em;
   stroke-width: var(--sui-icon-stroke-width, 2);
 }
+
+.mirrored:dir(rtl) {
+  transform: scaleX(-1);
+}

@@ -1,16 +1,47 @@
 import { render, screen } from "@testing-library/react";
+import chevronDownArtwork from "lucide-static/icons/chevron-down.svg?raw";
+import ellipsisArtwork from "lucide-static/icons/ellipsis.svg?raw";
+import ellipsisVerticalArtwork from "lucide-static/icons/ellipsis-vertical.svg?raw";
+import minusArtwork from "lucide-static/icons/minus.svg?raw";
+import plusArtwork from "lucide-static/icons/plus.svg?raw";
+import refreshArtwork from "lucide-static/icons/refresh-cw.svg?raw";
+import sendHorizontalArtwork from "lucide-static/icons/send-horizontal.svg?raw";
+import trashArtwork from "lucide-static/icons/trash-2.svg?raw";
+import xArtwork from "lucide-static/icons/x.svg?raw";
 import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 
+import { AddIcon } from "./AddIcon";
+import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
+import { DeleteIcon } from "./DeleteIcon";
+import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
+import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { RefreshIcon } from "./RefreshIcon";
+import { RemoveIcon } from "./RemoveIcon";
+import { SendIcon } from "./SendIcon";
 
 const icons = [
-  { Component: CloseIcon, name: "CloseIcon" },
-  { Component: RefreshIcon, name: "RefreshIcon" },
+  { Component: AddIcon, artwork: plusArtwork, name: "AddIcon" },
+  { Component: ChevronDownIcon, artwork: chevronDownArtwork, name: "ChevronDownIcon" },
+  { Component: CloseIcon, artwork: xArtwork, name: "CloseIcon" },
+  { Component: DeleteIcon, artwork: trashArtwork, name: "DeleteIcon" },
+  { Component: MoreHorizontalIcon, artwork: ellipsisArtwork, name: "MoreHorizontalIcon" },
+  { Component: MoreVerticalIcon, artwork: ellipsisVerticalArtwork, name: "MoreVerticalIcon" },
+  { Component: RefreshIcon, artwork: refreshArtwork, name: "RefreshIcon" },
+  { Component: RemoveIcon, artwork: minusArtwork, name: "RemoveIcon" },
+  { Component: SendIcon, artwork: sendHorizontalArtwork, name: "SendIcon" },
 ];
 
 describe("icons", () => {
+  it.each(icons)("must draw Lucide's shapes when $name renders", ({ Component, artwork }) => {
+    const lucideSvg = new DOMParser().parseFromString(artwork, "image/svg+xml").documentElement;
+
+    render(<Component label="Meaning" />);
+
+    expect(shapesOf(screen.getByRole("img", { name: "Meaning" }))).toEqual(shapesOf(lucideSvg));
+  });
+
   it.each(icons)("must be an image named by the label when $name has a label", ({ Component }) => {
     render(<Component label="Meaning" />);
 
@@ -124,3 +155,14 @@ describe("icons", () => {
     expect(screen.getByRole("img", { name: "Meaning" })).toBeInTheDocument();
   });
 });
+
+function shapesOf(svg: Element): string[] {
+  return Array.from(svg.children, (shape) => {
+    const attributes = Array.from(shape.attributes)
+      .filter(({ name }) => name !== "class")
+      .map(({ name, value }) => `${name}="${value}"`)
+      .toSorted();
+
+    return [shape.tagName, ...attributes].join(" ");
+  });
+}

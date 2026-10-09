@@ -9,9 +9,16 @@ import { Row } from "../Row";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
 
+import { AddIcon } from "./AddIcon";
+import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
+import { DeleteIcon } from "./DeleteIcon";
 import type { IconProps } from "./Icon";
+import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
+import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { RefreshIcon } from "./RefreshIcon";
+import { RemoveIcon } from "./RemoveIcon";
+import { SendIcon } from "./SendIcon";
 
 interface GalleryIcon {
   /**
@@ -26,8 +33,15 @@ interface GalleryIcon {
 }
 
 const icons: GalleryIcon[] = [
+  { Component: AddIcon, name: "AddIcon" },
+  { Component: ChevronDownIcon, name: "ChevronDownIcon" },
   { Component: CloseIcon, name: "CloseIcon" },
+  { Component: DeleteIcon, name: "DeleteIcon" },
+  { Component: MoreHorizontalIcon, name: "MoreHorizontalIcon" },
+  { Component: MoreVerticalIcon, name: "MoreVerticalIcon" },
   { Component: RefreshIcon, name: "RefreshIcon" },
+  { Component: RemoveIcon, name: "RemoveIcon" },
+  { Component: SendIcon, name: "SendIcon" },
 ];
 
 const fontSizes = [16, 24, 32];
@@ -42,7 +56,16 @@ const idleButtons = [
 const meta = {
   title: "Foundations/Icons",
   component: CloseIcon,
-  subcomponents: { RefreshIcon },
+  subcomponents: {
+    AddIcon,
+    ChevronDownIcon,
+    DeleteIcon,
+    MoreHorizontalIcon,
+    MoreVerticalIcon,
+    RefreshIcon,
+    RemoveIcon,
+    SendIcon,
+  },
   parameters: {
     a11y: { test: "error" },
     docs: {
@@ -150,6 +173,31 @@ export const InNarrowRow: Story = {
     const fontSize = parseFloat(getComputedStyle(icon).fontSize);
 
     await expect(icon.getBoundingClientRect().width).toBeCloseTo(fontSize, 1);
+  },
+};
+
+/**
+ * An icon that points the way the text runs, such as SendIcon, is mirrored in right-to-left text. Other icons, such as
+ * RefreshIcon, keep their artwork.
+ */
+export const RightToLeft: Story = {
+  render: () => (
+    <Stack>
+      <Cluster align="center" dir="ltr">
+        <SendIcon style={{ fontSize: 32 }} data-testid="ltr-send" />
+        <Text>Left to right</Text>
+      </Cluster>
+      <Cluster align="center" dir="rtl">
+        <SendIcon style={{ fontSize: 32 }} data-testid="rtl-send" />
+        <RefreshIcon style={{ fontSize: 32 }} data-testid="rtl-refresh" />
+        <Text>Right to left</Text>
+      </Cluster>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    await expect(getComputedStyle(canvas.getByTestId("ltr-send")).transform).toBe("none");
+    await expect(getComputedStyle(canvas.getByTestId("rtl-send")).transform).toBe("matrix(-1, 0, 0, 1, 0, 0)");
+    await expect(getComputedStyle(canvas.getByTestId("rtl-refresh")).transform).toBe("none");
   },
 };
 

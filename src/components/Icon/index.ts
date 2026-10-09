@@ -1,3 +1,10 @@
+export { AddIcon } from "./AddIcon";
+export { ChevronDownIcon } from "./ChevronDownIcon";
 export { CloseIcon } from "./CloseIcon";
+export { DeleteIcon } from "./DeleteIcon";
 export type { IconProps } from "./Icon";
+export { MoreHorizontalIcon } from "./MoreHorizontalIcon";
+export { MoreVerticalIcon } from "./MoreVerticalIcon";
 export { RefreshIcon } from "./RefreshIcon";
+export { RemoveIcon } from "./RemoveIcon";
+export { SendIcon } from "./SendIcon";
