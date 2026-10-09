@@ -19,9 +19,17 @@
     "Tokens": null,
     "Blogpage": null,
     "Contactform": null,
-    "Emptystate": null
+    "Emptystate": null,
+    "Icons": "CloseIcon"
   },
   "overrides": {
+    "Button": {
+      "cardMode": "column"
+    },
+    "Popover": {
+      "cardMode": "single",
+      "primaryStory": "HeldOpen"
+    },
     "Center": {
       "cardMode": "column"
     },

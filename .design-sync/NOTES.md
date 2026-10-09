@@ -7,10 +7,10 @@ Syncs to the Claude Design project "StylesUI" (`projectId` in `config.json`). Sh
 ```sh
 pnpm build
 npx storybook build -c .storybook -o .design-sync/sb-reference
-node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules ./node_modules --entry ./dist/index.js --out ./ds-bundle --remote .design-sync/.cache/remote-sync.json
+node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules ./node_modules --entry ./dist/index.js --out ./ds-bundle --remote .design-sync/.cache/remote-sync.json --max-stories 11
 ```
 
-`--entry ./dist/index.js` is needed because the package is not installed into its own `node_modules`.
+`--entry ./dist/index.js` is needed because the package is not installed into its own `node_modules`. `--max-stories 11` covers every story of the longest story file (Tooltip); raise it when a story file grows past that.
 
 ## Fixes
 
@@ -24,7 +24,10 @@ node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules ./node
 - Center, Grid, Sidebar, Switcher: `[GRID_OVERFLOW]` wide -> `cardMode: "column"`.
 - PageLayout: `min-block-size: 100dvh` -> `cardMode: "single"` so the card is full-bleed.
 - TextInput: `[GRID_OVERFLOW]` wide on `Sizes` -> `cardMode: "column"`.
-- Tooltip: `[GRID_OVERFLOW]` escape (open popovers in Placement, RightToLeft and Flip) -> `cardMode: "single"`, `primaryStory: "Placement"`, the one story with every side held open. It has 10 stories, so compare it with `--max-stories 10`.
+- Tooltip: `[GRID_OVERFLOW]` escape (open popovers in Placement, RightToLeft and Flip) -> `cardMode: "single"`, `primaryStory: "Placement"`, the one story with every side held open.
+- Button: `[GRID_OVERFLOW]` wide on `HoverContrast` -> `cardMode: "column"`.
+- Popover: `[GRID_OVERFLOW]` escape on `HeldOpen` -> `cardMode: "single"`, `primaryStory: "HeldOpen"`, the one story whose popover is open without its play function.
+- Icons: the story title `Foundations/Icons` matches no export, so the converter dropped it -> `titleMap` maps `Icons` to `CloseIcon`, the story meta's `component`, so the gallery is the `CloseIcon` card in `foundations`. The other eight icons get no card or `.d.ts`; `conventions.md` lists them.
 - Tooltip `Flip` (and `Default`'s hovered end state): the reference capture crops to the story root, and the open tooltip sits in the top layer outside it, so the reference shows the button alone. The play function asserts the tooltip is open below the button, which is what the preview shows. Graded `match`.
 - Theme `All Combinations`: the preview's 24px capture gutter makes each cell 8px narrower than the reference, so the playful cards wrap their Outline button onto a second row. Framing, graded `match`.
 - [GENERAL] Most form, link and feedback stories have play functions, and the reference Storybook captures their end state (focus rings, clicked radios and checkboxes, typed text, the revealed SkipLink) while previews show the story's initial render. Compare has no switch to skip play functions. Grade the preview against the story's args, not the post-play reference; these deltas are graded `match` with a note, and need no owned preview.
@@ -38,7 +41,8 @@ node .ds-sync/resync.mjs --config .design-sync/config.json --node-modules ./node
 - `compiler-runtime.js` depends on `React.__COMPILER_RUNTIME` (React 19). If a converter update gives its React shim a real `c` export, remove the alias and `cfg.tsconfig`.
 - `extraFonts` paths point into `node_modules/@fontsource-variable/*`; a fontsource layout change breaks them silently apart from a build log line.
 - The reference Storybook and previews were only compared in the default theme, light mode. The playful theme and dark mode are covered only by the three stories on the `Theme` card.
-- Button has 7 stories and the capture cap is 6: `KeyboardInteraction` was not captured (same render as `Primary`).
+- The capture cap is `--max-stories 11`. A story file that grows past 11 stories leaves its tail ungraded; `[STORY_CAP]` in the capture log names it.
+- A new icon needs adding to the Icons bullet in `conventions.md`, since only `CloseIcon` has a card.
 - PageLayout's per-story capture hides the footer below the fold (24px capture gutter around a 100dvh component). Judge it from the card screenshot instead.
 - Prose `Default` is taller than the 700px per-story preview capture, so its figure and table are only visible in the card screenshot (`ds-bundle/_screenshots/typography__Prose.png`). Judge them there.
 - SkipLink `KeyboardInteraction` and `LongLabel` show the link hidden on the card, since it only appears on focus. Faithful, but the card shows no visible link.
