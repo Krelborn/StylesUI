@@ -1,0 +1,7 @@
+.icon {
+  flex-shrink: 0;
+  inline-size: 1em;
+  block-size: 1em;
+  vertical-align: -0.125em;
+  stroke-width: var(--sui-icon-stroke-width, 2);
+}
