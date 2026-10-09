@@ -157,7 +157,7 @@ describe("icons", () => {
 });
 
 function shapesOf(svg: Element): string[] {
-  return Array.from(svg.children, (shape) => {
+  return Array.from(svg.querySelectorAll(":not(g)"), (shape) => {
     const attributes = Array.from(shape.attributes)
       .filter(({ name }) => name !== "class")
       .map(({ name, value }) => `${name}="${value}"`)

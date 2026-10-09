@@ -72,7 +72,7 @@ export function Icon({ children, className, label, mirrored = false, ...rest }: 
     <Box
       {...rest}
       as="svg"
-      className={clsx(styles.icon, { [styles.mirrored]: mirrored }, className)}
+      className={clsx(styles.icon, className)}
       fill="none"
       role={decorative ? undefined : "img"}
       stroke="currentColor"
@@ -82,7 +82,13 @@ export function Icon({ children, className, label, mirrored = false, ...rest }: 
       aria-hidden={decorative ? true : undefined}
       aria-label={decorative ? undefined : label}
     >
-      {children}
+      {mirrored ? (
+        <Box as="g" className={styles.mirrored}>
+          {children}
+        </Box>
+      ) : (
+        children
+      )}
     </Box>
   );
 }
