@@ -55,12 +55,17 @@ interface IconBaseProps extends IconProps {
    * The glyph's shapes, drawn in round strokes on a 24 by 24 grid
    */
   children: ReactNode;
+
+  /**
+   * Whether the glyph points the way the text runs, so it is mirrored in right-to-left text
+   */
+  mirrored?: boolean;
 }
 
 /**
  * The svg element every icon renders: 1em square, stroked in `currentColor`, and decorative unless it has a `label`
  */
-export function Icon({ children, className, label, ...rest }: IconBaseProps): JSX.Element {
+export function Icon({ children, className, label, mirrored = false, ...rest }: IconBaseProps): JSX.Element {
   const decorative = !label;
 
   return (
@@ -77,7 +82,13 @@ export function Icon({ children, className, label, ...rest }: IconBaseProps): JS
       aria-hidden={decorative ? true : undefined}
       aria-label={decorative ? undefined : label}
     >
-      {children}
+      {mirrored ? (
+        <Box as="g" className={styles.mirrored}>
+          {children}
+        </Box>
+      ) : (
+        children
+      )}
     </Box>
   );
 }

@@ -9,9 +9,16 @@ import { Row } from "../Row";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
 
+import { AddIcon } from "./AddIcon";
+import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
+import { DeleteIcon } from "./DeleteIcon";
 import type { IconProps } from "./Icon";
+import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
+import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { RefreshIcon } from "./RefreshIcon";
+import { RemoveIcon } from "./RemoveIcon";
+import { SendIcon } from "./SendIcon";
 
 interface GalleryIcon {
   /**
@@ -26,8 +33,15 @@ interface GalleryIcon {
 }
 
 const icons: GalleryIcon[] = [
+  { Component: AddIcon, name: "AddIcon" },
+  { Component: ChevronDownIcon, name: "ChevronDownIcon" },
   { Component: CloseIcon, name: "CloseIcon" },
+  { Component: DeleteIcon, name: "DeleteIcon" },
+  { Component: MoreHorizontalIcon, name: "MoreHorizontalIcon" },
+  { Component: MoreVerticalIcon, name: "MoreVerticalIcon" },
   { Component: RefreshIcon, name: "RefreshIcon" },
+  { Component: RemoveIcon, name: "RemoveIcon" },
+  { Component: SendIcon, name: "SendIcon" },
 ];
 
 const fontSizes = [16, 24, 32];
@@ -42,7 +56,16 @@ const idleButtons = [
 const meta = {
   title: "Foundations/Icons",
   component: CloseIcon,
-  subcomponents: { RefreshIcon },
+  subcomponents: {
+    AddIcon,
+    ChevronDownIcon,
+    DeleteIcon,
+    MoreHorizontalIcon,
+    MoreVerticalIcon,
+    RefreshIcon,
+    RemoveIcon,
+    SendIcon,
+  },
   parameters: {
     a11y: { test: "error" },
     docs: {
@@ -154,6 +177,42 @@ export const InNarrowRow: Story = {
 };
 
 /**
+ * An icon that points the way the text runs, such as SendIcon, is mirrored in right-to-left text, within its own box
+ * and alongside any transform it is given. Other icons, such as RefreshIcon, keep their artwork.
+ */
+export const RightToLeft: Story = {
+  render: () => (
+    <Stack>
+      <Cluster align="center" dir="ltr">
+        <SendIcon style={{ fontSize: 32 }} data-testid="ltr-send" />
+        <Text>Left to right</Text>
+      </Cluster>
+      <Cluster align="center" dir="rtl">
+        <SendIcon style={{ fontSize: 32 }} data-testid="rtl-send" />
+        <SendIcon style={{ fontSize: 32, transform: "rotate(90deg)" }} data-testid="rtl-rotated-send" />
+        <RefreshIcon style={{ fontSize: 32 }} data-testid="rtl-refresh" />
+        <Text>Right to left</Text>
+      </Cluster>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const mirror = "matrix(-1, 0, 0, 1, 24, 0)";
+    const rtlSend = canvas.getByTestId("rtl-send");
+    const rtlSendBox = rtlSend.getBoundingClientRect();
+    const rtlGlyphBox = glyphOf(rtlSend).getBoundingClientRect();
+    const rotatedSend = canvas.getByTestId("rtl-rotated-send");
+
+    await expect(getComputedStyle(glyphOf(canvas.getByTestId("ltr-send"))).transform).toBe("none");
+    await expect(getComputedStyle(glyphOf(rtlSend)).transform).toBe(mirror);
+    await expect(rtlGlyphBox.left).toBeGreaterThanOrEqual(rtlSendBox.left);
+    await expect(rtlGlyphBox.right).toBeLessThanOrEqual(rtlSendBox.right);
+    await expect(getComputedStyle(rotatedSend).transform).toBe("matrix(0, 1, -1, 0, 0, 0)");
+    await expect(getComputedStyle(glyphOf(rotatedSend)).transform).toBe(mirror);
+    await expect(getComputedStyle(glyphOf(canvas.getByTestId("rtl-refresh"))).transform).toBe("none");
+  },
+};
+
+/**
  * The stroke weight follows `--sui-icon-stroke-width`, which each theme sets and any element can override for the
  * icons inside it
  */
@@ -207,3 +266,13 @@ export const InIconButton: Story = {
     await expect(canvas.queryByRole("img")).toBeNull();
   },
 };
+
+function glyphOf(icon: HTMLElement): Element {
+  const glyph = icon.firstElementChild;
+
+  if (!glyph) {
+    throw new Error("The icon draws no shapes");
+  }
+
+  return glyph;
+}

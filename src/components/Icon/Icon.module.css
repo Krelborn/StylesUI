@@ -6,3 +6,8 @@
   vertical-align: -0.125em;
   stroke-width: var(--sui-icon-stroke-width, 2);
 }
+
+/* On a group inside the svg, so it composes with a transform the consumer gives the svg */
+.mirrored:dir(rtl) {
+  transform: matrix(-1, 0, 0, 1, 24, 0);
+}
