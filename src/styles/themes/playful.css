@@ -68,6 +68,7 @@
 
   --sui-border-width: 2px;
   --sui-focus-ring-width: 3px;
+  --sui-icon-stroke-width: 2;
   --sui-shadow-sm: 4px 4px 0 var(--sui-color-shadow);
 
   --sui-control-depth: 4px;

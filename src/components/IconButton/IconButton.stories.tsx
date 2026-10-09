@@ -1,43 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { JSX } from "react";
 import { expect, fn, userEvent } from "storybook/test";
 
 import { focusRingContrast } from "../../test/colorContrast";
-import { Box } from "../Box";
 import type { ButtonSize, ButtonVariant } from "../Button";
 import { Cluster } from "../Cluster";
+import { RefreshIcon } from "../Icon";
 
 import { IconButton } from "./IconButton";
 
 const sizes: ButtonSize[] = ["sm", "md", "lg"];
 const variants: ButtonVariant[] = ["ghost", "outline", "primary", "secondary"];
-
-interface RefreshIconProps {
-  /**
-   * Colour of the arrow. Defaults to the button's text colour.
-   */
-  stroke?: string;
-}
-
-/**
- * A refresh arrow
- */
-function RefreshIcon({ stroke = "currentColor" }: RefreshIconProps): JSX.Element {
-  return (
-    <Box
-      as="svg"
-      fill="none"
-      stroke={stroke}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <Box as="path" d="M20 11a8 8 0 1 0-2.3 5.7" />
-      <Box as="path" d="M20 4v7h-7" />
-    </Box>
-  );
-}
 
 /**
  * Finds the one element a selector names inside a button
@@ -174,7 +146,7 @@ export const WithShortcut: Story = {
 export const Busy: Story = {
   args: {
     busy: true,
-    children: <RefreshIcon stroke="#dc2626" />,
+    children: <RefreshIcon style={{ color: "#dc2626" }} />,
   },
   render: (args) => (
     <Cluster>
