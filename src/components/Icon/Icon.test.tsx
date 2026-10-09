@@ -105,4 +105,22 @@ describe("icons", () => {
 
     expect(screen.getByRole("img", { name: "Meaning" })).toBeInTheDocument();
   });
+
+  it.each(icons)("must reject width when $name is given one", ({ Component }) => {
+    render(
+      // @ts-expect-error font-size sizes the icon
+      <Component label="Meaning" width={48} />
+    );
+
+    expect(screen.getByRole("img", { name: "Meaning" })).toBeInTheDocument();
+  });
+
+  it.each(icons)("must reject height when $name is given one", ({ Component }) => {
+    render(
+      // @ts-expect-error font-size sizes the icon
+      <Component height={48} label="Meaning" />
+    );
+
+    expect(screen.getByRole("img", { name: "Meaning" })).toBeInTheDocument();
+  });
 });

@@ -7,8 +7,8 @@ import { Box } from "../Box";
 import styles from "./Icon.module.css";
 
 /**
- * Props for every icon: its own props plus every `svg` prop except those its artwork and `label` decide. Its colour
- * follows `color`, and its stroke weight follows `--sui-icon-stroke-width`.
+ * Props for every icon: its own props plus every `svg` prop except those its artwork and `label` decide. It is 1em
+ * square, so `font-size` sizes it, its colour follows `color`, and its stroke weight follows `--sui-icon-stroke-width`.
  */
 export interface IconProps extends Omit<
   BoxProps<"svg">,
@@ -19,12 +19,14 @@ export interface IconProps extends Omit<
   | "children"
   | "dangerouslySetInnerHTML"
   | "fill"
+  | "height"
   | "role"
   | "stroke"
   | "strokeLinecap"
   | "strokeLinejoin"
   | "strokeWidth"
   | "viewBox"
+  | "width"
 > {
   /**
    * Not accepted: the icon is hidden from assistive technology exactly when it has no `label`
