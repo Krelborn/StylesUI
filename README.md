@@ -1,6 +1,6 @@
 # StylesUI
 
-A tree-shakable React component library styled with CSS modules and CSS custom properties.
+A React component library styled with CSS modules and CSS custom properties.
 
 ## Installation
 
@@ -20,18 +20,30 @@ pnpm add @krelborn/stylesui
 ## Usage
 
 ```tsx
-import { Box } from "@krelborn/stylesui";
+import { Button, Card, Checkbox, Field, Heading, Stack, TextInput } from "@krelborn/stylesui";
 
-export function App() {
+export function SignIn({ error, saving }: { error?: string; saving: boolean }) {
   return (
-    <Box as="button" onClick={() => console.log("Clicked")}>
-      Click Me
-    </Box>
+    <Card padding="lg">
+      <Stack as="form" gap={4}>
+        <Heading level={1}>Sign in</Heading>
+        <Field description="We'll never share it." error={error} label="Email" required>
+          <TextInput autoComplete="email" type="email" />
+        </Field>
+        <Field label="Password" required>
+          <TextInput autoComplete="current-password" type="password" />
+        </Field>
+        <Checkbox>Remember me</Checkbox>
+        <Button busy={saving} type="submit">
+          Sign in
+        </Button>
+      </Stack>
+    </Card>
   );
 }
 ```
 
-`Box` renders the DOM element given in `as` (default `div`) and accepts every prop that element supports, including `ref`.
+Components accept every prop of the element they render, including `ref`. Layout components such as `Stack` render the element given in `as`. `Field` labels the control inside it and links its description and error to it, and marks it required, invalid or disabled. A `busy` `Button` shows a spinner and ignores clicks while keeping focus.
 
 ### CSS and themes
 
