@@ -35,6 +35,8 @@ const textPairs: readonly ColourPair[] = [
   { background: "field", foreground: "text-muted" },
   { background: "overlay", foreground: "text" },
   { background: "overlay", foreground: "text-muted" },
+  { background: "sunken", foreground: "text" },
+  { background: "sunken", foreground: "text-muted" },
   { background: "background", foreground: "primary" },
   { background: "surface", foreground: "primary" },
   { background: "overlay", foreground: "primary" },
@@ -56,6 +58,7 @@ const focusRingBackgrounds = [
   "background",
   "surface",
   "overlay",
+  "sunken",
   "secondary-subtle",
   "shadow",
   "danger-subtle",
@@ -118,9 +121,9 @@ export const TextPairs: Story = {
 };
 
 /**
- * The focus ring keeps at least 3:1 against the page, a surface, an overlay, the secondary subtle tint a hovered
- * listbox option takes, each status subtle, and the shadow-coloured lip a button's ring crosses in themes where
- * controls have depth
+ * The focus ring keeps at least 3:1 against the page, a surface, an overlay, a sunken chip, the secondary subtle tint
+ * a hovered listbox option takes, each status subtle, and the shadow-coloured lip a button's ring crosses in themes
+ * where controls have depth
  */
 export const FocusRing: Story = {
   render: () => (

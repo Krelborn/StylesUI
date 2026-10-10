@@ -21,6 +21,7 @@
   --sui-color-surface: light-dark(var(--sui-white), color-mix(in srgb, var(--sui-violet-900) 70%, var(--sui-black)));
   --sui-color-field: light-dark(color-mix(in srgb, var(--sui-orange-100) 40%, var(--sui-white)), var(--_sui-plum));
   --sui-color-overlay: light-dark(color-mix(in srgb, var(--sui-orange-100) 40%, var(--sui-white)), var(--_sui-plum));
+  --sui-color-sunken: light-dark(var(--sui-white), color-mix(in srgb, var(--sui-violet-900) 70%, var(--sui-black)));
   --sui-color-border: light-dark(var(--_sui-ink), var(--sui-violet-300));
   --sui-color-control-border: light-dark(var(--_sui-ink), var(--_sui-ink));
   --sui-color-input-border: light-dark(var(--_sui-ink), var(--sui-violet-300));
