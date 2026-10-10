@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { PaletteName } from "../components/Theme";
+import type { PaletteName, ThemeName } from "../components/Theme";
 
+import indexCss from "./index.css?raw";
 import brightPaletteCss from "./palettes/bright.css?raw";
 import duskPaletteCss from "./palettes/dusk.css?raw";
 import mistPaletteCss from "./palettes/mist.css?raw";
@@ -19,7 +20,7 @@ interface PaletteSource {
   /**
    * Theme whose elements take this palette when no palette is set
    */
-  companion?: string;
+  companion?: ThemeName;
 
   css: string;
   name: PaletteName;
@@ -38,7 +39,7 @@ const palettes: readonly PaletteSource[] = [
   { css: duskPaletteCss, name: "dusk" },
 ];
 
-// Text on a light fill stays dark in both schemes: Bright's yellow warning, and every one of
+// Text on a light fill stays dark in both schemes: the yellow warning fill, and every one of
 // Pop's bright fills, which carry its ink. A palette's ink, the outline a theme with outlined
 // controls draws, is its light-mode text colour whatever the scheme.
 const sameInBothModes: Record<PaletteName, readonly string[]> = {
@@ -86,6 +87,10 @@ function lightDarkValues(value: string): [light: string, dark: string] {
 
   const [light, dark] = splitTopLevelCommaSeparatedValues(match[1]);
   return [light, dark];
+}
+
+function importedFiles(css: string): string[] {
+  return [...css.matchAll(/@import "\.\/([^"]+)";/g)].map((match) => match[1]);
 }
 
 function colourTokens(css: string): Array<[name: string, value: string]> {
@@ -194,6 +199,19 @@ describe("theme tokens", () => {
       expect(groups.some((group) => group.includes(`[data-sui-theme="${companion}"]`))).toBe(true);
     }
   );
+
+  it("must import default and bright first when a root that sets another theme takes that theme's companion", () => {
+    const imports = importedFiles(indexCss);
+
+    expect(imports.find((file) => file.startsWith("themes/"))).toBe("themes/default.css");
+    expect(imports.find((file) => file.startsWith("palettes/"))).toBe("palettes/bright.css");
+  });
+
+  it("must import every palette when styles.css is loaded", () => {
+    const importedPalettes = importedFiles(indexCss).filter((file) => file.startsWith("palettes/"));
+
+    expect(importedPalettes.sort()).toEqual(paletteNames.map((name) => `palettes/${name}.css`).sort());
+  });
 
   it("must apply bright at zero specificity when the root sets no palette", () => {
     const groups = zeroSpecificityGroups(ruleSelector(brightPaletteCss));

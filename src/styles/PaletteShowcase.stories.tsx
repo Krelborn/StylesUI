@@ -81,7 +81,7 @@ function PaletteSamples({ palette }: PaletteSamplesProps): JSX.Element {
         <Box style={{ display: "grid", gap: "1rem" }}>
           {tabsVariants.map((variant) => (
             <Tabs defaultValue="code" key={variant} variant={variant}>
-              <TabList aria-label={`Repository, ${variant} tabs`}>
+              <TabList aria-label={`${palette} repository, ${variant} tabs`}>
                 <Tab value="code">Code</Tab>
                 <Tab value="issues">Issues</Tab>
               </TabList>
@@ -96,13 +96,13 @@ function PaletteSamples({ palette }: PaletteSamplesProps): JSX.Element {
           </Card>
         </Box>
         <Box style={{ display: "grid", gap: "1rem" }}>
-          <NavList aria-label="Sections">
+          <NavList aria-label={`${palette} sections`}>
             <NavListItem href="#overview" aria-current="page">
               Overview
             </NavListItem>
             <NavListItem href="#deployments">Deployments</NavListItem>
           </NavList>
-          <Listbox aria-label="Pull requests" defaultValue="build">
+          <Listbox aria-label={`${palette} pull requests`} defaultValue="build">
             <ListboxOption value="build">Fix the build</ListboxOption>
             <ListboxOption value="tests">Fix the tests</ListboxOption>
             <ListboxOption disabled={true} value="docs">

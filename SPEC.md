@@ -22,7 +22,7 @@ Success looks like this: an app opts into Mist, Paper or Dusk with one prop or a
 - Theme-dependent colours are derived in `tokens.css` from palette inputs (`--sui-color-ink`, `--sui-color-shadow-soft`, `--sui-color-shadow-hard`) and theme inputs (`--sui-control-outline`, `--sui-shadow-hardness`, `--sui-shadow-sm-offset`).
 - `palette.css` becomes `ramps.css`, and the token tier "Palette" becomes "Ramps".
 - Default's dark-mode popover elevation is fixed in a follow-up, not here.
-- One spec, delivered as three pull requests, one per phase, in order.
+- One spec and one pull request, built in three phases in order, with a commit per task.
 
 ## Tech Stack
 
@@ -187,7 +187,7 @@ interface ThemeOwnProps {
 
 ### Phase 1: Layer tokens
 
-No visual change. This PR can ship on its own.
+No visual change.
 
 1. `themes/default.css` and `themes/playful.css` each declare `--sui-color-field`, `--sui-color-overlay` and `--sui-color-sunken` with `light-dark()`. `field` and `overlay` equal the theme's `--sui-color-background` value, and `sunken` equals its `--sui-color-surface` value. Proven by `pnpm test:unit src/styles/themeTokens.test.ts`, the existing same-tokens check, plus the resolved-colour comparison.
 2. `TextControl` and `ChoiceControl` read `var(--sui-color-field, #fff)`, and `Popover` reads `var(--sui-color-overlay, #fff)`.

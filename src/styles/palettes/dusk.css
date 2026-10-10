@@ -10,9 +10,10 @@
   --_sui-dusk-night-raised: #363d46;
   --_sui-dusk-night-border: #444c56;
   --_sui-dusk-night-text: #ccd4dc;
+  --_sui-dusk-night-blue: #96d0ff;
 
   --sui-color-primary: light-dark(var(--sui-blue-800), #6cb6ff);
-  --sui-color-primary-hover: light-dark(var(--sui-blue-900), #96d0ff);
+  --sui-color-primary-hover: light-dark(var(--sui-blue-900), var(--_sui-dusk-night-blue));
   --sui-color-primary-subtle: light-dark(#d3dbec, #26364d);
   --sui-color-on-primary: light-dark(var(--sui-white), var(--_sui-dusk-night));
   --sui-color-secondary: light-dark(var(--_sui-dusk-sunken), var(--_sui-dusk-night-border));
@@ -31,7 +32,7 @@
   --sui-color-text-muted: light-dark(#424a55, #a4aeb9);
   --sui-color-tooltip: light-dark(var(--_sui-dusk-ink), var(--_sui-dusk-night-text));
   --sui-color-on-tooltip: light-dark(var(--_sui-dusk-page), var(--_sui-dusk-night));
-  --sui-color-focus-ring: light-dark(var(--sui-blue-600), #96d0ff);
+  --sui-color-focus-ring: light-dark(var(--sui-blue-600), var(--_sui-dusk-night-blue));
   --sui-color-shadow-soft: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
   --sui-color-shadow-hard: light-dark(var(--_sui-dusk-ink), var(--sui-gray-600));
   --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));

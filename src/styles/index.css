@@ -1,5 +1,6 @@
 @import "./ramps.css";
 @import "./tokens.css";
+/* default and Bright also match :root, so they come first: on a root that sets another theme, the later rule wins */
 @import "./themes/default.css";
 @import "./themes/playful.css";
 @import "./palettes/bright.css";

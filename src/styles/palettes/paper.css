@@ -6,6 +6,7 @@
   --_sui-paper-sunken: #e9e4da;
   --_sui-paper-border: #ddd6c9;
   --_sui-paper-ink: #1c1917;
+  --_sui-paper-muted: #57534e;
   --_sui-paper-night: #1b1916;
   --_sui-paper-night-border: #3a352f;
   --_sui-paper-night-text: #f2eee6;
@@ -27,12 +28,12 @@
   --sui-color-ink: light-dark(var(--_sui-paper-ink), var(--_sui-paper-ink));
   --sui-color-input-border: light-dark(#78716c, #948d86);
   --sui-color-text: light-dark(var(--_sui-paper-ink), var(--_sui-paper-night-text));
-  --sui-color-text-muted: light-dark(#57534e, #a8a29e);
+  --sui-color-text-muted: light-dark(var(--_sui-paper-muted), #a8a29e);
   --sui-color-tooltip: light-dark(var(--_sui-paper-ink), var(--_sui-paper-night-text));
   --sui-color-on-tooltip: light-dark(var(--_sui-paper-page), var(--_sui-paper-night));
   --sui-color-focus-ring: light-dark(var(--sui-blue-600), var(--sui-blue-300));
   --sui-color-shadow-soft: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
-  --sui-color-shadow-hard: light-dark(var(--_sui-paper-ink), #57534e);
+  --sui-color-shadow-hard: light-dark(var(--_sui-paper-ink), var(--_sui-paper-muted));
   --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));
   --sui-color-on-success: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-success-text: light-dark(var(--sui-green-800), var(--sui-green-300));
