@@ -16,7 +16,7 @@ import { Icon } from "./Icon";
 export function RemoveIcon(props: IconProps): JSX.Element {
   return (
     <Icon {...props}>
-      {/* Lucide's "minus" icon, under the licence in THIRD_PARTY_NOTICES.md */}
+      {/* Lucide's "minus" icon, under the licence in LICENSE */}
       <Box as="path" d="M5 12h14" />
     </Icon>
   );

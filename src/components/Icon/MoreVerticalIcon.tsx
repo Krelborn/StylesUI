@@ -16,7 +16,7 @@ import { Icon } from "./Icon";
 export function MoreVerticalIcon(props: IconProps): JSX.Element {
   return (
     <Icon {...props}>
-      {/* Lucide's "ellipsis-vertical" icon, under the licence in THIRD_PARTY_NOTICES.md */}
+      {/* Lucide's "ellipsis-vertical" icon, under the licence in LICENSE */}
       <Box as="circle" cx="12" cy="12" r="1" />
       <Box as="circle" cx="12" cy="5" r="1" />
       <Box as="circle" cx="12" cy="19" r="1" />

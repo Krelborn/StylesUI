@@ -41,6 +41,7 @@ export {
   ChevronDownIcon,
   CloseIcon,
   DeleteIcon,
+  InfoIcon,
   MoreHorizontalIcon,
   MoreVerticalIcon,
   RefreshIcon,

@@ -16,7 +16,7 @@ import { Icon } from "./Icon";
 export function ChevronDownIcon(props: IconProps): JSX.Element {
   return (
     <Icon {...props}>
-      {/* Lucide's "chevron-down" icon, under the licence in THIRD_PARTY_NOTICES.md */}
+      {/* Lucide's "chevron-down" icon, under the licence in LICENSE */}
       <Box as="path" d="m6 9 6 6 6-6" />
     </Icon>
   );

@@ -14,6 +14,7 @@ import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
 import { DeleteIcon } from "./DeleteIcon";
 import type { IconProps } from "./Icon";
+import { InfoIcon } from "./InfoIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { RefreshIcon } from "./RefreshIcon";
@@ -37,6 +38,7 @@ const icons: GalleryIcon[] = [
   { Component: ChevronDownIcon, name: "ChevronDownIcon" },
   { Component: CloseIcon, name: "CloseIcon" },
   { Component: DeleteIcon, name: "DeleteIcon" },
+  { Component: InfoIcon, name: "InfoIcon" },
   { Component: MoreHorizontalIcon, name: "MoreHorizontalIcon" },
   { Component: MoreVerticalIcon, name: "MoreVerticalIcon" },
   { Component: RefreshIcon, name: "RefreshIcon" },
@@ -60,6 +62,7 @@ const meta = {
     AddIcon,
     ChevronDownIcon,
     DeleteIcon,
+    InfoIcon,
     MoreHorizontalIcon,
     MoreVerticalIcon,
     RefreshIcon,
@@ -71,7 +74,7 @@ const meta = {
     docs: {
       description: {
         component:
-          "Icons drawn in round strokes in `currentColor`, 1em square, so each takes the size and colour of the text around it. Import each icon by name, so a bundle holds only the icons it uses. An icon is hidden from assistive technology unless it has a `label`. `--sui-icon-stroke-width`, set by each theme and overridable on any element, sets the stroke weight. The artwork is from [Lucide](https://lucide.dev), under the licence in `THIRD_PARTY_NOTICES.md`.",
+          "Icons drawn in round strokes in `currentColor`, 1em square, so each takes the size and colour of the text around it. Import each icon by name, so a bundle holds only the icons it uses. An icon is hidden from assistive technology unless it has a `label`. `--sui-icon-stroke-width`, set by each theme and overridable on any element, sets the stroke weight. The artwork is from [Lucide](https://lucide.dev), under the licence in `LICENSE`.",
       },
     },
   },

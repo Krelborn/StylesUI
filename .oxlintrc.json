@@ -20,6 +20,7 @@
         "Divider": "hr",
         "Fieldset": "fieldset",
         "IconButton": "button",
+        "InfoIcon": "svg",
         "Kbd": "kbd",
         "Link": "a",
         "Listbox": "div",

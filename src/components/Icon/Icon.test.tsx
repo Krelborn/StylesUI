@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import chevronDownArtwork from "lucide-static/icons/chevron-down.svg?raw";
 import ellipsisArtwork from "lucide-static/icons/ellipsis.svg?raw";
 import ellipsisVerticalArtwork from "lucide-static/icons/ellipsis-vertical.svg?raw";
+import infoArtwork from "lucide-static/icons/info.svg?raw";
 import minusArtwork from "lucide-static/icons/minus.svg?raw";
 import plusArtwork from "lucide-static/icons/plus.svg?raw";
 import refreshArtwork from "lucide-static/icons/refresh-cw.svg?raw";
@@ -15,6 +16,7 @@ import { AddIcon } from "./AddIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
 import { DeleteIcon } from "./DeleteIcon";
+import { InfoIcon } from "./InfoIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { RefreshIcon } from "./RefreshIcon";
@@ -26,6 +28,7 @@ const icons = [
   { Component: ChevronDownIcon, artwork: chevronDownArtwork, name: "ChevronDownIcon" },
   { Component: CloseIcon, artwork: xArtwork, name: "CloseIcon" },
   { Component: DeleteIcon, artwork: trashArtwork, name: "DeleteIcon" },
+  { Component: InfoIcon, artwork: infoArtwork, name: "InfoIcon" },
   { Component: MoreHorizontalIcon, artwork: ellipsisArtwork, name: "MoreHorizontalIcon" },
   { Component: MoreVerticalIcon, artwork: ellipsisVerticalArtwork, name: "MoreVerticalIcon" },
   { Component: RefreshIcon, artwork: refreshArtwork, name: "RefreshIcon" },
