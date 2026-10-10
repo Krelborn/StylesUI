@@ -1,6 +1,6 @@
 .alert {
-  --sui-alert-bg: var(--sui-color-info-subtle, #edf5ff);
-  --sui-alert-accent: var(--sui-color-info-text, #1d4ed8);
+  --sui-alert-bg: var(--sui-color-info-subtle, #f0f3ff);
+  --sui-alert-accent: var(--sui-color-info-text, #4338ca);
   /* A Link inside takes the alert's text colour */
   --sui-link-color: currentColor;
 

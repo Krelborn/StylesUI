@@ -26,7 +26,7 @@
 }
 
 .statusDot[data-tone="info"] {
-  --sui-status-dot-tone-color: var(--sui-color-info-text, #1d4ed8);
+  --sui-status-dot-tone-color: var(--sui-color-info-text, #4338ca);
 }
 
 .statusDot[data-tone="primary"] {
