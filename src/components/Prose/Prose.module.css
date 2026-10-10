@@ -184,8 +184,23 @@
   block-size: auto;
 }
 
+/*
+ * A block that is the table's own scroll box, so a table wider than the column scrolls sideways.
+ * break-word keeps each word whole when sizing the columns, where anywhere would narrow them to fit
+ * by breaking words.
+ */
 :where(.prose) table {
+  display: block;
+  inline-size: max-content;
+  max-inline-size: 100%;
+  overflow: auto;
   border-collapse: collapse;
+  overflow-wrap: break-word;
+}
+
+:where(.prose) table:where(:focus-visible) {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
 }
 
 :where(.prose) th,
@@ -195,5 +210,6 @@
 }
 
 :where(.prose) th {
+  background-color: var(--sui-color-surface, #f3f4f6);
   font-weight: var(--sui-font-weight-bold, 700);
 }

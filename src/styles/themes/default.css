@@ -43,12 +43,12 @@
     color-mix(in srgb, var(--sui-red-100), var(--sui-white)),
     color-mix(in srgb, var(--sui-red-900), var(--sui-gray-900))
   );
-  --sui-color-info: light-dark(var(--sui-blue-700), var(--sui-blue-300));
+  --sui-color-info: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
   --sui-color-on-info: light-dark(var(--sui-white), var(--sui-gray-900));
-  --sui-color-info-text: light-dark(var(--sui-blue-700), var(--sui-blue-300));
+  --sui-color-info-text: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
   --sui-color-info-subtle: light-dark(
-    color-mix(in srgb, var(--sui-blue-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-blue-900), var(--sui-gray-900))
+    color-mix(in srgb, var(--sui-indigo-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-indigo-900), var(--sui-gray-900))
   );
 
   --sui-radius-sm: 2px;

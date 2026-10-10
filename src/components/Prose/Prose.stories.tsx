@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { JSX } from "react";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 
 import { asArgType } from "../../docs/argTypes";
-import { focusRingContrast } from "../../test/colorContrast";
+import { focusRingContrast, resolvedColor } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Badge } from "../Badge";
 import { Box } from "../Box";
 import { Button } from "../Button";
@@ -39,6 +40,21 @@ const longUrl =
 
 const wideCodeLine =
   'const response = await fetch("https://api.example.com/v2/organisations/acme/projects/website/deployments?status=failed");';
+
+const quarterColumns = [
+  "Region",
+  "First quarter",
+  "Second quarter",
+  "Third quarter",
+  "Fourth quarter",
+  "Change on last year",
+];
+
+const quarterRows = [
+  ["Europe", "€1.2m", "€1.4m", "€1.3m", "€1.6m", "+12%"],
+  ["North America", "$2.1m", "$2.0m", "$2.4m", "$2.7m", "+9%"],
+  ["Asia Pacific", "$0.8m", "$0.9m", "$1.1m", "$1.2m", "+21%"],
+];
 
 const releaseCardHeading = "Hear about the next release";
 const releaseCardText = "One email when a version ships, and nothing else.";
@@ -256,5 +272,88 @@ export const LongContent: Story = {
     const prose = canvas.getByTestId("long-content-prose");
 
     await expect(prose.scrollWidth).toBeLessThanOrEqual(prose.clientWidth);
+  },
+};
+
+/**
+ * Header cells sit on the surface colour. A table is as wide as its content, and one wider than the
+ * column scrolls sideways inside its own box rather than pushing the prose wider. A table that
+ * scrolls takes `tabIndex={0}`, so a keyboard can reach and scroll it, and shows a focus ring.
+ */
+export const Tables: Story = {
+  render: (args) => (
+    <Box style={{ inlineSize: "24rem" }}>
+      <Prose {...args} data-testid="tables-prose">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Size</th>
+              <th scope="col">Body text</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sm</td>
+              <td>0.875rem</td>
+            </tr>
+            <tr>
+              <td>md</td>
+              <td>1rem</td>
+            </tr>
+            <tr>
+              <td>lg</td>
+              <td>1.125rem</td>
+            </tr>
+          </tbody>
+        </table>
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a table that scrolls needs focus for a keyboard to scroll it */}
+        <table tabIndex={0}>
+          <thead>
+            <tr>
+              {quarterColumns.map((column) => (
+                <th key={column} scope="col">
+                  {column}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {quarterRows.map(([region, ...cells]) => (
+              <tr key={region}>
+                <th scope="row">{region}</th>
+                {cells.map((cell, index) => (
+                  <td key={quarterColumns[index + 1]}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Prose>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const prose = canvas.getByTestId("tables-prose");
+    const [narrowTable, wideTable] = canvas.getAllByRole("table");
+    const [header] = canvas.getAllByRole("columnheader");
+
+    await expect(getComputedStyle(header).backgroundColor).toBe(resolvedColor(header, "var(--sui-color-surface)"));
+    await expect(narrowTable.clientWidth).toBeLessThan(prose.clientWidth);
+    await expect(narrowTable.scrollWidth).toBe(narrowTable.clientWidth);
+    await expect(wideTable.scrollWidth).toBeGreaterThan(wideTable.clientWidth);
+    await expect(prose.scrollWidth).toBeLessThanOrEqual(prose.clientWidth);
+
+    await userEvent.tab();
+    await expect(wideTable).toHaveFocus();
+    await expect(wideTable.matches(":focus-visible")).toBe(true);
+    await expect(focusRingContrast(wideTable)).toBeGreaterThanOrEqual(3);
+
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(wideTable.scrollLeft).toBeGreaterThan(0));
   },
 };

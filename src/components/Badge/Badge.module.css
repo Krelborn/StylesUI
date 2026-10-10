@@ -30,13 +30,13 @@
 }
 
 .badge[data-tone="info"][data-variant="solid"] {
-  --sui-badge-bg: var(--sui-color-info, #1d4ed8);
+  --sui-badge-bg: var(--sui-color-info, #4338ca);
   --sui-badge-fg: var(--sui-color-on-info, #fff);
 }
 
 .badge[data-tone="info"][data-variant="subtle"] {
-  --sui-badge-bg: var(--sui-color-info-subtle, #edf5ff);
-  --sui-badge-fg: var(--sui-color-info-text, #1d4ed8);
+  --sui-badge-bg: var(--sui-color-info-subtle, #f0f3ff);
+  --sui-badge-fg: var(--sui-color-info-text, #4338ca);
 }
 
 .badge[data-tone="neutral"][data-variant="solid"] {

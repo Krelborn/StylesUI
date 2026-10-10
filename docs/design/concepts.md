@@ -91,7 +91,7 @@ NavList is a named navigation landmark holding a list. NavListGroup puts a muted
 
 ### Prose
 
-Prose styles the raw HTML inside it (headings, paragraphs, links, lists, quotes, code, images, figures and tables) for content that can't be written one component per element, such as rendered markdown. Headings follow Heading's level sizes and links look like Link. Code blocks wrap rather than scroll, because CSS cannot add the `tabindex` a scrolling region needs to be reachable by keyboard.
+Prose styles the raw HTML inside it (headings, paragraphs, links, lists, quotes, code, images, figures and tables) for content that can't be written one component per element, such as rendered markdown. Headings follow Heading's level sizes and links look like Link. Code blocks wrap rather than scroll, because CSS cannot add the `tabindex` a scrolling region needs to be reachable by keyboard. A table scrolls instead, as GitHub's do, because fitting its columns to the width would break their words: it is as wide as its content, and one wider than the column scrolls sideways inside its own box. The content must give a table that scrolls `tabindex="0"`, and prose draws a focus ring around it. Header cells sit on the surface colour.
 
 Every descendant rule is `:where(.prose)` followed by type selectors only. That puts it above the reset and below every component class, so a StylesUI component inside prose keeps its own styles. Heading and Text declare `margin: 0` for this reason: without it, prose's heading and paragraph margins would beat the reset's. Prose has no opt-out, and three limits follow:
 
