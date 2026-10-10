@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { PaletteName } from "../components/Theme";
+
 import brightPaletteCss from "./palettes/bright.css?raw";
 import popPaletteCss from "./palettes/pop.css?raw";
 import rampsCss from "./ramps.css?raw";
@@ -7,7 +9,8 @@ import defaultThemeCss from "./themes/default.css?raw";
 import playfulThemeCss from "./themes/playful.css?raw";
 import { declaredTokens, hues, paletteNames, steps } from "./tokenSource";
 
-type PaletteName = (typeof paletteNames)[number];
+// paletteNames satisfies PaletteName[], and this fails to typecheck when PaletteName has a name paletteNames lacks
+const everyPaletteNameListed: PaletteName extends (typeof paletteNames)[number] ? true : never = true;
 
 interface PaletteSource {
   /**
@@ -120,6 +123,7 @@ describe("theme tokens", () => {
   });
 
   it("must test every palette when compared with the palette names", () => {
+    expect(everyPaletteNameListed).toBe(true);
     expect(palettes.map(({ name }) => name)).toEqual([...paletteNames]);
   });
 

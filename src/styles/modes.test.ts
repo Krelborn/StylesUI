@@ -17,15 +17,20 @@ function declarationsForSelector(css: string, selector: string): Map<string, str
 }
 
 describe("modes", () => {
-  it("must paint background, text colour and font when an element has the theme or mode attribute", () => {
-    const declarations = declarationsForSelector(modesCss, ":where([data-sui-theme], [data-sui-mode])");
+  it("must paint background, text colour and font when an element has the theme, mode or palette attribute", () => {
+    const declarations = declarationsForSelector(
+      modesCss,
+      ":where([data-sui-theme], [data-sui-mode], [data-sui-palette])"
+    );
 
     expect(declarations.get("background-color")).toBe("var(--sui-color-background)");
     expect(declarations.get("color")).toBe("var(--sui-color-text)");
     expect(declarations.get("font-family")).toBe("var(--sui-font-body)");
   });
 
-  it("must wrap the theme and mode attribute selector in :where when painting so component and consumer classes win", () => {
-    expect(modesCss).toMatch(/:where\(\s*\[data-sui-theme\]\s*,\s*\[data-sui-mode\]\s*\)\s*\{/);
+  it("must wrap the theme, mode and palette attribute selector in :where when painting so component and consumer classes win", () => {
+    expect(modesCss).toMatch(
+      /:where\(\s*\[data-sui-theme\]\s*,\s*\[data-sui-mode\]\s*,\s*\[data-sui-palette\]\s*\)\s*\{/
+    );
   });
 });

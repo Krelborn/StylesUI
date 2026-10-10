@@ -23,11 +23,18 @@ describe("Theme", () => {
     expect(screen.getByText("Content")).toHaveAttribute("data-sui-mode", "dark");
   });
 
-  it("must omit the theme and mode attributes when theme and mode are omitted", () => {
+  it("must set data-sui-palette when palette is given", () => {
+    render(<Theme palette="pop">Content</Theme>);
+
+    expect(screen.getByText("Content")).toHaveAttribute("data-sui-palette", "pop");
+  });
+
+  it("must omit the theme, palette and mode attributes when theme, palette and mode are omitted", () => {
     render(<Theme>Content</Theme>);
 
     const theme = screen.getByText("Content");
     expect(theme).not.toHaveAttribute("data-sui-theme");
+    expect(theme).not.toHaveAttribute("data-sui-palette");
     expect(theme).not.toHaveAttribute("data-sui-mode");
   });
 
@@ -75,6 +82,11 @@ describe("Theme", () => {
   it("must reject a theme name when it is not shipped", () => {
     // @ts-expect-error "ocean" is not a ThemeName
     render(<Theme theme="ocean">Content</Theme>);
+  });
+
+  it("must reject a palette name when it is not shipped", () => {
+    // @ts-expect-error "neon" is not a PaletteName
+    render(<Theme palette="neon">Content</Theme>);
   });
 
   it("must reject a mode when it is not supported", () => {
