@@ -135,6 +135,7 @@
     ]
   },
   "enabledPlugins": {
-    "open-code-review@open-code-review": true
+    "open-code-review@open-code-review": true,
+    "agent-skills@addy-agent-skills": true
   }
 }
