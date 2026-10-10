@@ -32,7 +32,8 @@ export type ProseProps<E extends BoxElement = "div"> = ProseOwnProps & Omit<BoxP
  * A StylesUI component inside prose keeps its own styles. Two things are still styled as prose: a
  * raw element inside that component, and, for the properties it does not set itself, a component
  * rendered through `as` as an element prose styles, such as `<Text as="code">`. Code blocks wrap
- * rather than scroll.
+ * rather than scroll. A table wider than the column scrolls sideways inside its own box; give it
+ * `tabIndex={0}` so a keyboard can scroll it.
  *
  * @example
  * <Prose as="article" size="lg">
