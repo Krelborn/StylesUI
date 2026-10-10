@@ -1,7 +1,8 @@
 import type { Preview } from "@storybook/react-vite";
 
-import type { ThemeMode, ThemeName } from "../src/components/Theme";
+import type { PaletteName, ThemeMode, ThemeName } from "../src/components/Theme";
 import { componentDescription } from "../src/docs/componentDescription";
+import { paletteNames } from "../src/styles/tokenSource";
 
 import "../fonts/playful.css";
 import "../src/styles/index.css";
@@ -11,16 +12,22 @@ import { ThemeRoot } from "./ThemeRoot";
 
 interface ThemeGlobals {
   mode: ThemeMode;
+  palette: PaletteName | "theme";
   theme: ThemeName;
 }
 
 const preview: Preview = {
   decorators: [
     (Story, context) => {
-      const { mode, theme } = context.globals as ThemeGlobals;
+      const { mode, palette, theme } = context.globals as ThemeGlobals;
 
       return (
-        <ThemeRoot isDocs={context.viewMode === "docs"} mode={mode} theme={theme}>
+        <ThemeRoot
+          isDocs={context.viewMode === "docs"}
+          mode={mode}
+          palette={palette === "theme" ? undefined : palette}
+          theme={theme}
+        >
           <Story />
         </ThemeRoot>
       );
@@ -35,6 +42,14 @@ const preview: Preview = {
         items: ["system", "light", "dark"],
       },
     },
+    palette: {
+      description: "Palette; theme uses the theme's companion palette",
+      toolbar: {
+        dynamicTitle: true,
+        icon: "contrast",
+        items: ["theme", ...paletteNames],
+      },
+    },
     theme: {
       description: "Theme",
       toolbar: {
@@ -46,6 +61,7 @@ const preview: Preview = {
   },
   initialGlobals: {
     mode: "system",
+    palette: "theme",
     theme: "default",
   },
   tags: ["autodocs"],
