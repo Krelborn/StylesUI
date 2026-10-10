@@ -30,17 +30,17 @@ const palettes: readonly PaletteSource[] = [
 ];
 
 // Text on a light fill stays dark in both schemes: Bright's yellow warning, and every one of
-// Pop's bright fills, which carry its ink. Control borders are transparent in Bright and ink in
-// Pop whatever the scheme.
+// Pop's bright fills, which carry its ink. A palette's ink, the outline a theme with outlined
+// controls draws, is its light-mode text colour whatever the scheme.
 const sameInBothModes: Record<PaletteName, readonly string[]> = {
-  bright: ["--sui-color-on-warning", "--sui-color-control-border"],
+  bright: ["--sui-color-on-warning", "--sui-color-ink"],
   pop: [
     "--sui-color-on-secondary",
     "--sui-color-on-success",
     "--sui-color-on-warning",
     "--sui-color-on-danger",
     "--sui-color-on-info",
-    "--sui-color-control-border",
+    "--sui-color-ink",
   ],
 };
 

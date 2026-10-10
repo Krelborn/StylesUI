@@ -8,8 +8,8 @@ import { Text } from "../components/Text";
 import brightPaletteCss from "./palettes/bright.css?raw";
 import { declaredTokens, hues, steps } from "./tokenSource";
 
-// Edge colours rather than fills, and Bright's control border is transparent
-const unswatchedColours = new Set(["--sui-color-control-border", "--sui-color-shadow"]);
+// Inputs that tokens.css combines with the theme into the outline and shadow colours, which components never read
+const unswatchedColours = new Set(["--sui-color-ink", "--sui-color-shadow-hard", "--sui-color-shadow-soft"]);
 const semanticColours = [...declaredTokens(brightPaletteCss).keys()]
   .filter((name) => name.startsWith("--sui-color-") && !unswatchedColours.has(name))
   .map((name) => name.replace("--sui-color-", ""));

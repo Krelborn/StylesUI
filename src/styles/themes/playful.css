@@ -8,9 +8,11 @@
   --sui-border-width: 2px;
   --sui-focus-ring-width: 3px;
   --sui-icon-stroke-width: 2;
-  --sui-shadow-sm: 4px 4px 0 var(--sui-color-shadow);
+  --sui-shadow-sm-offset: 4px 4px 0;
+  --sui-shadow-hardness: 100%;
 
   --sui-control-depth: 4px;
+  --sui-control-outline: 100%;
   --sui-motion-spring: 450ms
     linear(
       0,
