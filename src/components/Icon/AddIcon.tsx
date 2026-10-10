@@ -16,7 +16,7 @@ import { Icon } from "./Icon";
 export function AddIcon(props: IconProps): JSX.Element {
   return (
     <Icon {...props}>
-      {/* Lucide's "plus" icon, under the licence in THIRD_PARTY_NOTICES.md */}
+      {/* Lucide's "plus" icon, under the licence in LICENSE */}
       <Box as="path" d="M5 12h14" />
       <Box as="path" d="M12 5v14" />
     </Icon>

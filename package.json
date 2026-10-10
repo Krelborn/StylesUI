@@ -1,14 +1,14 @@
 {
   "name": "@krelborn/stylesui",
-  "version": "0.2.2",
+  "version": "0.3.0",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Krelborn/StylesUI.git"
   },
   "files": [
     "dist",
-    "fonts",
-    "THIRD_PARTY_NOTICES.md"
+    "fonts"
   ],
   "type": "module",
   "sideEffects": [

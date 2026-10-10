@@ -16,7 +16,7 @@ import { Icon } from "./Icon";
 export function MoreHorizontalIcon(props: IconProps): JSX.Element {
   return (
     <Icon {...props}>
-      {/* Lucide's "ellipsis" icon, under the licence in THIRD_PARTY_NOTICES.md */}
+      {/* Lucide's "ellipsis" icon, under the licence in LICENSE */}
       <Box as="circle" cx="12" cy="12" r="1" />
       <Box as="circle" cx="19" cy="12" r="1" />
       <Box as="circle" cx="5" cy="12" r="1" />

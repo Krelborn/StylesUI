@@ -17,7 +17,7 @@ import { Icon } from "./Icon";
 export function CloseIcon(props: IconProps): JSX.Element {
   return (
     <Icon {...props}>
-      {/* Lucide's "x" icon, under the licence in THIRD_PARTY_NOTICES.md */}
+      {/* Lucide's "x" icon, under the licence in LICENSE */}
       <Box as="path" d="M18 6 6 18" />
       <Box as="path" d="m6 6 12 12" />
     </Icon>
