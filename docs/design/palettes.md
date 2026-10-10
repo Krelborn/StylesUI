@@ -32,14 +32,13 @@ Four palettes ship: **Bright**, **Mist**, **Paper** and **Dusk**. Playful's exis
 
 - Mist, Paper and Dusk give default a softer light mode without changing its shapes.
 - Any palette combines with any theme, and palettes nest like themes and modes.
-- Existing apps see no change: default renders in Bright and playful in Pop unless a palette is chosen.
+- Existing apps see no change beyond a lighter popover in default's dark mode: default renders in Bright and playful in Pop unless a palette is chosen.
 - Every palette meets every pairing the Contrast stories assert, in both modes.
 - `styles.css` stays the only delivery: palettes ship in it, and component CSS still loads per component.
 
 ## Non-goals
 
 - An accent axis, a density axis and a high-contrast palette. They are possible next steps (see [Future axes](#future-axes)), not part of this change.
-- Fixing default's dark-mode popover, which is darker than the cards it floats over. Bright keeps today's values exactly, so that fix lands on its own where it can be reviewed visually.
 - Typed support for consumer-defined palettes. A consumer can declare every colour token under its own `data-sui-palette` value, but `Theme`'s `palette` prop accepts only the shipped names.
 
 ## The palettes
@@ -68,7 +67,7 @@ So the layers split into five tokens. Each palette decides how bright each one i
 
 `AvatarGroup`'s ring stays on `background`, because its job is to match the page. `Tooltip` keeps its own inverse pair.
 
-Bright and Pop map the new tokens onto today's values: `field` and `overlay` take today's `background`, and `sunken` takes today's `surface`. Default and playful render exactly as they do now, including playful's white code chips on its cream page.
+Bright and Pop map the new tokens onto today's values: `field` and `overlay` take today's `background`, and `sunken` takes today's `surface`. Default and playful render exactly as they do now, apart from Bright's dark-mode overlay (see below), including playful's white code chips on its cream page.
 
 ## Colours that depend on the theme too
 
@@ -136,7 +135,7 @@ Hex values that equal a ramp step are written as the step (`#1d4ed8` is `var(--s
 
 ### Bright
 
-Today's default values, through the new layer tokens: `field` and `overlay` are `white` / `gray-900`, and `sunken` is `gray-100` / `gray-800`. Everything else is as declared in `themes/default.css` today.
+Today's default values, through the new layer tokens: `field` is `white` / `gray-900`, `overlay` is `white` / an even mix of `gray-800` and `gray-700`, and `sunken` is `gray-100` / `gray-800`. The dark overlay is the one change to default: it was the page colour, darker than the cards a popover floats over, and is now lighter than them, keeping 4.5:1 for muted and primary text. Everything else is as declared in `themes/default.css` today.
 
 ### Mist
 
@@ -240,7 +239,7 @@ Default's `blue-600` is 5.17:1 on white, but about 4.1:1 on every tinted page, w
 
 ## Compatibility
 
-Rendering is unchanged for apps that set no palette. Overrides change in three places:
+Apps that set no palette render as before, except that a popover in default's dark mode is lighter than the cards around it. Overrides change in three places:
 
 - An app that overrides `--sui-color-background` to recolour inputs or popovers now overrides `--sui-color-field` or `--sui-color-overlay`.
 - An app that overrides `--sui-color-surface` to recolour `Code`, `Kbd` or Prose code now overrides `--sui-color-sunken`.
@@ -274,4 +273,4 @@ The README's note on base tokens extends to `data-sui-palette`: tokens that othe
 
 - **Pop's name.** Pop, after the "chunky pop" description of playful. Grape and Candy were the alternatives.
 - **Sunken.** Solid per palette, so Bright stays identical. The translucent tint stays an option for later.
-- **Default's dark popover.** Lifted to a raised `overlay` in a follow-up, not in this change.
+- **Default's dark popover.** Lifted to a raised `overlay` in this change, after the palette axis landed with no visual change.

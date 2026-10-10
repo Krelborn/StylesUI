@@ -21,7 +21,7 @@ Success looks like this: an app opts into Mist, Paper or Dusk with one prop or a
 - New layer tokens: `--sui-color-field`, `--sui-color-overlay` and `--sui-color-sunken`. Sunken is a solid colour per palette.
 - Theme-dependent colours are derived in `tokens.css` from palette inputs (`--sui-color-ink`, `--sui-color-shadow-soft`, `--sui-color-shadow-hard`) and theme inputs (`--sui-control-outline`, `--sui-shadow-hardness`, `--sui-shadow-sm-offset`).
 - `palette.css` becomes `ramps.css`, and the token tier "Palette" becomes "Ramps".
-- Default's dark-mode popover elevation is fixed in a follow-up, not here.
+- Bright's dark-mode overlay is lifted above the surface, so a popover over a card stands above it: the one intended visual change to default, made after the three phases.
 - One spec and one pull request, built in three phases in order, with a commit per task.
 
 ## Tech Stack

@@ -50,7 +50,7 @@ Five neutral tokens paint the layers of a page, and the palette decides how brig
 - `--sui-color-overlay`: a layer that floats above the page, such as a `Popover`.
 - `--sui-color-sunken`: a recessed chip or block: `Code`, `Kbd`, and Prose's `code`, `kbd`, `pre` and table header cells.
 
-Bright and Pop give `field` and `overlay` the page colour and `sunken` the surface colour. Text, muted text and the focus ring keep their contrast on every layer, and primary text on the page, a surface and an overlay.
+Bright and Pop give `field` the page colour and `sunken` the surface colour. `overlay` is the page colour too, except in Bright's dark mode, where it is lighter than a card, so a popover floating over a card stands above it. Text, muted text and the focus ring keep their contrast on every layer, and primary text on the page, a surface and an overlay.
 
 ### Token tiers
 

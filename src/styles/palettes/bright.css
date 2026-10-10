@@ -14,7 +14,7 @@
   --sui-color-background: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-surface: light-dark(var(--sui-gray-100), var(--sui-gray-800));
   --sui-color-field: light-dark(var(--sui-white), var(--sui-gray-900));
-  --sui-color-overlay: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-overlay: light-dark(var(--sui-white), color-mix(in srgb, var(--sui-gray-800), var(--sui-gray-700)));
   --sui-color-sunken: light-dark(var(--sui-gray-100), var(--sui-gray-800));
   --sui-color-border: light-dark(var(--sui-gray-300), var(--sui-gray-700));
   --sui-color-ink: light-dark(var(--sui-gray-900), var(--sui-gray-900));
