@@ -30,7 +30,7 @@ pnpm add @krelborn/stylesui
 ## Setup
 
 Import the global stylesheet once at your app root. It provides the reset, colour ramps, design
-tokens and themes:
+tokens, themes and palettes:
 
 ```tsx
 import "@krelborn/stylesui/styles.css";
@@ -85,16 +85,16 @@ The sidebar groups the components by what they are for:
 - **Utilities**: `VisuallyHidden`
 - **Theming**: `Theme`
 
-Themes give each status (danger, success, warning and info) a fill, a text and a subtle colour, and
-give form controls a border that keeps 3:1 against the page. `Alert`, `Badge` and the form
+Palettes give each status (danger, success, warning and info) a fill, a text and a subtle colour,
+and give form controls a border that keeps 3:1 against the page. `Alert`, `Badge` and the form
 components are built on them.
 
 ## Using these docs
 
 - Each component's **Docs** page describes its props and shows every story. The controls in the
   prop table edit the first example live.
-- The **theme** and **mode** toolbar buttons switch every example on the page.
-- [Theming](?path=/docs/guides-theming--docs) covers themes, modes and design tokens.
+- The **theme**, **palette** and **mode** toolbar buttons switch every example on the page.
+- [Theming](?path=/docs/guides-theming--docs) covers themes, palettes, modes and design tokens.
 - [Composition](?path=/docs/guides-composition--docs) covers `Box`, the `as` prop, `Link` with a
   router, `Prose` and building your own components.
 - [Forms](?path=/docs/guides-forms--docs) covers `Field`, groups, required answers and errors.

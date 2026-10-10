@@ -47,7 +47,7 @@ Components accept every prop of the element they render, including `ref`. Layout
 
 ### CSS and themes
 
-Import the global stylesheet once at your app root. It provides the reset, colour ramps, design tokens and themes:
+Import the global stylesheet once at your app root. It provides the reset, colour ramps, design tokens, themes and palettes:
 
 ```tsx
 import "@krelborn/stylesui/styles.css";
@@ -55,7 +55,7 @@ import "@krelborn/stylesui/styles.css";
 
 Each component's compiled JS imports its own CSS file, so only styles for components you use end up in your bundle. Your bundler must handle CSS imports from `node_modules` (Vite, Next.js and webpack do by default).
 
-The `default` theme applies to the whole page, and colour mode follows the OS. Use `Theme` to switch the theme or mode for any subtree; themes and modes nest:
+The `default` theme and its `bright` palette apply to the whole page, and colour mode follows the OS. Use `Theme` to switch the theme, palette or mode for any subtree; they nest:
 
 ```tsx
 import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
@@ -68,7 +68,9 @@ import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 </Theme>;
 ```
 
-`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, ramp steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s.
+A theme sets shape (radius, borders, shadows, spacing, motion and fonts) and a palette sets colour. Each theme brings a companion palette, `bright` for `default` and `pop` for `playful`, and `palette` swaps it: `<Theme palette="pop" theme="default">`. Set `palette` beside `theme`, because a palette on an outer element doesn't reach through an inner `Theme` that sets a theme.
+
+`Theme` sets `data-sui-theme`, `data-sui-palette` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Form controls, popovers and code chips read their own layer tokens (`--sui-color-field`, `--sui-color-overlay` and `--sui-color-sunken`), so `--sui-color-background` recolours only the page and `--sui-color-surface` only panels such as `Card`. Base tokens others are built from — `--sui-space-unit`, ramp steps like `--sui-blue-600`, `--sui-color-ink` and the shadow colours `--sui-color-shadow-soft` and `--sui-color-shadow-hard` — only take effect when overridden on `:root` or an element with `data-sui-theme` or `data-sui-palette`, since that's where the derived tokens (`--sui-space-*`, `--sui-color-control-border`, `--sui-color-shadow`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s.
 
 The `playful` theme uses Fredoka for headings and Nunito for body text. They're self-hosted and kept out of `styles.css`, so import them alongside it if you use playful; without them it falls back to the system's rounded font:
 
@@ -81,7 +83,7 @@ Fredoka and Nunito are licensed under the SIL Open Font License 1.1 and come fro
 
 Playful's buttons lift on hover and press down when clicked. When the OS asks for reduced motion, only their colours transition.
 
-Themes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
+Themes and palettes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
 
 `Tooltip` and `Popover` use the Popover API and CSS anchor positioning, which need Chrome/Edge 129, Firefox 147 or Safari 26. With Vite, the CSS target below leaves their anchor positioning styles unchanged.
 

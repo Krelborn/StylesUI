@@ -37,12 +37,12 @@ Each status (`danger`, `success`, `warning`, `info`) has three grades:
 #### Borders
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
-- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge`, the selected `Tabs` pill and a checked `Checkbox`, `Radio`, `Segment` or `Switch`. Transparent in `default`.
+- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge`, the selected `Tabs` pill and a checked `Checkbox`, `Radio`, `Segment` or `Switch`. Transparent in `default` and the palette's ink in `playful` (see [Colours that depend on the theme](#colours-that-depend-on-the-theme)).
 - `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background, a surface and an overlay (WCAG 1.4.11).
 
 #### Layers
 
-Five neutral tokens paint the layers of a page, and the theme decides how bright each one is:
+Five neutral tokens paint the layers of a page, and the palette decides how bright each one is:
 
 - `--sui-color-background`: the page.
 - `--sui-color-surface`: a panel on the page, such as a `Card`.
@@ -50,24 +50,43 @@ Five neutral tokens paint the layers of a page, and the theme decides how bright
 - `--sui-color-overlay`: a layer that floats above the page, such as a `Popover`.
 - `--sui-color-sunken`: a recessed chip or block: `Code`, `Kbd`, and Prose's `code`, `kbd`, `pre` and table header cells.
 
-Both themes give `field` and `overlay` the page colour and `sunken` the surface colour. Text, muted text and the focus ring keep their contrast on every layer, and primary text on the page, a surface and an overlay.
+Bright and Pop give `field` and `overlay` the page colour and `sunken` the surface colour. Text, muted text and the focus ring keep their contrast on every layer, and primary text on the page, a surface and an overlay.
 
 ### Token tiers
 
-Tokens are layered so themes only ever change one tier:
+Tokens are layered so themes and palettes only ever change one tier:
 
-1. **Ramps**: the colour ramps above (`--sui-blue-600`). Theme-agnostic.
-2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-control-depth`, `--sui-font-body`). Themes set these, and components read only these.
+1. **Ramps**: the colour ramps above (`--sui-blue-600`). Shared by every palette.
+2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-control-depth`, `--sui-font-body`). Palettes set the colours, themes set the rest, and `tokens.css` derives the three that need both. Components read only these.
 3. **Component**: local to a component's CSS module (`--sui-button-bg`). They default to semantic tokens, and variants reassign them.
 
 ### Themes
 
-A theme sets every semantic token: primary, secondary and status colours, surfaces, text, borders, focus ring, radius, border width, shadows, control depth, motion, spacing unit and fonts. StylesUI ships two:
+A theme sets every semantic token that is not a colour: radius, border width, focus ring width, shadow offset, control depth, motion, spacing unit and fonts, and how much outline and shadow hardness its controls use. StylesUI ships two:
 
-- `default`: blue and gray, small radius, thin borders, soft shadows, system font, no depth, and no motion beyond colour fades, a short slide of a Switch thumb and a short scale of a Checkbox or Radio mark.
-- `playful`: a "chunky pop" look. Cream background in light mode and deep plum in dark, grape and sunshine-yellow fills, 2px ink outlines, hard offset shadows, pill buttons on a 3D lip that spring up on hover and squash when pressed, and Fredoka headings over Nunito body text.
+- `default`: small radius, thin borders, soft shadows, system font, no depth, and no motion beyond colour fades, a short slide of a Switch thumb and a short scale of a Checkbox or Radio mark. Its companion palette is Bright.
+- `playful`: a "chunky pop" look. 2px outlines in the palette's ink, hard offset shadows, pill buttons on a 3D lip that spring up on hover and squash when pressed, and Fredoka headings over Nunito body text. Its companion palette is Pop.
 
 `default` applies at `:root`; any subtree can switch with `data-sui-theme="playful"`, usually through the `Theme` component.
+
+### Palettes
+
+A palette sets every colour token: the layers, text, borders, primary, secondary and status colours, focus ring and tooltip, and the ink, soft shadow and hard shadow that a theme's outlines and shadows are drawn in. StylesUI ships two:
+
+- `bright`: blue and grey on a white page, with grey cards.
+- `pop`: a cream page in light mode and deep plum in dark, grape and sunshine-yellow fills, and ink outlines and shadows.
+
+Each theme has a companion palette, Bright for `default` and Pop for `playful`. An element that sets `data-sui-theme` takes its companion's colours at zero specificity, so `data-sui-palette` on the same element or on any element inside overrides them. A palette set on an ancestor does not reach through an element that sets a theme, because that element's companion is nearer, so set the palette beside the theme to keep it. Bright also applies at `:root`. [Palettes](palettes.md) records the design and its alternatives.
+
+#### Colours that depend on the theme
+
+Control outlines and shadows belong to a theme's shape language but take a palette's colours, so `tokens.css` combines the two:
+
+- `--sui-color-control-border` is the palette's `--sui-color-ink` at the theme's `--sui-control-outline`: `0%` in `default`, so transparent, and `100%` in `playful`.
+- `--sui-color-shadow` mixes the palette's `--sui-color-shadow-hard` into its `--sui-color-shadow-soft` by the theme's `--sui-shadow-hardness`: soft in `default`, hard in `playful`. It is also the colour of the lip under a raised control.
+- `--sui-shadow-sm` is the theme's `--sui-shadow-sm-offset` in that colour.
+
+A custom property substitutes its `var()`s on the element that declares it, so these three are declared on every element that sets a theme or a palette, and an island of either recomputes them.
 
 ### Motion
 
@@ -77,11 +96,11 @@ A `Checkbox`, `Radio` or `Switch` moves its mark with the same spring when it is
 
 ### Modes
 
-Every semantic colour is defined once with `light-dark()`, so light and dark variants come from `color-scheme`. Mode follows the OS by default, and `data-sui-mode="light" | "dark" | "system"` overrides it for a subtree. Because `light-dark()` resolves where a colour is used, themes and modes nest independently of each other. This needs Chrome 123, Safari 17.5 or Firefox 120.
+Every semantic colour is defined once with `light-dark()`, so light and dark variants come from `color-scheme`. Mode follows the OS by default, and `data-sui-mode="light" | "dark" | "system"` overrides it for a subtree. Because `light-dark()` resolves where a colour is used, themes, palettes and modes nest independently of each other. This needs Chrome 123, Safari 17.5 or Firefox 120.
 
 ### Global styles
 
-`@krelborn/stylesui/styles.css` contains the reset, ramps, tokens, themes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
+`@krelborn/stylesui/styles.css` contains the reset, ramps, tokens, themes, palettes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
 
 ## Components
 
@@ -182,7 +201,7 @@ Tooltip is the first overlay. `useTooltip` opens it after a delay when a mouse o
 
 A tooltip describes its trigger (`aria-describedby`), or names it with `relationship: "label"` (`aria-labelledby`) when the trigger has no text of its own, such as an icon-only button. It holds text only, nothing interactive. A native `disabled` button cannot take focus, so keyboard users never reach its tooltip: use `aria-disabled` on a trigger whose tooltip they need. On a `Checkbox`, `Radio` or `Switch` trigger, only the box itself responds to hover, not its label text.
 
-The tooltip's colours are `--sui-color-tooltip` and `--sui-color-on-tooltip`, which each theme sets to the inverse of body text on the page background. `--sui-tooltip-max-width` (default `20rem`) sets how wide a tooltip grows before its text wraps.
+The tooltip's colours are `--sui-color-tooltip` and `--sui-color-on-tooltip`, which each palette sets to the inverse of body text on the page background. `--sui-tooltip-max-width` (default `20rem`) sets how wide a tooltip grows before its text wraps.
 
 Popover is the second overlay. Its trigger, a Button or IconButton, gets `popoverTarget`, which makes it the popover's native invoker, so the browser opens and closes the popover on click, closes it on Escape and on a click outside, returns focus to the trigger when closing from the keyboard, and closes any other open popover. The trigger also carries `aria-expanded` and `aria-controls`. `usePopover` follows the native `toggle` event. Controlled, it cancels an opening in `beforetoggle` and reports it through `onOpenChange`, and reports a close after the browser makes it, showing the popover again if the parent keeps `open` true. Only one popover is open at a time, so two controlled popovers both held open would keep closing each other. Popover has no role; give it `role="dialog"` and a name when it holds a form. It takes the overlay colour with a border, the large radius and the small shadow, at most `--sui-popover-max-width` (default `20rem`) wide, and fades in while moving out from the trigger, or only fades under reduced motion.
 

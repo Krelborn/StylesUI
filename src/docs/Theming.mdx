@@ -7,18 +7,18 @@ import * as ThemeStories from "../components/Theme/Theme.stories";
 # Theming
 
 Every component reads its colours, radius, spacing and fonts from `--sui-*` CSS custom properties,
-so themes and modes are pure CSS. `@krelborn/stylesui/styles.css` must be imported once for them to
+so themes, palettes and modes are pure CSS. `@krelborn/stylesui/styles.css` must be imported once for them to
 apply.
 
 ## Themes
 
+A theme sets the shape of everything: radius, borders, shadows, spacing, depth, motion and fonts.
 StylesUI ships two themes:
 
-- `default`: blue and gray, small radius, system font. Applies to the whole page.
-- `playful`: a "chunky pop" look made to be fun to use. Cream or deep plum backgrounds, grape and
-  sunshine-yellow fills, 2px ink outlines, hard offset shadows, roomier spacing and pill buttons
-  that spring up on hover and squash down when pressed. Every colour pairing still meets WCAG 2.2
-  AA in both modes.
+- `default`: small radius, thin borders, soft shadows and the system font. Applies to the whole
+  page.
+- `playful`: a "chunky pop" look made to be fun to use. 2px ink outlines, hard offset shadows,
+  roomier spacing and pill buttons that spring up on hover and squash down when pressed.
 
 ### Playful fonts
 
@@ -32,6 +32,29 @@ import "@krelborn/stylesui/fonts/playful.css";
 
 The fonts are self-hosted, so the page makes no third-party requests, and they stay out of
 `styles.css`, so apps using only `default` never bundle them.
+
+## Palettes
+
+A palette sets every colour. StylesUI ships two:
+
+- `bright`: blue and grey on a white page, with grey cards.
+- `pop`: a cream page in light mode and deep plum in dark, with grape and sunshine-yellow fills.
+
+Every colour pairing meets WCAG 2.2 AA in every palette, in both modes and both themes.
+
+Each theme brings its companion palette, Bright for `default` and Pop for `playful`, and `palette`
+swaps it. Playful's outlines and hard shadows take the palette's ink, so it keeps its look in any
+palette:
+
+<Canvas of={ThemeStories.CompanionPalettes} />
+
+```tsx
+<Theme palette="pop" theme="default">...</Theme>
+<Theme palette="bright" theme="playful">...</Theme>
+```
+
+Set `palette` beside `theme`. A palette set on an outer element does not reach through an inner
+`Theme` that sets a theme, because that theme's companion is nearer.
 
 ## Motion
 
@@ -50,8 +73,8 @@ goes back to following the OS.
 
 ## Switching a subtree
 
-`Theme` sets the theme and mode for everything inside it. Themes and modes nest independently: an
-inner `Theme` can change only the mode and inherit the theme from above.
+`Theme` sets the theme, palette and mode for everything inside it. They nest independently: an inner
+`Theme` can change only the mode and inherit the theme and palette from above.
 
 <Canvas of={ThemeStories.NestedIslands} />
 
@@ -61,21 +84,21 @@ inner `Theme` can change only the mode and inherit the theme from above.
 </Theme>
 ```
 
-`Theme` sets `data-sui-theme` and `data-sui-mode` attributes, so you can also put them on any
-element yourself, for example `<html data-sui-theme="playful" data-sui-mode="dark">`.
+`Theme` sets `data-sui-theme`, `data-sui-palette` and `data-sui-mode` attributes, so you can also put
+them on any element yourself, for example `<html data-sui-theme="playful" data-sui-mode="dark">`.
 
 ## Design tokens
 
-Tokens come in three tiers, and themes only change the middle one:
+Tokens come in three tiers, and themes and palettes only change the middle one:
 
-1. **Ramps**: colour ramps such as `--sui-blue-600`, shared by every theme.
+1. **Ramps**: colour ramps such as `--sui-blue-600`, shared by every palette.
 2. **Semantic**: what a value is for, such as `--sui-color-primary`, `--sui-color-surface`,
-   `--sui-radius-md`, `--sui-space-3` and `--sui-font-body`. Themes set these, and components read
-   only these.
+   `--sui-radius-md`, `--sui-space-3` and `--sui-font-body`. Palettes set the colours and themes set
+   the rest, and components read only these.
 3. **Component**: local to a component, such as `--sui-button-bg`. They default to semantic tokens.
 
-[Foundations/Tokens](?path=/docs/foundations-tokens--docs) shows every token in the current theme
-and mode.
+[Foundations/Tokens](?path=/docs/foundations-tokens--docs) shows every token in the current theme,
+palette and mode.
 
 ### Status colours
 
@@ -98,7 +121,7 @@ Three tokens draw borders, each for its own purpose:
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
 - `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge` and a checked checkbox,
-  radio or switch. Transparent in `default`.
+  radio or switch. Transparent in `default`, and the palette's ink in `playful`.
 - `--sui-color-input-border`: the boundary of form controls, at least 3:1 against the page, a
   surface and an overlay.
 
@@ -114,10 +137,10 @@ Five tokens paint the layers of a page:
   header in `Prose`.
 
 Override one to restyle everything on that layer: `--sui-color-field` recolours every form control,
-for example, and leaves the page alone.
+for example, and leaves the page alone, and `--sui-color-background` recolours only the page.
 
-[Foundations/Contrast](?path=/docs/foundations-contrast--docs) checks every pairing a theme
-guarantees, in each mode.
+[Foundations/Contrast](?path=/docs/foundations-contrast--docs) checks every pairing each palette
+guarantees, in each theme and mode.
 
 ## Customising
 
@@ -138,7 +161,8 @@ the element it is set on. `Alert` sets it so the links inside take the alert's t
 }
 ```
 
-Base tokens that others are built from, such as `--sui-space-unit`, ramp steps,
-`--sui-color-shadow` and `--sui-radius-md` (which `--sui-radius-control` points at in `default`),
-only take effect when overridden on `:root` or on an element with `data-sui-theme`, because that is
-where the derived tokens resolve.
+Base tokens that others are built from, such as `--sui-space-unit`, ramp steps, `--sui-color-ink`,
+`--sui-color-shadow-soft`, `--sui-color-shadow-hard` and `--sui-radius-md` (which
+`--sui-radius-control` points at in `default`), only take effect when overridden on `:root` or on an
+element with `data-sui-theme` or `data-sui-palette`, because that is where the derived tokens
+resolve.
