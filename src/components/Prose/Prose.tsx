@@ -11,7 +11,19 @@ import styles from "./Prose.module.css";
  */
 export type ProseSize = "sm" | "md" | "lg";
 
+/**
+ * What a code block in prose does with a line wider than the column
+ */
+export type ProseCodeOverflow = "wrap" | "scroll";
+
 interface ProseOwnProps {
+  /**
+   * What a code block does with a line wider than the column: `wrap` breaks it onto the next line,
+   * and `scroll` keeps it whole and scrolls the block sideways, for code whose indentation or
+   * diagrams wrapping would break. Defaults to `wrap`.
+   */
+  codeOverflow?: ProseCodeOverflow;
+
   /**
    * Body text size. Defaults to `md`.
    */
@@ -31,9 +43,12 @@ export type ProseProps<E extends BoxElement = "div"> = ProseOwnProps & Omit<BoxP
  *
  * A StylesUI component inside prose keeps its own styles. Two things are still styled as prose: a
  * raw element inside that component, and, for the properties it does not set itself, a component
- * rendered through `as` as an element prose styles, such as `<Text as="code">`. Code blocks wrap
- * rather than scroll. A table wider than the column scrolls sideways inside its own box; give it
- * `tabIndex={0}` so a keyboard can scroll it.
+ * rendered through `as` as an element prose styles, such as `<Text as="code">`.
+ *
+ * A table wider than the column scrolls sideways inside its own box, as does a code block when
+ * `codeOverflow` is `scroll`; give each one that scrolls `tabIndex={0}` so a keyboard can scroll it.
+ * Set `--sui-prose-line-height` on the prose or an ancestor to space out long lines of text. Code
+ * keeps `--sui-line-height-normal`.
  *
  * @example
  * <Prose as="article" size="lg">
@@ -46,11 +61,20 @@ export type ProseProps<E extends BoxElement = "div"> = ProseOwnProps & Omit<BoxP
 export function Prose<E extends BoxElement = "div">({
   as,
   className,
+  codeOverflow = "wrap",
   size = "md",
   ...rest
 }: ProseProps<E>): JSX.Element {
   // Widened as in Box: ProseProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
-  return <Box {...boxProps} as={as as "div"} className={clsx(styles.prose, className)} data-size={size} />;
+  return (
+    <Box
+      {...boxProps}
+      as={as as "div"}
+      className={clsx(styles.prose, className)}
+      data-code-overflow={codeOverflow}
+      data-size={size}
+    />
+  );
 }

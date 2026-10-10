@@ -5,7 +5,8 @@
   color: var(--sui-color-text, #111827);
   font-family: var(--sui-font-body, system-ui, sans-serif);
   font-size: var(--sui-prose-font-size);
-  line-height: var(--sui-line-height-normal, 1.5);
+  /* Not declared here, so a rule on the prose or any ancestor sets it whatever its specificity */
+  line-height: var(--sui-prose-line-height, var(--sui-line-height-normal, 1.5));
   overflow-wrap: anywhere;
 }
 
@@ -18,9 +19,10 @@
 }
 
 /*
- * Every rule below is :where(.prose) followed by type selectors only. That puts it above the
- * reset's universal rules and below every component class, so a component inside prose keeps its
- * own styles. A class, attribute or pseudo-class goes inside :where() to keep it there.
+ * Every rule below is :where(.prose), or a variant of it inside the same :where(), followed by type
+ * selectors only. That puts it above the reset's universal rules and below every component class,
+ * so a component inside prose keeps its own styles. A class, attribute or pseudo-class goes inside
+ * :where() to keep it there.
  */
 
 :where(.prose) p,
@@ -167,9 +169,15 @@
   background-color: var(--sui-color-surface, #f3f4f6);
   font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.875em;
+  line-height: var(--sui-line-height-normal, 1.5);
   overflow-wrap: anywhere;
-  /* Wraps rather than scrolls, because a scrolling block would need a tabindex to be reachable by keyboard */
+  /* Wraps by default, because a block that scrolls needs a tabindex from the content for every browser's keyboard to reach it */
   white-space: pre-wrap;
+}
+
+:where(.prose[data-code-overflow="scroll"]) pre {
+  overflow-x: auto;
+  white-space: pre;
 }
 
 :where(.prose) pre code {
@@ -198,6 +206,7 @@
   overflow-wrap: break-word;
 }
 
+:where(.prose) pre:where(:focus-visible),
 :where(.prose) table:where(:focus-visible) {
   outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
   outline-offset: 2px;

@@ -6,18 +6,25 @@ import { Prose } from "./Prose";
 import proseCss from "./Prose.module.css?raw";
 
 describe("Prose", () => {
-  it("must render a div with the medium size when as and size are omitted", () => {
+  it("must render a div with the medium size and wrapping code when as, size and codeOverflow are omitted", () => {
     render(<Prose>Content</Prose>);
 
     const prose = screen.getByText("Content");
     expect(prose.tagName).toBe("DIV");
     expect(prose).toHaveAttribute("data-size", "md");
+    expect(prose).toHaveAttribute("data-code-overflow", "wrap");
   });
 
   it.each(["sm", "md", "lg"] as const)("must apply the %s size when it is set", (size) => {
     render(<Prose size={size}>Content</Prose>);
 
     expect(screen.getByText("Content")).toHaveAttribute("data-size", size);
+  });
+
+  it.each(["wrap", "scroll"] as const)("must apply the %s code overflow when it is set", (codeOverflow) => {
+    render(<Prose codeOverflow={codeOverflow}>Content</Prose>);
+
+    expect(screen.getByText("Content")).toHaveAttribute("data-code-overflow", codeOverflow);
   });
 
   it("must render the element given in as when as is set", () => {
@@ -56,11 +63,16 @@ describe("Prose", () => {
     render(<Prose size="xl">Content</Prose>);
   });
 
-  it("must start every selector with :where(.prose) when the rule styles a descendant", () => {
+  it("must reject a code overflow when it is not supported", () => {
+    // @ts-expect-error "hidden" is not a ProseCodeOverflow
+    render(<Prose codeOverflow="hidden">Content</Prose>);
+  });
+
+  it("must start every selector with :where(.prose) or a variant of it when the rule styles a descendant", () => {
     const selectors = descendantSelectors(proseCss);
 
     expect(selectors).not.toEqual([]);
-    expect(selectors.filter((selector) => !selector.startsWith(":where(.prose) "))).toEqual([]);
+    expect(selectors.filter((selector) => !/^:where\(\.prose(?:\[[\w-]+="\w+"\])?\) /.test(selector))).toEqual([]);
   });
 
   it("must keep classes, attributes and pseudo-classes inside :where() when the rule styles a descendant", () => {

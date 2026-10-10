@@ -64,7 +64,7 @@ export type { PageLayoutProps } from "./components/PageLayout";
 export { Popover, usePopover } from "./components/Popover";
 export type { PopoverProps, UsePopoverOptions, UsePopoverResult } from "./components/Popover";
 export { Prose } from "./components/Prose";
-export type { ProseProps, ProseSize } from "./components/Prose";
+export type { ProseCodeOverflow, ProseProps, ProseSize } from "./components/Prose";
 export { Radio } from "./components/Radio";
 export type { RadioProps } from "./components/Radio";
 export { RadioGroup } from "./components/RadioGroup";

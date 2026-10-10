@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import type { JSX } from "react";
+import type { CSSProperties, JSX } from "react";
 import { expect, userEvent, waitFor } from "storybook/test";
 
 import { asArgType } from "../../docs/argTypes";
@@ -40,6 +40,11 @@ const longUrl =
 
 const wideCodeLine =
   'const response = await fetch("https://api.example.com/v2/organisations/acme/projects/website/deployments?status=failed");';
+
+const longReadText =
+  "A column wide enough for ninety characters a line reads more easily with a little more space between its lines, so the eye finds the start of the next one.";
+
+const textDiagram = ["┌────────┐     ┌────────┐", "│ Editor │ ──▶ │ Server │", "└────────┘     └────────┘"].join("\n");
 
 const quarterColumns = [
   "Region",
@@ -85,6 +90,10 @@ function blockStartMargin(element: HTMLElement): number {
 
 function fontSize(element: HTMLElement): number {
   return parseFloat(getComputedStyle(element).fontSize);
+}
+
+function lineHeightRatio(element: HTMLElement): number {
+  return parseFloat(getComputedStyle(element).lineHeight) / fontSize(element);
 }
 
 const meta = {
@@ -214,6 +223,30 @@ export const Sizes: Story = {
 };
 
 /**
+ * `--sui-prose-line-height`, set on the prose or an ancestor, spaces out the lines of text for a
+ * column long enough to need it. Code keeps `--sui-line-height-normal`, so a diagram drawn in text
+ * keeps its shape.
+ */
+export const LineHeight: Story = {
+  render: (args) => (
+    <Prose {...args} style={{ "--sui-prose-line-height": 1.6 } as CSSProperties}>
+      <p>{longReadText}</p>
+      <pre data-testid="line-height-code">
+        <code>{textDiagram}</code>
+      </pre>
+    </Prose>
+  ),
+  play: async ({ canvas }) => {
+    const paragraph = canvas.getByText(longReadText);
+    const codeBlock = canvas.getByTestId("line-height-code");
+    const normalLineHeight = parseFloat(getComputedStyle(codeBlock).getPropertyValue("--sui-line-height-normal"));
+
+    await expect(lineHeightRatio(paragraph)).toBeCloseTo(1.6);
+    await expect(lineHeightRatio(codeBlock)).toBeCloseTo(normalLineHeight);
+  },
+};
+
+/**
  * A StylesUI component inside prose keeps its own styles. The same card is shown above the prose
  * and inside it, and its `Badge` link, `Heading`, `Text` paragraph and `Button` look the same and
  * sit the same distance apart in both. Prose spaces only the raw elements it styles, so the card
@@ -248,8 +281,8 @@ export const WithComponents: Story = {
 
 /**
  * A long URL and a wide line of code wrap inside a narrow column instead of pushing the prose wider
- * than its container, in a paragraph, a code block and a list item. A code block wraps rather than
- * scrolls, so it needs no keyboard focus.
+ * than its container, in a paragraph, a code block and a list item. By default a code block wraps
+ * rather than scrolls, so it needs no keyboard focus.
  */
 export const LongContent: Story = {
   render: (args) => (
@@ -355,5 +388,57 @@ export const Tables: Story = {
 
     await input.pressKey("ArrowRight");
     await waitFor(() => expect(wideTable.scrollLeft).toBeGreaterThan(0));
+  },
+};
+
+/**
+ * With `codeOverflow="scroll"`, a code block keeps each line whole, so indentation and diagrams
+ * drawn in text keep their shape, and one wider than the column scrolls sideways inside its own box.
+ * A code block that scrolls takes `tabIndex={0}`, so a keyboard can reach and scroll it, and shows a
+ * focus ring, as a table does.
+ */
+export const ScrollingCode: Story = {
+  args: {
+    codeOverflow: "scroll",
+  },
+  render: (args) => (
+    <Box style={{ inlineSize: "24rem" }}>
+      <Prose {...args} data-testid="scrolling-code-prose">
+        <pre data-testid="short-code">
+          <code>pnpm add @krelborn/stylesui</code>
+        </pre>
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a code block that scrolls needs focus for a keyboard to scroll it */}
+        <pre tabIndex={0} data-testid="wide-code">
+          <code>{wideCodeLine}</code>
+        </pre>
+      </Prose>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    // After the Tables story's trusted press, focus from userEvent.tab() only matches :focus-visible once a trusted key
+    // has been pressed
+    await trustedInput()?.pressKey("Shift");
+    const prose = canvas.getByTestId("scrolling-code-prose");
+    const shortCode = canvas.getByTestId("short-code");
+    const wideCode = canvas.getByTestId("wide-code");
+
+    await expect(shortCode.scrollWidth).toBe(shortCode.clientWidth);
+    await expect(wideCode.scrollWidth).toBeGreaterThan(wideCode.clientWidth);
+    await expect(canvas.getByText(wideCodeLine).getClientRects()).toHaveLength(1);
+    await expect(prose.scrollWidth).toBeLessThanOrEqual(prose.clientWidth);
+
+    await userEvent.tab();
+    await expect(wideCode).toHaveFocus();
+    await expect(wideCode.matches(":focus-visible")).toBe(true);
+    await expect(focusRingContrast(wideCode)).toBeGreaterThanOrEqual(3);
+
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(wideCode.scrollLeft).toBeGreaterThan(0));
   },
 };
