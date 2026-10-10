@@ -224,17 +224,19 @@ export const Sizes: Story = {
 
 /**
  * `--sui-prose-line-height`, set on the prose or an ancestor, spaces out the lines of text for a
- * column long enough to need it. Code keeps `--sui-line-height-normal`, so a diagram drawn in text
- * keeps its shape.
+ * column long enough to need it. Here an ancestor sets it. Code keeps `--sui-line-height-normal`, so
+ * a diagram drawn in text keeps its shape.
  */
 export const LineHeight: Story = {
   render: (args) => (
-    <Prose {...args} style={{ "--sui-prose-line-height": 1.6 } as CSSProperties}>
-      <p>{longReadText}</p>
-      <pre data-testid="line-height-code">
-        <code>{textDiagram}</code>
-      </pre>
-    </Prose>
+    <Box style={{ "--sui-prose-line-height": 1.6 } as CSSProperties}>
+      <Prose {...args}>
+        <p>{longReadText}</p>
+        <pre data-testid="line-height-code">
+          <code>{textDiagram}</code>
+        </pre>
+      </Prose>
+    </Box>
   ),
   play: async ({ canvas }) => {
     const paragraph = canvas.getByText(longReadText);

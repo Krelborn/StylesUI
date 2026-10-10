@@ -19,8 +19,8 @@ export type ProseCodeOverflow = "wrap" | "scroll";
 interface ProseOwnProps {
   /**
    * What a code block does with a line wider than the column: `wrap` breaks it onto the next line,
-   * and `scroll` keeps it whole and scrolls the block sideways, for code whose indentation or
-   * diagrams wrapping would break. Defaults to `wrap`.
+   * and `scroll` keeps it whole and scrolls the block sideways, so wrapping cannot break indentation
+   * or a diagram drawn in text. Defaults to `wrap`.
    */
   codeOverflow?: ProseCodeOverflow;
 
