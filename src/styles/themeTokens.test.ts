@@ -4,6 +4,7 @@ import type { PaletteName } from "../components/Theme";
 
 import brightPaletteCss from "./palettes/bright.css?raw";
 import mistPaletteCss from "./palettes/mist.css?raw";
+import paperPaletteCss from "./palettes/paper.css?raw";
 import popPaletteCss from "./palettes/pop.css?raw";
 import rampsCss from "./ramps.css?raw";
 import defaultThemeCss from "./themes/default.css?raw";
@@ -32,6 +33,7 @@ const palettes: readonly PaletteSource[] = [
   { companion: "default", css: brightPaletteCss, name: "bright" },
   { companion: "playful", css: popPaletteCss, name: "pop" },
   { css: mistPaletteCss, name: "mist" },
+  { css: paperPaletteCss, name: "paper" },
 ];
 
 // Text on a light fill stays dark in both schemes: Bright's yellow warning, and every one of
@@ -40,6 +42,7 @@ const palettes: readonly PaletteSource[] = [
 const sameInBothModes: Record<PaletteName, readonly string[]> = {
   bright: ["--sui-color-on-warning", "--sui-color-ink"],
   mist: ["--sui-color-on-warning", "--sui-color-ink"],
+  paper: ["--sui-color-on-warning", "--sui-color-ink"],
   pop: [
     "--sui-color-on-secondary",
     "--sui-color-on-success",

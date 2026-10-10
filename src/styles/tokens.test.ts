@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import brightPaletteCss from "./palettes/bright.css?raw";
 import mistPaletteCss from "./palettes/mist.css?raw";
+import paperPaletteCss from "./palettes/paper.css?raw";
 import popPaletteCss from "./palettes/pop.css?raw";
 import defaultThemeCss from "./themes/default.css?raw";
 import playfulThemeCss from "./themes/playful.css?raw";
@@ -37,6 +38,7 @@ describe("tokens", () => {
     { css: brightPaletteCss, name: "bright palette" },
     { css: popPaletteCss, name: "pop palette" },
     { css: mistPaletteCss, name: "mist palette" },
+    { css: paperPaletteCss, name: "paper palette" },
   ])("must leave the derived tokens to tokens.css when the source is the $name", ({ css }) => {
     const declared = [...declaredTokens(css).keys()];
 
