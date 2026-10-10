@@ -16,7 +16,7 @@ export type ThemeMode = "dark" | "light" | "system";
 /**
  * Names of the colour palettes shipped in `styles.css`
  */
-export type PaletteName = "bright" | "pop";
+export type PaletteName = "bright" | "mist" | "pop";
 
 interface ThemeOwnProps {
   /**
