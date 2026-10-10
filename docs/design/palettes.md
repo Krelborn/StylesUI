@@ -199,7 +199,7 @@ Today's default values, through the new layer tokens: `field` and `overlay` are 
 | `primary-subtle`   | `#d3dbec` | `#26364d` |
 | `secondary`        | `#d6dae0` | `#444c56` |
 | `secondary-subtle` | `#d6dae0` | `#363d46` |
-| `focus-ring`       | `#1d4ed8` | `#96d0ff` |
+| `focus-ring`       | `#2563eb` | `#96d0ff` |
 
 `secondary-hover`, the tooltip pair and the theme-dependent inputs are left to implementation, which follows these rules:
 
@@ -215,7 +215,7 @@ Default's status text shades (`green-800`, `yellow-800`, `red-700` and `indigo-7
 
 ### The primary steps down a shade
 
-Default's `blue-600` is 5.17:1 on white, but about 4.1:1 on every tinted page, which fails as text. Mist and Paper step down to `blue-700` and Dusk to `blue-800`, and the focus ring steps down with them. Any future accent hits the same problem, and it hits some harder: green, orange and teal need their `800` step on a tinted page, and indigo keeps `600` everywhere but Dusk. That is why each palette tunes its own primary, and why an accent axis would have to tune each accent per palette.
+Default's `blue-600` is 5.17:1 on white, but about 4.1:1 on every tinted page, which fails as text. Mist and Paper step down to `blue-700` and Dusk to `blue-800`. The focus ring steps down to `blue-600` in all three. It goes no further on Dusk, because `blue-700` falls to 2.76:1 against the ink-coloured lip under raised controls in playful. Any future accent hits the same problem, and it hits some harder: green, orange and teal need their `800` step on a tinted page, and indigo keeps `600` everywhere but Dusk. That is why each palette tunes its own primary, and why an accent axis would have to tune each accent per palette.
 
 ## Files
 

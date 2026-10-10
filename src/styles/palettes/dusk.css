@@ -1,0 +1,65 @@
+[data-sui-palette="dusk"] {
+  /* Underscore-prefixed properties are private to this palette, so other palettes need not declare them */
+  --_sui-dusk-page: #e2e5e9;
+  --_sui-dusk-surface: #eceef1;
+  --_sui-dusk-raised: #f4f5f7;
+  --_sui-dusk-sunken: #d6dae0;
+  --_sui-dusk-border: #c5cbd3;
+  --_sui-dusk-ink: #0f141a;
+  --_sui-dusk-night: #23282f;
+  --_sui-dusk-night-raised: #363d46;
+  --_sui-dusk-night-border: #444c56;
+  --_sui-dusk-night-text: #ccd4dc;
+
+  --sui-color-primary: light-dark(var(--sui-blue-800), #6cb6ff);
+  --sui-color-primary-hover: light-dark(var(--sui-blue-900), #96d0ff);
+  --sui-color-primary-subtle: light-dark(#d3dbec, #26364d);
+  --sui-color-on-primary: light-dark(var(--sui-white), var(--_sui-dusk-night));
+  --sui-color-secondary: light-dark(var(--_sui-dusk-sunken), var(--_sui-dusk-night-border));
+  --sui-color-secondary-hover: light-dark(var(--_sui-dusk-border), #4f5864);
+  --sui-color-secondary-subtle: light-dark(var(--_sui-dusk-sunken), var(--_sui-dusk-night-raised));
+  --sui-color-on-secondary: light-dark(var(--_sui-dusk-ink), var(--_sui-dusk-night-text));
+  --sui-color-background: light-dark(var(--_sui-dusk-page), var(--_sui-dusk-night));
+  --sui-color-surface: light-dark(var(--_sui-dusk-surface), #2c323a);
+  --sui-color-field: light-dark(var(--_sui-dusk-raised), #272c33);
+  --sui-color-overlay: light-dark(var(--_sui-dusk-raised), var(--_sui-dusk-night-raised));
+  --sui-color-sunken: light-dark(var(--_sui-dusk-sunken), #1c2026);
+  --sui-color-border: light-dark(var(--_sui-dusk-border), var(--_sui-dusk-night-border));
+  --sui-color-ink: light-dark(var(--_sui-dusk-ink), var(--_sui-dusk-ink));
+  --sui-color-input-border: light-dark(#5f6773, #8b96a3);
+  --sui-color-text: light-dark(var(--_sui-dusk-ink), var(--_sui-dusk-night-text));
+  --sui-color-text-muted: light-dark(#424a55, #a4aeb9);
+  --sui-color-tooltip: light-dark(var(--_sui-dusk-ink), var(--_sui-dusk-night-text));
+  --sui-color-on-tooltip: light-dark(var(--_sui-dusk-page), var(--_sui-dusk-night));
+  --sui-color-focus-ring: light-dark(var(--sui-blue-600), #96d0ff);
+  --sui-color-shadow-soft: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
+  --sui-color-shadow-hard: light-dark(var(--_sui-dusk-ink), var(--sui-gray-600));
+  --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));
+  --sui-color-on-success: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-success-text: light-dark(var(--sui-green-800), var(--sui-green-300));
+  --sui-color-success-subtle: light-dark(
+    color-mix(in srgb, var(--sui-green-100), var(--_sui-dusk-surface)),
+    color-mix(in srgb, var(--sui-green-900), var(--_sui-dusk-night))
+  );
+  --sui-color-warning: light-dark(var(--sui-yellow-500), var(--sui-yellow-300));
+  --sui-color-on-warning: light-dark(var(--sui-gray-900), var(--sui-gray-900));
+  --sui-color-warning-text: light-dark(var(--sui-yellow-800), var(--sui-yellow-300));
+  --sui-color-warning-subtle: light-dark(
+    color-mix(in srgb, var(--sui-yellow-100), var(--_sui-dusk-surface)),
+    color-mix(in srgb, var(--sui-yellow-900), var(--_sui-dusk-night))
+  );
+  --sui-color-danger: light-dark(var(--sui-red-600), var(--sui-red-400));
+  --sui-color-on-danger: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-danger-text: light-dark(var(--sui-red-700), var(--sui-red-300));
+  --sui-color-danger-subtle: light-dark(
+    color-mix(in srgb, var(--sui-red-100), var(--_sui-dusk-surface)),
+    color-mix(in srgb, var(--sui-red-900), var(--_sui-dusk-night))
+  );
+  --sui-color-info: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
+  --sui-color-on-info: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-info-text: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
+  --sui-color-info-subtle: light-dark(
+    color-mix(in srgb, var(--sui-indigo-100), var(--_sui-dusk-surface)),
+    color-mix(in srgb, var(--sui-indigo-900), var(--_sui-dusk-night))
+  );
+}
