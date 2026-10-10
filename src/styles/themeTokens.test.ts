@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import paletteCss from "./palette.css?raw";
+import rampsCss from "./ramps.css?raw";
 import defaultThemeCss from "./themes/default.css?raw";
 import playfulThemeCss from "./themes/playful.css?raw";
 import { declaredTokens, hues, steps } from "./tokenSource";
@@ -53,16 +53,16 @@ const sameInBothModes: Record<string, readonly string[]> = {
 };
 
 describe("theme tokens", () => {
-  it("must define every hue step when the palette is loaded", () => {
-    const palette = declaredTokens(paletteCss);
+  it("must define every hue step when the ramps are loaded", () => {
+    const ramps = declaredTokens(rampsCss);
 
     const missing = hues
       .flatMap((hue) => steps.map((step) => `--sui-${hue}-${step}`))
-      .filter((name) => !palette.has(name));
+      .filter((name) => !ramps.has(name));
 
     expect(missing).toEqual([]);
-    expect(palette.get("--sui-black")).toBe("#000");
-    expect(palette.get("--sui-white")).toBe("#fff");
+    expect(ramps.get("--sui-black")).toBe("#000");
+    expect(ramps.get("--sui-white")).toBe("#fff");
   });
 
   it("must declare the same tokens when playful is compared with default", () => {

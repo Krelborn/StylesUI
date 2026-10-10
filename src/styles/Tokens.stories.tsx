@@ -61,7 +61,7 @@ type Story = StoryObj<typeof meta>;
 /**
  * The theme-agnostic colour ramps, from `100` to `900`
  */
-export const Palette: Story = {
+export const Ramps: Story = {
   render: () => (
     <Box style={{ display: "grid", gap: "1rem" }}>
       {hues.map((hue) => (

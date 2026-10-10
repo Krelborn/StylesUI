@@ -8,7 +8,7 @@ A base set of styles provides a global CSS reset at the root and defines the bas
 
 ### Colours
 
-A colour palette is defined in the base styles. The default palette ships with 11 base colours with 9 variations.
+Colour ramps are defined in the base styles: 11 base colours, most with 9 variations.
 
 Base colours are:
 
@@ -56,7 +56,7 @@ Both themes give `field` and `overlay` the page colour and `sunken` the surface 
 
 Tokens are layered so themes only ever change one tier:
 
-1. **Palette**: the colour ramps above (`--sui-blue-600`). Theme-agnostic.
+1. **Ramps**: the colour ramps above (`--sui-blue-600`). Theme-agnostic.
 2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-control-depth`, `--sui-font-body`). Themes set these, and components read only these.
 3. **Component**: local to a component's CSS module (`--sui-button-bg`). They default to semantic tokens, and variants reassign them.
 
@@ -81,7 +81,7 @@ Every semantic colour is defined once with `light-dark()`, so light and dark var
 
 ### Global styles
 
-`@krelborn/stylesui/styles.css` contains the reset, palette, tokens, themes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
+`@krelborn/stylesui/styles.css` contains the reset, ramps, tokens, themes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
 
 ## Components
 

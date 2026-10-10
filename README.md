@@ -47,7 +47,7 @@ Components accept every prop of the element they render, including `ref`. Layout
 
 ### CSS and themes
 
-Import the global stylesheet once at your app root. It provides the reset, colour palette, design tokens and themes:
+Import the global stylesheet once at your app root. It provides the reset, colour ramps, design tokens and themes:
 
 ```tsx
 import "@krelborn/stylesui/styles.css";
@@ -68,7 +68,7 @@ import { Button, Card, Heading, Theme } from "@krelborn/stylesui";
 </Theme>;
 ```
 
-`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, palette steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s.
+`Theme` sets `data-sui-theme` and `data-sui-mode` attributes; `styles.css` paints the background, text colour and font of any element carrying them, so you can also put them on any element yourself, e.g. `<html data-sui-theme="playful" data-sui-mode="dark">`, and it behaves the same way. To customise, override `--sui-*` custom properties. Semantic tokens such as `--sui-color-primary` can be overridden on any element, since components read them directly. Base tokens they're built from — `--sui-space-unit`, ramp steps like `--sui-blue-600`, `--sui-color-shadow` — only take effect when overridden on `:root` or an element with `data-sui-theme`, since that's where the derived tokens (`--sui-space-*`, `--sui-shadow-sm`, the semantic colours) resolve their `var()`s.
 
 The `playful` theme uses Fredoka for headings and Nunito for body text. They're self-hosted and kept out of `styles.css`, so import them alongside it if you use playful; without them it falls back to the system's rounded font:
 
