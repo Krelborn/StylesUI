@@ -71,10 +71,15 @@ A theme sets every semantic token that is not a colour: radius, border width, fo
 
 ### Palettes
 
-A palette sets every colour token: the layers, text, borders, primary, secondary and status colours, focus ring and tooltip, and the ink, soft shadow and hard shadow that a theme's outlines and shadows are drawn in. StylesUI ships two:
+A palette sets every colour token: the layers, text, borders, primary, secondary and status colours, focus ring and tooltip, and the ink, soft shadow and hard shadow that a theme's outlines and shadows are drawn in. StylesUI ships five:
 
-- `bright`: blue and grey on a white page, with grey cards.
-- `pop`: a cream page in light mode and deep plum in dark, grape and sunshine-yellow fills, and ink outlines and shadows.
+- `bright`: blue and grey on a white page, with grey cards. `default`'s companion, for documents, forms and shops.
+- `pop`: a cream page in light mode and deep plum in dark, grape and sunshine-yellow fills, and ink outlines and shadows. `playful`'s companion.
+- `mist`: a cool grey page with white cards, inputs and popovers on it, for web apps, dashboards and admin tools.
+- `paper`: a warm off-white page with ivory panels and stone greys, for reading, docs and consumer apps.
+- `dusk`: the dimmest light mode, with nothing near white, and a lifted, lower-contrast dark mode, for desktop apps and long sessions.
+
+On a tinted page, default's `blue-600` falls below 4.5:1 as text, so Mist and Paper use `blue-700` and Dusk `blue-800` for primary, with a `blue-600` focus ring. Their status subtles tint the palette's surface in light mode and its page in dark.
 
 Each theme has a companion palette, Bright for `default` and Pop for `playful`. An element that sets `data-sui-theme` takes its companion's colours at zero specificity, so `data-sui-palette` on the same element or on any element inside overrides them. A palette set on an ancestor does not reach through an element that sets a theme, because that element's companion is nearer, so set the palette beside the theme to keep it. Bright also applies at `:root`. [Palettes](palettes.md) records the design and its alternatives.
 
