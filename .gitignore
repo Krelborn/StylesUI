@@ -25,9 +25,6 @@ dist-ssr
 storybook-static
 .fallow/
 
-# Agent planning docs (specs, plans)
-docs/superpowers/
-
 # design-sync
 .design-sync/sb-reference/
 .design-sync/learnings/
