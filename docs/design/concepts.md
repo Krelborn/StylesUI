@@ -38,7 +38,19 @@ Each status (`danger`, `success`, `warning`, `info`) has three grades:
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
 - `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge`, the selected `Tabs` pill and a checked `Checkbox`, `Radio`, `Segment` or `Switch`. Transparent in `default`.
-- `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background and a surface (WCAG 1.4.11).
+- `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background, a surface and an overlay (WCAG 1.4.11).
+
+#### Layers
+
+Five neutral tokens paint the layers of a page, and the theme decides how bright each one is:
+
+- `--sui-color-background`: the page.
+- `--sui-color-surface`: a panel on the page, such as a `Card`.
+- `--sui-color-field`: the fill of a form control: `TextInput`, `Textarea`, `Select`, `Checkbox`, `Radio` and `Switch`.
+- `--sui-color-overlay`: a layer that floats above the page, such as a `Popover`.
+- `--sui-color-sunken`: a recessed chip or block: `Code`, `Kbd`, and Prose's `code`, `kbd`, `pre` and table header cells.
+
+Both themes give `field` and `overlay` the page colour and `sunken` the surface colour. Text, muted text and the focus ring keep their contrast on every layer, and primary text on the page, a surface and an overlay.
 
 ### Token tiers
 
@@ -93,7 +105,7 @@ NavList is a named navigation landmark holding a list. NavListGroup puts a muted
 
 Prose styles the raw HTML inside it (headings, paragraphs, links, lists, quotes, code, images, figures and tables) for content that can't be written one component per element, such as rendered markdown. Headings follow Heading's level sizes and links look like Link. Text is spaced by `--sui-prose-line-height`, which defaults to `--sui-line-height-normal` (1.5, the spacing WCAG 1.4.8 asks for within a paragraph). The right spacing depends on the length of a line, which the app sets and Prose cannot see, so Prose reads the property without declaring it: an app with long lines sets it on the prose or an ancestor, at any specificity. Code keeps `--sui-line-height-normal`, so loosening the text leaves code and diagrams drawn in text as they were.
 
-Code blocks wrap by default, because a scrolling region needs a `tabindex`, which CSS cannot add, before Safari lets a keyboard reach it. With `codeOverflow="scroll"` a code block keeps each line whole and scrolls sideways instead, as GitHub's do, so wrapping cannot break indentation or a diagram drawn in text. A table always scrolls, because fitting its columns to the width would break their words: it is as wide as its content, and one wider than the column scrolls sideways inside its own box. The content must give a table or code block that scrolls `tabindex="0"`, and prose draws a focus ring around it. Header cells sit on the surface colour.
+Code blocks wrap by default, because a scrolling region needs a `tabindex`, which CSS cannot add, before Safari lets a keyboard reach it. With `codeOverflow="scroll"` a code block keeps each line whole and scrolls sideways instead, as GitHub's do, so wrapping cannot break indentation or a diagram drawn in text. A table always scrolls, because fitting its columns to the width would break their words: it is as wide as its content, and one wider than the column scrolls sideways inside its own box. The content must give a table or code block that scrolls `tabindex="0"`, and prose draws a focus ring around it. Header cells sit on the sunken colour.
 
 Every descendant rule is `:where(.prose)`, or a variant of it such as `:where(.prose[data-code-overflow="scroll"])`, followed by type selectors only. That puts it above the reset and below every component class, so a StylesUI component inside prose keeps its own styles. Heading and Text declare `margin: 0` for this reason: without it, prose's heading and paragraph margins would beat the reset's. Prose has no opt-out, and four limits follow:
 
@@ -104,7 +116,7 @@ Every descendant rule is `:where(.prose)`, or a variant of it such as `:where(.p
 
 ### Code and keys
 
-Code is inline code in the monospace font on the surface colour, the look Prose gives a raw `code`. It wraps a long value rather than push its column wider. Kbd is a key: the same font and surface with a border whose bottom edge is twice as thick, so a shortcut reads as keys rather than as code. Write a combination as one Kbd per key. Prose draws a raw `kbd` with Kbd's declarations, and a unit test keeps the two identical.
+Code is inline code in the monospace font on the sunken colour, the look Prose gives a raw `code`. It wraps a long value rather than push its column wider. Kbd is a key: the same font and sunken colour with a border whose bottom edge is twice as thick, so a shortcut reads as keys rather than as code. Write a combination as one Kbd per key. Prose draws a raw `kbd` with Kbd's declarations, and a unit test keeps the two identical.
 
 ### Alerts and badges
 
@@ -172,7 +184,7 @@ A tooltip describes its trigger (`aria-describedby`), or names it with `relation
 
 The tooltip's colours are `--sui-color-tooltip` and `--sui-color-on-tooltip`, which each theme sets to the inverse of body text on the page background. `--sui-tooltip-max-width` (default `20rem`) sets how wide a tooltip grows before its text wraps.
 
-Popover is the second overlay. Its trigger, a Button or IconButton, gets `popoverTarget`, which makes it the popover's native invoker, so the browser opens and closes the popover on click, closes it on Escape and on a click outside, returns focus to the trigger when closing from the keyboard, and closes any other open popover. The trigger also carries `aria-expanded` and `aria-controls`. `usePopover` follows the native `toggle` event. Controlled, it cancels an opening in `beforetoggle` and reports it through `onOpenChange`, and reports a close after the browser makes it, showing the popover again if the parent keeps `open` true. Only one popover is open at a time, so two controlled popovers both held open would keep closing each other. Popover has no role; give it `role="dialog"` and a name when it holds a form. It takes the page background with a border, the large radius and the small shadow, at most `--sui-popover-max-width` (default `20rem`) wide, and fades in while moving out from the trigger, or only fades under reduced motion.
+Popover is the second overlay. Its trigger, a Button or IconButton, gets `popoverTarget`, which makes it the popover's native invoker, so the browser opens and closes the popover on click, closes it on Escape and on a click outside, returns focus to the trigger when closing from the keyboard, and closes any other open popover. The trigger also carries `aria-expanded` and `aria-controls`. `usePopover` follows the native `toggle` event. Controlled, it cancels an opening in `beforetoggle` and reports it through `onOpenChange`, and reports a close after the browser makes it, showing the popover again if the parent keeps `open` true. Only one popover is open at a time, so two controlled popovers both held open would keep closing each other. Popover has no role; give it `role="dialog"` and a name when it holds a form. It takes the overlay colour with a border, the large radius and the small shadow, at most `--sui-popover-max-width` (default `20rem`) wide, and fades in while moving out from the trigger, or only fades under reduced motion.
 
 ### Tabs
 

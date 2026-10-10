@@ -99,8 +99,22 @@ Three tokens draw borders, each for its own purpose:
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
 - `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge` and a checked checkbox,
   radio or switch. Transparent in `default`.
-- `--sui-color-input-border`: the boundary of form controls, at least 3:1 against the page and a
-  surface.
+- `--sui-color-input-border`: the boundary of form controls, at least 3:1 against the page, a
+  surface and an overlay.
+
+### Layers
+
+Five tokens paint the layers of a page:
+
+- `--sui-color-background`: the page.
+- `--sui-color-surface`: a panel on the page, such as a `Card`.
+- `--sui-color-field`: the fill of a text input, textarea, select, checkbox, radio or switch.
+- `--sui-color-overlay`: a layer that floats above the page, such as a `Popover`.
+- `--sui-color-sunken`: a recessed chip or block, such as `Code`, `Kbd`, or a code block or table
+  header in `Prose`.
+
+Override one to restyle everything on that layer: `--sui-color-field` recolours every form control,
+for example, and leaves the page alone.
 
 [Foundations/Contrast](?path=/docs/foundations-contrast--docs) checks every pairing a theme
 guarantees, in each mode.
