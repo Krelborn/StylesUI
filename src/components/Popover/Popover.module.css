@@ -3,7 +3,7 @@
   padding: var(--sui-space-3, 0.75rem);
   border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
   border-radius: var(--sui-radius-lg, 8px);
-  background-color: var(--sui-color-background, #fff);
+  background-color: var(--sui-color-overlay, #fff);
   box-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
   color: var(--sui-color-text, #111827);
   font-family: var(--sui-font-body, system-ui, sans-serif);

@@ -14,6 +14,7 @@
   --sui-color-background: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-surface: light-dark(var(--sui-gray-100), var(--sui-gray-800));
   --sui-color-field: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-overlay: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-border: light-dark(var(--sui-gray-300), var(--sui-gray-700));
   --sui-color-control-border: light-dark(transparent, transparent);
   --sui-color-input-border: light-dark(var(--sui-gray-500), var(--sui-gray-400));

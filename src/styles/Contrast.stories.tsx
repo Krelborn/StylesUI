@@ -33,8 +33,11 @@ const textPairs: readonly ColourPair[] = [
   { background: "surface", foreground: "text-muted" },
   { background: "field", foreground: "text" },
   { background: "field", foreground: "text-muted" },
+  { background: "overlay", foreground: "text" },
+  { background: "overlay", foreground: "text-muted" },
   { background: "background", foreground: "primary" },
   { background: "surface", foreground: "primary" },
+  { background: "overlay", foreground: "primary" },
   { background: "primary-subtle", foreground: "primary" },
   { background: "primary", foreground: "on-primary" },
   { background: "primary-hover", foreground: "on-primary" },
@@ -52,6 +55,7 @@ const textPairs: readonly ColourPair[] = [
 const focusRingBackgrounds = [
   "background",
   "surface",
+  "overlay",
   "secondary-subtle",
   "shadow",
   "danger-subtle",
@@ -60,7 +64,7 @@ const focusRingBackgrounds = [
   "info-subtle",
 ] as const;
 
-const inputBorderBackgrounds = ["background", "surface"] as const;
+const inputBorderBackgrounds = ["background", "surface", "overlay"] as const;
 
 function pairLabel({ background, foreground }: ColourPair): string {
   return `${foreground} on ${background}`;
@@ -114,8 +118,9 @@ export const TextPairs: Story = {
 };
 
 /**
- * The focus ring keeps at least 3:1 against the page, a surface, the secondary subtle tint a hovered listbox option
- * takes, each status subtle, and the shadow-coloured lip a button's ring crosses in themes where controls have depth
+ * The focus ring keeps at least 3:1 against the page, a surface, an overlay, the secondary subtle tint a hovered
+ * listbox option takes, each status subtle, and the shadow-coloured lip a button's ring crosses in themes where
+ * controls have depth
  */
 export const FocusRing: Story = {
   render: () => (
@@ -151,7 +156,7 @@ export const FocusRing: Story = {
 };
 
 /**
- * The form control border keeps at least 3:1 against the page and a surface
+ * The form control border keeps at least 3:1 against the page, a surface and an overlay
  */
 export const InputBorder: Story = {
   render: () => (
