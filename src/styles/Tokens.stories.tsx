@@ -5,12 +5,12 @@ import { Box } from "../components/Box";
 import { Heading } from "../components/Heading";
 import { Text } from "../components/Text";
 
-import defaultThemeCss from "./themes/default.css?raw";
+import brightPaletteCss from "./palettes/bright.css?raw";
 import { declaredTokens, hues, steps } from "./tokenSource";
 
-// Edge colours rather than fills, and default's control border is transparent
+// Edge colours rather than fills, and Bright's control border is transparent
 const unswatchedColours = new Set(["--sui-color-control-border", "--sui-color-shadow"]);
-const semanticColours = [...declaredTokens(defaultThemeCss).keys()]
+const semanticColours = [...declaredTokens(brightPaletteCss).keys()]
   .filter((name) => name.startsWith("--sui-color-") && !unswatchedColours.has(name))
   .map((name) => name.replace("--sui-color-", ""));
 const radii = ["sm", "md", "lg", "full", "control"] as const;
@@ -76,7 +76,7 @@ export const Ramps: Story = {
 };
 
 /**
- * The semantic colours the current theme and mode set, which components read
+ * The semantic colours the current palette and mode set, which components read
  */
 export const SemanticColours: Story = {
   render: () => (

@@ -1,0 +1,56 @@
+:where(:root, [data-sui-theme="default"]),
+[data-sui-palette="bright"] {
+  --sui-color-primary: light-dark(var(--sui-blue-600), var(--sui-blue-400));
+  --sui-color-primary-hover: light-dark(var(--sui-blue-700), var(--sui-blue-300));
+  --sui-color-primary-subtle: light-dark(
+    color-mix(in srgb, var(--sui-blue-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-blue-900), var(--sui-gray-900))
+  );
+  --sui-color-on-primary: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-secondary: light-dark(var(--sui-gray-200), var(--sui-gray-700));
+  --sui-color-secondary-hover: light-dark(var(--sui-gray-300), var(--sui-gray-600));
+  --sui-color-secondary-subtle: light-dark(var(--sui-gray-100), var(--sui-gray-800));
+  --sui-color-on-secondary: light-dark(var(--sui-gray-900), var(--sui-gray-100));
+  --sui-color-background: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-surface: light-dark(var(--sui-gray-100), var(--sui-gray-800));
+  --sui-color-field: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-overlay: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-sunken: light-dark(var(--sui-gray-100), var(--sui-gray-800));
+  --sui-color-border: light-dark(var(--sui-gray-300), var(--sui-gray-700));
+  --sui-color-control-border: light-dark(transparent, transparent);
+  --sui-color-input-border: light-dark(var(--sui-gray-500), var(--sui-gray-400));
+  --sui-color-text: light-dark(var(--sui-gray-900), var(--sui-gray-100));
+  --sui-color-text-muted: light-dark(var(--sui-gray-600), var(--sui-gray-400));
+  --sui-color-tooltip: light-dark(var(--sui-gray-900), var(--sui-gray-100));
+  --sui-color-on-tooltip: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-focus-ring: light-dark(var(--sui-blue-500), var(--sui-blue-300));
+  --sui-color-shadow: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
+  --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));
+  --sui-color-on-success: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-success-text: light-dark(var(--sui-green-800), var(--sui-green-300));
+  --sui-color-success-subtle: light-dark(
+    color-mix(in srgb, var(--sui-green-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-green-900), var(--sui-gray-900))
+  );
+  --sui-color-warning: light-dark(var(--sui-yellow-500), var(--sui-yellow-300));
+  --sui-color-on-warning: light-dark(var(--sui-gray-900), var(--sui-gray-900));
+  --sui-color-warning-text: light-dark(var(--sui-yellow-800), var(--sui-yellow-300));
+  --sui-color-warning-subtle: light-dark(
+    color-mix(in srgb, var(--sui-yellow-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-yellow-900), var(--sui-gray-900))
+  );
+  --sui-color-danger: light-dark(var(--sui-red-600), var(--sui-red-400));
+  --sui-color-on-danger: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-danger-text: light-dark(var(--sui-red-700), var(--sui-red-300));
+  --sui-color-danger-subtle: light-dark(
+    color-mix(in srgb, var(--sui-red-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-red-900), var(--sui-gray-900))
+  );
+  --sui-color-info: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
+  --sui-color-on-info: light-dark(var(--sui-white), var(--sui-gray-900));
+  --sui-color-info-text: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
+  --sui-color-info-subtle: light-dark(
+    color-mix(in srgb, var(--sui-indigo-100), var(--sui-white)),
+    color-mix(in srgb, var(--sui-indigo-900), var(--sui-gray-900))
+  );
+}

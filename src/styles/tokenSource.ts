@@ -1,5 +1,6 @@
 export const hues = ["gray", "red", "orange", "yellow", "green", "blue", "indigo", "violet", "pink"] as const;
 export const steps = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+export const paletteNames = ["bright", "pop"] as const;
 
 export function declaredTokens(css: string): Map<string, string> {
   const tokens = new Map<string, string>();
