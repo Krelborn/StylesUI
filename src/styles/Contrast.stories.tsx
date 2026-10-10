@@ -31,6 +31,8 @@ const textPairs: readonly ColourPair[] = [
   { background: "background", foreground: "text-muted" },
   { background: "surface", foreground: "text" },
   { background: "surface", foreground: "text-muted" },
+  { background: "field", foreground: "text" },
+  { background: "field", foreground: "text-muted" },
   { background: "background", foreground: "primary" },
   { background: "surface", foreground: "primary" },
   { background: "primary-subtle", foreground: "primary" },
