@@ -30,7 +30,7 @@ For each colour there exists 9 variations `[color]-[variant]` where each variant
 
 Each status (`danger`, `success`, `warning`, `info`) has three grades:
 
-- **Fill**: `--sui-color-<status>`, a solid background. `--sui-color-on-<status>` is the text on it.
+- **Fill**: `--sui-color-<status>`, a solid background, and `--sui-color-<status>-hover`, the same fill hovered. `--sui-color-on-<status>` is the text on both.
 - **Text**: `--sui-color-<status>-text`, for text, borders and icons on the page background, on a surface and on the status's own subtle.
 - **Subtle**: `--sui-color-<status>-subtle`, a tinted background. Body text (`--sui-color-text`) sits on it. Primary-coloured text must not, because it falls below 4.5:1 on some subtles.
 
