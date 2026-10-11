@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, onTestFinished } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { transitionedProperties } from "../../test/transitionedProperties";
 
@@ -81,9 +81,105 @@ describe("Tooltip", () => {
     expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Sends to all subscribers");
   });
 
+  it("must show the tooltip on the next task when the browser refuses to show it at first", () => {
+    const { advance, popoverMethod } = setUpTest();
+    popoverMethod("showPopover").mockImplementationOnce(refuse);
+    render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    advance(0);
+
+    expect(screen.getByRole("tooltip", { name: "Sends to all subscribers" })).toBeVisible();
+  });
+
+  it("must hide the tooltip on the next task when the browser refuses to hide it at first", () => {
+    const { advance, popoverMethod } = setUpTest();
+    const { rerender } = render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+    popoverMethod("hidePopover").mockImplementationOnce(refuse);
+    rerender(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={false} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    advance(0);
+
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  it("must keep the tooltip hidden when open turns false before the browser lets it show", () => {
+    const { advance, popoverMethod } = setUpTest();
+    popoverMethod("showPopover").mockImplementationOnce(refuse);
+    const { rerender } = render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    rerender(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={false} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+    advance(0);
+
+    expect(screen.queryByRole("tooltip")).toBeNull();
+  });
+
+  it("must report the refusal and keep the tooltip rendered when the browser refuses to show it again", () => {
+    const { advance, popoverMethod } = setUpTest();
+    popoverMethod("showPopover").mockImplementation(refuse);
+    render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    expect(() => advance(0)).toThrow("Invalid to show a popover during another show operation");
+    expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Sends to all subscribers");
+  });
+
   it("must not transition when reduced motion is requested", () => {
     const reducedMotionBlock = tooltipCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
 
     expect(transitionedProperties(reducedMotionBlock)).toEqual(["none"]);
   });
 });
+
+function setUpTest() {
+  vi.useFakeTimers();
+  onTestFinished(() => {
+    vi.useRealTimers();
+  });
+
+  function advance(milliseconds: number): void {
+    act(() => {
+      vi.advanceTimersByTime(milliseconds);
+    });
+  }
+
+  function popoverMethod(method: "hidePopover" | "showPopover") {
+    const spy = vi.spyOn(HTMLElement.prototype, method);
+    onTestFinished(() => {
+      spy.mockRestore();
+    });
+
+    return spy;
+  }
+
+  return { advance, popoverMethod };
+}
+
+/**
+ * Throws as the browser does when asked to show or hide a popover while it shows or hides another
+ */
+function refuse(): never {
+  throw new DOMException("Invalid to show a popover during another show operation", "InvalidStateError");
+}

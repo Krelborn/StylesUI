@@ -9,6 +9,8 @@ import { Box } from "../Box";
 import type { ButtonProps } from "../Button";
 import { Button } from "../Button";
 import { Field } from "../Field";
+import { Link } from "../Link";
+import { Popover, usePopover } from "../Popover";
 import { TextInput } from "../TextInput";
 
 import { Tooltip } from "./Tooltip";
@@ -398,6 +400,62 @@ describe("useTooltip", () => {
     expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
   });
 
+  it("must not ask the browser to show the tooltip while it closes the popover that returned focus to the trigger", async () => {
+    const { user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.tab();
+    await user.tab();
+
+    const refusedPopovers = await closeOnEscape(user, elements.publishOptions, elements.publishButton);
+
+    expect(refusedPopovers).toEqual([]);
+  });
+
+  it("must show the tooltip once the popover has closed when closing it returns keyboard focus to the trigger", async () => {
+    const { advance, user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.tab();
+    await user.tab();
+
+    await closeOnEscape(user, elements.publishOptions, elements.publishButton);
+    advance(0);
+
+    expect(elements.publishButton).toHaveFocus();
+    expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
+  });
+
+  it("must not show the tooltip when focus leaves the trigger before the popover that returned it has closed", async () => {
+    const { advance, user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.tab();
+    await user.tab();
+    await closeOnEscape(user, elements.publishOptions, elements.publishButton);
+
+    act(() => {
+      elements.cancelButton.focus();
+    });
+    advance(0);
+
+    expect(elements.visibleTooltip).toBeNull();
+  });
+
+  it("must cancel a pending pointer show when the popover returns focus to the trigger", async () => {
+    const { advance, user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.tab();
+    await user.tab();
+    advance(1000);
+    await user.hover(elements.publishButton);
+    await closeOnEscape(user, elements.publishOptions, elements.publishButton);
+
+    act(() => {
+      elements.cancelButton.focus();
+    });
+    advance(1000);
+
+    expect(elements.visibleTooltip).toBeNull();
+  });
+
   it("must hide the open tooltip when another tooltip opens", async () => {
     const { user } = setUpTest();
     render(
@@ -561,6 +619,23 @@ function OpenChangeCounterExample(): JSX.Element {
   );
 }
 
+function PopoverTriggerExample(): JSX.Element {
+  const tooltip = useTooltip();
+  const popover = usePopover({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...tooltip.getTriggerProps(popover.getTriggerProps())}>Publish</Button>
+      <Tooltip {...tooltip.getOverlayProps()}>Sends to all subscribers</Tooltip>
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a Popover always renders a div */}
+      <Popover {...popover.getOverlayProps()} aria-label="Publish options" role="dialog">
+        <Link href="#schedule">Schedule for later</Link>
+      </Popover>
+      <Button>Cancel</Button>
+    </>
+  );
+}
+
 function FieldExample(): JSX.Element {
   const tooltip = useTooltip();
 
@@ -592,6 +667,36 @@ function setUpTest() {
   return { advance, user };
 }
 
+/**
+ * Presses Escape in a popover and closes it as the browser does: it returns focus to the trigger before it has finished
+ * closing, and until then refuses to show another popover
+ *
+ * @param user the user pressing Escape
+ * @param popover the open popover, holding focus
+ * @param trigger the element focus returns to
+ * @returns the popovers the browser was asked to show, and refused, while it closed the popover
+ */
+async function closeOnEscape(user: UserEvent, popover: HTMLElement, trigger: HTMLElement): Promise<HTMLElement[]> {
+  await user.keyboard("{Escape}");
+
+  const refusedPopovers: HTMLElement[] = [];
+  const showPopover = vi.spyOn(HTMLElement.prototype, "showPopover").mockImplementation(function refuse(
+    this: HTMLElement
+  ) {
+    refusedPopovers.push(this);
+
+    throw new DOMException("Invalid to show a popover during another show operation", "InvalidStateError");
+  });
+
+  act(() => {
+    popover.hidePopover();
+    trigger.focus();
+  });
+  showPopover.mockRestore();
+
+  return refusedPopovers;
+}
+
 const copyIcon = (
   <Box as="svg" viewBox="0 0 16 16" aria-hidden="true">
     <Box as="path" d="M4 4h8v8H4z" />
@@ -610,6 +715,9 @@ const elements = {
   },
   get publishButton() {
     return screen.getByRole("button", { name: "Publish" });
+  },
+  get publishOptions() {
+    return screen.getByRole("dialog", { name: "Publish options" });
   },
   get scheduleButton() {
     return screen.getByRole("button", { name: "Schedule" });

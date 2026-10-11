@@ -64,13 +64,19 @@ export function Overlay({
       return;
     }
 
-    const shown = current.matches(":popover-open");
-
-    if (open && !shown) {
-      current.showPopover();
-    } else if (!open && shown) {
-      current.hidePopover();
+    if (trySyncPopover(current, open)) {
+      return;
     }
+
+    // The browser refuses to show a popover while it shows or hides another, and has finished by the next task. A
+    // second refusal throws from the timer, where it is reported without unmounting the app.
+    const retry = setTimeout(() => {
+      syncPopover(current, open);
+    }, 0);
+
+    return () => {
+      clearTimeout(retry);
+    };
   }, [open]);
 
   return (
@@ -84,4 +90,37 @@ export function Overlay({
       data-placement={placement}
     />
   );
+}
+
+/**
+ * Shows or hides a popover to match `open`, leaving it alone when it already matches
+ *
+ * @param popover the popover element
+ * @param open whether it should be shown
+ */
+function syncPopover(popover: HTMLElement, open: boolean): void {
+  const shown = popover.matches(":popover-open");
+
+  if (open && !shown) {
+    popover.showPopover();
+  } else if (!open && shown) {
+    popover.hidePopover();
+  }
+}
+
+/**
+ * Shows or hides a popover to match `open`, unless the browser refuses
+ *
+ * @param popover the popover element
+ * @param open whether it should be shown
+ * @returns false when the browser refused, which it does while it shows or hides another popover
+ */
+function trySyncPopover(popover: HTMLElement, open: boolean): boolean {
+  try {
+    syncPopover(popover, open);
+
+    return true;
+  } catch {
+    return false;
+  }
 }

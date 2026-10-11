@@ -68,6 +68,11 @@ interface OverlayState {
    * Shows the overlay after the show delay, unless another request comes first
    */
   showAfterDelay: () => void;
+
+  /**
+   * Shows the overlay once the current task has finished, unless another request comes first
+   */
+  showAfterTask: () => void;
 }
 
 /**
@@ -116,10 +121,22 @@ export function useOverlay({
       return;
     }
 
+    commitLater(nextOpen, delayMilliseconds);
+  }
+
+  function commitLater(nextOpen: boolean, delayMilliseconds: number): void {
     pendingRequest.current = setTimeout(() => {
       pendingRequest.current = undefined;
       commit(nextOpen);
     }, delayMilliseconds);
+  }
+
+  function showAfterTask(): void {
+    cancelDelay();
+
+    if (!open) {
+      commitLater(true, 0);
+    }
   }
 
   const hideOnEscape = useEffectEvent((event: KeyboardEvent) => {
@@ -163,5 +180,6 @@ export function useOverlay({
     open,
     show: () => request(true, 0),
     showAfterDelay: () => request(true, delay.show),
+    showAfterTask,
   };
 }
