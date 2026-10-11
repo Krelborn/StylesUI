@@ -53,6 +53,12 @@ function PaletteSamples({ palette }: PaletteSamplesProps): JSX.Element {
             <Button variant="ghost">Ghost</Button>
           </Box>
           <Box style={sampleRow}>
+            <Button variant="danger">Danger</Button>
+            <Button variant="warning">Warning</Button>
+            <Button variant="info">Info</Button>
+            <Button variant="success">Success</Button>
+          </Box>
+          <Box style={sampleRow}>
             {badgeTones.map((tone) => (
               <Badge key={tone} tone={tone}>
                 {tone}

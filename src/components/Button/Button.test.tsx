@@ -33,7 +33,7 @@ describe("Button", () => {
     expect(button).toHaveAttribute("data-size", "md");
   });
 
-  it.each(["ghost", "outline", "primary", "secondary"] as const)(
+  it.each(["danger", "ghost", "info", "outline", "primary", "secondary", "success", "warning"] as const)(
     "must apply the %s variant when it is set",
     (variant) => {
       render(<Button variant={variant}>Save</Button>);
@@ -181,8 +181,8 @@ describe("Button", () => {
   });
 
   it("must reject a variant when it is not supported", () => {
-    // @ts-expect-error "danger" is not a ButtonVariant
-    render(<Button variant="danger">Save</Button>);
+    // @ts-expect-error "tertiary" is not a ButtonVariant
+    render(<Button variant="tertiary">Save</Button>);
   });
 
   it("must reject a size when it is not supported", () => {

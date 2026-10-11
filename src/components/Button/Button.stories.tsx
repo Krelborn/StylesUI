@@ -9,6 +9,7 @@ import { Box } from "../Box";
 import { Card } from "../Card";
 import { Kbd } from "../Kbd";
 import { Row } from "../Row";
+import { Stack } from "../Stack";
 
 import { Button } from "./Button";
 
@@ -31,6 +32,10 @@ function findKbd(button: HTMLElement): HTMLElement {
 
 // About the step from white to gray-100, the faintest change of fill that still reads as a new state
 const distinctFillContrast = 1.1;
+
+const sizes = ["sm", "md", "lg"] as const;
+
+const statusVariants = ["danger", "warning", "info", "success"] as const;
 
 /**
  * Waits for a button's fill to finish changing into the state the real pointer has just put it in
@@ -169,6 +174,48 @@ export const Ghost: Story = {
 };
 
 /**
+ * Filled in a status colour: `danger` for an action that destroys something, such as deleting, and `warning`, `info`
+ * or `success` for an action tied to that status. Each works at every size, disabled and busy, and hovering changes its
+ * fill enough to see.
+ */
+export const StatusVariants: Story = {
+  render: () => (
+    <Stack gap={3}>
+      {statusVariants.map((variant) => (
+        <Row align="center" gap={2} key={variant}>
+          {sizes.map((size) => (
+            <Button key={size} size={size} variant={variant}>
+              {`${variant} ${size}`}
+            </Button>
+          ))}
+          <Button disabled={true} variant={variant}>
+            {`${variant} disabled`}
+          </Button>
+          <Button busy={true} variant={variant}>
+            {`${variant} busy`}
+          </Button>
+        </Row>
+      ))}
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    for (const variant of statusVariants) {
+      const button = canvas.getByRole("button", { name: `${variant} md` });
+      const spinner = canvas.getByRole("button", { name: `${variant} busy` }).querySelector("svg");
+
+      await expect(
+        fillContrast(button, "var(--sui-button-bg)", "var(--sui-button-bg-hover)"),
+        `${variant} rest to hover`
+      ).toBeGreaterThanOrEqual(distinctFillContrast);
+      await expect(spinner, `${variant} spinner`).not.toBeNull();
+      await expect(getComputedStyle(spinner as SVGElement).color, `${variant} spinner colour`).toBe(
+        getComputedStyle(button).color
+      );
+    }
+  },
+};
+
+/**
  * A disabled button is skipped by the keyboard and ignores clicks
  */
 export const Disabled: Story = {
@@ -245,6 +292,11 @@ export const HoverContrast: Story = {
       <Button variant="secondary">Secondary</Button>
       <Button variant="outline">Outline</Button>
       <Button variant="ghost">Ghost</Button>
+      {statusVariants.map((variant) => (
+        <Button key={variant} variant={variant}>
+          {variant}
+        </Button>
+      ))}
       <Card padding="sm">
         <Button variant="ghost">Ghost on a card</Button>
       </Card>

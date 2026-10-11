@@ -48,6 +48,30 @@
   --sui-button-border: var(--sui-color-primary, #2563eb);
 }
 
+.button[data-variant="danger"] {
+  --sui-button-bg: var(--sui-color-danger, #dc2626);
+  --sui-button-bg-hover: var(--sui-color-danger-hover, #b91c1c);
+  --sui-button-fg: var(--sui-color-on-danger, #fff);
+}
+
+.button[data-variant="info"] {
+  --sui-button-bg: var(--sui-color-info, #4338ca);
+  --sui-button-bg-hover: var(--sui-color-info-hover, #3730a3);
+  --sui-button-fg: var(--sui-color-on-info, #fff);
+}
+
+.button[data-variant="success"] {
+  --sui-button-bg: var(--sui-color-success, #15803d);
+  --sui-button-bg-hover: var(--sui-color-success-hover, #166534);
+  --sui-button-fg: var(--sui-color-on-success, #fff);
+}
+
+.button[data-variant="warning"] {
+  --sui-button-bg: var(--sui-color-warning, #eab308);
+  --sui-button-bg-hover: var(--sui-color-warning-hover, #facc15);
+  --sui-button-fg: var(--sui-color-on-warning, #111827);
+}
+
 /* Hover and press tint whatever is behind the button, since a fixed fill can match the surface it sits on */
 .button[data-variant="ghost"] {
   --sui-button-bg: transparent;
