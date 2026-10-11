@@ -142,19 +142,20 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to Bri
 15. Each outline variant reads the tokens in the decision above, each with Bright's light value as its fallback. Every fallback pair is at least 4.5:1 for text and 3:1 for the secondary border, checked by hand.
 16. The Contrast stories pass `<status>-text` on `overlay` for every palette in all four projects.
 17. The Button outline story passes axe at every size, disabled and busy, `HoverContrast` passes for every outline variant, and the palette showcase passes axe with them.
-18. Nothing in the repository uses `variant="outline"` on a Button. The `ButtonVariant` JSDoc, concepts.md, Theming.mdx and `.design-sync/conventions.md` describe the outline variants.
+18. `IconButton` takes every Button variant. Its unit test and its `Variants` story each list the variants in a `Record<ButtonVariant, true>`, so a variant missing from either fails to compile, and the story checks that each renders square.
+19. Nothing in the repository uses `variant="outline"` on a Button. The `ButtonVariant` JSDoc, concepts.md, Theming.mdx and `.design-sync/conventions.md` describe the outline variants.
 
 ### Popover focus
 
-19. With `initialFocus`, the element it points at has focus once the popover has opened, uncontrolled or controlled.
-20. When the popover closes with focus inside it, by Escape or by `close()`, the trigger has focus. When it closes after a click outside, focus stays where the click left it.
-21. `close()` called with focus on the page's `body` moves focus to the trigger.
-22. A consumer's `ref` on the trigger is unaffected.
-23. The Popover and `usePopover` JSDoc, concepts.md, `.design-sync/conventions.md` and AGENTS.md describe the behaviour.
+20. With `initialFocus`, the element it points at has focus once the popover has opened, uncontrolled or controlled.
+21. When the popover closes with focus inside it, by Escape or by `close()`, the trigger has focus. When it closes after a click outside, focus stays where the click left it.
+22. `close()` called with focus on the page's `body` moves focus to the trigger.
+23. A consumer's `ref` on the trigger is unaffected.
+24. The Popover and `usePopover` JSDoc, concepts.md, `.design-sync/conventions.md` and AGENTS.md describe the behaviour.
 
 ### Whole change
 
-24. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
+25. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
 
 ## Open Questions
 
