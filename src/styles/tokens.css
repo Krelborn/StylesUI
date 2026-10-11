@@ -19,9 +19,13 @@
   --sui-width-wide: 72rem;
 }
 
-/* Custom properties resolve var() where they are declared, so these repeat on every theme element to pick up its unit */
+/*
+ * Custom properties resolve var() where they are declared, so these repeat on every theme and palette element to
+ * combine the nearest theme's measurements with the nearest palette's colours
+ */
 :root,
-[data-sui-theme] {
+[data-sui-theme],
+[data-sui-palette] {
   --sui-space-1: calc(1 * var(--sui-space-unit));
   --sui-space-2: calc(2 * var(--sui-space-unit));
   --sui-space-3: calc(3 * var(--sui-space-unit));
@@ -30,4 +34,12 @@
   --sui-space-6: calc(6 * var(--sui-space-unit));
   --sui-space-7: calc(7 * var(--sui-space-unit));
   --sui-space-8: calc(8 * var(--sui-space-unit));
+
+  --sui-color-control-border: color-mix(in srgb, var(--sui-color-ink) var(--sui-control-outline), transparent);
+  --sui-color-shadow: color-mix(
+    in srgb,
+    var(--sui-color-shadow-hard) var(--sui-shadow-hardness),
+    var(--sui-color-shadow-soft)
+  );
+  --sui-shadow-sm: var(--sui-shadow-sm-offset) var(--sui-color-shadow);
 }

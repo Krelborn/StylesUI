@@ -1,6 +1,12 @@
-@import "./palette.css";
+@import "./ramps.css";
 @import "./tokens.css";
+/* default and Bright also match :root, so they come first: on a root that sets another theme, the later rule wins */
 @import "./themes/default.css";
 @import "./themes/playful.css";
+@import "./palettes/bright.css";
+@import "./palettes/pop.css";
+@import "./palettes/mist.css";
+@import "./palettes/paper.css";
+@import "./palettes/dusk.css";
 @import "./modes.css";
 @import "./reset.css";

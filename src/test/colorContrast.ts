@@ -118,6 +118,32 @@ export function resolvedColor(element: HTMLElement, color: string): string {
   return computedInProbe(element, "color", color);
 }
 
+/**
+ * Tells whether two CSS colours resolve to the same colour in an element's scope, whatever syntax
+ * the browser reports each in. Two fully transparent colours match whatever their channels.
+ *
+ * Needs a real browser to resolve custom properties and `light-dark()`.
+ *
+ * @param element the element whose custom properties and `color-scheme` both colours are resolved
+ *   against
+ * @param first a CSS colour, such as `"var(--sui-color-control-border)"`
+ * @param second a CSS colour, such as `"var(--sui-gray-900)"`
+ * @returns whether the colours match to within one step of each 8-bit channel
+ */
+export function isSameColor(element: HTMLElement, first: string, second: string): boolean {
+  const [one, two] = [first, second].map((color) => toRgba(computedInProbe(element, "backgroundColor", color)));
+
+  if (one.alpha === 0 && two.alpha === 0) {
+    return true;
+  }
+
+  return (["alpha", "blue", "green", "red"] as const).every((channel) => {
+    const step = channel === "alpha" ? 1 / 255 : 1;
+
+    return Math.abs(one[channel] - two[channel]) <= step;
+  });
+}
+
 function backgroundsBesideRing(element: HTMLElement, style: CSSStyleDeclaration): Rgba[] {
   const outlineOffset = parseFloat(style.outlineOffset);
   const behind = backgroundBehind(element);

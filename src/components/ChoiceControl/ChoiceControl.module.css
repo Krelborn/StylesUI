@@ -2,7 +2,7 @@
   --sui-choice-control-size: 1.5rem;
   --sui-choice-control-track-size: var(--sui-choice-control-size);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
-  --sui-choice-control-bg: var(--sui-color-background, #fff);
+  --sui-choice-control-bg: var(--sui-color-field, #fff);
   --sui-choice-control-border: var(--sui-color-input-border, #6b7280);
   --sui-choice-control-border-width: var(--sui-border-width, 1px);
   --sui-choice-control-radius: var(--sui-radius-sm, 2px);

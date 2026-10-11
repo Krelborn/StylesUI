@@ -12,7 +12,7 @@ import styles from "./Code.module.css";
 export type CodeProps = Omit<BoxProps<"code">, "as">;
 
 /**
- * Inline code, such as a command, a file name or a value, in the theme's monospace font on the surface colour
+ * Inline code, such as a command, a file name or a value, in the theme's monospace font on the sunken colour
  *
  * @example
  * <Text as="p">Run <Code>pnpm install</Code> first.</Text>

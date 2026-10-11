@@ -146,7 +146,7 @@
 :where(.prose) code {
   padding: 0 var(--sui-space-1, 0.25rem);
   border-radius: var(--sui-radius-sm, 2px);
-  background-color: var(--sui-color-surface, #f3f4f6);
+  background-color: var(--sui-color-sunken, #f3f4f6);
   font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.875em;
 }
@@ -156,7 +156,7 @@
   border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
   border-block-end-width: calc(var(--sui-border-width, 1px) * 2);
   border-radius: var(--sui-radius-sm, 2px);
-  background-color: var(--sui-color-surface, #f3f4f6);
+  background-color: var(--sui-color-sunken, #f3f4f6);
   color: var(--sui-color-text, #111827);
   font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.875em;
@@ -166,7 +166,7 @@
 :where(.prose) pre {
   padding: var(--sui-space-4, 1rem);
   border-radius: var(--sui-radius-md, 4px);
-  background-color: var(--sui-color-surface, #f3f4f6);
+  background-color: var(--sui-color-sunken, #f3f4f6);
   font-family: var(--sui-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 0.875em;
   line-height: var(--sui-line-height-normal, 1.5);
@@ -222,6 +222,6 @@
 }
 
 :where(.prose) th {
-  background-color: var(--sui-color-surface, #f3f4f6);
+  background-color: var(--sui-color-sunken, #f3f4f6);
   font-weight: var(--sui-font-weight-bold, 700);
 }

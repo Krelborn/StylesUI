@@ -1,5 +1,5 @@
 .textControl {
-  --sui-text-control-bg: var(--sui-color-background, #fff);
+  --sui-text-control-bg: var(--sui-color-field, #fff);
   --sui-text-control-fg: var(--sui-color-text, #111827);
   --sui-text-control-border: var(--sui-color-input-border, #6b7280);
   --sui-text-control-border-width: var(--sui-border-width, 1px);

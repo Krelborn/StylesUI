@@ -13,11 +13,22 @@ export type ThemeName = "default" | "playful";
  */
 export type ThemeMode = "dark" | "light" | "system";
 
+/**
+ * Names of the colour palettes shipped in `styles.css`
+ */
+export type PaletteName = "bright" | "dusk" | "mist" | "paper" | "pop";
+
 interface ThemeOwnProps {
   /**
    * Colour mode for this subtree. Inherited from the nearest ancestor when omitted.
    */
   mode?: ThemeMode;
+
+  /**
+   * Colour palette for this subtree. Defaults to the theme's companion palette on an element that sets `theme`, and
+   * is inherited from the nearest ancestor otherwise.
+   */
+  palette?: PaletteName;
 
   /**
    * Theme for this subtree. Inherited from the nearest ancestor when omitted.
@@ -32,16 +43,19 @@ interface ThemeOwnProps {
 export type ThemeProps<E extends BoxElement = "div"> = ThemeOwnProps & Omit<BoxProps<E>, keyof ThemeOwnProps>;
 
 /**
- * Sets the theme and colour mode attributes for its subtree. `styles.css` paints the background,
- * text colour and font of any element that carries these attributes, so this needs
+ * Sets the theme, palette and colour mode attributes for its subtree. `styles.css` paints the
+ * background, text colour and font of any element that carries these attributes, so this needs
  * `@krelborn/stylesui/styles.css` imported once by the app.
  *
  * @example
  * <Theme mode="dark" theme="playful">...</Theme>
+ *
+ * @example
+ * <Theme palette="pop" theme="default">...</Theme>
  */
-export function Theme<E extends BoxElement = "div">({ as, mode, theme, ...rest }: ThemeProps<E>): JSX.Element {
+export function Theme<E extends BoxElement = "div">({ as, mode, palette, theme, ...rest }: ThemeProps<E>): JSX.Element {
   // Widened as in Box: ThemeProps<E> already guarantees the props match `as`
   const boxProps = rest as BoxProps<"div">;
 
-  return <Box {...boxProps} as={as as "div"} data-sui-mode={mode} data-sui-theme={theme} />;
+  return <Box {...boxProps} as={as as "div"} data-sui-mode={mode} data-sui-palette={palette} data-sui-theme={theme} />;
 }

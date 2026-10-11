@@ -8,7 +8,7 @@ A base set of styles provides a global CSS reset at the root and defines the bas
 
 ### Colours
 
-A colour palette is defined in the base styles. The default palette ships with 11 base colours with 9 variations.
+Colour ramps are defined in the base styles: 11 base colours, most with 9 variations.
 
 Base colours are:
 
@@ -37,25 +37,61 @@ Each status (`danger`, `success`, `warning`, `info`) has three grades:
 #### Borders
 
 - `--sui-color-border`: decorative dividers and outlines. It carries no contrast guarantee.
-- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge`, the selected `Tabs` pill and a checked `Checkbox`, `Radio`, `Segment` or `Switch`. Transparent in `default`.
-- `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background and a surface (WCAG 1.4.11).
+- `--sui-color-control-border`: the outline of `Avatar`, `Button`, `Badge`, the selected `Tabs` pill and a checked `Checkbox`, `Radio`, `Segment` or `Switch`. Transparent in `default` and the palette's ink in `playful` (see [Colours that depend on the theme](#colours-that-depend-on-the-theme)).
+- `--sui-color-input-border`: the boundary of form controls. At least 3:1 against the page background, a surface and an overlay (WCAG 1.4.11).
+
+#### Layers
+
+Five neutral tokens paint the layers of a page, and the palette decides how bright each one is:
+
+- `--sui-color-background`: the page.
+- `--sui-color-surface`: a panel on the page, such as a `Card`.
+- `--sui-color-field`: the fill of a form control: `TextInput`, `Textarea`, `Select`, `Checkbox`, `Radio` and `Switch`.
+- `--sui-color-overlay`: a layer that floats above the page, such as a `Popover`.
+- `--sui-color-sunken`: a recessed chip or block: `Code`, `Kbd`, and Prose's `code`, `kbd`, `pre` and table header cells.
+
+Bright and Pop give `field` the page colour and `sunken` the surface colour. `overlay` is the page colour too, except in Bright's dark mode, where it is lighter than a card, so a popover floating over a card stands above it. Text, muted text and the focus ring keep their contrast on every layer, and primary text on the page, a surface and an overlay.
 
 ### Token tiers
 
-Tokens are layered so themes only ever change one tier:
+Tokens are layered so themes and palettes only ever change one tier:
 
-1. **Palette**: the colour ramps above (`--sui-blue-600`). Theme-agnostic.
-2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-control-depth`, `--sui-font-body`). Themes set these, and components read only these.
+1. **Ramps**: the colour ramps above (`--sui-blue-600`). Shared by every palette.
+2. **Semantic**: what a colour or measurement is for (`--sui-color-primary`, `--sui-color-surface`, `--sui-radius-md`, `--sui-space-3`, `--sui-control-depth`, `--sui-font-body`). Palettes set the colours, themes set the rest, and `tokens.css` derives the three that need both. Components read only these.
 3. **Component**: local to a component's CSS module (`--sui-button-bg`). They default to semantic tokens, and variants reassign them.
 
 ### Themes
 
-A theme sets every semantic token: primary, secondary and status colours, surfaces, text, borders, focus ring, radius, border width, shadows, control depth, motion, spacing unit and fonts. StylesUI ships two:
+A theme sets every semantic token that is not a colour: radius, border width, focus ring width, shadow offset, control depth, motion, spacing unit and fonts, and how much outline and shadow hardness its controls use. StylesUI ships two:
 
-- `default`: blue and gray, small radius, thin borders, soft shadows, system font, no depth, and no motion beyond colour fades, a short slide of a Switch thumb and a short scale of a Checkbox or Radio mark.
-- `playful`: a "chunky pop" look. Cream background in light mode and deep plum in dark, grape and sunshine-yellow fills, 2px ink outlines, hard offset shadows, pill buttons on a 3D lip that spring up on hover and squash when pressed, and Fredoka headings over Nunito body text.
+- `default`: small radius, thin borders, soft shadows, system font, no depth, and no motion beyond colour fades, a short slide of a Switch thumb and a short scale of a Checkbox or Radio mark. Its companion palette is Bright.
+- `playful`: a "chunky pop" look. 2px outlines in the palette's ink, hard offset shadows, pill buttons on a 3D lip that spring up on hover and squash when pressed, and Fredoka headings over Nunito body text. Its companion palette is Pop.
 
 `default` applies at `:root`; any subtree can switch with `data-sui-theme="playful"`, usually through the `Theme` component.
+
+### Palettes
+
+A palette sets every colour token: the layers, text, borders, primary, secondary and status colours, focus ring and tooltip, and the ink, soft shadow and hard shadow that a theme's outlines and shadows are drawn in. StylesUI ships five:
+
+- `bright`: blue and grey on a white page, with grey cards. `default`'s companion, for documents, forms and shops.
+- `pop`: a cream page in light mode and deep plum in dark, grape and sunshine-yellow fills, and ink outlines and shadows. `playful`'s companion.
+- `mist`: a cool grey page with white cards, inputs and popovers on it, for web apps, dashboards and admin tools.
+- `paper`: a warm off-white page with ivory panels and stone greys, for reading, docs and consumer apps.
+- `dusk`: the dimmest light mode, with nothing near white, and a lifted, lower-contrast dark mode, for desktop apps and long sessions.
+
+On a tinted page, default's `blue-600` falls below 4.5:1 as text, so Mist and Paper use `blue-700` and Dusk `blue-800` for primary, with a `blue-600` focus ring. Their status subtles tint the palette's surface in light mode and its page in dark.
+
+Each theme has a companion palette, Bright for `default` and Pop for `playful`. An element that sets `data-sui-theme` takes its companion's colours at zero specificity, so `data-sui-palette` on the same element or on any element inside overrides them. A palette set on an ancestor does not reach through an element that sets a theme, because that element's companion is nearer, so set the palette beside the theme to keep it. Bright also applies at `:root`. [Palettes](palettes.md) records the design and its alternatives.
+
+#### Colours that depend on the theme
+
+Control outlines and shadows belong to a theme's shape language but take a palette's colours, so `tokens.css` combines the two:
+
+- `--sui-color-control-border` is the palette's `--sui-color-ink` at the theme's `--sui-control-outline`: `0%` in `default`, so transparent, and `100%` in `playful`.
+- `--sui-color-shadow` mixes the palette's `--sui-color-shadow-hard` into its `--sui-color-shadow-soft` by the theme's `--sui-shadow-hardness`: soft in `default`, hard in `playful`. It is also the colour of the lip under a raised control.
+- `--sui-shadow-sm` is the theme's `--sui-shadow-sm-offset` in that colour.
+
+A custom property substitutes its `var()`s on the element that declares it, so these three are declared on every element that sets a theme or a palette, and an island of either recomputes them.
 
 ### Motion
 
@@ -65,11 +101,11 @@ A `Checkbox`, `Radio` or `Switch` moves its mark with the same spring when it is
 
 ### Modes
 
-Every semantic colour is defined once with `light-dark()`, so light and dark variants come from `color-scheme`. Mode follows the OS by default, and `data-sui-mode="light" | "dark" | "system"` overrides it for a subtree. Because `light-dark()` resolves where a colour is used, themes and modes nest independently of each other. This needs Chrome 123, Safari 17.5 or Firefox 120.
+Every semantic colour is defined once with `light-dark()`, so light and dark variants come from `color-scheme`. Mode follows the OS by default, and `data-sui-mode="light" | "dark" | "system"` overrides it for a subtree. Because `light-dark()` resolves where a colour is used, themes, palettes and modes nest independently of each other. This needs Chrome 123, Safari 17.5 or Firefox 120.
 
 ### Global styles
 
-`@krelborn/stylesui/styles.css` contains the reset, palette, tokens, themes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
+`@krelborn/stylesui/styles.css` contains the reset, ramps, tokens, themes, palettes and modes. Apps import it once at the root. Playful's fonts are a separate, opt-in import, `@krelborn/stylesui/fonts/playful.css`, so apps that don't use them don't bundle them. Component CSS still loads per component, and every token read has a fallback, so components render sensibly without it.
 
 ## Components
 
@@ -93,7 +129,7 @@ NavList is a named navigation landmark holding a list. NavListGroup puts a muted
 
 Prose styles the raw HTML inside it (headings, paragraphs, links, lists, quotes, code, images, figures and tables) for content that can't be written one component per element, such as rendered markdown. Headings follow Heading's level sizes and links look like Link. Text is spaced by `--sui-prose-line-height`, which defaults to `--sui-line-height-normal` (1.5, the spacing WCAG 1.4.8 asks for within a paragraph). The right spacing depends on the length of a line, which the app sets and Prose cannot see, so Prose reads the property without declaring it: an app with long lines sets it on the prose or an ancestor, at any specificity. Code keeps `--sui-line-height-normal`, so loosening the text leaves code and diagrams drawn in text as they were.
 
-Code blocks wrap by default, because a scrolling region needs a `tabindex`, which CSS cannot add, before Safari lets a keyboard reach it. With `codeOverflow="scroll"` a code block keeps each line whole and scrolls sideways instead, as GitHub's do, so wrapping cannot break indentation or a diagram drawn in text. A table always scrolls, because fitting its columns to the width would break their words: it is as wide as its content, and one wider than the column scrolls sideways inside its own box. The content must give a table or code block that scrolls `tabindex="0"`, and prose draws a focus ring around it. Header cells sit on the surface colour.
+Code blocks wrap by default, because a scrolling region needs a `tabindex`, which CSS cannot add, before Safari lets a keyboard reach it. With `codeOverflow="scroll"` a code block keeps each line whole and scrolls sideways instead, as GitHub's do, so wrapping cannot break indentation or a diagram drawn in text. A table always scrolls, because fitting its columns to the width would break their words: it is as wide as its content, and one wider than the column scrolls sideways inside its own box. The content must give a table or code block that scrolls `tabindex="0"`, and prose draws a focus ring around it. Header cells sit on the sunken colour.
 
 Every descendant rule is `:where(.prose)`, or a variant of it such as `:where(.prose[data-code-overflow="scroll"])`, followed by type selectors only. That puts it above the reset and below every component class, so a StylesUI component inside prose keeps its own styles. Heading and Text declare `margin: 0` for this reason: without it, prose's heading and paragraph margins would beat the reset's. Prose has no opt-out, and four limits follow:
 
@@ -104,7 +140,7 @@ Every descendant rule is `:where(.prose)`, or a variant of it such as `:where(.p
 
 ### Code and keys
 
-Code is inline code in the monospace font on the surface colour, the look Prose gives a raw `code`. It wraps a long value rather than push its column wider. Kbd is a key: the same font and surface with a border whose bottom edge is twice as thick, so a shortcut reads as keys rather than as code. Write a combination as one Kbd per key. Prose draws a raw `kbd` with Kbd's declarations, and a unit test keeps the two identical.
+Code is inline code in the monospace font on the sunken colour, the look Prose gives a raw `code`. It wraps a long value rather than push its column wider. Kbd is a key: the same font and sunken colour with a border whose bottom edge is twice as thick, so a shortcut reads as keys rather than as code. Write a combination as one Kbd per key. Prose draws a raw `kbd` with Kbd's declarations, and a unit test keeps the two identical.
 
 ### Alerts and badges
 
@@ -170,9 +206,9 @@ Tooltip is the first overlay. `useTooltip` opens it after a delay when a mouse o
 
 A tooltip describes its trigger (`aria-describedby`), or names it with `relationship: "label"` (`aria-labelledby`) when the trigger has no text of its own, such as an icon-only button. It holds text only, nothing interactive. A native `disabled` button cannot take focus, so keyboard users never reach its tooltip: use `aria-disabled` on a trigger whose tooltip they need. On a `Checkbox`, `Radio` or `Switch` trigger, only the box itself responds to hover, not its label text.
 
-The tooltip's colours are `--sui-color-tooltip` and `--sui-color-on-tooltip`, which each theme sets to the inverse of body text on the page background. `--sui-tooltip-max-width` (default `20rem`) sets how wide a tooltip grows before its text wraps.
+The tooltip's colours are `--sui-color-tooltip` and `--sui-color-on-tooltip`, which each palette sets to the inverse of body text on the page background. `--sui-tooltip-max-width` (default `20rem`) sets how wide a tooltip grows before its text wraps.
 
-Popover is the second overlay. Its trigger, a Button or IconButton, gets `popoverTarget`, which makes it the popover's native invoker, so the browser opens and closes the popover on click, closes it on Escape and on a click outside, returns focus to the trigger when closing from the keyboard, and closes any other open popover. The trigger also carries `aria-expanded` and `aria-controls`. `usePopover` follows the native `toggle` event. Controlled, it cancels an opening in `beforetoggle` and reports it through `onOpenChange`, and reports a close after the browser makes it, showing the popover again if the parent keeps `open` true. Only one popover is open at a time, so two controlled popovers both held open would keep closing each other. Popover has no role; give it `role="dialog"` and a name when it holds a form. It takes the page background with a border, the large radius and the small shadow, at most `--sui-popover-max-width` (default `20rem`) wide, and fades in while moving out from the trigger, or only fades under reduced motion.
+Popover is the second overlay. Its trigger, a Button or IconButton, gets `popoverTarget`, which makes it the popover's native invoker, so the browser opens and closes the popover on click, closes it on Escape and on a click outside, returns focus to the trigger when closing from the keyboard, and closes any other open popover. The trigger also carries `aria-expanded` and `aria-controls`. `usePopover` follows the native `toggle` event. Controlled, it cancels an opening in `beforetoggle` and reports it through `onOpenChange`, and reports a close after the browser makes it, showing the popover again if the parent keeps `open` true. Only one popover is open at a time, so two controlled popovers both held open would keep closing each other. Popover has no role; give it `role="dialog"` and a name when it holds a form. It takes the overlay colour with a border, the large radius and the small shadow, at most `--sui-popover-max-width` (default `20rem`) wide, and fades in while moving out from the trigger, or only fades under reduced motion.
 
 ### Tabs
 

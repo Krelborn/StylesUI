@@ -104,7 +104,7 @@ export type { TextareaProps } from "./components/Textarea";
 export { TextInput } from "./components/TextInput";
 export type { TextInputProps, TextInputType } from "./components/TextInput";
 export { Theme } from "./components/Theme";
-export type { ThemeMode, ThemeName, ThemeProps } from "./components/Theme";
+export type { PaletteName, ThemeMode, ThemeName, ThemeProps } from "./components/Theme";
 export { Tooltip, useTooltip } from "./components/Tooltip";
 export type { TooltipProps, TooltipRelationship, UseTooltipOptions, UseTooltipResult } from "./components/Tooltip";
 export { VisuallyHidden } from "./components/VisuallyHidden";

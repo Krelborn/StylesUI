@@ -311,7 +311,7 @@ export const LongContent: Story = {
 };
 
 /**
- * Header cells sit on the surface colour. A table is as wide as its content, and one wider than the
+ * Header cells sit on the sunken colour. A table is as wide as its content, and one wider than the
  * column scrolls sideways inside its own box rather than pushing the prose wider. A table that
  * scrolls takes `tabIndex={0}`, so a keyboard can reach and scroll it, and shows a focus ring.
  */
@@ -371,7 +371,7 @@ export const Tables: Story = {
     const [narrowTable, wideTable] = canvas.getAllByRole("table");
     const [header] = canvas.getAllByRole("columnheader");
 
-    await expect(getComputedStyle(header).backgroundColor).toBe(resolvedColor(header, "var(--sui-color-surface)"));
+    await expect(getComputedStyle(header).backgroundColor).toBe(resolvedColor(header, "var(--sui-color-sunken)"));
     await expect(narrowTable.clientWidth).toBeLessThan(prose.clientWidth);
     await expect(narrowTable.scrollWidth).toBe(narrowTable.clientWidth);
     await expect(wideTable.scrollWidth).toBeGreaterThan(wideTable.clientWidth);

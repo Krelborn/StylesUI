@@ -1,65 +1,4 @@
 [data-sui-theme="playful"] {
-  /* Underscore-prefixed properties are private to this theme, so other themes need not declare them */
-  --_sui-ink: color-mix(in srgb, var(--sui-violet-900) 35%, var(--sui-black));
-  --_sui-plum: color-mix(in srgb, var(--sui-violet-900) 45%, var(--sui-black));
-
-  --sui-color-primary: light-dark(var(--sui-violet-600), var(--sui-violet-400));
-  --sui-color-primary-hover: light-dark(var(--sui-violet-700), var(--sui-violet-300));
-  --sui-color-primary-subtle: light-dark(
-    color-mix(in srgb, var(--sui-violet-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-violet-700) 55%, var(--sui-black))
-  );
-  --sui-color-on-primary: light-dark(var(--sui-white), var(--_sui-ink));
-  --sui-color-secondary: light-dark(var(--sui-yellow-300), var(--sui-yellow-400));
-  --sui-color-secondary-hover: light-dark(var(--sui-yellow-200), var(--sui-yellow-300));
-  --sui-color-secondary-subtle: light-dark(
-    color-mix(in srgb, var(--sui-yellow-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-yellow-900) 40%, var(--_sui-plum))
-  );
-  --sui-color-on-secondary: light-dark(var(--_sui-ink), var(--_sui-ink));
-  --sui-color-background: light-dark(color-mix(in srgb, var(--sui-orange-100) 40%, var(--sui-white)), var(--_sui-plum));
-  --sui-color-surface: light-dark(var(--sui-white), color-mix(in srgb, var(--sui-violet-900) 70%, var(--sui-black)));
-  --sui-color-border: light-dark(var(--_sui-ink), var(--sui-violet-300));
-  --sui-color-control-border: light-dark(var(--_sui-ink), var(--_sui-ink));
-  --sui-color-input-border: light-dark(var(--_sui-ink), var(--sui-violet-300));
-  --sui-color-text: light-dark(var(--_sui-ink), color-mix(in srgb, var(--sui-violet-100), var(--sui-white)));
-  --sui-color-text-muted: light-dark(
-    color-mix(in srgb, var(--sui-violet-900) 60%, var(--sui-gray-500)),
-    var(--sui-violet-200)
-  );
-  --sui-color-tooltip: light-dark(var(--_sui-ink), color-mix(in srgb, var(--sui-violet-100), var(--sui-white)));
-  --sui-color-on-tooltip: light-dark(color-mix(in srgb, var(--sui-orange-100) 40%, var(--sui-white)), var(--_sui-plum));
-  --sui-color-focus-ring: light-dark(var(--sui-pink-600), var(--sui-yellow-300));
-  --sui-color-shadow: light-dark(var(--_sui-ink), var(--sui-pink-600));
-  --sui-color-success: light-dark(var(--sui-green-400), var(--sui-green-300));
-  --sui-color-on-success: light-dark(var(--_sui-ink), var(--_sui-ink));
-  --sui-color-success-text: light-dark(var(--sui-green-800), var(--sui-green-300));
-  --sui-color-success-subtle: light-dark(
-    color-mix(in srgb, var(--sui-green-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-green-700) 55%, var(--sui-black))
-  );
-  --sui-color-warning: light-dark(var(--sui-yellow-400), var(--sui-yellow-300));
-  --sui-color-on-warning: light-dark(var(--_sui-ink), var(--_sui-ink));
-  --sui-color-warning-text: light-dark(var(--sui-yellow-800), var(--sui-yellow-300));
-  --sui-color-warning-subtle: light-dark(
-    color-mix(in srgb, var(--sui-yellow-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-yellow-700) 55%, var(--sui-black))
-  );
-  --sui-color-danger: light-dark(var(--sui-red-400), var(--sui-red-300));
-  --sui-color-on-danger: light-dark(var(--_sui-ink), var(--_sui-ink));
-  --sui-color-danger-text: light-dark(var(--sui-red-700), var(--sui-red-300));
-  --sui-color-danger-subtle: light-dark(
-    color-mix(in srgb, var(--sui-red-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-red-700) 55%, var(--sui-black))
-  );
-  --sui-color-info: light-dark(var(--sui-blue-400), var(--sui-blue-300));
-  --sui-color-on-info: light-dark(var(--_sui-ink), var(--_sui-ink));
-  --sui-color-info-text: light-dark(var(--sui-blue-700), var(--sui-blue-300));
-  --sui-color-info-subtle: light-dark(
-    color-mix(in srgb, var(--sui-blue-100), var(--sui-white)),
-    color-mix(in srgb, var(--sui-blue-700) 55%, var(--sui-black))
-  );
-
   --sui-radius-sm: 6px;
   --sui-radius-md: 12px;
   --sui-radius-lg: 20px;
@@ -69,9 +8,11 @@
   --sui-border-width: 2px;
   --sui-focus-ring-width: 3px;
   --sui-icon-stroke-width: 2;
-  --sui-shadow-sm: 4px 4px 0 var(--sui-color-shadow);
+  --sui-shadow-sm-offset: 4px 4px 0;
+  --sui-shadow-hardness: 100%;
 
   --sui-control-depth: 4px;
+  --sui-control-outline: 100%;
   --sui-motion-spring: 450ms
     linear(
       0,

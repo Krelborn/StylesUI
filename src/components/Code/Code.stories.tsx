@@ -29,7 +29,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Inline code inside a sentence, in the monospace font on the surface colour
+ * Inline code inside a sentence, in the monospace font on the sunken colour
  */
 export const Default: Story = {
   render: (args) => (
