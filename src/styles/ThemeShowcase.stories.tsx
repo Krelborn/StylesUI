@@ -26,7 +26,7 @@ function SampleCard(): JSX.Element {
       <Box style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginTop: "1rem" }}>
         <Button>Primary</Button>
         <Button variant="secondary">Secondary</Button>
-        <Button variant="outline">Outline</Button>
+        <Button variant="outline-primary">Outline</Button>
       </Box>
     </Card>
   );

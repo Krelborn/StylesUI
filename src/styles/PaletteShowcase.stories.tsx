@@ -49,7 +49,6 @@ function PaletteSamples({ palette }: PaletteSamplesProps): JSX.Element {
           <Box style={sampleRow}>
             <Button>Primary</Button>
             <Button variant="secondary">Secondary</Button>
-            <Button variant="outline">Outline</Button>
             <Button variant="ghost">Ghost</Button>
           </Box>
           <Box style={sampleRow}>
@@ -57,6 +56,14 @@ function PaletteSamples({ palette }: PaletteSamplesProps): JSX.Element {
             <Button variant="warning">Warning</Button>
             <Button variant="info">Info</Button>
             <Button variant="success">Success</Button>
+          </Box>
+          <Box style={sampleRow}>
+            <Button variant="outline-primary">Primary</Button>
+            <Button variant="outline-secondary">Secondary</Button>
+            <Button variant="outline-danger">Danger</Button>
+            <Button variant="outline-warning">Warning</Button>
+            <Button variant="outline-info">Info</Button>
+            <Button variant="outline-success">Success</Button>
           </Box>
           <Box style={sampleRow}>
             {badgeTones.map((tone) => (

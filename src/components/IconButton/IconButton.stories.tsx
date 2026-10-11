@@ -9,7 +9,21 @@ import { RefreshIcon } from "../Icon";
 import { IconButton } from "./IconButton";
 
 const sizes: ButtonSize[] = ["sm", "md", "lg"];
-const variants: ButtonVariant[] = ["ghost", "outline", "primary", "secondary"];
+const variants: ButtonVariant[] = [
+  "ghost",
+  "primary",
+  "secondary",
+  "danger",
+  "warning",
+  "info",
+  "success",
+  "outline-primary",
+  "outline-secondary",
+  "outline-danger",
+  "outline-warning",
+  "outline-info",
+  "outline-success",
+];
 
 /**
  * Finds the one element a selector names inside a button
@@ -61,7 +75,7 @@ const meta = {
       options: variants,
       table: {
         defaultValue: { summary: "ghost" },
-        type: { summary: '"ghost" | "outline" | "primary" | "secondary"' },
+        type: { summary: variants.map((variant) => `"${variant}"`).join(" | ") },
       },
     },
   },

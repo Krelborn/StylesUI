@@ -33,14 +33,25 @@ describe("Button", () => {
     expect(button).toHaveAttribute("data-size", "md");
   });
 
-  it.each(["danger", "ghost", "info", "outline", "primary", "secondary", "success", "warning"] as const)(
-    "must apply the %s variant when it is set",
-    (variant) => {
-      render(<Button variant={variant}>Save</Button>);
+  it.each([
+    "danger",
+    "ghost",
+    "info",
+    "outline-danger",
+    "outline-info",
+    "outline-primary",
+    "outline-secondary",
+    "outline-success",
+    "outline-warning",
+    "primary",
+    "secondary",
+    "success",
+    "warning",
+  ] as const)("must apply the %s variant when it is set", (variant) => {
+    render(<Button variant={variant}>Save</Button>);
 
-      expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("data-variant", variant);
-    }
-  );
+    expect(screen.getByRole("button", { name: "Save" })).toHaveAttribute("data-variant", variant);
+  });
 
   it.each(["sm", "md", "lg"] as const)("must apply the %s size when it is set", (size) => {
     render(<Button size={size}>Save</Button>);
@@ -181,8 +192,8 @@ describe("Button", () => {
   });
 
   it("must reject a variant when it is not supported", () => {
-    // @ts-expect-error "tertiary" is not a ButtonVariant
-    render(<Button variant="tertiary">Save</Button>);
+    // @ts-expect-error "outline" names no colour, so it is not a ButtonVariant
+    render(<Button variant="outline">Save</Button>);
   });
 
   it("must reject a size when it is not supported", () => {

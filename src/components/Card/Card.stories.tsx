@@ -57,7 +57,7 @@ export const WithContent: Story = {
       </Text>
       <Box style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
         <Button>Open</Button>
-        <Button variant="outline">Dismiss</Button>
+        <Button variant="outline-primary">Dismiss</Button>
       </Box>
     </Card>
   ),

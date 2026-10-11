@@ -31,7 +31,7 @@ For each colour there exists 9 variations `[color]-[variant]` where each variant
 Each status (`danger`, `success`, `warning`, `info`) has three grades:
 
 - **Fill**: `--sui-color-<status>`, a solid background, and `--sui-color-<status>-hover`, the same fill hovered. `--sui-color-on-<status>` is the text on both.
-- **Text**: `--sui-color-<status>-text`, for text, borders and icons on the page background, on a surface and on the status's own subtle.
+- **Text**: `--sui-color-<status>-text`, for text, borders and icons on the page background, on a surface, on an overlay and on the status's own subtle.
 - **Subtle**: `--sui-color-<status>-subtle`, a tinted background. Body text (`--sui-color-text`) sits on it. Primary-coloured text must not, because it falls below 4.5:1 on some subtles.
 
 #### Borders
@@ -218,7 +218,9 @@ Tabs follows the WAI-ARIA tabs pattern. `Tabs` holds the selection, controlled w
 
 ### Buttons
 
-The status variants, `danger`, `warning`, `info` and `success`, fill a Button with the status's fill grade: `--sui-color-<status>` at rest and `--sui-color-<status>-hover` on hover, with `--sui-color-on-<status>` text. Otherwise they behave as `primary`, with its outline, lip, sizes and states. `danger` is for an action that destroys something, such as deleting a draft.
+The status variants, `danger`, `warning`, `info` and `success`, fill a Button with the status's fill grade: `--sui-color-<status>` at rest and `--sui-color-<status>-hover` on hover, with `--sui-color-on-<status>` text. Otherwise they behave as `primary`, with its control border, lip, sizes and states. `danger` is for an action that destroys something, such as deleting a draft.
+
+Every colour also has an outline variant, `outline-<colour>`, transparent at rest and filled with the colour's subtle on hover. A status outline draws its text and border in `--sui-color-<status>-text` and `outline-primary` in `--sui-color-primary`. Secondary has no text grade, so `outline-secondary` draws body text inside the 3:1 `--sui-color-input-border` and hovers to `--sui-color-secondary-subtle`.
 
 A ghost Button has no fill or border at rest. Hovering tints it with its text colour at 8% and pressing at 16%, laid over whatever is behind it, so both states show on the page, on a surface and on any tint, and its text keeps its colour. A fixed fill would vanish on a background of the same colour.
 

@@ -13,11 +13,25 @@ import styles from "./Button.module.css";
 export type ButtonSize = "sm" | "md" | "lg";
 
 /**
- * Button styles: filled primary, filled secondary, primary-coloured outline, `ghost`, which has no border and no fill
- * until it is hovered, and never sits on a lip, or filled in a status colour: `danger` for an action that destroys
- * something, such as deleting, and `success`, `warning` or `info` for an action tied to that status
+ * Button styles: filled in the primary, secondary or a status colour, outlined in one of those colours
+ * (`outline-<colour>`), or `ghost`, which has no border and no fill until it is hovered, and never sits on a lip. Use
+ * `danger` or `outline-danger` for an action that destroys something, such as deleting, and the other status colours
+ * for an action tied to that status.
  */
-export type ButtonVariant = "danger" | "ghost" | "info" | "outline" | "primary" | "secondary" | "success" | "warning";
+export type ButtonVariant =
+  | "danger"
+  | "ghost"
+  | "info"
+  | "outline-danger"
+  | "outline-info"
+  | "outline-primary"
+  | "outline-secondary"
+  | "outline-success"
+  | "outline-warning"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning";
 
 /**
  * Props for `Button`: its own props plus every native button prop

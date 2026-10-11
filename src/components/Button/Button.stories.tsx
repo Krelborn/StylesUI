@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { JSX } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { childrenArgType } from "../../docs/argTypes";
@@ -11,6 +12,7 @@ import { Kbd } from "../Kbd";
 import { Row } from "../Row";
 import { Stack } from "../Stack";
 
+import type { ButtonVariant } from "./Button";
 import { Button } from "./Button";
 
 /**
@@ -36,6 +38,63 @@ const distinctFillContrast = 1.1;
 const sizes = ["sm", "md", "lg"] as const;
 
 const statusVariants = ["danger", "warning", "info", "success"] as const;
+
+const outlineVariants = [
+  "outline-primary",
+  "outline-secondary",
+  "outline-danger",
+  "outline-warning",
+  "outline-info",
+  "outline-success",
+] as const;
+
+interface VariantRowsProps {
+  /**
+   * Variants to show, one row each
+   */
+  variants: readonly ButtonVariant[];
+}
+
+/**
+ * One row per variant: the button at each size, then disabled and busy, each named for its variant and state
+ */
+function VariantRows({ variants }: VariantRowsProps): JSX.Element {
+  return (
+    <Stack gap={3}>
+      {variants.map((variant) => (
+        <Row align="center" gap={2} key={variant}>
+          {sizes.map((size) => (
+            <Button key={size} size={size} variant={variant}>
+              {`${variant} ${size}`}
+            </Button>
+          ))}
+          <Button disabled={true} variant={variant}>
+            {`${variant} disabled`}
+          </Button>
+          <Button busy={true} variant={variant}>
+            {`${variant} busy`}
+          </Button>
+        </Row>
+      ))}
+    </Stack>
+  );
+}
+
+/**
+ * Checks that a busy button's spinner is drawn in the text colour its variant has at rest
+ *
+ * @param idle a button of the variant at rest
+ * @param busy a busy button of the same variant
+ * @param variant the variant, for the failure message
+ */
+async function expectSpinnerInTextColour(idle: HTMLElement, busy: HTMLElement, variant: ButtonVariant): Promise<void> {
+  const spinner = busy.querySelector("svg");
+
+  await expect(spinner, `${variant} spinner`).not.toBeNull();
+  await expect(getComputedStyle(spinner as SVGElement).color, `${variant} spinner colour`).toBe(
+    getComputedStyle(idle).color
+  );
+}
 
 /**
  * Waits for a button's fill to finish changing into the state the real pointer has just put it in
@@ -128,15 +187,6 @@ export const Secondary: Story = {
 };
 
 /**
- * Primary-coloured outline, for lower-emphasis actions
- */
-export const Outline: Story = {
-  args: {
-    variant: "outline",
-  },
-};
-
-/**
  * No border, and no fill until hovered, for quiet actions in toolbars and status bars. It stays flat in every theme.
  * Hovering and pressing tint it with its text colour, so both show on the page, on a surface and on any tint.
  */
@@ -179,38 +229,33 @@ export const Ghost: Story = {
  * fill enough to see.
  */
 export const StatusVariants: Story = {
-  render: () => (
-    <Stack gap={3}>
-      {statusVariants.map((variant) => (
-        <Row align="center" gap={2} key={variant}>
-          {sizes.map((size) => (
-            <Button key={size} size={size} variant={variant}>
-              {`${variant} ${size}`}
-            </Button>
-          ))}
-          <Button disabled={true} variant={variant}>
-            {`${variant} disabled`}
-          </Button>
-          <Button busy={true} variant={variant}>
-            {`${variant} busy`}
-          </Button>
-        </Row>
-      ))}
-    </Stack>
-  ),
+  render: () => <VariantRows variants={statusVariants} />,
   play: async ({ canvas }) => {
     for (const variant of statusVariants) {
       const button = canvas.getByRole("button", { name: `${variant} md` });
-      const spinner = canvas.getByRole("button", { name: `${variant} busy` }).querySelector("svg");
 
       await expect(
         fillContrast(button, "var(--sui-button-bg)", "var(--sui-button-bg-hover)"),
         `${variant} rest to hover`
       ).toBeGreaterThanOrEqual(distinctFillContrast);
-      await expect(spinner, `${variant} spinner`).not.toBeNull();
-      await expect(getComputedStyle(spinner as SVGElement).color, `${variant} spinner colour`).toBe(
-        getComputedStyle(button).color
-      );
+      await expectSpinnerInTextColour(button, canvas.getByRole("button", { name: `${variant} busy` }), variant);
+    }
+  },
+};
+
+/**
+ * Transparent inside a border of any colour, and filled with that colour's subtle tint on hover: `outline-primary` for
+ * lower-emphasis actions, `outline-secondary` for neutral ones, and a status outline for a quieter action tied to that
+ * status, such as `outline-danger`. Each works at every size, disabled and busy.
+ */
+export const OutlineVariants: Story = {
+  render: () => <VariantRows variants={outlineVariants} />,
+  play: async ({ canvas }) => {
+    for (const variant of outlineVariants) {
+      const button = canvas.getByRole("button", { name: `${variant} md` });
+
+      await expect(getComputedStyle(button).backgroundColor, `${variant} at rest`).toBe("rgba(0, 0, 0, 0)");
+      await expectSpinnerInTextColour(button, canvas.getByRole("button", { name: `${variant} busy` }), variant);
     }
   },
 };
@@ -290,7 +335,11 @@ export const HoverContrast: Story = {
     <Box style={{ alignItems: "center", display: "flex", gap: "0.5rem" }}>
       <Button variant="primary">Primary</Button>
       <Button variant="secondary">Secondary</Button>
-      <Button variant="outline">Outline</Button>
+      {outlineVariants.map((variant) => (
+        <Button key={variant} variant={variant}>
+          {variant}
+        </Button>
+      ))}
       <Button variant="ghost">Ghost</Button>
       {statusVariants.map((variant) => (
         <Button key={variant} variant={variant}>

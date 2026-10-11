@@ -41,13 +41,6 @@
   --sui-button-fg: var(--sui-color-on-secondary, #111827);
 }
 
-.button[data-variant="outline"] {
-  --sui-button-bg: transparent;
-  --sui-button-bg-hover: var(--sui-color-primary-subtle, #edf5ff);
-  --sui-button-fg: var(--sui-color-primary, #2563eb);
-  --sui-button-border: var(--sui-color-primary, #2563eb);
-}
-
 .button[data-variant="danger"] {
   --sui-button-bg: var(--sui-color-danger, #dc2626);
   --sui-button-bg-hover: var(--sui-color-danger-hover, #b91c1c);
@@ -70,6 +63,47 @@
   --sui-button-bg: var(--sui-color-warning, #eab308);
   --sui-button-bg-hover: var(--sui-color-warning-hover, #facc15);
   --sui-button-fg: var(--sui-color-on-warning, #111827);
+}
+
+.button[data-variant^="outline-"] {
+  --sui-button-bg: transparent;
+}
+
+.button[data-variant="outline-primary"] {
+  --sui-button-bg-hover: var(--sui-color-primary-subtle, #edf5ff);
+  --sui-button-fg: var(--sui-color-primary, #2563eb);
+  --sui-button-border: var(--sui-color-primary, #2563eb);
+}
+
+/* Secondary has no text grade, so its outline is body text inside a form control's border */
+.button[data-variant="outline-secondary"] {
+  --sui-button-bg-hover: var(--sui-color-secondary-subtle, #f3f4f6);
+  --sui-button-fg: var(--sui-color-text, #111827);
+  --sui-button-border: var(--sui-color-input-border, #6b7280);
+}
+
+.button[data-variant="outline-danger"] {
+  --sui-button-bg-hover: var(--sui-color-danger-subtle, #fff1f1);
+  --sui-button-fg: var(--sui-color-danger-text, #b91c1c);
+  --sui-button-border: var(--sui-color-danger-text, #b91c1c);
+}
+
+.button[data-variant="outline-info"] {
+  --sui-button-bg-hover: var(--sui-color-info-subtle, #f0f3ff);
+  --sui-button-fg: var(--sui-color-info-text, #4338ca);
+  --sui-button-border: var(--sui-color-info-text, #4338ca);
+}
+
+.button[data-variant="outline-success"] {
+  --sui-button-bg-hover: var(--sui-color-success-subtle, #eefef3);
+  --sui-button-fg: var(--sui-color-success-text, #166534);
+  --sui-button-border: var(--sui-color-success-text, #166534);
+}
+
+.button[data-variant="outline-warning"] {
+  --sui-button-bg-hover: var(--sui-color-warning-subtle, #fffce1);
+  --sui-button-fg: var(--sui-color-warning-text, #854d0e);
+  --sui-button-border: var(--sui-color-warning-text, #854d0e);
 }
 
 /* Hover and press tint whatever is behind the button, since a fixed fill can match the surface it sits on */

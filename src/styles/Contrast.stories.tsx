@@ -29,6 +29,7 @@ const statusTextPairs: readonly ColourPair[] = statuses.flatMap((status) => [
   { background: `${status}-hover`, foreground: `on-${status}` },
   { background: "background", foreground: `${status}-text` },
   { background: "surface", foreground: `${status}-text` },
+  { background: "overlay", foreground: `${status}-text` },
   { background: `${status}-subtle`, foreground: `${status}-text` },
   { background: `${status}-subtle`, foreground: "text" },
 ]);
