@@ -3,7 +3,7 @@ import type { JSX } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { childrenArgType } from "../../docs/argTypes";
-import { fillContrast, focusRingContrast, textContrast } from "../../test/colorContrast";
+import { distinctFillContrast, fillContrast, focusRingContrast, textContrast } from "../../test/colorContrast";
 import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
@@ -31,9 +31,6 @@ function findKbd(button: HTMLElement): HTMLElement {
 
   return kbd;
 }
-
-// About the step from white to gray-100, the faintest change of fill that still reads as a new state
-const distinctFillContrast = 1.1;
 
 const sizes = ["sm", "md", "lg"] as const;
 
@@ -244,9 +241,10 @@ export const StatusVariants: Story = {
 };
 
 /**
- * Transparent inside a border of any colour, and filled with that colour's subtle tint on hover: `outline-primary` for
- * lower-emphasis actions, `outline-secondary` for neutral ones, and a status outline for a quieter action tied to that
- * status, such as `outline-danger`. Each works at every size, disabled and busy.
+ * Transparent inside a border of any colour, and tinted with that colour on hover, over whatever is behind it:
+ * `outline-primary` for lower-emphasis actions, `outline-secondary` for neutral ones, and a status outline for a quieter
+ * action tied to that status, such as `outline-danger`. Each works at every size, disabled and busy, and hovering
+ * changes its fill enough to see.
  */
 export const OutlineVariants: Story = {
   render: () => <VariantRows variants={outlineVariants} />,
@@ -255,6 +253,10 @@ export const OutlineVariants: Story = {
       const button = canvas.getByRole("button", { name: `${variant} md` });
 
       await expect(getComputedStyle(button).backgroundColor, `${variant} at rest`).toBe("rgba(0, 0, 0, 0)");
+      await expect(
+        fillContrast(button, "transparent", "var(--sui-button-bg-hover)"),
+        `${variant} rest to hover`
+      ).toBeGreaterThanOrEqual(distinctFillContrast);
       await expectSpinnerInTextColour(button, canvas.getByRole("button", { name: `${variant} busy` }), variant);
     }
   },

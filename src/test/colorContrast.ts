@@ -83,6 +83,11 @@ export function textContrast(element: HTMLElement, background?: string): number 
 }
 
 /**
+ * The lowest contrast between two fills that still reads as a change of state, about the step from white to gray-100
+ */
+export const distinctFillContrast = 1.1;
+
+/**
  * Measures the WCAG contrast ratio between two fills an element can show, such as its resting and hovered
  * backgrounds, each painted over the background behind the element. WCAG sets no minimum for a change of state; a
  * ratio near 1 means the two cannot be told apart.

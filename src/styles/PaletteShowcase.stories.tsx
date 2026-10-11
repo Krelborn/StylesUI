@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 
 import { Alert } from "../components/Alert";
 import type { AlertTone } from "../components/Alert";
@@ -21,6 +22,7 @@ import { Text } from "../components/Text";
 import { TextInput } from "../components/TextInput";
 import type { PaletteName } from "../components/Theme";
 import { Theme } from "../components/Theme";
+import { distinctFillContrast, fillContrast, textContrast } from "../test/colorContrast";
 
 import { paletteNames } from "./tokenSource";
 
@@ -141,7 +143,8 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * The same components in every palette, in the current theme and mode, so a palette's colours can be compared on real
- * buttons, badges, alerts, form controls, tabs, cards, navigation and lists
+ * buttons, badges, alerts, form controls, tabs, cards, navigation and lists. Every Button keeps its text readable when
+ * hovered, and its hover fill can be told from its resting one.
  */
 export const AllPalettes: Story = {
   render: () => (
@@ -151,4 +154,20 @@ export const AllPalettes: Story = {
       ))}
     </Box>
   ),
+  // axe only sees the resting state, so the hover is measured directly
+  play: async ({ canvas }) => {
+    for (const palette of paletteNames) {
+      const section = within(canvas.getByRole("region", { name: `${palette} palette` }));
+
+      for (const button of section.getAllByRole("button")) {
+        const label = `${palette}: ${button.getAttribute("data-variant")} hovered`;
+
+        await expect(textContrast(button, "var(--sui-button-bg-hover)"), `${label} text`).toBeGreaterThanOrEqual(4.5);
+        await expect(
+          fillContrast(button, "var(--sui-button-bg)", "var(--sui-button-bg-hover)"),
+          `${label} fill`
+        ).toBeGreaterThanOrEqual(distinctFillContrast);
+      }
+    }
+  },
 };
