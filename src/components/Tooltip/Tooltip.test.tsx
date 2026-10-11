@@ -185,6 +185,20 @@ describe("Tooltip", () => {
     expect(() => advance(0)).not.toThrow();
   });
 
+  it("must not show the tooltip when it leaves the document before the browser lets it show", () => {
+    const { advance } = setUpTest();
+    rejectInvalidShowPopover().mockImplementationOnce(refuse);
+    const { container } = render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    container.remove();
+
+    expect(() => advance(0)).not.toThrow();
+  });
+
   it("must show the tooltip once on the next task when the browser refuses at first in StrictMode", () => {
     const { advance } = setUpTest();
     rejectInvalidShowPopover().mockImplementationOnce(refuse);
