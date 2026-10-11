@@ -3,7 +3,7 @@ import type { UserEvent } from "@testing-library/user-event";
 import userEvent from "@testing-library/user-event";
 import type { JSX, ReactNode } from "react";
 import { useState } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { Box } from "../Box";
 import type { ButtonProps } from "../Button";
@@ -456,6 +456,90 @@ describe("useTooltip", () => {
     expect(elements.visibleTooltip).toBeNull();
   });
 
+  it("must show the tooltip at once when Shift+Tab returns focus to the trigger from a popover that stays open", async () => {
+    const { user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.tab();
+    await user.tab();
+
+    await user.tab({ shift: true });
+
+    expect(elements.publishButton).toHaveFocus();
+    expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
+  });
+
+  it("must not show the tooltip when a pointer press closes the popover and focus returns to the trigger", async () => {
+    const { advance, user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.click(elements.scheduleLink);
+
+    returnFocus(elements.publishOptions, elements.publishButton, { focusVisible: false });
+    advance(1000);
+
+    expect(elements.publishButton).toHaveFocus();
+    expect(elements.visibleTooltip).toBeNull();
+  });
+
+  it("must keep the tooltip open when the popover returns focus to the trigger while the tooltip waits to hide", async () => {
+    const { advance, user } = setUpTest();
+    render(<PopoverTriggerExample />);
+    await user.tab();
+    await user.tab();
+    await user.hover(elements.publishButton);
+    advance(400);
+    await user.unhover(elements.publishButton);
+
+    returnFocus(elements.publishOptions, elements.publishButton, { focusVisible: true });
+    advance(1000);
+
+    expect(elements.visibleTooltip).toHaveAccessibleName("Sends to all subscribers");
+  });
+
+  it("must ask to open a controlled tooltip only once the popover that returned focus to the trigger has closed", async () => {
+    const { advance, user } = setUpTest();
+    const onOpenChange = vi.fn();
+    render(<PopoverTriggerExample onOpenChange={onOpenChange} open={false} />);
+    await user.tab();
+    await user.tab();
+    onOpenChange.mockClear();
+
+    await closeOnEscape(user, elements.publishOptions, elements.publishButton);
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    advance(0);
+
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it.each([
+    {
+      request: async (user: UserEvent) => {
+        await user.hover(elements.publishButton);
+      },
+      requested: "the show delay",
+    },
+    {
+      request: async (user: UserEvent) => {
+        await user.tab();
+        await user.tab();
+        await closeOnEscape(user, elements.publishOptions, elements.publishButton);
+      },
+      requested: "the popover closing",
+    },
+  ])("must not call onOpenChange when the tooltip unmounts while it waits for $requested", async ({ request }) => {
+    const { advance, user } = setUpTest();
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<PopoverTriggerExample onOpenChange={onOpenChange} open={false} />);
+    await request(user);
+    onOpenChange.mockClear();
+
+    unmount();
+    advance(1000);
+
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it("must hide the open tooltip when another tooltip opens", async () => {
     const { user } = setUpTest();
     render(
@@ -619,8 +703,8 @@ function OpenChangeCounterExample(): JSX.Element {
   );
 }
 
-function PopoverTriggerExample(): JSX.Element {
-  const tooltip = useTooltip();
+function PopoverTriggerExample(options: UseTooltipOptions): JSX.Element {
+  const tooltip = useTooltip(options);
   const popover = usePopover({ defaultOpen: true });
 
   return (
@@ -688,6 +772,10 @@ async function closeOnEscape(user: UserEvent, popover: HTMLElement, trigger: HTM
     throw new DOMException("Invalid to show a popover during another show operation", "InvalidStateError");
   });
 
+  onTestFinished(() => {
+    showPopover.mockRestore();
+  });
+
   act(() => {
     popover.hidePopover();
     trigger.focus();
@@ -695,6 +783,30 @@ async function closeOnEscape(user: UserEvent, popover: HTMLElement, trigger: HTM
   showPopover.mockRestore();
 
   return refusedPopovers;
+}
+
+/**
+ * Closes a popover and returns focus to its trigger, as the browser does when a press inside the popover closes it.
+ * jsdom decides `:focus-visible` for such a focus differently from a browser, so the caller says whether it matches.
+ *
+ * @param popover the open popover
+ * @param trigger the element focus returns to
+ * @param options whether the trigger matches `:focus-visible` once focused
+ */
+function returnFocus(popover: HTMLElement, trigger: HTMLElement, { focusVisible }: { focusVisible: boolean }): void {
+  const matches = trigger.matches.bind(trigger);
+  const matchesSpy = vi
+    .spyOn(trigger, "matches")
+    .mockImplementation((selectors) => (selectors === ":focus-visible" ? focusVisible : matches(selectors)));
+  onTestFinished(() => {
+    matchesSpy.mockRestore();
+  });
+
+  act(() => {
+    popover.hidePopover();
+    trigger.focus();
+  });
+  matchesSpy.mockRestore();
 }
 
 const copyIcon = (
@@ -721,6 +833,9 @@ const elements = {
   },
   get scheduleButton() {
     return screen.getByRole("button", { name: "Schedule" });
+  },
+  get scheduleLink() {
+    return screen.getByRole("link", { name: "Schedule for later" });
   },
   get visibleTooltip() {
     return screen.queryByRole("tooltip");

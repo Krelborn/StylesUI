@@ -6,7 +6,8 @@ import type { IconProps } from "./Icon";
 import { Icon } from "./Icon";
 
 /**
- * A sun half hidden behind a crescent moon, for the colour mode, such as on a button that switches between light and dark. It is hidden from assistive technology unless it has a `label`, so inside a button, name the button instead.
+ * A sun half hidden behind a crescent moon, for the colour mode, such as on a button that switches between light and
+ * dark. It is hidden from assistive technology unless it has a `label`, so inside a button, name the button instead.
  *
  * @example
  * <IconButton label="Dark mode" onClick={toggleDarkMode} aria-pressed={isDark}>

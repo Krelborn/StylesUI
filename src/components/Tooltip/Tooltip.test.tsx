@@ -1,6 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
+import { StrictMode } from "react";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
+import { rejectInvalidShowPopover } from "../../test/rejectInvalidShowPopover";
 import { transitionedProperties } from "../../test/transitionedProperties";
 
 import { Tooltip } from "./Tooltip";
@@ -142,8 +144,90 @@ describe("Tooltip", () => {
       </Tooltip>
     );
 
-    expect(() => advance(0)).toThrow("Invalid to show a popover during another show operation");
+    expect(() => advance(0)).toThrow(
+      expect.objectContaining({
+        cause: expect.objectContaining({ name: "InvalidStateError" }),
+        message: 'The browser refused to show the popover with id "publish-tip"',
+      })
+    );
     expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Sends to all subscribers");
+  });
+
+  it("must report the refusal and keep the tooltip rendered when the browser refuses to hide it again", () => {
+    const { advance, popoverMethod } = setUpTest();
+    const { rerender } = render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+    popoverMethod("hidePopover").mockImplementation(refuse);
+    rerender(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={false} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    expect(() => advance(0)).toThrow('The browser refused to hide the popover with id "publish-tip"');
+    expect(screen.getByRole("tooltip", { hidden: true })).toHaveTextContent("Sends to all subscribers");
+  });
+
+  it("must not show the tooltip when it unmounts before the browser lets it show", () => {
+    const { advance } = setUpTest();
+    rejectInvalidShowPopover().mockImplementationOnce(refuse);
+    const { unmount } = render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    unmount();
+
+    expect(() => advance(0)).not.toThrow();
+  });
+
+  it("must not show the tooltip when it leaves the document before the browser lets it show", () => {
+    const { advance } = setUpTest();
+    rejectInvalidShowPopover().mockImplementationOnce(refuse);
+    const { container } = render(
+      <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+        Sends to all subscribers
+      </Tooltip>
+    );
+
+    container.remove();
+
+    expect(() => advance(0)).not.toThrow();
+  });
+
+  it("must show the tooltip once on the next task when the browser refuses at first in StrictMode", () => {
+    const { advance } = setUpTest();
+    rejectInvalidShowPopover().mockImplementationOnce(refuse);
+    render(
+      <StrictMode>
+        <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+          Sends to all subscribers
+        </Tooltip>
+      </StrictMode>
+    );
+
+    advance(0);
+
+    expect(screen.getByRole("tooltip", { name: "Sends to all subscribers" })).toBeVisible();
+  });
+
+  it("must throw while rendering when showing the tooltip fails for a reason other than a refusal", () => {
+    const { popoverMethod } = setUpTest();
+    popoverMethod("showPopover").mockImplementationOnce(() => {
+      throw new TypeError("The popover is broken");
+    });
+
+    expect(() =>
+      render(
+        <Tooltip anchorName="--sui-overlay-test" id="publish-tip" open={true} placement="top">
+          Sends to all subscribers
+        </Tooltip>
+      )
+    ).toThrow("The popover is broken");
   });
 
   it("must not transition when reduced motion is requested", () => {

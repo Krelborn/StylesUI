@@ -6,7 +6,8 @@ import type { IconProps } from "./Icon";
 import { Icon } from "./Icon";
 
 /**
- * A painter's palette dotted with paint, for choosing colours, such as the button that opens an appearance or theme menu. It is hidden from assistive technology unless it has a `label`, so inside a button, name the button instead.
+ * A painter's palette dotted with paint, for choosing colours, such as the button that opens an appearance or theme
+ * menu. It is hidden from assistive technology unless it has a `label`, so inside a button, name the button instead.
  *
  * @example
  * <IconButton label="Appearance" {...getTriggerProps()}>

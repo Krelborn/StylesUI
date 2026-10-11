@@ -1,9 +1,10 @@
-import { fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX } from "react";
 import { memo, useState } from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
+import { rejectInvalidShowPopover } from "../../test/rejectInvalidShowPopover";
 import { Button } from "../Button";
 import { IconButton } from "../IconButton";
 import { Text } from "../Text";
@@ -115,6 +116,33 @@ describe("usePopover", () => {
 
     elements.popover.hidePopover();
     fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+  });
+
+  it("must show a controlled popover once on the next task when the browser refuses to show it at first", () => {
+    const { advance } = setUpTest();
+    rejectInvalidShowPopover().mockImplementationOnce(refuse);
+    render(<ProblemsPopover onOpenChange={vi.fn()} open={true} />);
+
+    advance(0);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    expect(elements.popover).toBeVisible();
+  });
+
+  it("must show the popover again on the next task when the browser refuses at first after closing it while the parent keeps it open", () => {
+    const { advance } = setUpTest();
+    const showPopover = rejectInvalidShowPopover();
+    render(<ProblemsPopover onOpenChange={vi.fn()} open={true} />);
+    showPopover.mockImplementationOnce(refuse);
+
+    elements.popover.hidePopover();
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).not.toBeVisible();
+
+    advance(0);
 
     expect(elements.popover).toBeVisible();
   });
@@ -311,25 +339,26 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
   });
 }
 
-/**
- * Makes `showPopover` stricter than a browser's: it throws when the popover is not in the document, as a browser's does,
- * and also when it is already showing, where a browser returns without effect, so a test fails on a needless show. The
- * jsdom stub does neither.
- */
-function rejectInvalidShowPopover(): void {
-  const showPopover = HTMLElement.prototype.showPopover;
-
-  vi.spyOn(HTMLElement.prototype, "showPopover").mockImplementation(function showPopoverOrThrow(this: HTMLElement) {
-    if (!this.isConnected) {
-      throw new DOMException("The popover is not in the document", "InvalidStateError");
-    }
-
-    if (this.matches(":popover-open")) {
-      throw new DOMException("The popover is already showing", "InvalidStateError");
-    }
-
-    showPopover.call(this);
+function setUpTest() {
+  vi.useFakeTimers();
+  onTestFinished(() => {
+    vi.useRealTimers();
   });
+
+  function advance(milliseconds: number): void {
+    act(() => {
+      vi.advanceTimersByTime(milliseconds);
+    });
+  }
+
+  return { advance };
+}
+
+/**
+ * Throws as the browser does when asked to show a popover while it shows or hides another
+ */
+function refuse(): never {
+  throw new DOMException("Invalid to show a popover during another show operation", "InvalidStateError");
 }
 
 const UnchangingPopover = memo(Popover, () => true);
