@@ -139,11 +139,11 @@ const defaultDelay: Required<OverlayDelay> = { hide: 150, show: 400 };
 /**
  * Connects a `Tooltip` to the element it belongs to. Spread `getTriggerProps()` on that element and
  * `getOverlayProps()` on the `Tooltip`. The tooltip opens after the show delay when a mouse or pen rests on the
- * trigger and at once when the trigger takes keyboard focus. It stays open while the pointer is over the tooltip, and
- * hides after the hide delay once the pointer leaves both, or at once on blur, on Escape and when the trigger is
- * pressed. A tooltip that keyboard focus opened stays open when the pointer leaves, until blur or Escape. Only one
- * tooltip is open at a time, and while one is open, or for 300ms after it closes, the next opens without its show
- * delay.
+ * trigger and at once when the trigger takes keyboard focus, or once the popover has closed when closing a popover
+ * returns keyboard focus to the trigger. It stays open while the pointer is over the tooltip, and hides after the hide
+ * delay once the pointer leaves both, or at once on blur, on Escape and when the trigger is pressed. A tooltip that
+ * keyboard focus opened stays open when the pointer leaves, until blur or Escape. Only one tooltip is open at a time,
+ * and while one is open, or for 300ms after it closes, the next opens without its show delay.
  *
  * @param options open state, delays, placement and how the tooltip relates to its trigger
  * @returns prop getters for the trigger and the `Tooltip`, and whether the tooltip is open
@@ -207,7 +207,15 @@ export function useTooltip({
   function handleFocus(event: FocusEvent<HTMLElement>): void {
     keyboardHoldsOpen.current = event.currentTarget.matches(":focus-visible");
 
-    if (keyboardHoldsOpen.current) {
+    if (!keyboardHoldsOpen.current) {
+      return;
+    }
+
+    // A popover returns focus to its trigger while the browser is still closing it, and the browser refuses to show
+    // another popover until it has finished
+    if (isReturnedByClosedPopover(event)) {
+      overlay.showAfterTask();
+    } else {
       overlay.show();
     }
   }
@@ -257,4 +265,17 @@ export function useTooltip({
   }
 
   return { getOverlayProps, getTriggerProps, open: overlay.open };
+}
+
+/**
+ * Whether focus arrived from inside a popover that is no longer open, as it does when closing the popover returns
+ * focus to its trigger
+ *
+ * @param event the trigger's focus event
+ * @returns true when the element that lost focus sits in a closed popover
+ */
+function isReturnedByClosedPopover(event: FocusEvent<HTMLElement>): boolean {
+  const popover = event.relatedTarget instanceof Element ? event.relatedTarget.closest("[popover]") : null;
+
+  return popover !== null && !popover.matches(":popover-open");
 }

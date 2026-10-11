@@ -126,7 +126,7 @@ function ControlledPopover(): JSX.Element {
 }
 
 /**
- * An icon-only button, named by its own tooltip, that opens the list of problems
+ * An icon-only button, named by its own tooltip, that opens a problem with a link to it
  */
 function IconTriggerPopover(): JSX.Element {
   const popover = usePopover();
@@ -148,7 +148,10 @@ function IconTriggerPopover(): JSX.Element {
         </Box>
       </IconButton>
       <Popover {...popover.getOverlayProps()}>
-        <Text as="p">Checks failed on #42</Text>
+        <Stack gap={2}>
+          <Text as="p">Checks failed on #42</Text>
+          <Link href="#pull-request-42">Open pull request</Link>
+        </Stack>
       </Popover>
     </>
   );
@@ -325,6 +328,31 @@ export const Controlled: Story = {
 };
 
 /**
+ * Opening a controlled popover with the keyboard reports the opening, and the popover shows once the parent sets
+ * `open`
+ */
+export const ControlledKeyboardOpening: Story = {
+  render: () => <ControlledPopover />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Show details" });
+
+    await input.pressKey("Tab");
+    await expect(trigger).toHaveFocus();
+    await input.pressKey("Enter");
+
+    await expect(await canvas.findByText("Open: yes")).toBeInTheDocument();
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+  },
+};
+
+/**
  * A parent that keeps `open` true while it handles `onOpenChange` holds the popover open: Escape is reported as a
  * close, and the popover shows again even when the `Popover` itself does not render again. It is left off the Docs
  * page, where its popover would keep closing the other stories' popovers.
@@ -464,6 +492,33 @@ export const KeyboardInteraction: Story = {
 };
 
 /**
+ * Escape from inside a popover that a click opened closes it and returns focus to the button
+ */
+export const EscapeFromInside: Story = {
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Show details" });
+
+    await userEvent.click(trigger);
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+    await input.pressKey("Tab");
+    await expect(link).toHaveFocus();
+
+    await input.pressKey("Escape");
+
+    await waitFor(() => expect(link).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
  * An `IconButton` can open a popover. Pressing it hides its tooltip, so a single Escape closes the popover and leaves
  * focus on the button.
  */
@@ -490,5 +545,36 @@ export const IconButtonTrigger: Story = {
     await waitFor(() => expect(problem).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
+ * Escape from inside a popover that an `IconButton` opened closes it and returns focus to the button, whose tooltip
+ * then shows its name
+ */
+export const IconButtonEscapeFromInside: Story = {
+  render: () => <IconTriggerPopover />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Problems" });
+
+    await userEvent.click(trigger);
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+    await input.pressKey("Tab");
+    await expect(link).toHaveFocus();
+
+    await input.pressKey("Escape");
+
+    await waitFor(() => expect(link).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
+    const tooltip = await canvas.findByRole("tooltip", { name: "Problems" });
+    await waitFor(() => expect(tooltip).toBeVisible());
   },
 };
