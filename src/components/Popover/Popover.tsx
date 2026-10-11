@@ -51,9 +51,9 @@ export interface PopoverProps
 /**
  * A surface that opens beside a button and holds more content than a tooltip can, such as a short list or a few
  * actions. `usePopover` connects the two: spread `getTriggerProps()` on a `Button` or `IconButton` and
- * `getOverlayProps()` on the popover, inside the same `Theme`. It closes on Escape and on a click outside, and closing
- * from the keyboard returns focus to the button. It has no role of its own: give it `role="dialog"` and a name when it
- * holds a form.
+ * `getOverlayProps()` on the popover, inside the same `Theme`. It closes on Escape and on a click outside. Closing it
+ * with focus inside returns focus to the button, and `usePopover`'s `initialFocus` moves focus in as it opens. It has no
+ * role of its own: give it `role="dialog"` and a name when it holds a form or asks for confirmation.
  *
  * @example
  * const popover = usePopover({ placement: "top" });

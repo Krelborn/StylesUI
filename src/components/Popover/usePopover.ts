@@ -1,4 +1,4 @@
-import type { CSSProperties, ToggleEvent } from "react";
+import type { CSSProperties, RefObject, ToggleEvent } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import type { OverlayPlacement } from "../../overlays";
@@ -14,6 +14,12 @@ export interface UsePopoverOptions {
    * Whether the popover starts open when uncontrolled. Defaults to `false`.
    */
   defaultOpen?: boolean;
+
+  /**
+   * Element to focus when the popover opens, such as the safe choice in a confirmation. Without one, focus stays where
+   * it is.
+   */
+  initialFocus?: RefObject<HTMLElement | null>;
 
   /**
    * Called with the new open state when the popover opens or closes; when controlled, also with `true` when the user
@@ -65,7 +71,9 @@ interface PopoverTriggerProps {
  */
 export interface UsePopoverResult {
   /**
-   * Closes the popover: hides it when uncontrolled, and reports `false` through `onOpenChange` either way
+   * Closes the popover: hides it when uncontrolled, and reports `false` through `onOpenChange` either way. Focus
+   * returns to the trigger when it was inside the popover or had been lost to the page, as Safari loses it when a button
+   * is clicked.
    */
   close: () => void;
 
@@ -92,9 +100,10 @@ export interface UsePopoverResult {
 
 /**
  * Connects a `Popover` to the button that opens it. Clicking the button toggles the popover, and Escape or a click
- * outside closes it, all handled by the browser. Opening another popover closes this one.
+ * outside closes it, all handled by the browser. Opening another popover closes this one. When the popover closes with
+ * focus inside it, focus returns to the button; a click outside leaves focus where the click put it.
  *
- * @param options open state, the change callback and placement
+ * @param options open state, the change callback, placement and the element to focus on opening
  * @returns prop getters for the trigger and the `Popover`, whether it is open, and `close`
  *
  * @example
@@ -105,6 +114,7 @@ export interface UsePopoverResult {
  */
 export function usePopover({
   defaultOpen = false,
+  initialFocus,
   onOpenChange,
   open: controlledOpen,
   placement = "bottom",
@@ -113,6 +123,7 @@ export function usePopover({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const [renderRequest, requestRender] = useState(0);
   const popoverElement = useRef<HTMLElement | null>(null);
+  const returnsFocus = useRef(false);
   const controlled = controlledOpen !== undefined;
   const open = controlledOpen ?? uncontrolledOpen;
   const anchorName = anchorNameFor(id);
@@ -138,6 +149,11 @@ export function usePopover({
   }
 
   function handleBeforeToggle(event: ToggleEvent<HTMLElement>): void {
+    // Only now, before the popover hides, can focus be found inside it
+    if (event.newState === "closed" && event.currentTarget.contains(document.activeElement)) {
+      returnsFocus.current = true;
+    }
+
     if (controlled && !open && event.newState === "open") {
       event.preventDefault();
       onOpenChange?.(true);
@@ -146,6 +162,8 @@ export function usePopover({
 
   function handleToggle(event: ToggleEvent<HTMLElement>): void {
     const nextOpen = event.newState === "open";
+    popoverElement.current = event.currentTarget;
+    moveFocus(event.currentTarget, nextOpen);
 
     if (nextOpen === open) {
       return;
@@ -154,15 +172,34 @@ export function usePopover({
     commit(nextOpen);
 
     if (controlled) {
-      popoverElement.current = event.currentTarget;
       requestRender((count) => count + 1);
     }
   }
 
-  function close(): void {
-    if (open) {
-      commit(false);
+  // The browser returns focus to whatever had it before the popover opened, which in WebKit is not the trigger
+  function moveFocus(popover: HTMLElement, opened: boolean): void {
+    if (opened) {
+      returnsFocus.current = false;
+      initialFocus?.current?.focus();
+    } else if (returnsFocus.current) {
+      returnsFocus.current = false;
+      triggerOf(popover)?.focus();
     }
+  }
+
+  function close(): void {
+    if (!open) {
+      return;
+    }
+
+    const focused = document.activeElement;
+
+    // WebKit leaves focus on the page, not on a button clicked inside the popover
+    if (focused === null || focused === document.body || popoverElement.current?.contains(focused) === true) {
+      returnsFocus.current = true;
+    }
+
+    commit(false);
   }
 
   const overlayProps: PopoverOverlayProps = {
@@ -193,4 +230,16 @@ export function usePopover({
   }
 
   return { close, getOverlayProps, getTriggerProps, open };
+}
+
+/**
+ * Finds the button that opens a popover
+ *
+ * @param popover the popover element
+ * @returns the element whose `popovertarget` names the popover, or null when there is none
+ */
+function triggerOf(popover: HTMLElement): HTMLElement | null {
+  const triggers = popover.ownerDocument.querySelectorAll<HTMLElement>("[popovertarget]");
+
+  return Array.from(triggers).find((trigger) => trigger.getAttribute("popovertarget") === popover.id) ?? null;
 }

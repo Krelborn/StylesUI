@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { JSX } from "react";
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import type { OverlayPlacement } from "../../overlays";
@@ -228,6 +228,36 @@ function CountingOwnerPopover(): JSX.Element {
       </Cluster>
       <Text>{`Clicks: ${clicks}`}</Text>
     </Stack>
+  );
+}
+
+/**
+ * Discard at the start of a panel, whose confirmation opens with focus on Cancel
+ */
+function DiscardConfirmation(): JSX.Element {
+  const cancel = useRef<HTMLButtonElement>(null);
+  const popover = usePopover({ initialFocus: cancel, placement: "top-start" });
+
+  return (
+    <Box style={{ paddingBlockStart: "10rem" }}>
+      <Button {...popover.getTriggerProps()} size="sm" variant="outline-danger">
+        Discard
+      </Button>
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a Popover always renders a div */}
+      <Popover {...popover.getOverlayProps()} role="dialog" aria-label="Discard this comment?">
+        <Stack gap={2}>
+          <Text as="p">It hasn't been sent, and you can't get it back.</Text>
+          <Cluster gap={2} justify="end">
+            <Button onClick={popover.close} ref={cancel} size="sm" variant="secondary">
+              Cancel
+            </Button>
+            <Button onClick={popover.close} size="sm" variant="danger">
+              Discard comment
+            </Button>
+          </Cluster>
+        </Stack>
+      </Popover>
+    </Box>
   );
 }
 
@@ -633,6 +663,64 @@ export const EscapeFromInside: Story = {
     await waitFor(() => expect(link).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
+ * `initialFocus` moves focus into a confirmation as it opens. Closing it with focus inside, by Escape or with Cancel,
+ * returns focus to the button that opened it.
+ */
+export const Confirmation: Story = {
+  render: () => <DiscardConfirmation />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Discard" });
+
+    await input.pressKey("Tab");
+    await expect(trigger).toHaveFocus();
+    await input.pressKey("Enter");
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+    await expect(focusRingContrast(cancel)).toBeGreaterThanOrEqual(3);
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+
+    await input.pressKey("Enter");
+    await waitFor(() => expect(cancel).toHaveFocus());
+    await input.pressKey("Enter");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+  },
+};
+
+/**
+ * A click outside closes the confirmation and leaves focus where the click put it, not on the button
+ */
+export const ConfirmationClickOutside: Story = {
+  render: () => <DiscardConfirmation />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Discard" });
+
+    await userEvent.click(trigger);
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+
+    await input.clickPageCorner();
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).not.toHaveFocus();
   },
 };
 
