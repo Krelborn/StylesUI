@@ -171,11 +171,15 @@ export default defineConfig({
             ],
             test: {
               name: `storybook-${mode}-${theme}`,
+              // A page per file, in each of four browsers, slows Chromium's replies to the trusted input commands past
+              // the test timeout, and running one file at a time per project takes no longer
+              fileParallelism: false,
               setupFiles: ["src/test/storybookSetup.ts"],
               browser: {
                 enabled: true,
                 headless: true,
-                provider: playwright(),
+                // Below the test timeout, so an input command that stalls fails with Playwright's call log
+                provider: playwright({ actionTimeout: 10_000 }),
                 instances: [{ browser: "chromium" as const }],
                 commands: {
                   clickByTestId,
