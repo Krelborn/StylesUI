@@ -234,9 +234,9 @@ function CountingOwnerPopover(): JSX.Element {
 /**
  * Discard at the start of a panel, whose confirmation opens with focus on Cancel
  */
-function DiscardConfirmation(): JSX.Element {
+function DiscardConfirmation(options: Omit<UsePopoverOptions, "initialFocus" | "placement">): JSX.Element {
   const cancel = useRef<HTMLButtonElement>(null);
-  const popover = usePopover({ initialFocus: cancel, placement: "top-start" });
+  const popover = usePopover({ ...options, initialFocus: cancel, placement: "top-start" });
 
   return (
     <Box style={{ paddingBlockStart: "10rem" }}>
@@ -258,6 +258,22 @@ function DiscardConfirmation(): JSX.Element {
         </Stack>
       </Popover>
     </Box>
+  );
+}
+
+/**
+ * A confirmation its parent can also open from a toolbar button, as a keyboard shortcut would
+ */
+function DiscardConfirmationOpenedElsewhere(): JSX.Element {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Stack align="start" gap={3}>
+      <Button onClick={() => setOpen(true)} variant="ghost">
+        Discard from the toolbar
+      </Button>
+      <DiscardConfirmation onOpenChange={setOpen} open={open} />
+    </Stack>
   );
 }
 
@@ -721,6 +737,55 @@ export const ConfirmationClickOutside: Story = {
     await input.clickPageCorner();
     await waitFor(() => expect(cancel).not.toBeVisible());
     await expect(trigger).not.toHaveFocus();
+  },
+};
+
+/**
+ * Opened from somewhere other than its button, such as a toolbar button or a shortcut, a confirmation gives focus back
+ * to where it was before, which the browser restores
+ */
+export const ConfirmationOpenedElsewhere: Story = {
+  render: () => <DiscardConfirmationOpenedElsewhere />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const opener = canvas.getByRole("button", { name: "Discard from the toolbar" });
+
+    await userEvent.click(opener);
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(opener).toHaveFocus();
+  },
+};
+
+/**
+ * A confirmation open from the start had nothing focused before it, so the browser returns focus to nothing and the
+ * hook gives it to the button. It is left off the Docs page, where it would take focus as the page opens.
+ */
+export const ConfirmationOpenOnLoad: Story = {
+  tags: ["!autodocs"],
+  render: () => <DiscardConfirmation defaultOpen={true} />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Discard" });
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
   },
 };
 
