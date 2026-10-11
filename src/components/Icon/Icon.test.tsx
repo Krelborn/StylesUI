@@ -19,6 +19,7 @@ import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
 import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
+import * as iconBarrel from "./index";
 import { InfoIcon } from "./InfoIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
@@ -43,6 +44,12 @@ const icons = [
 ];
 
 describe("icons", () => {
+  it("must cover every icon the barrel exports", () => {
+    expect(Object.entries(iconBarrel).toSorted(([first], [second]) => first.localeCompare(second))).toEqual(
+      icons.map(({ Component, name }) => [name, Component])
+    );
+  });
+
   it.each(icons)("must draw Lucide's shapes when $name renders", ({ Component, artwork }) => {
     const lucideSvg = new DOMParser().parseFromString(artwork, "image/svg+xml").documentElement;
 
