@@ -2,7 +2,7 @@ import type { CSSProperties, ToggleEvent } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import type { OverlayPlacement } from "../../overlays";
-import { anchorNameFor, mergeProps } from "../../overlays";
+import { anchorNameFor, mergeProps, syncPopover } from "../../overlays";
 
 import type { PopoverOverlayProps } from "./Popover";
 
@@ -122,9 +122,11 @@ export function usePopover({
   useEffect(() => {
     const element = popoverElement.current;
 
-    if (renderRequest > 0 && open && element !== null && element.isConnected && !element.matches(":popover-open")) {
-      element.showPopover();
+    if (renderRequest === 0 || !open || element === null || !element.isConnected) {
+      return;
     }
+
+    return syncPopover(element, true);
   }, [open, renderRequest]);
 
   function commit(nextOpen: boolean): void {
