@@ -1,11 +1,13 @@
 export { AddIcon } from "./AddIcon";
 export { ChevronDownIcon } from "./ChevronDownIcon";
 export { CloseIcon } from "./CloseIcon";
+export { ColorModeIcon } from "./ColorModeIcon";
 export { DeleteIcon } from "./DeleteIcon";
 export type { IconProps } from "./Icon";
 export { InfoIcon } from "./InfoIcon";
 export { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 export { MoreVerticalIcon } from "./MoreVerticalIcon";
+export { PaletteIcon } from "./PaletteIcon";
 export { RefreshIcon } from "./RefreshIcon";
 export { RemoveIcon } from "./RemoveIcon";
 export { SendIcon } from "./SendIcon";
