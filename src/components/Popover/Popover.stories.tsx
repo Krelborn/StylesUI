@@ -19,16 +19,32 @@ import { Popover } from "./Popover";
 import type { UsePopoverOptions } from "./usePopover";
 import { usePopover } from "./usePopover";
 
-const placements: OverlayPlacement[] = ["top", "end", "bottom", "start"];
+const sidePlacements: OverlayPlacement[] = ["top", "end", "bottom", "start"];
+
+const alignedPlacements: OverlayPlacement[] = ["top-start", "top-end", "bottom-start", "bottom-end"];
+
+const placementColumn = { display: "grid", gap: "3rem", justifyItems: "center", paddingBlock: "10rem" } as const;
 
 /**
- * Whether the popover sits wholly on each side of its trigger, in a left-to-right page
+ * Whether two edges are in the same place, to within rounding
  */
-const sideChecks: Record<OverlayPlacement, (popover: DOMRect, trigger: DOMRect) => boolean> = {
+function meets(first: number, second: number): boolean {
+  return Math.abs(first - second) < 1;
+}
+
+/**
+ * Whether the popover sits wholly on its side of the trigger and, when aligned, meets the trigger's edge, in a
+ * left-to-right page
+ */
+const placementChecks: Record<OverlayPlacement, (popover: DOMRect, trigger: DOMRect) => boolean> = {
   bottom: (popover, trigger) => popover.top >= trigger.bottom,
+  "bottom-end": (popover, trigger) => popover.top >= trigger.bottom && meets(popover.right, trigger.right),
+  "bottom-start": (popover, trigger) => popover.top >= trigger.bottom && meets(popover.left, trigger.left),
   end: (popover, trigger) => popover.left >= trigger.right,
   start: (popover, trigger) => popover.right <= trigger.left,
   top: (popover, trigger) => popover.bottom <= trigger.top,
+  "top-end": (popover, trigger) => popover.bottom <= trigger.top && meets(popover.right, trigger.right),
+  "top-start": (popover, trigger) => popover.bottom <= trigger.top && meets(popover.left, trigger.left),
 };
 
 /**
@@ -39,6 +55,38 @@ const sideChecks: Record<OverlayPlacement, (popover: DOMRect, trigger: DOMRect) 
 async function waitUntilSettled(popover: HTMLElement): Promise<void> {
   await waitFor(() => expect(popover).toBeVisible());
   await Promise.all(popover.getAnimations().map((animation) => animation.finished));
+}
+
+interface SettledPosition {
+  /**
+   * Where the popover sits
+   */
+  popover: DOMRect;
+
+  /**
+   * Where its trigger sits
+   */
+  trigger: DOMRect;
+}
+
+/**
+ * Clicks a trigger and waits for the popover it controls to settle
+ *
+ * @param trigger the button that opens the popover
+ * @returns where the popover and the trigger sit once it has settled
+ * @throws when the trigger controls no popover
+ */
+async function openSettled(trigger: HTMLElement): Promise<SettledPosition> {
+  await userEvent.click(trigger);
+  const popover = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
+
+  if (popover === null) {
+    throw new Error("The trigger controls no popover");
+  }
+
+  await waitUntilSettled(popover);
+
+  return { popover: popover.getBoundingClientRect(), trigger: trigger.getBoundingClientRect() };
 }
 
 interface DetailsPopoverProps extends UsePopoverOptions {
@@ -225,7 +273,7 @@ const meta = {
     onBeforeToggle: { control: false },
     onToggle: { control: false },
     open: { control: false },
-    placement: { control: "select", options: placements },
+    placement: { control: "select", options: [...sidePlacements, ...alignedPlacements] },
   },
   parameters: {
     a11y: { test: "error" },
@@ -266,25 +314,63 @@ export const Default: Story = {
  */
 export const Placement: Story = {
   render: () => (
-    <Box style={{ display: "grid", gap: "3rem", justifyItems: "center", paddingBlock: "10rem" }}>
-      {placements.map((placement) => (
+    <Box style={placementColumn}>
+      {sidePlacements.map((placement) => (
         <DetailsPopover key={placement} label={placement} placement={placement} />
       ))}
     </Box>
   ),
   play: async ({ canvas }) => {
-    for (const placement of placements) {
-      const trigger = canvas.getByRole("button", { name: placement });
+    for (const placement of sidePlacements) {
+      const { popover, trigger } = await openSettled(canvas.getByRole("button", { name: placement }));
 
-      await userEvent.click(trigger);
-      const text = await canvas.findByText(`${placement}: pull request #42 is waiting for your review.`);
-      const popover = text.closest("[popover]") as HTMLElement;
-      await waitUntilSettled(popover);
-
-      const onSide = sideChecks[placement](popover.getBoundingClientRect(), trigger.getBoundingClientRect());
-
-      await expect(onSide, placement).toBe(true);
+      await expect(placementChecks[placement](popover, trigger), placement).toBe(true);
     }
+  },
+};
+
+/**
+ * `top-start`, `top-end`, `bottom-start` and `bottom-end` line the popover up with the button's start or end edge
+ * instead of centring it, so it grows away from that edge, as from a button at the start of a narrow panel
+ */
+export const AlignedPlacement: Story = {
+  render: () => (
+    <Box style={placementColumn}>
+      {alignedPlacements.map((placement) => (
+        <DetailsPopover key={placement} label={placement} placement={placement} />
+      ))}
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    for (const placement of alignedPlacements) {
+      const { popover, trigger } = await openSettled(canvas.getByRole("button", { name: placement }));
+
+      await expect(placementChecks[placement](popover, trigger), placement).toBe(true);
+    }
+  },
+};
+
+/**
+ * In a right-to-left container the start edge is on the right, so `top-start` meets the button's right edge and
+ * `top-end` its left edge
+ */
+export const AlignedPlacementRightToLeft: Story = {
+  render: () => (
+    <Box dir="rtl" style={placementColumn}>
+      <DetailsPopover label="top-start" placement="top-start" />
+      <DetailsPopover label="top-end" placement="top-end" />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const start = await openSettled(canvas.getByRole("button", { name: "top-start" }));
+
+    await expect(start.popover.bottom).toBeLessThanOrEqual(start.trigger.top);
+    await expect(meets(start.popover.right, start.trigger.right), "top-start meets the right edge").toBe(true);
+
+    const end = await openSettled(canvas.getByRole("button", { name: "top-end" }));
+
+    await expect(end.popover.bottom).toBeLessThanOrEqual(end.trigger.top);
+    await expect(meets(end.popover.left, end.trigger.left), "top-end meets the left edge").toBe(true);
   },
 };
 
