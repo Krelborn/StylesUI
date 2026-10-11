@@ -12,11 +12,13 @@ import { Text } from "../Text";
 import { AddIcon } from "./AddIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
+import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
 import type { IconProps } from "./Icon";
 import { InfoIcon } from "./InfoIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
+import { PaletteIcon } from "./PaletteIcon";
 import { RefreshIcon } from "./RefreshIcon";
 import { RemoveIcon } from "./RemoveIcon";
 import { SendIcon } from "./SendIcon";
@@ -37,10 +39,12 @@ const icons: GalleryIcon[] = [
   { Component: AddIcon, name: "AddIcon" },
   { Component: ChevronDownIcon, name: "ChevronDownIcon" },
   { Component: CloseIcon, name: "CloseIcon" },
+  { Component: ColorModeIcon, name: "ColorModeIcon" },
   { Component: DeleteIcon, name: "DeleteIcon" },
   { Component: InfoIcon, name: "InfoIcon" },
   { Component: MoreHorizontalIcon, name: "MoreHorizontalIcon" },
   { Component: MoreVerticalIcon, name: "MoreVerticalIcon" },
+  { Component: PaletteIcon, name: "PaletteIcon" },
   { Component: RefreshIcon, name: "RefreshIcon" },
   { Component: RemoveIcon, name: "RemoveIcon" },
   { Component: SendIcon, name: "SendIcon" },
@@ -61,10 +65,12 @@ const meta = {
   subcomponents: {
     AddIcon,
     ChevronDownIcon,
+    ColorModeIcon,
     DeleteIcon,
     InfoIcon,
     MoreHorizontalIcon,
     MoreVerticalIcon,
+    PaletteIcon,
     RefreshIcon,
     RemoveIcon,
     SendIcon,
