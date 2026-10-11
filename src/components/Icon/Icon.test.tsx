@@ -4,9 +4,11 @@ import ellipsisArtwork from "lucide-static/icons/ellipsis.svg?raw";
 import ellipsisVerticalArtwork from "lucide-static/icons/ellipsis-vertical.svg?raw";
 import infoArtwork from "lucide-static/icons/info.svg?raw";
 import minusArtwork from "lucide-static/icons/minus.svg?raw";
+import paletteArtwork from "lucide-static/icons/palette.svg?raw";
 import plusArtwork from "lucide-static/icons/plus.svg?raw";
 import refreshArtwork from "lucide-static/icons/refresh-cw.svg?raw";
 import sendHorizontalArtwork from "lucide-static/icons/send-horizontal.svg?raw";
+import sunMoonArtwork from "lucide-static/icons/sun-moon.svg?raw";
 import trashArtwork from "lucide-static/icons/trash-2.svg?raw";
 import xArtwork from "lucide-static/icons/x.svg?raw";
 import { createRef } from "react";
@@ -15,10 +17,12 @@ import { describe, expect, it } from "vitest";
 import { AddIcon } from "./AddIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
 import { CloseIcon } from "./CloseIcon";
+import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
 import { InfoIcon } from "./InfoIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
+import { PaletteIcon } from "./PaletteIcon";
 import { RefreshIcon } from "./RefreshIcon";
 import { RemoveIcon } from "./RemoveIcon";
 import { SendIcon } from "./SendIcon";
@@ -27,10 +31,12 @@ const icons = [
   { Component: AddIcon, artwork: plusArtwork, name: "AddIcon" },
   { Component: ChevronDownIcon, artwork: chevronDownArtwork, name: "ChevronDownIcon" },
   { Component: CloseIcon, artwork: xArtwork, name: "CloseIcon" },
+  { Component: ColorModeIcon, artwork: sunMoonArtwork, name: "ColorModeIcon" },
   { Component: DeleteIcon, artwork: trashArtwork, name: "DeleteIcon" },
   { Component: InfoIcon, artwork: infoArtwork, name: "InfoIcon" },
   { Component: MoreHorizontalIcon, artwork: ellipsisArtwork, name: "MoreHorizontalIcon" },
   { Component: MoreVerticalIcon, artwork: ellipsisVerticalArtwork, name: "MoreVerticalIcon" },
+  { Component: PaletteIcon, artwork: paletteArtwork, name: "PaletteIcon" },
   { Component: RefreshIcon, artwork: refreshArtwork, name: "RefreshIcon" },
   { Component: RemoveIcon, artwork: minusArtwork, name: "RemoveIcon" },
   { Component: SendIcon, artwork: sendHorizontalArtwork, name: "SendIcon" },
