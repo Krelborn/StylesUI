@@ -439,6 +439,38 @@ export const ControlledKeyboardOpening: Story = {
 };
 
 /**
+ * A controlled popover that Escape closed opens again from its button
+ */
+export const ControlledReopening: Story = {
+  render: () => <ControlledPopover />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Show details" });
+
+    await input.pressKey("Tab");
+    await expect(trigger).toHaveFocus();
+    await input.pressKey("Enter");
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+
+    await input.pressKey("Escape");
+    await expect(await canvas.findByText("Open: no")).toBeInTheDocument();
+    await waitFor(() => expect(link).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+
+    await input.pressKey("Enter");
+
+    await expect(await canvas.findByText("Open: yes")).toBeInTheDocument();
+    await waitFor(() => expect(link).toBeVisible());
+  },
+};
+
+/**
  * A parent that keeps `open` true while it handles `onOpenChange` holds the popover open: Escape is reported as a
  * close, and the popover shows again even when the `Popover` itself does not render again. It is left off the Docs
  * page, where its popover would keep closing the other stories' popovers.
