@@ -200,9 +200,10 @@ Today's default values, through the new layer tokens: `field` is `white` / `gray
 | `secondary-subtle` | `#d6dae0` | `#363d46` |
 | `focus-ring`       | `#2563eb` | `#96d0ff` |
 
-`secondary-hover`, the tooltip pair and the theme-dependent inputs are left to implementation, which follows these rules:
+`secondary-hover`, the status hovers, the tooltip pair and the theme-dependent inputs are left to implementation, which follows these rules:
 
 - **`secondary-hover`**: one step further from the page than `secondary`.
+- **Status hovers** (`<status>-hover`): one ramp step further from the status's `on-*` text than its fill, as `primary-hover` is: darker under light text, lighter under dark text.
 - **Tooltip**: `text` on `background`, inverted.
 - **`ink`**: the palette's light-mode `text` in both modes, which is what playful's ink does today.
 - **`shadow-soft`**: default's translucent black.

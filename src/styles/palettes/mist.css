@@ -30,6 +30,7 @@
   --sui-color-shadow-soft: light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.5));
   --sui-color-shadow-hard: light-dark(var(--sui-gray-900), var(--sui-gray-600));
   --sui-color-success: light-dark(var(--sui-green-700), var(--sui-green-400));
+  --sui-color-success-hover: light-dark(var(--sui-green-800), var(--sui-green-300));
   --sui-color-on-success: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-success-text: light-dark(var(--sui-green-800), var(--sui-green-300));
   --sui-color-success-subtle: light-dark(
@@ -37,6 +38,7 @@
     color-mix(in srgb, var(--sui-green-900), var(--_sui-mist-night))
   );
   --sui-color-warning: light-dark(var(--sui-yellow-500), var(--sui-yellow-300));
+  --sui-color-warning-hover: light-dark(var(--sui-yellow-400), var(--sui-yellow-200));
   --sui-color-on-warning: light-dark(var(--sui-gray-900), var(--sui-gray-900));
   --sui-color-warning-text: light-dark(var(--sui-yellow-800), var(--sui-yellow-300));
   --sui-color-warning-subtle: light-dark(
@@ -44,6 +46,7 @@
     color-mix(in srgb, var(--sui-yellow-900), var(--_sui-mist-night))
   );
   --sui-color-danger: light-dark(var(--sui-red-600), var(--sui-red-400));
+  --sui-color-danger-hover: light-dark(var(--sui-red-700), var(--sui-red-300));
   --sui-color-on-danger: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-danger-text: light-dark(var(--sui-red-700), var(--sui-red-300));
   --sui-color-danger-subtle: light-dark(
@@ -51,6 +54,7 @@
     color-mix(in srgb, var(--sui-red-900), var(--_sui-mist-night))
   );
   --sui-color-info: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
+  --sui-color-info-hover: light-dark(var(--sui-indigo-800), var(--sui-indigo-200));
   --sui-color-on-info: light-dark(var(--sui-white), var(--sui-gray-900));
   --sui-color-info-text: light-dark(var(--sui-indigo-700), var(--sui-indigo-300));
   --sui-color-info-subtle: light-dark(

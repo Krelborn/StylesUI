@@ -173,7 +173,10 @@ const meta = {
     children: { control: "text" },
     id: { control: false },
     open: { control: false },
-    placement: { control: "select", options: ["top", "end", "bottom", "start"] },
+    placement: {
+      control: "select",
+      options: ["top", "end", "bottom", "start", "top-start", "top-end", "bottom-start", "bottom-end"],
+    },
   },
   parameters: {
     a11y: { test: "error" },
@@ -213,7 +216,8 @@ export const Label: Story = {
 };
 
 /**
- * `placement` puts the tooltip on any side of its trigger. `start` and `end` follow the writing direction.
+ * `placement` puts the tooltip on any side of its trigger, centred on it or lined up with its start or end edge.
+ * `start` and `end` follow the writing direction.
  */
 export const Placement: Story = {
   render: () => (
@@ -222,21 +226,36 @@ export const Placement: Story = {
       <PlacementButton placement="end" />
       <PlacementButton placement="bottom" />
       <PlacementButton placement="start" />
+      <PlacementButton placement="top-start" />
+      <PlacementButton placement="top-end" />
+      <PlacementButton placement="bottom-start" />
+      <PlacementButton placement="bottom-end" />
     </Box>
   ),
   play: async ({ canvas }) => {
-    const expectedSides: Record<OverlayPlacement, PhysicalSide> = {
-      bottom: "bottom",
-      end: "right",
-      start: "left",
-      top: "top",
+    const expectedPlaces: Record<OverlayPlacement, { edge?: "left" | "right"; side: PhysicalSide }> = {
+      bottom: { side: "bottom" },
+      "bottom-end": { edge: "right", side: "bottom" },
+      "bottom-start": { edge: "left", side: "bottom" },
+      end: { side: "right" },
+      start: { side: "left" },
+      top: { side: "top" },
+      "top-end": { edge: "right", side: "top" },
+      "top-start": { edge: "left", side: "top" },
     };
 
-    for (const [placement, side] of Object.entries(expectedSides)) {
+    for (const [placement, { edge, side }] of Object.entries(expectedPlaces)) {
       const trigger = canvas.getByRole("button", { name: placement }).getBoundingClientRect();
       const tooltip = canvas.getByRole("tooltip", { name: `${placement} side` }).getBoundingClientRect();
 
       await expect(isOnSide(side, tooltip, trigger), `${placement} tooltip on the ${side}`).toBe(true);
+
+      if (edge !== undefined) {
+        await expect(
+          Math.abs(tooltip[edge] - trigger[edge]),
+          `${placement} tooltip meets the ${edge} edge`
+        ).toBeLessThan(1);
+      }
     }
   },
 };

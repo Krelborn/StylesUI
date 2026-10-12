@@ -9,7 +9,23 @@ import { RefreshIcon } from "../Icon";
 import { IconButton } from "./IconButton";
 
 const sizes: ButtonSize[] = ["sm", "md", "lg"];
-const variants: ButtonVariant[] = ["ghost", "outline", "primary", "secondary"];
+// A Record needs every ButtonVariant as a key, so a new variant fails to compile until it is shown here
+const shownVariants: Record<ButtonVariant, true> = {
+  ghost: true,
+  primary: true,
+  secondary: true,
+  danger: true,
+  warning: true,
+  info: true,
+  success: true,
+  "outline-primary": true,
+  "outline-secondary": true,
+  "outline-danger": true,
+  "outline-warning": true,
+  "outline-info": true,
+  "outline-success": true,
+};
+const variants = Object.keys(shownVariants) as ButtonVariant[];
 
 /**
  * Finds the one element a selector names inside a button
@@ -61,7 +77,7 @@ const meta = {
       options: variants,
       table: {
         defaultValue: { summary: "ghost" },
-        type: { summary: '"ghost" | "outline" | "primary" | "secondary"' },
+        type: { summary: variants.map((variant) => `"${variant}"`).join(" | ") },
       },
     },
   },
@@ -84,7 +100,7 @@ export const Default: Story = {
 };
 
 /**
- * Every `Button` variant; ghost is the default
+ * Every `Button` variant, each square; ghost is the default
  */
 export const Variants: Story = {
   render: (args) => (
@@ -94,6 +110,15 @@ export const Variants: Story = {
       ))}
     </Cluster>
   ),
+  play: async ({ canvas }) => {
+    for (const variant of variants) {
+      const button = canvas.getByRole("button", { name: `Refresh ${variant}` });
+      const { height, width } = button.getBoundingClientRect();
+
+      await expect(button).toHaveAttribute("data-variant", variant);
+      await expect(Math.abs(height - width), `${variant} is square`).toBeLessThan(1);
+    }
+  },
 };
 
 /**

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { JSX } from "react";
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import type { OverlayPlacement } from "../../overlays";
@@ -19,16 +19,32 @@ import { Popover } from "./Popover";
 import type { UsePopoverOptions } from "./usePopover";
 import { usePopover } from "./usePopover";
 
-const placements: OverlayPlacement[] = ["top", "end", "bottom", "start"];
+const sidePlacements: OverlayPlacement[] = ["top", "end", "bottom", "start"];
+
+const alignedPlacements: OverlayPlacement[] = ["top-start", "top-end", "bottom-start", "bottom-end"];
+
+const placementColumn = { display: "grid", gap: "3rem", justifyItems: "center", paddingBlock: "10rem" } as const;
 
 /**
- * Whether the popover sits wholly on each side of its trigger, in a left-to-right page
+ * Whether two edges are in the same place, to within rounding
  */
-const sideChecks: Record<OverlayPlacement, (popover: DOMRect, trigger: DOMRect) => boolean> = {
+function meets(first: number, second: number): boolean {
+  return Math.abs(first - second) < 1;
+}
+
+/**
+ * Whether the popover sits wholly on its side of the trigger and, when aligned, meets the trigger's edge, in a
+ * left-to-right page
+ */
+const placementChecks: Record<OverlayPlacement, (popover: DOMRect, trigger: DOMRect) => boolean> = {
   bottom: (popover, trigger) => popover.top >= trigger.bottom,
+  "bottom-end": (popover, trigger) => popover.top >= trigger.bottom && meets(popover.right, trigger.right),
+  "bottom-start": (popover, trigger) => popover.top >= trigger.bottom && meets(popover.left, trigger.left),
   end: (popover, trigger) => popover.left >= trigger.right,
   start: (popover, trigger) => popover.right <= trigger.left,
   top: (popover, trigger) => popover.bottom <= trigger.top,
+  "top-end": (popover, trigger) => popover.bottom <= trigger.top && meets(popover.right, trigger.right),
+  "top-start": (popover, trigger) => popover.bottom <= trigger.top && meets(popover.left, trigger.left),
 };
 
 /**
@@ -39,6 +55,38 @@ const sideChecks: Record<OverlayPlacement, (popover: DOMRect, trigger: DOMRect) 
 async function waitUntilSettled(popover: HTMLElement): Promise<void> {
   await waitFor(() => expect(popover).toBeVisible());
   await Promise.all(popover.getAnimations().map((animation) => animation.finished));
+}
+
+interface SettledPosition {
+  /**
+   * Where the popover sits
+   */
+  popover: DOMRect;
+
+  /**
+   * Where its trigger sits
+   */
+  trigger: DOMRect;
+}
+
+/**
+ * Clicks a trigger and waits for the popover it controls to settle
+ *
+ * @param trigger the button that opens the popover
+ * @returns where the popover and the trigger sit once it has settled
+ * @throws when the trigger controls no popover
+ */
+async function openSettled(trigger: HTMLElement): Promise<SettledPosition> {
+  await userEvent.click(trigger);
+  const popover = document.getElementById(trigger.getAttribute("aria-controls") ?? "");
+
+  if (popover === null) {
+    throw new Error("The trigger controls no popover");
+  }
+
+  await waitUntilSettled(popover);
+
+  return { popover: popover.getBoundingClientRect(), trigger: trigger.getBoundingClientRect() };
 }
 
 interface DetailsPopoverProps extends UsePopoverOptions {
@@ -183,6 +231,52 @@ function CountingOwnerPopover(): JSX.Element {
   );
 }
 
+/**
+ * Discard at the start of a panel, whose confirmation opens with focus on Cancel
+ */
+function DiscardConfirmation(options: Omit<UsePopoverOptions, "initialFocus" | "placement">): JSX.Element {
+  const cancel = useRef<HTMLButtonElement>(null);
+  const popover = usePopover({ ...options, initialFocus: cancel, placement: "top-start" });
+
+  return (
+    <Box style={{ paddingBlockStart: "10rem" }}>
+      <Button {...popover.getTriggerProps()} size="sm" variant="outline-danger">
+        Discard
+      </Button>
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a Popover always renders a div */}
+      <Popover {...popover.getOverlayProps()} role="dialog" aria-label="Discard this comment?">
+        <Stack gap={2}>
+          <Text as="p">It hasn't been sent, and you can't get it back.</Text>
+          <Cluster gap={2} justify="end">
+            <Button onClick={popover.close} ref={cancel} size="sm" variant="secondary">
+              Cancel
+            </Button>
+            <Button onClick={popover.close} size="sm" variant="danger">
+              Discard comment
+            </Button>
+          </Cluster>
+        </Stack>
+      </Popover>
+    </Box>
+  );
+}
+
+/**
+ * A confirmation its parent can also open from a toolbar button, as a keyboard shortcut would
+ */
+function DiscardConfirmationOpenedElsewhere(): JSX.Element {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Stack align="start" gap={3}>
+      <Button onClick={() => setOpen(true)} variant="ghost">
+        Discard from the toolbar
+      </Button>
+      <DiscardConfirmation onOpenChange={setOpen} open={open} />
+    </Stack>
+  );
+}
+
 const UnchangingPopover = memo(Popover, () => true);
 
 /**
@@ -225,7 +319,7 @@ const meta = {
     onBeforeToggle: { control: false },
     onToggle: { control: false },
     open: { control: false },
-    placement: { control: "select", options: placements },
+    placement: { control: "select", options: [...sidePlacements, ...alignedPlacements] },
   },
   parameters: {
     a11y: { test: "error" },
@@ -266,25 +360,63 @@ export const Default: Story = {
  */
 export const Placement: Story = {
   render: () => (
-    <Box style={{ display: "grid", gap: "3rem", justifyItems: "center", paddingBlock: "10rem" }}>
-      {placements.map((placement) => (
+    <Box style={placementColumn}>
+      {sidePlacements.map((placement) => (
         <DetailsPopover key={placement} label={placement} placement={placement} />
       ))}
     </Box>
   ),
   play: async ({ canvas }) => {
-    for (const placement of placements) {
-      const trigger = canvas.getByRole("button", { name: placement });
+    for (const placement of sidePlacements) {
+      const { popover, trigger } = await openSettled(canvas.getByRole("button", { name: placement }));
 
-      await userEvent.click(trigger);
-      const text = await canvas.findByText(`${placement}: pull request #42 is waiting for your review.`);
-      const popover = text.closest("[popover]") as HTMLElement;
-      await waitUntilSettled(popover);
-
-      const onSide = sideChecks[placement](popover.getBoundingClientRect(), trigger.getBoundingClientRect());
-
-      await expect(onSide, placement).toBe(true);
+      await expect(placementChecks[placement](popover, trigger), placement).toBe(true);
     }
+  },
+};
+
+/**
+ * `top-start`, `top-end`, `bottom-start` and `bottom-end` line the popover up with the button's start or end edge
+ * instead of centring it, so it grows away from that edge, as from a button at the start of a narrow panel
+ */
+export const AlignedPlacement: Story = {
+  render: () => (
+    <Box style={placementColumn}>
+      {alignedPlacements.map((placement) => (
+        <DetailsPopover key={placement} label={placement} placement={placement} />
+      ))}
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    for (const placement of alignedPlacements) {
+      const { popover, trigger } = await openSettled(canvas.getByRole("button", { name: placement }));
+
+      await expect(placementChecks[placement](popover, trigger), placement).toBe(true);
+    }
+  },
+};
+
+/**
+ * In a right-to-left container the start edge is on the right, so `top-start` meets the button's right edge and
+ * `top-end` its left edge
+ */
+export const AlignedPlacementRightToLeft: Story = {
+  render: () => (
+    <Box dir="rtl" style={placementColumn}>
+      <DetailsPopover label="top-start" placement="top-start" />
+      <DetailsPopover label="top-end" placement="top-end" />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const start = await openSettled(canvas.getByRole("button", { name: "top-start" }));
+
+    await expect(start.popover.bottom).toBeLessThanOrEqual(start.trigger.top);
+    await expect(meets(start.popover.right, start.trigger.right), "top-start meets the right edge").toBe(true);
+
+    const end = await openSettled(canvas.getByRole("button", { name: "top-end" }));
+
+    await expect(end.popover.bottom).toBeLessThanOrEqual(end.trigger.top);
+    await expect(meets(end.popover.left, end.trigger.left), "top-end meets the left edge").toBe(true);
   },
 };
 
@@ -348,6 +480,38 @@ export const ControlledKeyboardOpening: Story = {
 
     await expect(await canvas.findByText("Open: yes")).toBeInTheDocument();
     const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+  },
+};
+
+/**
+ * A controlled popover that Escape closed opens again from its button
+ */
+export const ControlledReopening: Story = {
+  render: () => <ControlledPopover />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Show details" });
+
+    await input.pressKey("Tab");
+    await expect(trigger).toHaveFocus();
+    await input.pressKey("Enter");
+    const link = await canvas.findByRole("link", { name: "Open pull request" });
+    await waitFor(() => expect(link).toBeVisible());
+
+    await input.pressKey("Escape");
+    await expect(await canvas.findByText("Open: no")).toBeInTheDocument();
+    await waitFor(() => expect(link).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+
+    await input.pressKey("Enter");
+
+    await expect(await canvas.findByText("Open: yes")).toBeInTheDocument();
     await waitFor(() => expect(link).toBeVisible());
   },
 };
@@ -515,6 +679,113 @@ export const EscapeFromInside: Story = {
     await waitFor(() => expect(link).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
+ * `initialFocus` moves focus into a confirmation as it opens. Closing it with focus inside, by Escape or with Cancel,
+ * returns focus to the button that opened it.
+ */
+export const Confirmation: Story = {
+  render: () => <DiscardConfirmation />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Discard" });
+
+    await input.pressKey("Tab");
+    await expect(trigger).toHaveFocus();
+    await input.pressKey("Enter");
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+    await expect(focusRingContrast(cancel)).toBeGreaterThanOrEqual(3);
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+
+    await input.pressKey("Enter");
+    await waitFor(() => expect(cancel).toHaveFocus());
+    await input.pressKey("Enter");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+  },
+};
+
+/**
+ * A click outside closes the confirmation and leaves focus where the click put it, not on the button
+ */
+export const ConfirmationClickOutside: Story = {
+  render: () => <DiscardConfirmation />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Discard" });
+
+    await userEvent.click(trigger);
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+
+    await input.clickPageCorner();
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).not.toHaveFocus();
+  },
+};
+
+/**
+ * Opened from somewhere other than its button, such as a toolbar button or a shortcut, a confirmation gives focus back
+ * to where it was before, which the browser restores
+ */
+export const ConfirmationOpenedElsewhere: Story = {
+  render: () => <DiscardConfirmationOpenedElsewhere />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const opener = canvas.getByRole("button", { name: "Discard from the toolbar" });
+
+    await userEvent.click(opener);
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(opener).toHaveFocus();
+  },
+};
+
+/**
+ * A confirmation open from the start had nothing focused before it, so the browser returns focus to nothing and the
+ * hook gives it to the button. It is left off the Docs page, where it would take focus as the page opens.
+ */
+export const ConfirmationOpenOnLoad: Story = {
+  tags: ["!autodocs"],
+  render: () => <DiscardConfirmation defaultOpen={true} />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Discard" });
+    const cancel = await canvas.findByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(cancel).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
   },
 };
 

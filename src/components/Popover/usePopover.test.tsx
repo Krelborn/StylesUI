@@ -1,7 +1,7 @@
 import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { JSX } from "react";
-import { memo, useState } from "react";
+import type { JSX, RefObject } from "react";
+import { createRef, memo, useRef, useState } from "react";
 import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { rejectInvalidShowPopover } from "../../test/rejectInvalidShowPopover";
@@ -200,6 +200,137 @@ describe("usePopover", () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
+  it.each([
+    { name: "an uncontrolled", options: { defaultOpen: true } },
+    { name: "a controlled", options: { onOpenChange: vi.fn(), open: true } },
+  ])("must focus initialFocus when $name popover opens", ({ options }) => {
+    render(<ConfirmationPopover {...options} />);
+
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    expect(elements.cancel).toHaveFocus();
+  });
+
+  it("must leave focus where it is when a popover without initialFocus opens", () => {
+    render(<ConfirmationPopover defaultOpen={true} focusesCancel={false} />);
+    elements.elsewhere.focus();
+
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    expect(elements.elsewhere).toHaveFocus();
+  });
+
+  it("must return focus to the trigger when the browser closes the popover with focus inside it", () => {
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    closeAsBrowser(elements.popover);
+
+    expect(elements.trigger).toHaveFocus();
+  });
+
+  it("must keep focus where the browser returns it when the popover closes with focus inside it", () => {
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    closeAsBrowser(elements.popover, elements.elsewhere);
+
+    expect(elements.elsewhere).toHaveFocus();
+  });
+
+  it("must leave focus where it is when the browser closes the popover with focus outside it", () => {
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+    elements.elsewhere.focus();
+
+    closeAsBrowser(elements.popover);
+
+    expect(elements.elsewhere).toHaveFocus();
+  });
+
+  it.each([
+    { name: "an uncontrolled", ui: <ConfirmationPopover defaultOpen={true} /> },
+    { name: "a controlled", ui: <ControlledConfirmation /> },
+  ])("must return focus to the trigger when close is called on $name popover with focus inside it", async ({ ui }) => {
+    const user = userEvent.setup();
+    render(ui);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    await user.click(elements.cancel);
+    closeAsBrowser(elements.popover);
+
+    expect(elements.trigger).toHaveFocus();
+  });
+
+  it.each([
+    { name: "an uncontrolled", ui: <ConfirmationPopover defaultOpen={true} /> },
+    { name: "a controlled", ui: <ControlledConfirmation /> },
+  ])("must return focus to the trigger when close is called on $name popover with focus lost to the page", ({ ui }) => {
+    render(ui);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+    elements.cancel.blur();
+
+    // fireEvent, unlike userEvent, does not focus the button, as WebKit does not
+    fireEvent.click(elements.cancel);
+    closeAsBrowser(elements.popover);
+
+    expect(elements.trigger).toHaveFocus();
+  });
+
+  it("must leave focus where close's caller moves it when focus was inside the popover", async () => {
+    const user = userEvent.setup();
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    await user.click(elements.rename);
+    closeAsBrowser(elements.popover);
+
+    expect(elements.elsewhere).toHaveFocus();
+  });
+
+  it("must leave focus where close's caller moves it when focus was lost to the page", () => {
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+    elements.cancel.blur();
+
+    fireEvent.click(elements.rename);
+    closeAsBrowser(elements.popover);
+
+    expect(elements.elsewhere).toHaveFocus();
+  });
+
+  it("must leave focus where it is when close is called with focus outside the popover", () => {
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+    elements.elsewhere.focus();
+
+    fireEvent.click(elements.cancel);
+    closeAsBrowser(elements.popover);
+
+    expect(elements.elsewhere).toHaveFocus();
+  });
+
+  it("must return focus to the trigger rather than a button inside the popover that also targets it", () => {
+    render(<PopoverBeforeTrigger />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+    screen.getByRole("button", { name: "Hide" }).focus();
+
+    closeAsBrowser(elements.popover);
+
+    expect(elements.trigger).toHaveFocus();
+  });
+
+  it("must return focus to a trigger that has a ref of its own", () => {
+    const triggerRef = createRef<HTMLButtonElement>();
+    render(<ConfirmationPopover defaultOpen={true} triggerRef={triggerRef} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+
+    closeAsBrowser(elements.popover);
+
+    expect(triggerRef.current).toBe(elements.trigger);
+    expect(elements.trigger).toHaveFocus();
+  });
+
   it("must run the consumer's trigger handler when one is given", async () => {
     const user = userEvent.setup();
     render(<ClickCountingPopover />);
@@ -307,6 +438,78 @@ function RemountingPopover(): JSX.Element {
   );
 }
 
+interface ConfirmationPopoverProps extends UsePopoverOptions {
+  /**
+   * Whether Cancel takes focus as the popover opens. Defaults to `true`.
+   */
+  focusesCancel?: boolean;
+
+  /**
+   * The consumer's own ref on the trigger
+   */
+  triggerRef?: RefObject<HTMLButtonElement | null>;
+}
+
+/**
+ * A "2 problems" button whose popover asks for confirmation, beside a button outside it. Cancel closes the popover, and
+ * Rename closes it and moves focus to the button outside, as a menu item that opens an editor would.
+ */
+function ConfirmationPopover({ focusesCancel = true, triggerRef, ...options }: ConfirmationPopoverProps): JSX.Element {
+  const cancel = useRef<HTMLButtonElement>(null);
+  const elsewhere = useRef<HTMLButtonElement>(null);
+  const popover = usePopover({ ...options, initialFocus: focusesCancel ? cancel : undefined });
+
+  return (
+    <>
+      <Button {...popover.getTriggerProps()} ref={triggerRef}>
+        2 problems
+      </Button>
+      <Popover {...popover.getOverlayProps()} data-testid="popover">
+        <Button onClick={popover.close} ref={cancel}>
+          Cancel
+        </Button>
+        <Button
+          onClick={() => {
+            popover.close();
+            elsewhere.current?.focus();
+          }}
+        >
+          Rename
+        </Button>
+      </Popover>
+      <Button ref={elsewhere}>Elsewhere</Button>
+    </>
+  );
+}
+
+/**
+ * A popover rendered before its trigger, holding a button that hides it through `popovertarget` too
+ */
+function PopoverBeforeTrigger(): JSX.Element {
+  const popover = usePopover({ defaultOpen: true });
+  const overlayProps = popover.getOverlayProps();
+
+  return (
+    <>
+      <Popover {...overlayProps} data-testid="popover">
+        <Button popoverTarget={overlayProps.id} popoverTargetAction="hide">
+          Hide
+        </Button>
+      </Popover>
+      <Button {...popover.getTriggerProps()}>2 problems</Button>
+    </>
+  );
+}
+
+/**
+ * A confirmation whose parent holds its open state and follows `onOpenChange`
+ */
+function ControlledConfirmation(): JSX.Element {
+  const [open, setOpen] = useState(true);
+
+  return <ConfirmationPopover onOpenChange={setOpen} open={open} />;
+}
+
 /**
  * An icon-only button that anchors both its own tooltip and a popover
  */
@@ -339,6 +542,20 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
   });
 }
 
+/**
+ * Closes a popover as a browser does, on Escape or once `close()` has asked it to: `beforetoggle`, the hide, then
+ * `toggle`. jsdom fires neither event, and never returns focus as it hides a popover.
+ *
+ * @param popover the popover element
+ * @param restoreFocusTo the element the browser returns focus to as it hides the popover, if any
+ */
+function closeAsBrowser(popover: HTMLElement, restoreFocusTo?: HTMLElement): void {
+  fireEvent(popover, toggleEvent("beforetoggle", "closed"));
+  popover.hidePopover();
+  restoreFocusTo?.focus();
+  fireEvent(popover, toggleEvent("toggle", "closed"));
+}
+
 function setUpTest() {
   vi.useFakeTimers();
   onTestFinished(() => {
@@ -364,6 +581,15 @@ function refuse(): never {
 const UnchangingPopover = memo(Popover, () => true);
 
 const elements = {
+  get cancel(): HTMLElement {
+    return screen.getByRole("button", { name: "Cancel" });
+  },
+  get elsewhere(): HTMLElement {
+    return screen.getByRole("button", { name: "Elsewhere" });
+  },
+  get rename(): HTMLElement {
+    return screen.getByRole("button", { name: "Rename" });
+  },
   get popover(): HTMLElement {
     return screen.getByTestId("popover");
   },

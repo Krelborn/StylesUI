@@ -3,7 +3,26 @@ import userEvent from "@testing-library/user-event";
 import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import type { ButtonVariant } from "../Button";
+
 import { IconButton } from "./IconButton";
+
+// A Record needs every ButtonVariant as a key, so a new variant fails to compile until it is tested here
+const testedVariants: Record<ButtonVariant, true> = {
+  ghost: true,
+  primary: true,
+  secondary: true,
+  danger: true,
+  warning: true,
+  info: true,
+  success: true,
+  "outline-primary": true,
+  "outline-secondary": true,
+  "outline-danger": true,
+  "outline-warning": true,
+  "outline-info": true,
+  "outline-success": true,
+};
 
 describe("IconButton", () => {
   it("must be named by its label when it renders", () => {
@@ -100,6 +119,16 @@ describe("IconButton", () => {
     render(<IconButton label="Refresh">↻</IconButton>);
 
     expect(screen.getByRole("button", { name: "Refresh" })).toHaveAttribute("data-variant", "ghost");
+  });
+
+  it.each(Object.keys(testedVariants) as ButtonVariant[])("must apply the %s variant when it is set", (variant) => {
+    render(
+      <IconButton label="Refresh" variant={variant}>
+        ↻
+      </IconButton>
+    );
+
+    expect(screen.getByRole("button", { name: "Refresh" })).toHaveAttribute("data-variant", variant);
   });
 
   it("must forward ref to the button when one is given", () => {

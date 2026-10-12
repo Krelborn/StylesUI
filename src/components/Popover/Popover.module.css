@@ -20,11 +20,11 @@
     opacity: 0;
   }
 
-  .popover[data-placement="top"] {
+  .popover[data-placement^="top"] {
     translate: 0 var(--sui-popover-offset, 4px);
   }
 
-  .popover[data-placement="bottom"] {
+  .popover[data-placement^="bottom"] {
     translate: 0 calc(var(--sui-popover-offset, 4px) * -1);
   }
 

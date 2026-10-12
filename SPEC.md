@@ -1,256 +1,162 @@
-# Spec: Palettes
+# Spec: Markdown Review follow-ups
 
-Design and reasoning: [`docs/design/palettes.md`](docs/design/palettes.md). This spec turns it into acceptance criteria and does not repeat its arguments.
+Gaps Markdown Review found while polishing its comment cards ([Krelborn/markdown-review#19](https://github.com/Krelborn/markdown-review/pull/19)), on `@krelborn/stylesui` 0.6.0, and the follow-ups agreed in review.
 
 ## Objective
 
-StylesUI's `default` theme paints a white page, so apps built with it end up mostly white. This change makes colour an axis of its own, the **palette**, beside the theme (shape, type, motion, depth, spacing) and the mode (light or dark). It ships three softer palettes for default and lets any palette combine with any theme.
+1. **Status buttons.** `Button` has no destructive variant, so Markdown Review's confirming Discard button is `secondary`. Button gains filled `danger`, `warning`, `info` and `success` variants.
+2. **Aligned placements.** An overlay can only be centred on its trigger. Near a container's edge, such as Discard at the start of a narrow comments panel, the centred popover covers the content and spills past the panel. Markdown Review overrides `position-area` in its own CSS. Overlays gain placements aligned to the trigger's start or end edge.
+3. **Controlled reopening.** In 0.6.0, a controlled `usePopover` reopened after Escape threw `InvalidStateError: Invalid to show a popover during another show operation`, which unmounted the app. Check that the current code fixes it, with a test in a real browser.
+4. **An outline per colour.** `outline` is replaced by an outline variant for each colour: `outline-primary`, `outline-secondary`, `outline-danger`, `outline-warning`, `outline-info` and `outline-success`. This breaks `variant="outline"`, which the beta allows.
+5. **Popover focus.** Markdown Review's `DiscardDraftButton` moves focus itself: into the popover as it opens, back to the trigger as it closes with focus inside, and to the trigger from Cancel, because WebKit doesn't focus a clicked button. `usePopover` does this instead.
 
-Users:
-
-- **App developers** who want default's look with a less bright page: `<Theme palette="mist">`.
-- **App developers** who want to mix palettes and themes: `<Theme theme="playful" palette="paper">`.
-- **Existing apps**, which must see no change: default renders in Bright and playful in Pop unless a palette is chosen.
-
-Success looks like this: an app opts into Mist, Paper or Dusk with one prop or attribute, every palette meets every contrast pairing StylesUI asserts in both modes, and no existing story, test or screenshot changes.
+Users are app developers building with StylesUI, Markdown Review first. Success looks like this: Markdown Review's confirming Discard becomes `variant="danger"`, its `.confirmation` override gives way to `placement="top-start"`, it can go back to a controlled popover, and `DiscardDraftButton`'s focus code gives way to `initialFocus` and `close()`.
 
 ## Decisions
 
-- Palettes: `bright` (default's colours), `mist`, `paper`, `dusk`, and `pop` (playful's colours).
-- Each theme has a companion palette: default has Bright and playful has Pop. Companion colours apply at zero specificity on an element that sets a theme, and `data-sui-palette` on the same element or a descendant overrides them.
-- New layer tokens: `--sui-color-field`, `--sui-color-overlay` and `--sui-color-sunken`. Sunken is a solid colour per palette.
-- Theme-dependent colours are derived in `tokens.css` from palette inputs (`--sui-color-ink`, `--sui-color-shadow-soft`, `--sui-color-shadow-hard`) and theme inputs (`--sui-control-outline`, `--sui-shadow-hardness`, `--sui-shadow-sm-offset`).
-- `palette.css` becomes `ramps.css`, and the token tier "Palette" becomes "Ramps".
-- Bright's dark-mode overlay is lifted above the surface, so a popover over a card stands above it: the one intended visual change to default, made after the three phases.
-- One spec and one pull request, built in three phases in order, with a commit per task.
+- **Variants, not a tone prop.** `ButtonVariant` gains `danger`, `info`, `success` and `warning`. Each is filled in its status colour with `--sui-color-on-<status>` text, and keeps the outline, lip, sizes, `disabled` and `busy` that `primary` has. `IconButton` takes Button's variants, so it gains them too.
+- **A hover token per status.** Each palette declares `--sui-color-<status>-hover`, one ramp step further from the status's `on-*` text than the fill: darker under light text, lighter under dark text. That is the rule `primary-hover` already follows in every palette. `danger-text` can't double as the hover, because Pop draws ink on its danger fill, and ink on `red-700` is about 3:1. The values are below.
+- **Placements on the shared type.** `OverlayPlacement` gains `top-start`, `top-end`, `bottom-start` and `bottom-end`, the naming Floating UI uses, with `start` and `end` following the writing direction as they already do. `Overlay` owns placement, so `Popover`, `Tooltip` and `IconButton`'s tooltip all take them.
+- **Placement CSS.** `top-start` is `position-area: self-block-start span-self-inline-end`, with no inline-start margin, so the overlay's start edge meets the trigger's. It flips to the other side, the other edge, or both, when even its narrowest width doesn't fit (`position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline`); with room to spare it shrinks rather than flips. The other three mirror it. A throwaway spike checked the keywords in Playwright's Chromium and WebKit: the `self-` keywords line up in both directions, and in a right-to-left container inside a left-to-right page. Markdown Review's `block-start span-inline-end` misses by the margin there, and `top span-x-self-end` is unsupported in both browsers. Playwright's Firefox would not launch here, so Firefox is unchecked, as it is for every story.
+- **Controlled reopening is already fixed.** 0.6.1 guards both calls that could show the popover during the browser's own show: `Overlay`'s effect (#45) and `usePopover`'s re-show effect (#46), each through `syncPopover`, which retries a refusal on the next task. No test reopens a controlled popover after Escape with real input, so a story is added. It must fail with #46's guard removed.
+- **Outline variants.** Each `outline-<colour>` is transparent at rest and, like ghost, hovering tints it with its text colour at 8% over whatever is behind it. Review measured the status subtles as hover fills first: against a light page they changed the fill by only 1.01:1 to 1.05:1 in Pop, and 1.04:1 for warning and success in Bright, under the 1.1:1 a change of state needs. A status outline draws its text and border in `--sui-color-<status>-text`, the grade made for text on the page, a surface and the status's own subtle. `outline-primary` keeps `outline`'s colours. Secondary has no text grade, so `outline-secondary` draws `--sui-color-text` inside a `--sui-color-input-border` border. Status text on `overlay` is added to the Contrast stories, because an outline button can sit in a popover.
+- **Focus moves with the popover.** `usePopover` takes `initialFocus`, a ref to the element to focus when the popover opens. Without one, focus stays where it is, as now. When the popover closes with focus inside it, the browser's own return of focus stands: the trigger when the trigger opened it, or whatever had focus before. Where the browser leaves focus on the page or in the hidden popover, as WebKit does, the hook moves it to the trigger. `close()` also returns focus when it is lost to the page as the popover hides, which is where WebKit leaves it after a click on a button. The decision is made in `beforetoggle`, as the popover starts to hide, so focus that `close()`'s caller moves elsewhere stays there, and so does focus after a click outside. The hook finds the trigger through its `popovertarget`, skipping elements inside the popover, so a consumer's own `ref` on the trigger still works. It searches the document only: StylesUI's CSS is injected into the document, so its components are not styled inside a shadow root.
+- One pull request, one commit per task, and no version bump unless asked. Breaking changes are acceptable while the package is in beta.
+
+### Hover values
+
+Bright, Mist, Paper and Dusk share the status fills, so they share the hovers:
+
+- `success-hover`: `green-800` light, `green-300` dark
+- `warning-hover`: `yellow-400` light, `yellow-200` dark
+- `danger-hover`: `red-700` light, `red-300` dark
+- `info-hover`: `indigo-800` light, `indigo-200` dark
+
+Pop draws ink on every status fill, so its hovers are lighter in both modes:
+
+- `success-hover`: `green-300` light, `green-200` dark
+- `warning-hover`: `yellow-300` light, `yellow-200` dark
+- `danger-hover`: `red-300` light, `red-200` dark
+- `info-hover`: `blue-300` light, `blue-200` dark
 
 ## Tech Stack
 
-React 19, TypeScript 7, Vite 8 (rolldown) library mode with lightningcss at the pinned `cssTarget`, CSS modules and custom properties, `light-dark()` and `color-mix()`, Vitest 5 (jsdom unit project plus four Chromium storybook projects), Storybook 10, oxlint and oxfmt, pnpm. No new dependencies.
+React 19, TypeScript 7, Vite 8 (rolldown) library mode, CSS modules and custom properties, CSS anchor positioning, Vitest 5 (jsdom unit project plus four Chromium storybook projects), Storybook 10, oxlint and oxfmt, pnpm. No new dependencies.
 
 ## Commands
 
 ```sh
-pnpm install                                   # also installs the Husky pre-commit hook
-pnpm verify                                    # lint, format check, typecheck, every test; run before every commit
-pnpm lint                                      # oxlint
-pnpm format                                    # oxfmt, writes
-pnpm format:check                              # oxfmt --check
-pnpm typecheck                                 # tsc -b
-pnpm test:unit                                 # jsdom unit tests
-pnpm test:unit src/styles/themeTokens.test.ts  # one unit test file
-pnpm test:storybook                            # every story in the four mode × theme projects
-pnpm test:storybook src/styles/Contrast.stories.tsx  # one story file
-pnpm build                                     # dist/ (JS, CSS, styles.css) and declarations
-pnpm storybook                                 # http://localhost:6006
+pnpm verify                                          # lint, format check, typecheck, every test; before every commit
+pnpm test:unit src/components/Button/Button.test.tsx # one unit test file
+pnpm test:storybook src/components/Popover/Popover.stories.tsx  # one story file, in all four projects
+pnpm build                                           # dist/
 fallow audit --format json --quiet --explain --gate-marker agent  # before every commit
 ```
-
-The phase 2 spike also uses `pnpm exec playwright install firefox webkit` to check the CSS in browsers the story tests don't run.
 
 ## Project Structure
 
 ```
-src/styles/
-  ramps.css              ← renamed from palette.css (phase 2)
-  tokens.css             ← derived block gains [data-sui-palette] and the theme-dependent colours (phase 2)
-  themes/default.css     ← non-colour tokens and theme inputs only (phase 2)
-  themes/playful.css     ← non-colour tokens and theme inputs only (phase 2)
-  palettes/bright.css    ← default's colours (phase 2)
-  palettes/pop.css       ← playful's colours (phase 2)
-  palettes/mist.css      ← new (phase 3)
-  palettes/paper.css     ← new (phase 3)
-  palettes/dusk.css      ← new (phase 3)
-  modes.css              ← paint rule matches [data-sui-palette] (phase 2)
-  index.css              ← imports ramps, tokens, themes, palettes (Bright first), modes, reset
-  tokenSource.ts         ← shared token parsing for tests and stories
-  themeTokens.test.ts    ← splits into theme and palette checks (phase 2)
-  modes.test.ts
-  Contrast.stories.tsx   ← new layers (phase 1), one island per palette (phase 2)
-  Tokens.stories.tsx     ← reads Bright's colours instead of default's (phase 2)
-  PaletteShowcase.stories.tsx ← new (phase 3)
-src/components/
-  TextControl, ChoiceControl  ← read --sui-color-field (phase 1)
-  Popover                     ← reads --sui-color-overlay (phase 1)
-  Code, Kbd, Prose            ← read --sui-color-sunken (phase 1)
-  Theme                       ← palette prop, PaletteName type (phase 2)
-src/index.ts             ← exports PaletteName (phase 2)
-.storybook/              ← palette toolbar global, ThemeRoot, ThemeDocsContainer (phase 2)
-docs/design/concepts.md  ← layers (phase 1), tiers, palettes, companions, ramps (phase 2), new palettes (phase 3)
-src/docs/Theming.mdx     ← palettes section (phase 2), showcase embed (phase 3)
-README.md, AGENTS.md, .design-sync/conventions.md ← palette usage and architecture (phases 2 and 3)
+src/styles/palettes/*.css            ← four status hover tokens in each palette
+src/styles/Contrast.stories.tsx      ← on-<status> on <status>-hover
+src/styles/PaletteShowcase.stories.tsx ← the status buttons
+src/components/Button/               ← variants, CSS, tests, stories
+src/overlays/OverlayPlacement.ts     ← four aligned placements
+src/components/Overlay/Overlay.module.css ← their position-area rules
+src/components/Popover/              ← entrance motion for them, focus handling, tests and stories
+src/components/IconButton/IconButton.stories.tsx ← every Button variant
+src/styles/ThemeShowcase.stories.tsx, src/components/Card/Card.stories.tsx ← outline-primary in place of outline
+src/components/Tooltip/Tooltip.stories.tsx ← the aligned placements
+docs/design/concepts.md, docs/design/palettes.md, src/docs/Theming.mdx, .design-sync/conventions.md, AGENTS.md ← docs
 ```
 
 ## Code Style
 
-Follow `docs/standards/` (comments, TypeScript, React, Vitest unit testing). The JSX prop order (alphabetical, then `aria-*`, then `data-*`) is kept by hand. Docs use British spelling and short declarative sentences, as `docs/design/concepts.md` does.
-
-A palette file declares every colour token with `light-dark()`, names ramp steps rather than repeating their hex, and keeps off-ramp neutrals as private `--_sui-*` helpers:
+Follow `docs/standards/`. Every token read keeps a literal fallback equal to Bright's light value:
 
 ```css
-:where(:root, [data-sui-theme="default"]),
-[data-sui-palette="bright"] {
-  --sui-color-background: light-dark(var(--sui-white), var(--sui-gray-900));
-  --sui-color-surface: light-dark(var(--sui-gray-100), var(--sui-gray-800));
-  --sui-color-field: light-dark(var(--sui-white), var(--sui-gray-900));
-  --sui-color-ink: light-dark(var(--sui-gray-900), var(--sui-gray-900));
-  /* … every other colour token */
+.button[data-variant="danger"] {
+  --sui-button-bg: var(--sui-color-danger, #dc2626);
+  --sui-button-bg-hover: var(--sui-color-danger-hover, #b91c1c);
+  --sui-button-fg: var(--sui-color-on-danger, #fff);
 }
 ```
 
 ```css
-[data-sui-palette="mist"] {
-  /* Underscore-prefixed properties are private to this palette, so other palettes need not declare them */
-  --_sui-mist-page: #eef1f5;
-  --_sui-mist-night: #0f141b;
-
-  --sui-color-background: light-dark(var(--_sui-mist-page), var(--_sui-mist-night));
-}
-```
-
-Component CSS keeps a literal fallback equal to Bright's light value on every token read:
-
-```css
-.control {
-  --sui-text-control-bg: var(--sui-color-field, #fff);
-}
-```
-
-The prop follows `Theme`'s existing pattern:
-
-```tsx
-/**
- * Names of the palettes shipped in `styles.css`
- */
-export type PaletteName = "bright" | "dusk" | "mist" | "paper" | "pop";
-
-interface ThemeOwnProps {
-  /**
-   * Colour mode for this subtree. Inherited from the nearest ancestor when omitted.
-   */
-  mode?: ThemeMode;
-
-  /**
-   * Colour palette for this subtree. Defaults to the theme's companion palette on an element that sets `theme`,
-   * and is inherited from the nearest ancestor otherwise.
-   */
-  palette?: PaletteName;
-
-  // …
+.overlay[data-placement="top-start"] {
+  margin-inline-start: 0;
+  position-area: self-block-start span-self-inline-end;
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline;
 }
 ```
 
 ## Testing Strategy
 
-- **Unit tests (Vitest, jsdom, `src/**/*.test.ts(x)`)** cover what can be read from CSS source and the DOM:
-  - token declarations per theme and per palette, through `tokenSource.ts`
-  - selector shapes in `tokens.css` and `modes.css`
-  - `Theme` writing `data-sui-palette`
-  - type-level rejection of an unknown palette, with `// @ts-expect-error`, enforced by `pnpm typecheck`
-- **Story tests (Vitest browser mode, Chromium, four `storybook-<mode>-<theme>` projects)** cover anything that needs the cascade resolved: `light-dark()`, `color-mix()`, companions, nesting, and contrast ratios through `src/test/colorContrast.ts`. A story whose stories have no violations sets `a11y.test: "error"`. No storybook projects are added: palettes are covered by rendering one `Theme` island per palette inside a story.
-- **Throwaway checks (not committed):**
-  - the phase 2 spike in Firefox and WebKit
-  - the before-and-after comparison of resolved colours that proves phases 1 and 2 change nothing
-  - the build inspection of `dist/styles.css`
-- **Manual checks:** fallback colour pairs, as AGENTS.md already requires.
-- No coverage percentage is set. Every acceptance criterion below names the test or check that proves it.
+- **Unit (jsdom).** `Button.test.tsx` covers each new variant, and its existing `@ts-expect-error` keeps rejecting an unknown one, now including `outline`. `usePopover.test.tsx` covers `initialFocus`, focus returning on close from inside, focus left alone from outside, and `close()` with focus lost to the page, which only WebKit and Firefox on macOS produce, so no story can. `themeTokens.test.ts` already requires every palette to declare the same tokens, with different light and dark values.
+- **Stories (Chromium, all four mode and theme projects).**
+  - Contrast stories assert `on-<status>` on `<status>-hover` at 4.5:1 in every palette.
+  - A Button story renders each status variant at every size, disabled and busy, under axe. `HoverContrast` measures each variant's hover text, and the new story checks that rest and hover fills can be told apart.
+  - The palette showcase adds the four buttons, so axe checks them in every palette.
+  - The Popover `Placement` story checks that each aligned placement is on its side and meets the trigger's edge. A right-to-left story checks that the edges swap.
+  - `ControlledReopening` opens a controlled popover with real keys, closes it with Escape, and opens it again.
+  - A Button story renders each outline variant at every size, disabled and busy, under axe, and the palette showcase renders them in every palette.
+  - A confirmation popover story checks with real keys and clicks that focus moves to Cancel on opening, returns to the trigger on Escape and on Cancel, and stays put after a click outside.
+- **Proof the reopening story bites.** It must fail with `usePopover`'s re-show effect put back to 0.6.0's bare `showPopover()`. That run is throwaway.
+- **By hand.** Fallback colour pairs, as AGENTS.md requires.
 
 ## Boundaries
 
-**Always:**
-
-- Run `pnpm verify` and the fallow audit before every commit, and fix what they report.
-- Keep default and playful pixel-identical through phases 1 and 2, and prove it with the resolved-colour comparison.
-- Give every new token read a literal fallback equal to Bright's light value.
-- Update `docs/design/concepts.md` and `AGENTS.md` in the same phase as the behaviour they describe.
-- Keep palette values within the contrast pairings the Contrast stories assert, in both modes.
-- Start phase 2 with the spike, and build nothing else in that phase until it passes.
-
-**Ask first:**
-
-- Pushing or opening a pull request. Commits on the working branch need no approval: one per task.
-- Bumping the version or publishing.
-- Running a Claude Design sync.
-- Changing a design-doc colour by more than a contrast pairing needs, or changing the design itself (companion rule, token names, derivation).
-- Adding a storybook project, a dependency, or a browser feature that raises the support floor (`@scope`, `if()`, style queries).
-- Changing any public API other than `Theme`'s `palette` prop and the `PaletteName` type.
-- Anything the spike shows doesn't work. Stop and report rather than working around it.
-
-**Never:**
-
-- Lower a contrast threshold, skip or delete an assertion, or set a story to `a11y.test: "todo"` to get a test green.
-- Change Bright's or Pop's resolved colours.
-- Edit `dist/` or `storybook-static/`, or hand-write a dependency version.
-- Put palette CSS anywhere but `styles.css`, or give a component module a top-level side effect.
+- **Always:** run `pnpm verify` and the fallow audit before every commit. Give every token read a literal fallback. Keep the docs in the same commit as the behaviour they describe.
+- **Ask first:** pushing or opening a pull request; bumping the version or publishing; a Claude Design sync; changing an existing colour.
+- **Never:** lower a contrast threshold, skip an assertion or set a story to `a11y.test: "todo"`; edit `dist/`; hand-write a dependency version.
 
 ## Success Criteria
 
-### Phase 1: Layer tokens
+### Status buttons
 
-No visual change.
+1. `ButtonVariant` gains `danger`, `info`, `success` and `warning`, and each sets `data-variant`. Proven by `Button.test.tsx`.
+2. All five palettes declare `--sui-color-danger-hover`, `--sui-color-info-hover`, `--sui-color-success-hover` and `--sui-color-warning-hover` with the values above, through `light-dark()`. Proven by `themeTokens.test.ts`.
+3. The Contrast stories pass `on-<status>` on `<status>-hover` at 4.5:1 for every palette in all four projects.
+4. A status variant is filled with `--sui-color-<status>`, hovers to `--sui-color-<status>-hover` and draws `--sui-color-on-<status>` text, each read with Bright's light value as its fallback. Every fallback pair is at least 4.5:1, checked by hand.
+5. The Button status story passes axe at every size, disabled and busy, and its rest and hover fills differ by at least the 1.1 the ghost Button's story requires. `HoverContrast` passes for every variant. The palette showcase passes axe with the four buttons.
+6. `docs/design/concepts.md` and `src/docs/Theming.mdx` document the hover in the status fill grade. `docs/design/palettes.md` documents the hover rule. The Buttons section of concepts.md and `.design-sync/conventions.md` list the variants.
 
-1. `themes/default.css` and `themes/playful.css` each declare `--sui-color-field`, `--sui-color-overlay` and `--sui-color-sunken` with `light-dark()`. `field` and `overlay` equal the theme's `--sui-color-background` value, and `sunken` equals its `--sui-color-surface` value. Proven by `pnpm test:unit src/styles/themeTokens.test.ts`, the existing same-tokens check, plus the resolved-colour comparison.
-2. `TextControl` and `ChoiceControl` read `var(--sui-color-field, #fff)`, and `Popover` reads `var(--sui-color-overlay, #fff)`.
-3. `Code`, `Kbd`, and Prose's `code`, `kbd`, `pre` and `th`, read `var(--sui-color-sunken, #f3f4f6)`. The unit test that keeps Prose's `kbd` identical to `Kbd` passes unchanged, and the Prose header-cell story asserts `--sui-color-sunken`.
-4. The Contrast stories add these pairs:
-   - `text` and `text-muted` on `field`, `overlay` and `sunken`
-   - `primary` on `overlay`
-   - the focus ring on `overlay` and `sunken`
-   - the input border on `overlay`
+### Aligned placements
 
-   All of them pass in the four projects.
+7. `OverlayPlacement` is `"bottom" | "bottom-end" | "bottom-start" | "end" | "start" | "top" | "top-end" | "top-start"`, and `Popover`, `usePopover`, `Tooltip`, `useTooltip` and `IconButton` take every value.
+8. In Chromium, in a left-to-right page, each aligned placement puts the popover wholly on its side of the trigger. A `-start` popover's left edge, and an `-end` popover's right edge, is within 1px of the trigger's. Proven by the Popover `Placement` story.
+9. In a right-to-left container, `top-start`'s right edge and `top-end`'s left edge meet the trigger's. Proven by a new story.
+10. An aligned popover's entrance moves out from the trigger as `top` and `bottom` do, and `Tooltip`'s `Placement` story and controls offer every placement.
+11. `docs/design/concepts.md` and `.design-sync/conventions.md` describe the aligned placements.
 
-5. Every existing unit and story test passes unchanged, apart from the token names in criteria 3 and 4.
-6. `docs/design/concepts.md` describes the five layers and which components read each.
+### Controlled reopening
 
-### Phase 2: The palette axis
+12. `ControlledReopening` passes in all four projects: Tab and Enter open the controlled popover, Escape closes it and reports `false`, and Enter opens it again, reporting `true` with the link visible and no error.
+13. The same story fails with `usePopover`'s re-show effect put back to 0.6.0's bare `showPopover()`. The run is reported in the PR, not committed.
 
-No visual change. Ships Bright and Pop, the companions, the derived colours and the `palette` prop.
+### An outline per colour
 
-1. **Spike.** A throwaway page shows two things work in Chromium, Firefox and WebKit: a `light-dark()` value inside `color-mix()` in a custom property, and a `color-mix()` percentage taken from `var()`. Both must survive `pnpm build`'s lightningcss output at the pinned `cssTarget`, and resolve to the expected colours in both modes. The result goes in the PR description. If either fails, stop and ask.
-2. **Ramps rename.** `src/styles/palette.css` is `src/styles/ramps.css`, its imports and tests follow, and `docs/design/concepts.md` calls the tier "Ramps". Ramp token names are unchanged.
-3. **Palette files.** `palettes/bright.css` and `palettes/pop.css` declare every `--sui-color-*` token the themes declared, with the same values, except the three derived ones. Each adds `--sui-color-ink`, `--sui-color-shadow-soft` and `--sui-color-shadow-hard`, and declares no `--sui-color-control-border`, `--sui-color-shadow` or `--sui-shadow-sm`. Their selectors are `:where(:root, [data-sui-theme="default"]), [data-sui-palette="bright"]` and `:where([data-sui-theme="playful"]), [data-sui-palette="pop"]`.
-4. **Theme files.** The themes declare no `--sui-color-*` token. Each declares `--sui-control-outline`, `--sui-shadow-hardness` and `--sui-shadow-sm-offset`, and no longer declares `--sui-shadow-sm`.
-5. **Derived tokens.** `tokens.css` declares `--sui-color-control-border`, `--sui-color-shadow` and `--sui-shadow-sm` in a block whose selector is `:root, [data-sui-theme], [data-sui-palette]`, as the design doc shows. The spacing block matches the same selectors.
-6. **Paint rule.** `modes.css` paints background, text colour and font on `:where([data-sui-theme], [data-sui-mode], [data-sui-palette])`, and `modes.test.ts` asserts it.
-7. **Token tests.** `themeTokens.test.ts` asserts:
-   - every theme declares the same tokens, none of them `--sui-color-*`
-   - every palette declares the same tokens, every one a `--sui-color-*` token or a `--_sui-*` helper
-   - every palette colour uses `light-dark()` with different light and dark values, apart from a listed set of exceptions per palette that are identical in both
-   - each palette's selector has its companion part inside `:where()`, if it has a companion
-8. **No visual change.** The resolved-colour comparison shows identical values for every `--sui-color-*` token and for `--sui-shadow-sm`, in default/light, default/dark, playful/light and playful/dark, before and after.
-9. **`Theme` prop.** `Theme` takes `palette?: PaletteName` and writes `data-sui-palette`, omitting it when `palette` is omitted. `PaletteName` is exported from `src/index.ts`. `Theme.test.tsx` covers both, and a `// @ts-expect-error` rejects an unknown name.
-10. **Companion stories.** `Theme.stories.tsx` gains a story whose play function asserts these resolved values in the browser:
-    - `<Theme theme="playful">`: Pop's `primary`.
-    - `<Theme theme="playful" palette="bright">`: Bright's `primary`, a non-transparent `control-border` equal to Bright's ink, and Bright's hard shadow colour.
-    - `<Theme theme="default" palette="pop">`: Pop's `primary`, a transparent `control-border` and a soft shadow colour.
-    - `<Theme theme="playful">` around `<Theme palette="bright">`: Bright's colours and Bright's ink as the outline, which proves the derived tokens re-resolve on a palette element.
-    - `<Theme palette="pop">` around `<Theme theme="default">`: Bright, because the companion is nearer.
-11. **Contrast across palettes.** The Contrast stories run every pairing once per shipped palette, each in a `Theme` island that sets `palette`, and pass in all four projects. The lip pair (focus ring on `shadow` where controls have depth) therefore runs for every palette under playful.
-12. **Storybook.** A `palette` toolbar global offers "theme" (the companion, the default), then each palette. `ThemeRoot` sets or removes `data-sui-palette` on the document and passes `palette` to its docs island, and `ThemeDocsContainer` removes the attribute so docs pages stay in Bright. `Tokens.stories.tsx` reads its swatch list from Bright.
-13. **Docs.** These describe the palette axis, the companions, `palette`, `data-sui-palette`, the derived tokens and the overrides that move:
-    - `docs/design/concepts.md`
-    - `src/docs/Theming.mdx`
-    - `README.md`, including its base-token note
-    - `AGENTS.md`
+14. `ButtonVariant` is `"danger" | "ghost" | "info" | "outline-danger" | "outline-info" | "outline-primary" | "outline-secondary" | "outline-success" | "outline-warning" | "primary" | "secondary" | "success" | "warning"`, and `variant="outline"` is a type error. Proven by `Button.test.tsx`.
+15. Each outline variant reads the tokens in the decision above, each with Bright's light value as its fallback. Every fallback pair is at least 4.5:1 for text and 3:1 for the secondary border, checked by hand.
+16. The Contrast stories pass `<status>-text` on `overlay` for every palette in all four projects.
+17. The Button outline story passes axe at every size, disabled and busy, and its hover fill differs from rest by at least 1.1. `HoverContrast` passes for every outline variant. The palette showcase passes axe with them and checks every Button's hover text (4.5:1) and fill (1.1) in every palette.
+18. `IconButton` takes every Button variant. Its unit test and its `Variants` story each list the variants in a `Record<ButtonVariant, true>`, so a variant missing from either fails to compile, and the story checks that each renders square.
+19. Nothing in the repository uses `variant="outline"` on a Button. The `ButtonVariant` JSDoc, concepts.md, Theming.mdx and `.design-sync/conventions.md` describe the outline variants.
 
-### Phase 3: Mist, Paper and Dusk
+### Popover focus
 
-1. `palettes/mist.css`, `paper.css` and `dusk.css` declare the same tokens as Bright, enforced by `themeTokens.test.ts`. They start from the values in the design doc, changing only what a failing contrast pairing needs, and each change goes in the PR description.
-2. `PaletteName` and the toolbar include `mist`, `paper` and `dusk`.
-3. The Contrast stories pass for all five palettes in all four projects.
-4. A new `src/styles/PaletteShowcase.stories.tsx`, with `a11y.test: "error"`, renders the same set of components in each palette. The set is primary, secondary, outline and ghost Buttons, Badge tones, an Alert per status, TextInput in a Field, Checkbox, pill and underline Tabs, a Listbox, a Card holding Code and Kbd, and a NavList. It passes axe in all four projects.
-5. `pnpm build` emits every palette in `dist/styles.css` and in no other CSS file, and the tree-shaking check in AGENTS.md shows an unused component still contributes no JS or CSS.
-6. Every fallback colour pair is unchanged, so none needs a new hand check.
-7. These describe the three palettes, what each is for, and the companion rule, and the Theming guide embeds the showcase:
-   - `docs/design/concepts.md`
-   - `src/docs/Theming.mdx`
-   - `README.md`
-   - `.design-sync/conventions.md`
+20. With `initialFocus`, the element it points at has focus once the popover has opened, uncontrolled or controlled.
+21. When the popover closes with focus inside it, by Escape or by `close()`, focus goes where the browser returns it, or to the trigger when the browser leaves it on the page or in the hidden popover. In Chromium, a confirmation opened from another button returns focus to that button, and one open from the start, with nothing focused before, returns it to the trigger. When it closes after a click outside, focus stays where the click left it.
+22. A popover hidden by `close()` with focus on the page's `body` moves focus to the trigger. Focus that `close()`'s caller moves elsewhere stays there.
+23. A consumer's `ref` on the trigger is unaffected, and a button inside the popover that also targets it is never taken for the trigger.
+24. The Popover and `usePopover` JSDoc, concepts.md, `.design-sync/conventions.md` and AGENTS.md describe the behaviour.
+
+### Whole change
+
+25. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
 
 ## Open Questions
 
-None blocking. Two are decided for now and noted for review:
-
-- **The before-and-after comparison is throwaway.** A committed test of literal colours would fail on every intended palette change, so it is run per PR instead. Say if you want it kept as a test.
-- **Toolbar label.** The `palette` toolbar's default item is labelled "theme" (the theme's companion). Alternatives: "companion", "auto".
+- **Release.** Markdown Review needs a published version to drop its workarounds. Bump to 0.7.0 (new variants, placements, tokens and `initialFocus`, and `outline` removed) once this merges?

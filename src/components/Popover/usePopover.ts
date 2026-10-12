@@ -1,4 +1,4 @@
-import type { CSSProperties, ToggleEvent } from "react";
+import type { CSSProperties, RefObject, ToggleEvent } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 
 import type { OverlayPlacement } from "../../overlays";
@@ -14,6 +14,12 @@ export interface UsePopoverOptions {
    * Whether the popover starts open when uncontrolled. Defaults to `false`.
    */
   defaultOpen?: boolean;
+
+  /**
+   * Element to focus when the popover opens, such as the safe choice in a confirmation. Without one, focus stays where
+   * it is.
+   */
+  initialFocus?: RefObject<HTMLElement | null>;
 
   /**
    * Called with the new open state when the popover opens or closes; when controlled, also with `true` when the user
@@ -65,7 +71,9 @@ interface PopoverTriggerProps {
  */
 export interface UsePopoverResult {
   /**
-   * Closes the popover: hides it when uncontrolled, and reports `false` through `onOpenChange` either way
+   * Closes the popover: hides it when uncontrolled, and reports `false` through `onOpenChange` either way. Focus moves
+   * as when the browser closes it, and also to the trigger when it is lost to the page as the popover hides, as Safari
+   * loses it when a button is clicked. Focus the caller moves elsewhere stays there.
    */
   close: () => void;
 
@@ -92,9 +100,12 @@ export interface UsePopoverResult {
 
 /**
  * Connects a `Popover` to the button that opens it. Clicking the button toggles the popover, and Escape or a click
- * outside closes it, all handled by the browser. Opening another popover closes this one.
+ * outside closes it, all handled by the browser. Opening another popover closes this one. When the popover closes with
+ * focus inside it, the browser returns focus to whatever had it before the popover opened, usually the button; where
+ * the browser leaves focus on the page or in the hidden popover, as Safari does, the hook moves it to the button. A
+ * click outside leaves focus where the click put it.
  *
- * @param options open state, the change callback and placement
+ * @param options open state, the change callback, placement and the element to focus on opening
  * @returns prop getters for the trigger and the `Popover`, whether it is open, and `close`
  *
  * @example
@@ -105,6 +116,7 @@ export interface UsePopoverResult {
  */
 export function usePopover({
   defaultOpen = false,
+  initialFocus,
   onOpenChange,
   open: controlledOpen,
   placement = "bottom",
@@ -113,6 +125,8 @@ export function usePopover({
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const [renderRequest, requestRender] = useState(0);
   const popoverElement = useRef<HTMLElement | null>(null);
+  const returnsFocus = useRef(false);
+  const closeRequested = useRef(false);
   const controlled = controlledOpen !== undefined;
   const open = controlledOpen ?? uncontrolledOpen;
   const anchorName = anchorNameFor(id);
@@ -138,6 +152,16 @@ export function usePopover({
   }
 
   function handleBeforeToggle(event: ToggleEvent<HTMLElement>): void {
+    // Only now, before the popover hides, can focus be found inside it. WebKit leaves focus on the page, not on a button
+    // clicked inside the popover, so a close() made with focus lost returns it too
+    if (event.newState === "closed") {
+      const popover = event.currentTarget;
+      returnsFocus.current =
+        popover.contains(popover.ownerDocument.activeElement) ||
+        (closeRequested.current && isFocusLost(popover.ownerDocument));
+      closeRequested.current = false;
+    }
+
     if (controlled && !open && event.newState === "open") {
       event.preventDefault();
       onOpenChange?.(true);
@@ -146,6 +170,13 @@ export function usePopover({
 
   function handleToggle(event: ToggleEvent<HTMLElement>): void {
     const nextOpen = event.newState === "open";
+
+    if (nextOpen) {
+      initialFocus?.current?.focus();
+    } else if (returnsFocus.current) {
+      returnsFocus.current = false;
+      returnFocus(event.currentTarget);
+    }
 
     if (nextOpen === open) {
       return;
@@ -161,6 +192,7 @@ export function usePopover({
 
   function close(): void {
     if (open) {
+      closeRequested.current = true;
       commit(false);
     }
   }
@@ -193,4 +225,42 @@ export function usePopover({
   }
 
   return { close, getOverlayProps, getTriggerProps, open };
+}
+
+/**
+ * Moves focus to a hidden popover's trigger, unless the browser has already returned focus somewhere, which WebKit
+ * does not
+ *
+ * @param popover the popover element, now hidden
+ */
+function returnFocus(popover: HTMLElement): void {
+  if (isFocusLost(popover.ownerDocument) || popover.contains(popover.ownerDocument.activeElement)) {
+    triggerOf(popover)?.focus();
+  }
+}
+
+/**
+ * Whether nothing on the page has focus
+ *
+ * @param page the document
+ * @returns true when focus is on the page itself
+ */
+function isFocusLost(page: Document): boolean {
+  return page.activeElement === null || page.activeElement === page.body;
+}
+
+/**
+ * Finds the button that opens a popover
+ *
+ * @param popover the popover element
+ * @returns the element outside the popover whose `popovertarget` names it, or null when there is none
+ */
+function triggerOf(popover: HTMLElement): HTMLElement | null {
+  const candidates = popover.ownerDocument.querySelectorAll<HTMLElement>("[popovertarget]");
+
+  return (
+    Array.from(candidates).find(
+      (candidate) => candidate.getAttribute("popovertarget") === popover.id && !popover.contains(candidate)
+    ) ?? null
+  );
 }

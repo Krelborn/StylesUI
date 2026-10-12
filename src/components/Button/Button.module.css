@@ -41,17 +41,68 @@
   --sui-button-fg: var(--sui-color-on-secondary, #111827);
 }
 
-.button[data-variant="outline"] {
+.button[data-variant="danger"] {
+  --sui-button-bg: var(--sui-color-danger, #dc2626);
+  --sui-button-bg-hover: var(--sui-color-danger-hover, #b91c1c);
+  --sui-button-fg: var(--sui-color-on-danger, #fff);
+}
+
+.button[data-variant="info"] {
+  --sui-button-bg: var(--sui-color-info, #4338ca);
+  --sui-button-bg-hover: var(--sui-color-info-hover, #3730a3);
+  --sui-button-fg: var(--sui-color-on-info, #fff);
+}
+
+.button[data-variant="success"] {
+  --sui-button-bg: var(--sui-color-success, #15803d);
+  --sui-button-bg-hover: var(--sui-color-success-hover, #166534);
+  --sui-button-fg: var(--sui-color-on-success, #fff);
+}
+
+.button[data-variant="warning"] {
+  --sui-button-bg: var(--sui-color-warning, #eab308);
+  --sui-button-bg-hover: var(--sui-color-warning-hover, #facc15);
+  --sui-button-fg: var(--sui-color-on-warning, #111827);
+}
+
+/* Hover tints whatever is behind the button, since a fixed fill can match the surface it sits on */
+.button:is([data-variant="ghost"], [data-variant^="outline-"]) {
   --sui-button-bg: transparent;
-  --sui-button-bg-hover: var(--sui-color-primary-subtle, #edf5ff);
+  --sui-button-bg-hover: color-mix(in srgb, var(--sui-button-fg) 8%, transparent);
+}
+
+.button[data-variant="outline-primary"] {
   --sui-button-fg: var(--sui-color-primary, #2563eb);
   --sui-button-border: var(--sui-color-primary, #2563eb);
 }
 
-/* Hover and press tint whatever is behind the button, since a fixed fill can match the surface it sits on */
+/* Secondary has no text grade, so its outline is body text inside a form control's border */
+.button[data-variant="outline-secondary"] {
+  --sui-button-fg: var(--sui-color-text, #111827);
+  --sui-button-border: var(--sui-color-input-border, #6b7280);
+}
+
+.button[data-variant="outline-danger"] {
+  --sui-button-fg: var(--sui-color-danger-text, #b91c1c);
+  --sui-button-border: var(--sui-color-danger-text, #b91c1c);
+}
+
+.button[data-variant="outline-info"] {
+  --sui-button-fg: var(--sui-color-info-text, #4338ca);
+  --sui-button-border: var(--sui-color-info-text, #4338ca);
+}
+
+.button[data-variant="outline-success"] {
+  --sui-button-fg: var(--sui-color-success-text, #166534);
+  --sui-button-border: var(--sui-color-success-text, #166534);
+}
+
+.button[data-variant="outline-warning"] {
+  --sui-button-fg: var(--sui-color-warning-text, #854d0e);
+  --sui-button-border: var(--sui-color-warning-text, #854d0e);
+}
+
 .button[data-variant="ghost"] {
-  --sui-button-bg: transparent;
-  --sui-button-bg-hover: color-mix(in srgb, var(--sui-button-fg) 8%, transparent);
   --sui-button-fg: var(--sui-color-text, #111827);
   --sui-button-border: transparent;
   --sui-button-depth: 0px;

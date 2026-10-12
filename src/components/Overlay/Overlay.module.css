@@ -33,3 +33,35 @@
   position-area: self-inline-end;
   position-try-fallbacks: flip-inline;
 }
+
+/* An aligned overlay's edge meets the trigger's, so it has no margin on that side */
+.overlay[data-placement$="-start"] {
+  margin-inline-start: 0;
+}
+
+.overlay[data-placement$="-end"] {
+  margin-inline-end: 0;
+}
+
+.overlay:is([data-placement$="-start"], [data-placement$="-end"]) {
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline;
+}
+
+.overlay[data-placement="top-start"] {
+  position-area: self-block-start span-self-inline-end;
+}
+
+.overlay[data-placement="top-end"] {
+  position-area: self-block-start span-self-inline-start;
+}
+
+.overlay[data-placement="bottom-start"] {
+  position-area: self-block-end span-self-inline-end;
+}
+
+.overlay[data-placement="bottom-end"] {
+  position-area: self-block-end span-self-inline-start;
+}
