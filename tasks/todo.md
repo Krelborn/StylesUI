@@ -88,16 +88,16 @@ concepts.md no longer says a Switch has no halo.
 
 **Acceptance criteria:**
 
-- [ ] SC 9 to 11 hold in all four projects.
-- [ ] The doc part of SC 13 for the halo: concepts.md describes the Switch's halo and no longer says it has none.
+- [x] SC 9 to 11 hold in all four projects.
+- [x] The doc part of SC 13 for the halo: concepts.md describes the Switch's halo and no longer says it has none.
 
 **Verification:**
 
-- [ ] Before the CSS change, `Halo` fails on the spread, and `FocusedHalo` fails on the halo shown before focus.
-- [ ] With the `.choiceControl .input:focus-visible` rule removed for one run, `FocusedHalo` fails on the halo under the ring. The rule is then restored.
-- [ ] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
-- [ ] The Checkbox unit tests: `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
-- [ ] `pnpm verify`, `pnpm build` and the fallow audit
+- [x] Before the CSS change, `Halo` fails on the spread, and `FocusedHalo` fails on the halo shown before focus.
+- [x] With the `.choiceControl .input:focus-visible` rule removed for one run, `FocusedHalo` fails on the halo under the ring. The rule is then restored.
+- [x] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
+- [x] The Checkbox unit tests: `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
 
 **Dependencies:** Task 1
 
@@ -105,13 +105,15 @@ concepts.md no longer says a Switch has no halo.
 
 - `src/components/ChoiceControl/ChoiceControl.module.css`
 - `src/components/Switch/Switch.stories.tsx`
-- `docs/design/concepts.md`, `tasks/`
+- `src/test/choiceControl.ts`: `expectHaloStates`, shared by the Checkbox, Radio and Switch `Halo` stories, and `expectHaloHiddenUnderFocus`, shared with Checkbox's `FocusedHalo`, which now also checks the halo's spread before focus
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx`
+- `docs/design/concepts.md`, `AGENTS.md`, `tasks/`
 
 **Estimated scope:** S
 
 ## Checkpoint B: complete
 
-- [ ] Spec success criteria 1 to 14 hold
-- [ ] `pnpm verify`, `pnpm build` and the fallow audit pass
-- [ ] By hand: screenshots of the Switch stories in both themes and modes, under Chromium's forced colours, and in WebKit, published with `html_render`
+- [x] Spec success criteria 1 to 14 hold
+- [x] `pnpm verify`, `pnpm build` and the fallow audit pass
+- [x] By hand: screenshots of the Switch stories in both themes and modes, under Chromium's forced colours, and in WebKit, published with `html_render`
 - [ ] You review the branch; pushing and opening a pull request wait for your go-ahead

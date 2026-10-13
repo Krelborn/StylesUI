@@ -22,18 +22,18 @@ This plan implements [SPEC.md](../SPEC.md). The `Switch` track shrinks to `space
 
 ### Checkpoint A: after Tasks 1 and 2
 
-- [ ] `pnpm verify` and the fallow audit pass
-- [ ] Every story that renders a Switch passes axe, including `target-size`, in all four projects
+- [x] `pnpm verify` and the fallow audit pass
+- [x] Every story that renders a Switch passes axe, including `target-size`, in all four projects
 
 ### Phase 2: Halo
 
-- [ ] Task 3: Turn on the halo for Switch
+- [x] Task 3: Turn on the halo for Switch
 
 ### Checkpoint B: complete
 
-- [ ] Spec success criteria 1 to 14 hold
-- [ ] `pnpm verify`, `pnpm build` and the fallow audit pass
-- [ ] Screenshots of the Switch stories in both themes and modes, under forced colours, and in WebKit, published for your review
+- [x] Spec success criteria 1 to 14 hold
+- [x] `pnpm verify`, `pnpm build` and the fallow audit pass
+- [x] Screenshots of the Switch stories in both themes and modes, under forced colours, and in WebKit, published for your review
 - [ ] You review the branch before anything is pushed
 
 ## Risks and Mitigations

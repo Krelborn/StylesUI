@@ -1,14 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import {
-  expectDistinctHaloStates,
-  expectOnSpaceScale,
-  readHalo,
-  settledHalo,
-  textStart,
-} from "../../test/choiceControl";
-import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
+import { expectHaloStates, expectOnSpaceScale, textStart } from "../../test/choiceControl";
+import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Button } from "../Button";
 import { Stack } from "../Stack";
@@ -186,7 +180,7 @@ export const Halo: Story = {
       </Radio>
     </Stack>
   ),
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas }) => {
     const input = trustedInput();
     const unchecked = canvas.getByRole<HTMLInputElement>("radio", { name: "Pay monthly" });
     const checked = canvas.getByRole<HTMLInputElement>("radio", { name: "Pay yearly" });
@@ -196,16 +190,6 @@ export const Halo: Story = {
       return;
     }
 
-    await input.hoverByTestId("disabled");
-    await settledHalo(disabled, ":hover");
-    await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
-
-    for (const control of [unchecked, checked]) {
-      await expect(isSameColor(canvasElement, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
-    }
-
-    // Pressing selects the radio, so the selected one is measured before the other takes its place
-    await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
-    await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
+    await expectHaloStates(input, { checked, disabled, unchecked });
   },
 };

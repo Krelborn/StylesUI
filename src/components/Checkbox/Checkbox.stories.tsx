@@ -1,14 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import {
-  expectDistinctHaloStates,
-  expectOnSpaceScale,
-  readHalo,
-  settledHalo,
-  textStart,
-} from "../../test/choiceControl";
-import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
+import { expectHaloHiddenUnderFocus, expectHaloStates, expectOnSpaceScale, textStart } from "../../test/choiceControl";
+import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Card } from "../Card";
 import { Field } from "../Field";
@@ -296,7 +290,7 @@ export const Halo: Story = {
       </Checkbox>
     </Stack>
   ),
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas }) => {
     const input = trustedInput();
     const unchecked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
     const checked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me security alerts" });
@@ -306,16 +300,7 @@ export const Halo: Story = {
       return;
     }
 
-    await input.hoverByTestId("disabled");
-    await settledHalo(disabled, ":hover");
-    await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
-
-    for (const control of [unchecked, checked]) {
-      await expect(isSameColor(canvasElement, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
-    }
-
-    await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
-    await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+    await expectHaloStates(input, { checked, disabled, unchecked });
   },
 };
 
@@ -332,7 +317,7 @@ export const FocusedHalo: Story = {
       </Checkbox>
     </Card>
   ),
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas }) => {
     const input = trustedInput();
     const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
 
@@ -340,21 +325,6 @@ export const FocusedHalo: Story = {
       return;
     }
 
-    await input.hoverByTestId("focused");
-    const hovered = await settledHalo(checkbox, ":hover");
-
-    await expect(isSameColor(canvasElement, hovered.color, "transparent"), "halo before the focus").toBe(false);
-
-    await input.pressKey("Tab");
-    await expect(checkbox).toHaveFocus();
-    await expect(checkbox.matches(":focus-visible")).toBe(true);
-    await expect(getComputedStyle(checkbox).transitionProperty, "halo transition under the focus ring").not.toContain(
-      "box-shadow"
-    );
-
-    const focused = await settledHalo(checkbox, ":hover");
-
-    await expect(isSameColor(canvasElement, focused.color, "transparent"), "halo under the focus ring").toBe(true);
-    await expect(focusRingContrast(checkbox)).toBeGreaterThanOrEqual(3);
+    await expectHaloHiddenUnderFocus(input, checkbox, "focused");
   },
 };

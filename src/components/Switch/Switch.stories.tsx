@@ -1,9 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { expectOnSpaceScale, resolvedLength, settledHalo, textStart } from "../../test/choiceControl";
+import {
+  expectHaloHiddenUnderFocus,
+  expectHaloStates,
+  expectOnSpaceScale,
+  resolvedLength,
+  textStart,
+} from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
+import { Card } from "../Card";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
@@ -329,13 +336,50 @@ export const KeyboardInteraction: Story = {
 };
 
 /**
- * A switch draws no halo when its label is hovered, unlike a checkbox or radio
+ * Hovering anywhere on the label tints a halo around the track that fills the gap before the text,
+ * and pressing darkens it, as on a checkbox. The halo is the text colour around a switch that is
+ * off and the primary colour around one that is on, and a disabled switch has none.
  */
-export const NoHalo: Story = {
+export const Halo: Story = {
   render: (args) => (
-    <Switch {...args}>
-      <span data-testid="switch">Email notifications</span>
-    </Switch>
+    <Stack gap={2}>
+      <Switch {...args}>
+        <span data-testid="unchecked">Email notifications</span>
+      </Switch>
+      <Switch defaultChecked={true}>
+        <span data-testid="checked">Text message notifications</span>
+      </Switch>
+      <Switch disabled={true}>
+        <span data-testid="disabled">Push notifications</span>
+      </Switch>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+    const unchecked = canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" });
+    const checked = canvas.getByRole<HTMLInputElement>("switch", { name: "Text message notifications" });
+    const disabled = canvas.getByRole<HTMLInputElement>("switch", { name: "Push notifications" });
+
+    if (input === null) {
+      return;
+    }
+
+    await expectHaloStates(input, { checked, disabled, unchecked });
+  },
+};
+
+/**
+ * A switch with keyboard focus draws no halo, even under the pointer, so nothing lowers the
+ * contrast of its focus ring, here on a surface. A halo the pointer showed before the focus
+ * vanishes at once rather than fading under the ring.
+ */
+export const FocusedHalo: Story = {
+  render: (args) => (
+    <Card padding="sm">
+      <Switch {...args}>
+        <span data-testid="focused">Email notifications</span>
+      </Switch>
+    </Card>
   ),
   play: async ({ canvas }) => {
     const input = trustedInput();
@@ -345,7 +389,6 @@ export const NoHalo: Story = {
       return;
     }
 
-    await input.hoverByTestId("switch");
-    await expect((await settledHalo(email, ":hover")).spread, "halo spread").toBe(0);
+    await expectHaloHiddenUnderFocus(input, email, "focused");
   },
 };

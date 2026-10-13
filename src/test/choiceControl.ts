@@ -1,12 +1,12 @@
 import { expect, waitFor } from "storybook/test";
 
-import { distinctFillContrast, fillContrast, isSameColor } from "./colorContrast";
+import { distinctFillContrast, fillContrast, focusRingContrast, isSameColor } from "./colorContrast";
 import type { TrustedInput } from "./trustedInput";
 
 /**
  * The halo a choice control draws around its box
  */
-export interface Halo {
+interface Halo {
   /**
    * Colour of the halo, as the browser reports it
    */
@@ -28,7 +28,7 @@ export interface Halo {
  * @param testId the `data-testid` of an element in the control's label
  * @param tint the colour the halo is tinted with, such as `"var(--sui-color-primary)"`
  */
-export async function expectDistinctHaloStates(
+async function expectDistinctHaloStates(
   input: TrustedInput,
   control: HTMLInputElement,
   testId: string,
@@ -66,6 +66,88 @@ export async function expectDistinctHaloStates(
 }
 
 /**
+ * The controls whose halos `expectHaloStates` checks
+ */
+interface HaloControls {
+  /**
+   * Input of a checked control, whose label holds an element with `data-testid="checked"`
+   */
+  checked: HTMLInputElement;
+
+  /**
+   * Input of a disabled control, whose label holds an element with `data-testid="disabled"`
+   */
+  disabled: HTMLInputElement;
+
+  /**
+   * Input of an unchecked control, whose label holds an element with `data-testid="unchecked"`
+   */
+  unchecked: HTMLInputElement;
+}
+
+/**
+ * Checks a choice control's halo with the real pointer: a disabled control has none when hovered, a checked and an
+ * unchecked one have a transparent halo at rest, and each passes `expectDistinctHaloStates`, tinted with
+ * `--sui-color-primary` when checked and `--sui-color-text` when not
+ *
+ * @param input the trusted input that moves and presses the pointer
+ * @param controls the checked, disabled and unchecked controls; pressing may toggle the checked and unchecked ones
+ */
+export async function expectHaloStates(
+  input: TrustedInput,
+  { checked, disabled, unchecked }: HaloControls
+): Promise<void> {
+  await input.hoverByTestId("disabled");
+  await settledHalo(disabled, ":hover");
+  await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
+
+  for (const control of [unchecked, checked]) {
+    const [label] = control.labels ?? [];
+
+    await expect(isSameColor(label, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
+  }
+
+  // Pressing an unchecked radio checks it and unchecks the other, so the checked control is measured first
+  await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+  await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
+}
+
+/**
+ * Hovers a choice control's label with the real pointer until its halo shows, then moves keyboard focus to the control
+ * with Tab, and checks that the halo vanishes at once, without a `box-shadow` transition, and that the focus ring keeps
+ * 3:1
+ *
+ * @param input the trusted input that moves the pointer and presses Tab
+ * @param control the control's input, which must be the next Tab stop
+ * @param testId the `data-testid` of an element in the control's label
+ */
+export async function expectHaloHiddenUnderFocus(
+  input: TrustedInput,
+  control: HTMLInputElement,
+  testId: string
+): Promise<void> {
+  const [label] = control.labels ?? [];
+
+  await input.hoverByTestId(testId);
+  const hovered = await settledHalo(control, ":hover");
+
+  await expect(hovered.spread, "halo spread before the focus").toBeGreaterThan(0);
+  await expect(isSameColor(label, hovered.color, "transparent"), "halo before the focus").toBe(false);
+
+  await input.pressKey("Tab");
+  await expect(control).toHaveFocus();
+  await expect(control.matches(":focus-visible")).toBe(true);
+  await expect(getComputedStyle(control).transitionProperty, "halo transition under the focus ring").not.toContain(
+    "box-shadow"
+  );
+
+  const focused = await settledHalo(control, ":hover");
+
+  await expect(isSameColor(label, focused.color, "transparent"), "halo under the focus ring").toBe(true);
+  await expect(focusRingContrast(control)).toBeGreaterThanOrEqual(3);
+}
+
+/**
  * Checks, without the pointer, that the hover and press halos a choice control declares can each be told from the step
  * before: rest from hover, and hover from press
  *
@@ -93,7 +175,7 @@ export async function expectDistinctDeclaredHalos(control: HTMLInputElement, nam
  * @param control the control's input
  * @returns the halo; fully transparent with no spread when the input draws none
  */
-export function readHalo(control: HTMLInputElement): Halo {
+function readHalo(control: HTMLInputElement): Halo {
   const shadow = getComputedStyle(control).boxShadow;
 
   if (shadow === "none") {
@@ -112,7 +194,7 @@ export function readHalo(control: HTMLInputElement): Halo {
  * @param state the pseudo-class the pointer applies to the label
  * @returns the halo in that state
  */
-export async function settledHalo(control: HTMLInputElement, state: ":active" | ":hover"): Promise<Halo> {
+async function settledHalo(control: HTMLInputElement, state: ":active" | ":hover"): Promise<Halo> {
   const [label] = control.labels ?? [];
 
   await waitFor(() => expect(label.matches(state)).toBe(true));
