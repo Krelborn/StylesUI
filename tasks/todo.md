@@ -189,8 +189,31 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** L. Most files take a sentence of documentation.
 
+## Task 8: Draw no halo under the focus ring
+
+**Description:** Codex's review of the pull request found that a checkbox with keyboard focus, under the pointer, drew its halo beneath the focus ring, which lowered the ring's contrast on a Bright surface to about 2.85:1. `.choiceControl .input:focus-visible` sets the halo transparent, after the hover and press rules. A Checkbox `FocusedHalo` story, last in its file, focuses a checkbox on a `Card` with a real Tab, hovers it, and checks the halo is transparent and the ring keeps 3:1. concepts.md and the spec record it.
+
+**Acceptance criteria:**
+
+- [x] SC 17 holds in all four projects.
+- [x] `FocusedHalo` fails before the fix, with the halo drawn under the ring.
+
+**Verification:**
+
+- [x] `pnpm test:storybook` on the Checkbox, Radio, Switch and palette showcase stories
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
+
+**Dependencies:** Task 7
+
+**Files likely touched:**
+
+- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/components/Checkbox/Checkbox.stories.tsx`
+- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
+
+**Estimated scope:** S
+
 ## Checkpoint B: complete
 
-- [x] Spec success criteria 1 to 16 hold
+- [x] Spec success criteria 1 to 17 hold
 - [x] `pnpm verify`, `pnpm build` and the fallow audit pass
 - [ ] You review the branch; pushing and opening a pull request wait for your go-ahead

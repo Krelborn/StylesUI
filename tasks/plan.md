@@ -58,10 +58,11 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 - [x] Task 5: Add the halo to Checkbox and Radio, with none on Switch
 - [x] Task 6: Check the halo in every palette
 - [x] Task 7: Apply the code review's fixes
+- [x] Task 8: Draw no halo under the focus ring
 
 ### Checkpoint B: complete
 
-- [x] Spec success criteria 1 to 16 hold
+- [x] Spec success criteria 1 to 17 hold
 - [x] `pnpm verify`, `pnpm build` and the fallow audit pass
 - [ ] You review the branch before anything is pushed
 

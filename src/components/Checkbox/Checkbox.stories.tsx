@@ -10,6 +10,7 @@ import {
 } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
+import { Card } from "../Card";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
@@ -315,5 +316,37 @@ export const Halo: Story = {
 
     await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
     await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+  },
+};
+
+/**
+ * A checkbox with keyboard focus draws no halo, even under the pointer, so nothing lowers the
+ * contrast of its focus ring, here on a surface
+ */
+export const FocusedHalo: Story = {
+  render: (args) => (
+    <Card padding="sm">
+      <Checkbox {...args}>
+        <span data-testid="focused">Send me product updates</span>
+      </Checkbox>
+    </Card>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    const input = trustedInput();
+    const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.pressKey("Tab");
+    await expect(checkbox).toHaveFocus();
+    await expect(checkbox.matches(":focus-visible")).toBe(true);
+
+    await input.hoverByTestId("focused");
+    const halo = await settledHalo(checkbox, ":hover");
+
+    await expect(isSameColor(canvasElement, halo.color, "transparent"), "halo under the focus ring").toBe(true);
+    await expect(focusRingContrast(checkbox)).toBeGreaterThanOrEqual(3);
   },
 };
