@@ -18,7 +18,7 @@ This plan implements [SPEC.md](../SPEC.md). The `Switch` track shrinks to `space
 ### Phase 1: Size and thumb
 
 - [x] Task 1: Shrink the track and start the text at `space-8`
-- [ ] Task 2: Prove the thumb's size, travel and overshoot
+- [x] Task 2: Prove the thumb's size, travel and overshoot
 
 ### Checkpoint A: after Tasks 1 and 2
 

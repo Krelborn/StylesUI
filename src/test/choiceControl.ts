@@ -183,6 +183,27 @@ export function textStart(element: HTMLElement): number {
   return getComputedStyle(element).direction === "rtl" ? right : left;
 }
 
+/**
+ * Resolves a CSS length, such as a space token, to pixels in an element's scope
+ *
+ * Needs a real browser, because jsdom lays nothing out.
+ *
+ * @param element the element whose custom properties and font resolve the length; not an `input`, whose children get
+ *   no style
+ * @param length the length to resolve, such as `"var(--sui-space-2)"`
+ * @returns the length in pixels
+ */
+export function resolvedLength(element: HTMLElement, length: string): number {
+  const probe = document.createElement("span");
+  probe.style.position = "absolute";
+  probe.style.inlineSize = length;
+  element.append(probe);
+  const { width } = probe.getBoundingClientRect();
+  probe.remove();
+
+  return width;
+}
+
 // An empty inline-block is zero high and sits with its bottom edge on the baseline
 function firstBaseline(element: HTMLElement): number {
   const marker = document.createElement("span");
@@ -192,18 +213,6 @@ function firstBaseline(element: HTMLElement): number {
   marker.remove();
 
   return bottom;
-}
-
-// Measured on a child so custom properties take the element's values
-function resolvedLength(element: HTMLElement, length: string): number {
-  const probe = document.createElement("span");
-  probe.style.position = "absolute";
-  probe.style.inlineSize = length;
-  element.append(probe);
-  const { width } = probe.getBoundingClientRect();
-  probe.remove();
-
-  return width;
 }
 
 // How far a line starts after the box's start edge, along the writing direction

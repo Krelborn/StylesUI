@@ -52,29 +52,30 @@ The docs describe the new size and the `space-8` rule. The prototype story is de
 
 **Acceptance criteria:**
 
-- [ ] SC 7 holds in all four projects, in both writing directions.
-- [ ] SC 8 holds in all four projects: the overshoot is at most 0.125rem.
-- [ ] The doc part of SC 13 for the thumb: concepts.md gives the thumb's travel and inset, and says the `playful` spring stays inside the track.
+- [x] SC 7 holds in all four projects, in both writing directions.
+- [x] SC 8 holds in all four projects: the overshoot is at most 0.125rem.
+- [x] The doc part of SC 13 for the thumb: concepts.md gives the thumb's travel and inset, and says the `playful` spring stays inside the track.
 
 **Verification:**
 
-- [ ] With the switch rule's track set back to 2.75rem by 1.5rem for one run, `Thumb` fails on the travel in all four projects and on the overshoot in the two `playful` ones. The track is then restored.
-- [ ] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
-- [ ] `pnpm verify` and the fallow audit
+- [x] With the switch rule's track set back to 2.75rem by 1.5rem for one run, `Thumb` fails on the travel in all four projects and on the overshoot in the two `playful` ones. The track is then restored.
+- [x] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
+- [x] `pnpm verify` and the fallow audit
 
 **Dependencies:** Task 1
 
 **Files likely touched:**
 
 - `src/components/Switch/Switch.stories.tsx`
-- `docs/design/concepts.md`, `tasks/`
+- `src/test/choiceControl.ts` (exports `resolvedLength`, so the story resolves `--sui-space-2` on the label)
+- `docs/design/concepts.md`, `AGENTS.md`, `tasks/`
 
 **Estimated scope:** S
 
 ## Checkpoint A: after Tasks 1 and 2
 
-- [ ] `pnpm verify` and the fallow audit pass
-- [ ] Every story that renders a Switch passes axe, including `target-size`, in all four projects
+- [x] `pnpm verify` and the fallow audit pass
+- [x] Every story that renders a Switch passes axe, including `target-size`, in all four projects
 
 ## Task 3: Turn on the halo for Switch
 

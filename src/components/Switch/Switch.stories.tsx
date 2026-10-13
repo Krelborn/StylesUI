@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { expectOnSpaceScale, settledHalo, textStart } from "../../test/choiceControl";
+import { expectOnSpaceScale, resolvedLength, settledHalo, textStart } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Field } from "../Field";
@@ -44,6 +44,19 @@ type Story = StoryObj<typeof meta>;
 const switchLayout = { boxWidth: "var(--sui-space-6)", indent: "var(--sui-space-8)" };
 
 const wrappingLabel = "Show a preview of every new message on the lock screen";
+
+// The thumb is the input's ::before, which has no box to measure, so its offset is read from its transform
+function thumbOffset(control: HTMLInputElement): number {
+  return new DOMMatrixReadOnly(getComputedStyle(control, "::before").transform).m41;
+}
+
+// Where a switch's thumb rests when it is on: --sui-space-2 towards the end of the track, in its writing direction
+function checkedTravel(control: HTMLInputElement): number {
+  const [label] = control.labels ?? [];
+  const direction = getComputedStyle(control).direction === "rtl" ? -1 : 1;
+
+  return direction * resolvedLength(label, "var(--sui-space-2)");
+}
 
 /**
  * The children are the label that names the switch, and clicking the label toggles it
@@ -184,10 +197,14 @@ export const AlignedText: Story = {
 
 /**
  * In a right-to-left layout the track sits at the right, and the label text, its wrapped lines
- * and text padded by `var(--sui-space-8)` below start `--sui-space-8` to its left
+ * and text padded by `var(--sui-space-8)` below start `--sui-space-8` to its left. A switch that is
+ * on has its thumb at the left end of the track.
  */
 export const RightToLeft: Story = {
   ...AlignedText,
+  args: {
+    defaultChecked: true,
+  },
   decorators: [
     (Story) => (
       <div dir="rtl">
@@ -195,6 +212,13 @@ export const RightToLeft: Story = {
       </div>
     ),
   ],
+  play: async (context) => {
+    await AlignedText.play?.(context);
+
+    const email = context.canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" });
+
+    await expect(thumbOffset(email), "thumb travel").toBeCloseTo(checkedTravel(email), 0);
+  },
 };
 
 /**
@@ -214,6 +238,53 @@ export const WithoutText: Story = {
     await expect(width, "label width").toBeCloseTo(notifications.getBoundingClientRect().width, 0);
     await expect(width, "target width").toBeGreaterThanOrEqual(24);
     await expect(height, "target height").toBeGreaterThanOrEqual(24);
+  },
+};
+
+/**
+ * The thumb is as tall as the track less its border and a 0.125rem inset on each side, and slides
+ * `--sui-space-2` to the end of the track when the switch is turned on. The `playful` theme's
+ * spring carries it past the end and back, but never by more than its inset, so it stays clear of
+ * the border.
+ */
+export const Thumb: Story = {
+  render: (args) => (
+    <Stack gap={2}>
+      <Switch {...args} />
+      <Switch defaultChecked={true}>Text message notifications</Switch>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const email = canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" });
+    const textMessages = canvas.getByRole<HTMLInputElement>("switch", { name: "Text message notifications" });
+    const [label] = email.labels ?? [];
+    const inset = resolvedLength(label, "0.125rem");
+
+    await expect(parseFloat(getComputedStyle(email, "::before").inlineSize), "thumb size").toBeCloseTo(
+      email.getBoundingClientRect().height - 2 * parseFloat(getComputedStyle(email).borderTopWidth) - 2 * inset,
+      0
+    );
+
+    // A native click starts the slide at once, so it is paused before even a short one ends
+    email.click();
+    const [slide] = email
+      .getAnimations({ subtree: true })
+      .filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === "transform");
+    slide.pause();
+    const duration = Number(slide.effect?.getComputedTiming().duration);
+    const offsets = Array.from({ length: 51 }, (_, step) => {
+      slide.currentTime = (duration * step) / 50;
+
+      return thumbOffset(email);
+    });
+    const end = offsets.at(-1) ?? Number.NaN;
+
+    await expect(duration, "slide duration").toBeGreaterThan(0);
+    await expect(
+      Math.max(...offsets.map((offset) => Math.sign(end) * (offset - end))),
+      "thumb overshoot"
+    ).toBeLessThanOrEqual(inset);
+    await expect(thumbOffset(textMessages), "thumb travel").toBeCloseTo(checkedTravel(textMessages), 0);
   },
 };
 
