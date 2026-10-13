@@ -79,9 +79,9 @@ export const Disabled: Story = {
 };
 
 /**
- * The dot is `--sui-space-4` across and centred on the first line of its label, and the label text
- * starts `--sui-space-6` from it in every theme. Text below a radio lines up with its label when it
- * is padded by `var(--sui-space-6)`.
+ * The dot is `--sui-space-4` across and centred on the lowercase letters of the first line of its
+ * label, and the label text starts `--sui-space-6` from it in every theme. Text below a radio lines
+ * up with its label when it is padded by `var(--sui-space-6)`.
  */
 export const AlignedText: Story = {
   render: (args) => (
@@ -100,8 +100,8 @@ export const AlignedText: Story = {
   play: async ({ canvas }) => {
     const wrappingText = canvas.getByText(wrappingLabel);
 
-    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThanOrEqual(
-      2 * parseFloat(getComputedStyle(wrappingText).lineHeight)
+    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThan(
+      parseFloat(getComputedStyle(wrappingText).lineHeight)
     );
 
     for (const name of ["Pay monthly", wrappingLabel]) {

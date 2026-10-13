@@ -55,13 +55,40 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** S
 
-## Checkpoint A: after Tasks 1 and 2
+## Task 3: Centre the box on the lowercase letters
+
+**Description:** Checkpoint A found that the box, centred on the line, sits 1.8px above the middle of the lowercase letters in `default` (1.1px in `playful`), so it looks high. The label becomes an `inline-block` with `--sui-choice-control-indent` (the box's width plus the gap) of inline-start padding when it has text, through a `withText` class that `ChoiceControl.tsx` adds. The input becomes an `inline-grid` with `vertical-align: middle`, pulled back into the padding by a negative margin. The `1lh` margin and `font: inherit` go. `expectOnSpaceScale` checks the box's centre against the middle of the lowercase letters, half the resolved `1ex` above the first baseline. A Checkbox `WithoutText` story checks that a checkbox named by `aria-label` alone is as wide as its box. concepts.md says what the box is centred on, and the spec already records the decision.
+
+**Acceptance criteria:**
+
+- [x] SC 1 to 3 hold for Checkbox and Radio in all four projects, with SC 2 measured against the lowercase letters.
+- [x] SC 4: a Checkbox named by `aria-label` alone has a label as wide as its box.
+- [x] Switch's track is still 2.75rem by 1.5rem, and its label is at least 24px tall.
+
+**Verification:**
+
+- [x] The updated alignment stories fail before the CSS change, by about 1.8px in `default` and 1.1px in `playful`
+- [x] `pnpm test:storybook` on every story file that renders a choice control: Checkbox, Radio, RadioGroup, Switch, Field, Fieldset, Tooltip, the contact form and the palette showcase
+- [ ] By hand: screenshots of Checkbox, Radio, RadioGroup and Switch in both themes for Checkpoint A
+
+**Dependencies:** Task 2
+
+**Files likely touched:**
+
+- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/components/ChoiceControl/ChoiceControl.tsx`
+- `src/test/choiceControl.ts`
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx` (JSDoc)
+- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
+
+**Estimated scope:** M
+
+## Checkpoint A: after Tasks 1 to 3
 
 - [ ] `pnpm verify` and the fallow audit pass
 - [ ] Every form story passes axe, including `target-size`, in all four projects
 - [ ] You review Checkbox, Radio and the Forms guide in Storybook before the halo goes in
 
-## Task 3: Add the halo to Checkbox and Radio, with none on Switch
+## Task 4: Add the halo to Checkbox and Radio, with none on Switch
 
 **Description:** The stylesheet gains the halo as the plan's Architecture Decisions set out: a `box-shadow` on an enabled input, spread by the gap, tinted with the text colour or, on a checked input, with the fill. Hover on the label (inside `@media (hover: hover)`) uses the 8% colour, and press uses the 16% one. `box-shadow` joins the input's transition. Switch's rule sets the spread to `0px`. A helper in `src/test/choiceControl.ts` reads the colour and spread from the computed `box-shadow`, and another drives real hover and press, as Button's `expectDistinctPointerStates` does. New `Halo` stories, last in their files, cover Checkbox and Radio unchecked, checked and disabled. A Switch story checks that hovering shows no halo. The spec's code sample is updated to the custom properties.
 
@@ -77,7 +104,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 - [ ] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
 - [ ] By hand: hover and press in Storybook, both themes and modes
 
-**Dependencies:** Task 2
+**Dependencies:** Task 3
 
 **Files likely touched:**
 
@@ -88,7 +115,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** M
 
-## Task 4: Check the halo in every palette
+## Task 5: Check the halo in every palette
 
 **Description:** The palette showcase gains a checked Checkbox beside its unchecked one. Its play function checks each palette's two checkboxes: transparent against `var(--sui-choice-control-halo-hover)`, and hover against `var(--sui-choice-control-halo-press)`, each at least `distinctFillContrast` with `fillContrast`. This is how it already checks every Button's hover fill. The spec's Testing Strategy and Success Criteria gain the check. This task depends on your answer to the plan's first open question.
 
@@ -101,7 +128,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 - [ ] `pnpm test:storybook src/styles/PaletteShowcase.stories.tsx`
 
-**Dependencies:** Task 3
+**Dependencies:** Task 4
 
 **Files likely touched:**
 

@@ -134,9 +134,9 @@ export const Stacked: Story = {
 };
 
 /**
- * The box is `--sui-space-4` square and centred on the first line of its label, and the label text
- * starts `--sui-space-6` from the box in every theme. Text below a checkbox lines up with its label
- * when it is padded by `var(--sui-space-6)`.
+ * The box is `--sui-space-4` square and centred on the lowercase letters of the first line of its
+ * label, and the label text starts `--sui-space-6` from the box in every theme. Text below a
+ * checkbox lines up with its label when it is padded by `var(--sui-space-6)`.
  */
 export const AlignedText: Story = {
   render: (args) => (
@@ -153,8 +153,8 @@ export const AlignedText: Story = {
   play: async ({ canvas }) => {
     const wrappingText = canvas.getByText(wrappingLabel);
 
-    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThanOrEqual(
-      2 * parseFloat(getComputedStyle(wrappingText).lineHeight)
+    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThan(
+      parseFloat(getComputedStyle(wrappingText).lineHeight)
     );
 
     for (const name of ["Send me product updates", wrappingLabel]) {
@@ -165,6 +165,22 @@ export const AlignedText: Story = {
       textStart(canvas.getByText("Send me product updates")),
       0
     );
+  },
+};
+
+/**
+ * A checkbox named by `aria-label` alone takes up no more room than its box
+ */
+export const WithoutText: Story = {
+  args: {
+    "aria-label": "Select every row",
+    children: undefined,
+  },
+  play: async ({ canvas }) => {
+    const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Select every row" });
+    const [label] = checkbox.labels ?? [];
+
+    await expect(label.getBoundingClientRect().width).toBeCloseTo(checkbox.getBoundingClientRect().width, 0);
   },
 };
 

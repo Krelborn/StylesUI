@@ -2,6 +2,7 @@
   --sui-choice-control-size: var(--sui-space-4, 1rem);
   --sui-choice-control-track-size: var(--sui-choice-control-size);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
+  --sui-choice-control-indent: calc(var(--sui-choice-control-track-size) + var(--sui-choice-control-gap));
   --sui-choice-control-bg: var(--sui-color-field, #fff);
   --sui-choice-control-border: var(--sui-color-input-border, #6b7280);
   --sui-choice-control-border-width: var(--sui-border-width, 1px);
@@ -19,8 +20,7 @@
   --sui-choice-control-mark-transform-unchecked: scale(0);
   --sui-choice-control-spring: var(--sui-motion-spring, 120ms ease-out);
 
-  display: inline-flex;
-  align-items: flex-start;
+  display: inline-block;
   /* Stops a flex or grid parent stretching the label, which would make the empty space beside the text clickable */
   inline-size: fit-content;
   font-family: var(--sui-font-body, system-ui, sans-serif);
@@ -53,6 +53,15 @@
   --sui-choice-control-mark-transform-unchecked: none;
 }
 
+/* The box sits in the padding, so a wrapped line starts where the first line's text does */
+.withText {
+  padding-inline-start: var(--sui-choice-control-indent);
+}
+
+.withText > .input {
+  margin-inline-start: calc(-1 * var(--sui-choice-control-indent));
+}
+
 /* translateX has no logical direction, so the thumb's travel is reversed by hand */
 .choiceControl[data-kind="switch"]:dir(rtl) {
   --sui-choice-control-mark-transform: translateX(
@@ -61,18 +70,16 @@
 }
 
 .input {
-  display: grid;
-  flex: none;
+  display: inline-grid;
   align-content: center;
   justify-content: var(--sui-choice-control-mark-justify);
   inline-size: var(--sui-choice-control-track-size);
   block-size: var(--sui-choice-control-size);
-  margin: calc((1lh - var(--sui-choice-control-size)) / 2) 0;
-  /* Without it, 1lh above is the browser's form control font, not the label's line */
-  font: inherit;
+  margin: 0;
   border: var(--sui-choice-control-border-width) solid var(--sui-choice-control-border);
   border-radius: var(--sui-choice-control-radius);
   background-color: var(--sui-choice-control-bg);
+  vertical-align: middle;
   cursor: pointer;
   transition:
     background-color 120ms ease,
