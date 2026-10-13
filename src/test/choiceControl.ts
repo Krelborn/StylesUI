@@ -1,9 +1,10 @@
 import { expect } from "storybook/test";
 
 /**
- * Checks that a choice control's box is `--sui-space-4` square and centred on the lowercase letters of the first line
- * of its label, half an `ex` above the baseline, and that the label text starts `--sui-space-6` from the box, each to
- * within half a pixel in the control's own theme, in a left-to-right layout
+ * Checks that a choice control's box is `--sui-space-4` square and centred halfway between the middles of the capital
+ * and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the baseline, and that the label
+ * text starts `--sui-space-6` from the box, each to within half a pixel in the control's own theme, in a left-to-right
+ * layout
  *
  * Needs a real browser, because jsdom lays nothing out.
  *
@@ -13,12 +14,12 @@ import { expect } from "storybook/test";
 export async function expectOnSpaceScale(input: HTMLInputElement, text: HTMLElement): Promise<void> {
   const box = input.getBoundingClientRect();
   const boxSize = resolvedLength(text, "var(--sui-space-4)");
-  const lowercaseMiddle = firstBaseline(text) - resolvedLength(text, "1ex") / 2;
+  const letterMiddle = firstBaseline(text) - (resolvedLength(text, "1cap") + resolvedLength(text, "1ex")) / 4;
   const name = text.textContent;
 
   await expect(box.width, `${name} box width`).toBeCloseTo(boxSize, 0);
   await expect(box.height, `${name} box height`).toBeCloseTo(boxSize, 0);
-  await expect(box.top + box.height / 2, `${name} box centre`).toBeCloseTo(lowercaseMiddle, 0);
+  await expect(box.top + box.height / 2, `${name} box centre`).toBeCloseTo(letterMiddle, 0);
   await expect(textStart(text) - box.left, `${name} text start`).toBeCloseTo(
     resolvedLength(text, "var(--sui-space-6)"),
     0

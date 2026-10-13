@@ -82,13 +82,39 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** M
 
-## Checkpoint A: after Tasks 1 to 3
+## Task 4: Centre the box between the capitals and the lowercase letters
+
+**Description:** Reviewed at Checkpoint A, the box centred on the lowercase letters hung low beside short capitalised labels such as "Email", and centred on the capitals it looked slightly high. You chose halfway between. The input gains `position: relative`, an `inset-block-start` of `calc((1ex - 1cap) / 4)` and `font: inherit`, so it rises a quarter of the gap between the two middles, measured in the label's font. `expectOnSpaceScale` checks the box's centre a quarter of `1cap + 1ex` above the first baseline. concepts.md and the story JSDoc say where the box is centred, and the spec already records the decision.
+
+**Acceptance criteria:**
+
+- [x] SC 1 to 3 hold for Checkbox and Radio in all four projects, with SC 2 measured halfway between the capitals and the lowercase letters.
+- [x] Checkbox and radio labels are still 24px tall, and Switch's track is still 2.75rem by 1.5rem.
+
+**Verification:**
+
+- [x] The updated alignment stories fail before the CSS change, by about 0.7px in `default` and 0.9px in `playful`
+- [x] `pnpm test:storybook` on every story file that renders a choice control
+- [ ] By hand: screenshots of RadioGroup and stacked checkboxes in both themes for Checkpoint A
+
+**Dependencies:** Task 3
+
+**Files likely touched:**
+
+- `src/components/ChoiceControl/ChoiceControl.module.css`
+- `src/test/choiceControl.ts`
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx` (JSDoc)
+- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
+
+**Estimated scope:** S
+
+## Checkpoint A: after Tasks 1 to 4
 
 - [ ] `pnpm verify` and the fallow audit pass
 - [ ] Every form story passes axe, including `target-size`, in all four projects
 - [ ] You review Checkbox, Radio and the Forms guide in Storybook before the halo goes in
 
-## Task 4: Add the halo to Checkbox and Radio, with none on Switch
+## Task 5: Add the halo to Checkbox and Radio, with none on Switch
 
 **Description:** The stylesheet gains the halo as the plan's Architecture Decisions set out: a `box-shadow` on an enabled input, spread by the gap, tinted with the text colour or, on a checked input, with the fill. Hover on the label (inside `@media (hover: hover)`) uses the 8% colour, and press uses the 16% one. `box-shadow` joins the input's transition. Switch's rule sets the spread to `0px`. A helper in `src/test/choiceControl.ts` reads the colour and spread from the computed `box-shadow`, and another drives real hover and press, as Button's `expectDistinctPointerStates` does. New `Halo` stories, last in their files, cover Checkbox and Radio unchecked, checked and disabled. A Switch story checks that hovering shows no halo. The spec's code sample is updated to the custom properties.
 
@@ -104,7 +130,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 - [ ] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
 - [ ] By hand: hover and press in Storybook, both themes and modes
 
-**Dependencies:** Task 3
+**Dependencies:** Task 4
 
 **Files likely touched:**
 
@@ -115,7 +141,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** M
 
-## Task 5: Check the halo in every palette
+## Task 6: Check the halo in every palette
 
 **Description:** The palette showcase gains a checked Checkbox beside its unchecked one. Its play function checks each palette's two checkboxes: transparent against `var(--sui-choice-control-halo-hover)`, and hover against `var(--sui-choice-control-halo-press)`, each at least `distinctFillContrast` with `fillContrast`. This is how it already checks every Button's hover fill. The spec's Testing Strategy and Success Criteria gain the check. This task depends on your answer to the plan's first open question.
 
@@ -128,7 +154,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 - [ ] `pnpm test:storybook src/styles/PaletteShowcase.stories.tsx`
 
-**Dependencies:** Task 4
+**Dependencies:** Task 5
 
 **Files likely touched:**
 

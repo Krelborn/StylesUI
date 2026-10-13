@@ -70,12 +70,17 @@
 }
 
 .input {
+  /* vertical-align: middle centres the box on the lowercase letters, and this lifts it halfway to the capitals */
+  position: relative;
+  inset-block-start: calc((1ex - 1cap) / 4);
   display: inline-grid;
   align-content: center;
   justify-content: var(--sui-choice-control-mark-justify);
   inline-size: var(--sui-choice-control-track-size);
   block-size: var(--sui-choice-control-size);
   margin: 0;
+  /* So 1ex and 1cap measure the label's font, not the browser's form control font */
+  font: inherit;
   border: var(--sui-choice-control-border-width) solid var(--sui-choice-control-border);
   border-radius: var(--sui-choice-control-radius);
   background-color: var(--sui-choice-control-bg);

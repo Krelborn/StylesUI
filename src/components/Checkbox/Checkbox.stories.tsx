@@ -134,9 +134,10 @@ export const Stacked: Story = {
 };
 
 /**
- * The box is `--sui-space-4` square and centred on the lowercase letters of the first line of its
- * label, and the label text starts `--sui-space-6` from the box in every theme. Text below a
- * checkbox lines up with its label when it is padded by `var(--sui-space-6)`.
+ * The box is `--sui-space-4` square and centred halfway between the capital and the lowercase
+ * letters of the first line of its label, and the label text starts `--sui-space-6` from the box in
+ * every theme. Text below a checkbox lines up with its label when it is padded by
+ * `var(--sui-space-6)`.
  */
 export const AlignedText: Story = {
   render: (args) => (
