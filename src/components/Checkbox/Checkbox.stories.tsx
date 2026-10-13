@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { choiceControlLayout, resolvedLength, textStart } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
+import { Text } from "../Text";
 
 import { Checkbox } from "./Checkbox";
 
@@ -37,6 +39,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const wrappingLabel = "Send me offers from partners we work with, chosen to match my plan";
 
 /**
  * The children are the label that names the checkbox, and clicking the label toggles it
@@ -105,8 +109,8 @@ export const InAField: Story = {
 };
 
 /**
- * Checkboxes stacked closely each keep a target of at least 24px, and each label is only as wide
- * as its text
+ * Stacked closely, each checkbox's label is a target at least 24px tall, and only as wide as its
+ * text
  */
 export const Stacked: Story = {
   render: (args) => (
@@ -121,6 +125,7 @@ export const Stacked: Story = {
     const text = canvas.getByText("Send me partner offers");
     const [label] = offers.labels ?? [];
 
+    await expect(label.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
     await expect(label.getBoundingClientRect().width).toBeCloseTo(
       offers.getBoundingClientRect().width + text.getBoundingClientRect().width,
       0
@@ -129,8 +134,51 @@ export const Stacked: Story = {
 };
 
 /**
- * Tab moves focus to the checkbox and shows a focus ring on the box, Space toggles it, and the next
- * Tab skips a disabled checkbox
+ * The box is `--sui-space-4` square and centred on the first line of its label, and the label text
+ * starts `--sui-space-6` from the box in every theme. Text below a checkbox lines up with its label
+ * when it is padded by `var(--sui-space-6)`.
+ */
+export const AlignedText: Story = {
+  render: (args) => (
+    <Stack gap={2} style={{ maxInlineSize: "18rem" }}>
+      <Stack gap={0}>
+        <Checkbox {...args} />
+        <Text as="p" size="sm" style={{ paddingInlineStart: "var(--sui-space-6)" }} tone="muted">
+          New features, about once a month
+        </Text>
+      </Stack>
+      <Checkbox>{wrappingLabel}</Checkbox>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const wrappingText = canvas.getByText(wrappingLabel);
+
+    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThanOrEqual(
+      2 * parseFloat(getComputedStyle(wrappingText).lineHeight)
+    );
+
+    for (const name of ["Send me product updates", wrappingLabel]) {
+      const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name });
+      const text = canvas.getByText(name);
+      const layout = choiceControlLayout(checkbox, text);
+      const boxSize = resolvedLength(text, "var(--sui-space-4)");
+
+      await expect(layout.boxWidth, `${name} box width`).toBeCloseTo(boxSize, 0);
+      await expect(layout.boxHeight, `${name} box height`).toBeCloseTo(boxSize, 0);
+      await expect(layout.boxOffsetFromFirstLine, `${name} box centring`).toBeCloseTo(0, 0);
+      await expect(layout.textInset, `${name} text start`).toBeCloseTo(resolvedLength(text, "var(--sui-space-6)"), 0);
+    }
+
+    await expect(textStart(canvas.getByText("New features, about once a month"))).toBeCloseTo(
+      textStart(canvas.getByText("Send me product updates")),
+      0
+    );
+  },
+};
+
+/**
+ * Tab moves focus to the checkbox and shows a focus ring on the box, which stops short of the label
+ * text. Space toggles it, and the next Tab skips a disabled checkbox.
  */
 export const KeyboardInteraction: Story = {
   render: (args) => (
@@ -150,6 +198,11 @@ export const KeyboardInteraction: Story = {
     await expect(parseFloat(getComputedStyle(updates).outlineWidth)).toBeGreaterThanOrEqual(2);
     await expect(focusRingContrast(updates)).toBeGreaterThanOrEqual(3);
     await expect(borderContrast(updates)).toBeGreaterThanOrEqual(3);
+
+    const { outlineOffset, outlineWidth } = getComputedStyle(updates);
+    const ringEnd = updates.getBoundingClientRect().right + parseFloat(outlineOffset) + parseFloat(outlineWidth);
+
+    await expect(ringEnd, "focus ring end").toBeLessThan(textStart(canvas.getByText("Send me product updates")));
 
     await userEvent.keyboard(" ");
     await expect(updates).toBeChecked();

@@ -78,6 +78,12 @@ still names itself, and when the field is required it shows the asterisk after i
 
 <Canvas of={CheckboxStories.InAField} />
 
+A checkbox's or radio's label text starts `--sui-space-6` from its box in every theme. Text placed
+below one lines up with its label when it is padded by `var(--sui-space-6)`. Unlike a `Field`'s
+description, that text is not linked to the control.
+
+<Canvas of={CheckboxStories.AlignedText} />
+
 Use `Switch` for a setting that takes effect at once, and `Checkbox` for a choice that is submitted
 with a form.
 

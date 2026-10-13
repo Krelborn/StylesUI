@@ -1,5 +1,5 @@
 .choiceControl {
-  --sui-choice-control-size: 1.5rem;
+  --sui-choice-control-size: var(--sui-space-4, 1rem);
   --sui-choice-control-track-size: var(--sui-choice-control-size);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
   --sui-choice-control-bg: var(--sui-color-field, #fff);
@@ -35,6 +35,7 @@
 }
 
 .choiceControl[data-kind="switch"] {
+  --sui-choice-control-size: 1.5rem;
   --sui-choice-control-track-size: 2.75rem;
   --sui-choice-control-radius: var(--sui-radius-full, 9999px);
   --sui-choice-control-mark-unchecked: var(--sui-color-input-border, #6b7280);
@@ -66,7 +67,9 @@
   justify-content: var(--sui-choice-control-mark-justify);
   inline-size: var(--sui-choice-control-track-size);
   block-size: var(--sui-choice-control-size);
-  margin: 0;
+  margin: calc((1lh - var(--sui-choice-control-size)) / 2) 0;
+  /* Without it, 1lh above is the browser's form control font, not the label's line */
+  font: inherit;
   border: var(--sui-choice-control-border-width) solid var(--sui-choice-control-border);
   border-radius: var(--sui-choice-control-radius);
   background-color: var(--sui-choice-control-bg);
