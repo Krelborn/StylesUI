@@ -59,6 +59,7 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 - [x] Task 6: Check the halo in every palette
 - [x] Task 7: Apply the code review's fixes
 - [x] Task 8: Draw no halo under the focus ring
+- [x] Task 9: Remove the halo at once when focus arrives
 
 ### Checkpoint B: complete
 

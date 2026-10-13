@@ -321,7 +321,8 @@ export const Halo: Story = {
 
 /**
  * A checkbox with keyboard focus draws no halo, even under the pointer, so nothing lowers the
- * contrast of its focus ring, here on a surface
+ * contrast of its focus ring, here on a surface. A halo the pointer showed before the focus
+ * vanishes at once rather than fading under the ring.
  */
 export const FocusedHalo: Story = {
   render: (args) => (
@@ -339,14 +340,21 @@ export const FocusedHalo: Story = {
       return;
     }
 
+    await input.hoverByTestId("focused");
+    const hovered = await settledHalo(checkbox, ":hover");
+
+    await expect(isSameColor(canvasElement, hovered.color, "transparent"), "halo before the focus").toBe(false);
+
     await input.pressKey("Tab");
     await expect(checkbox).toHaveFocus();
     await expect(checkbox.matches(":focus-visible")).toBe(true);
+    await expect(getComputedStyle(checkbox).transitionProperty, "halo transition under the focus ring").not.toContain(
+      "box-shadow"
+    );
 
-    await input.hoverByTestId("focused");
-    const halo = await settledHalo(checkbox, ":hover");
+    const focused = await settledHalo(checkbox, ":hover");
 
-    await expect(isSameColor(canvasElement, halo.color, "transparent"), "halo under the focus ring").toBe(true);
+    await expect(isSameColor(canvasElement, focused.color, "transparent"), "halo under the focus ring").toBe(true);
     await expect(focusRingContrast(checkbox)).toBeGreaterThanOrEqual(3);
   },
 };

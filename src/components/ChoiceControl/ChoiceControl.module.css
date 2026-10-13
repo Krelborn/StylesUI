@@ -149,9 +149,11 @@
   --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
 }
 
-/* The halo would sit under the focus ring and lower its contrast against a surface */
+/* The halo would sit under the focus ring and lower its contrast against a surface, even while fading out */
 .choiceControl .input:focus-visible {
   --_sui-choice-control-halo: transparent;
+
+  transition-property: background-color, border-color;
 }
 
 .input:enabled {

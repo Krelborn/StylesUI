@@ -212,6 +212,29 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** S
 
+## Task 9: Remove the halo at once when focus arrives
+
+**Description:** Codex's second review found that, with the pointer already over the label, Tab focused the input while the halo spent 120ms fading out under the new focus ring. While focused, the input now transitions only its background and border, so the halo vanishes at once and keyboard checking still fades its colours. `FocusedHalo` now hovers first, then focuses with a real Tab, and checks that the focused input does not transition its `box-shadow`.
+
+**Acceptance criteria:**
+
+- [x] SC 17's hover-then-focus clause holds in all four projects.
+- [x] `FocusedHalo` fails before the fix, with `box-shadow` still in the focused input's transitions.
+
+**Verification:**
+
+- [x] `pnpm test:storybook` on the Checkbox, Radio, Switch and palette showcase stories, and the Checkbox unit tests
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
+
+**Dependencies:** Task 8
+
+**Files likely touched:**
+
+- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/components/Checkbox/Checkbox.stories.tsx`
+- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
+
+**Estimated scope:** S
+
 ## Checkpoint B: complete
 
 - [x] Spec success criteria 1 to 17 hold
