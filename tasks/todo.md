@@ -163,8 +163,34 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Estimated scope:** S
 
+## Task 7: Apply the code review's fixes
+
+**Description:** The review before the pull request asked for these fixes, which the spec's review-fix decisions and criteria 12 to 16 record. The input loses `position: relative` and `inset-block-start` and is lifted by `margin-block-start: calc((1ex - 1cap) / 2)`. The padding rule becomes `.choiceControl.withText`. The label sets `text-align: start` and `text-indent: 0`. `--sui-choice-control-indent`, `-halo`, `-halo-hover`, `-halo-press` and `-halo-tint` become `--_sui-`. `expectOnSpaceScale` and `textStart` measure from the start edge in either direction. New Checkbox stories, `OuterStyles` and `RightToLeft`, and an `AlignedText` check that the input is not positioned. A unit test checks the hover gate. The docs and nits from the review are fixed.
+
+**Acceptance criteria:**
+
+- [x] SC 12 to 15 hold in all four projects, and the existing criteria still hold.
+- [x] SC 16: the docs, JSDoc and AGENTS.md say what the review asked.
+- [x] The new tests fail on the code before the fix: `OuterStyles` with single-class padding, `AlignedText` with the positioned input, and the hover-gate test with the hover rule moved out of its media query.
+
+**Verification:**
+
+- [x] `pnpm test:storybook` on every story file that renders a choice control, and `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
+
+**Dependencies:** Task 6
+
+**Files likely touched:**
+
+- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/test/choiceControl.ts`
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Checkbox/Checkbox.test.tsx`
+- `src/components/Checkbox/Checkbox.tsx`, `src/components/Radio/Radio.tsx`, `src/components/Switch/Switch.tsx` (JSDoc)
+- `docs/design/concepts.md`, `src/docs/Forms.mdx`, `AGENTS.md`, `SPEC.md`, `tasks/`
+
+**Estimated scope:** L. Most files take a sentence of documentation.
+
 ## Checkpoint B: complete
 
-- [ ] Spec success criteria 1 to 11 hold
-- [ ] `pnpm verify`, `pnpm build` and the fallow audit pass
+- [x] Spec success criteria 1 to 16 hold
+- [x] `pnpm verify`, `pnpm build` and the fallow audit pass
 - [ ] You review the branch; pushing and opening a pull request wait for your go-ahead

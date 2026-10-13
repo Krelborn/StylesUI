@@ -15,13 +15,14 @@ Users are app developers building with StylesUI. Success looks like this: a sett
 
 - **The input stays the box.** The box, dot and halo are all drawn on the native input, as now, so its border, focus ring and the contrast tests that measure them carry over. The rejected alternative is MUI's: an input the size of the hit area, with the box drawn inside it. That would move the border onto a pseudo-element, which `borderContrast` cannot measure.
 - **Size.** `--sui-choice-control-size` becomes `var(--sui-space-4, 1rem)`: 16px in `default` and 19.2px in `playful`. The gap stays `var(--sui-space-2, 0.5rem)`. Tying the box to the space scale, not to `em`, is what keeps the label at `space-6` in both themes.
-- **Centring.** The box's centre sits halfway between the middle of the capitals and the middle of the lowercase letters on the label's first line, `(1cap + 1ex) / 4` above the baseline, so it looks centred against short capitalised labels such as "Email" and long lowercase ones alike. Reviewed in Storybook at Checkpoint A against two alternatives: centred on the lowercase letters, it hung low beside short capitalised labels, and centred on the capitals it looked slightly high. Centring on the line, as first built, lands near the capitals in `default` only because of system-ui's measurements. The label is an `inline-block` with `--sui-choice-control-indent` (the box's width plus the gap) of inline-start padding, but only when it has text, so a control named by `aria-label` alone is as wide as its box. The input is an `inline-grid` pulled back into that padding by a negative margin, with `vertical-align: middle`, which CSS defines as centring a box on the middle of the parent's lowercase letters (half an `ex` above the baseline). A `position: relative` offset of `calc((1ex - 1cap) / 4)` then lifts it a quarter of the gap between the two, and the input sets `font: inherit` so those units measure the label's font. The offset is visual only, so the line, and the label, keep their height. `cap` needs Chrome 118, Firefox 97 and Safari 17.2, within the `build.cssTarget` floor. Wrapped lines start at the padding, so they line up with the first. `vertical-align: middle` was checked in Chromium and WebKit, where it centres the box on the lowercase letters to within 0.01px in both themes. Playwright's Firefox does not launch here.
+- **Centring.** The box's centre sits halfway between the middle of the capitals and the middle of the lowercase letters on the label's first line, `(1cap + 1ex) / 4` above the baseline, so it looks centred against short capitalised labels such as "Email" and long lowercase ones alike. Reviewed in Storybook at Checkpoint A against two alternatives: centred on the lowercase letters, it hung low beside short capitalised labels, and centred on the capitals it looked slightly high. Centring on the line, as first built, lands near the capitals in `default` only because of system-ui's measurements. The label is an `inline-block` with `--_sui-choice-control-indent` (the box's width plus the gap) of inline-start padding, but only when it has text, so a control named by `aria-label` alone is as wide as its box. The input is an `inline-grid` pulled back into that padding by a negative margin, with `vertical-align: middle`, which CSS defines as centring a box's margin box on the middle of the parent's lowercase letters (half an `ex` above the baseline). A block-start margin of `calc((1ex - 1cap) / 2)` then lifts the border box a quarter of the gap between the two, and the input sets `font: inherit` so those units measure the label's font. The lift is a margin, not a `position: relative` offset, because a positioned input paints over later positioned content, such as a sticky table header without a `z-index`, that it used to pass under. `cap` needs Chrome 118, Firefox 97 and Safari 17.2, within the `build.cssTarget` floor. The label sets `text-align: start` and `text-indent: 0`, so alignment inherited from a parent cannot move the box, and wrapped lines start at the padding, under the first line's text. Checked in Chromium and WebKit, where the box lands within 0.01px of its target in both themes. Playwright's Firefox does not launch here.
 - **The halo is a box-shadow.** It is `0 0 0 var(--sui-choice-control-halo-spread)`, with the spread equal to the gap, so it stops exactly where the text starts. It follows the box's shape: a rounded square around a checkbox and a circle around a radio. MUI's circle around a checkbox (prototype B2) was not chosen. No `:has()` is needed, which matters because Firefox 120 lacks it.
 - **Halo colours.** The halo tints with `--sui-color-text` around an unchecked box, and with `--sui-choice-control-fill` (primary) around a checked one. It is 8% on hover and 16% while pressed, the strengths the ghost Button uses. Computed from every palette, light and dark, on the page and on a surface, the lowest step is 1.112:1, primary in Bright light on a surface, against the 1.1:1 `distinctFillContrast` a change of state needs. The stories measure the real values.
 - **When the halo shows.** Hover anywhere on the label shows it, not only hover on the box, because the whole label is the click target. Hover is gated by `@media (hover: hover)`, as Button's lift is, so a tap on a touch screen doesn't leave a halo behind. Press shows on every device. A disabled input has no halo. Under forced colours the browser removes box-shadows, so the halo disappears and the rest is unchanged.
-- **Click target.** The click target stays the label: box, gap and text, one line tall (24px at 16px text). The part of the halo outside the label is not clickable.
-- **Switch keeps its size.** `Switch` shares ChoiceControl but keeps its 2.75rem by 1.5rem track and its gap, and shows no halo (`--sui-choice-control-halo-spread: 0px`). It takes the same centring, so its track moves down about 1.1px in `default`, and its label grows to about 25.8px tall, because a 24px track laid out on the lowercase letters overhangs a 24px line. The Switch follow-up revisits its size.
-- **No new public props or tokens.** This change adds no `description` prop and no space token. Text padded by `var(--sui-space-6)` already lines up under a control, and the Forms guide documents it. A `description` prop is not planned.
+- **Click target.** The click target stays the label: box, gap and text, one line tall (24px at 16px text). The part of the halo outside the label is not clickable. A control named by `aria-label` alone is a 16px box in a 16px by 24px label, down from 24px square, so it meets WCAG 2.5.8 through spacing: neighbouring controls need 24px between their centres.
+- **The label holds the box in its padding.** The inline-start padding is set by two classes (`.choiceControl.withText`), so a consumer's single class cannot override it, but padding in the `style` prop still can, and moves the box out of the label. The label's text is inline content, as HTML requires of a `label`: a child laid out as a block, such as a `Stack`, drops below the box. A description goes after the control, outside the label, padded by `var(--sui-space-6)` and linked with `aria-describedby`. A layout that keeps block children beside the box, an `inline-block` text span with `baseline-source: first`, failed in WebKit, which ignores `baseline-source`.
+- **Switch keeps its size.** `Switch` shares ChoiceControl but keeps its 2.75rem by 1.5rem track and its gap, and shows no halo (`--sui-choice-control-halo-spread: 0px`). It takes the same centring, so its track moves down about 1.1px in `default`, and its label grows to about 25.1px tall, because a 24px track laid out on the lowercase letters overhangs a 24px line. The Switch follow-up revisits its size.
+- **No new public props or tokens.** This change adds no `description` prop and no space token. Text padded by `var(--sui-space-6)` already lines up under a control, and the Forms guide documents it. A `description` prop is not planned. Of the new custom properties, only `--sui-choice-control-halo-spread` is public: set on the label, `0px` turns the halo off. The derived and state values, `--_sui-choice-control-indent`, `-halo`, `-halo-hover`, `-halo-press` and `-halo-tint`, take the private `--_sui-` prefix, which only palettes used before.
 - **No version bump.** The version is bumped when a release is cut, which won't follow this change straight away.
 - One pull request, one commit per task.
 
@@ -44,6 +45,9 @@ fallow audit --format json --quiet --explain --gate-marker agent   # before ever
 ```
 src/components/ChoiceControl/ChoiceControl.module.css  ← size, centring, halo, Switch overrides
 src/components/ChoiceControl/ChoiceControl.tsx          ← a class for a label that has text
+src/components/Checkbox/Checkbox.test.tsx               ← the hover gate on the stylesheet
+src/components/{Checkbox,Radio,Switch}/*.tsx           ← children JSDoc: inline content only
+AGENTS.md                                              ← the test helpers and the private --_sui- prefix
 src/components/Checkbox/Checkbox.stories.tsx           ← alignment, halo, Stacked, KeyboardInteraction
 src/components/Radio/Radio.stories.tsx                 ← alignment, halo
 src/components/Switch/Switch.stories.tsx               ← unchanged size, no halo, Stacked wording
@@ -61,31 +65,31 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to the
   --sui-choice-control-size: var(--sui-space-4, 1rem);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
   --sui-choice-control-halo-spread: var(--sui-choice-control-gap);
-  --sui-choice-control-halo-tint: var(--sui-color-text, #111827);
+  --_sui-choice-control-halo-tint: var(--sui-color-text, #111827);
 }
 
 .input {
-  --sui-choice-control-halo: transparent;
-  --sui-choice-control-halo-hover: color-mix(in srgb, var(--sui-choice-control-halo-tint) 8%, transparent);
-  --sui-choice-control-halo-press: color-mix(in srgb, var(--sui-choice-control-halo-tint) 16%, transparent);
+  --_sui-choice-control-halo: transparent;
+  --_sui-choice-control-halo-hover: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 8%, transparent);
+  --_sui-choice-control-halo-press: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 16%, transparent);
 }
 
 .input:checked {
-  --sui-choice-control-halo-tint: var(--sui-choice-control-fill);
+  --_sui-choice-control-halo-tint: var(--sui-choice-control-fill);
 }
 
 @media (hover: hover) {
   .choiceControl:hover .input {
-    --sui-choice-control-halo: var(--sui-choice-control-halo-hover);
+    --_sui-choice-control-halo: var(--_sui-choice-control-halo-hover);
   }
 }
 
 .choiceControl:active .input {
-  --sui-choice-control-halo: var(--sui-choice-control-halo-press);
+  --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
 }
 
 .input:enabled {
-  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--sui-choice-control-halo);
+  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--_sui-choice-control-halo);
 }
 ```
 
@@ -98,7 +102,8 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to the
   - Switch: the track is still 2.75rem by 1.5rem, and hovering it shows no halo.
   - Palette showcase: in all five palettes, the hover and press halos an unchecked and a checked checkbox declare are each at least `distinctFillContrast` from the step before, as it checks every Button's hover fill. The story projects only run Bright and Pop.
   - axe, including `target-size`, keeps passing on every Checkbox, Radio, RadioGroup, Switch, Field and Fieldset story.
-- **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, and only colour transitions under reduced motion.
+  - Review fixes: the input is not positioned; a label padded through a consumer class and a wrapping label under a centred parent keep the box inside the label and their text at `space-6`; and a right-to-left layout passes the same alignment checks, measured from the box's right edge.
+- **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, and only colour transitions under reduced motion. A new one fails if a `:hover` rule sits outside `@media (hover: hover)`, which no story can catch, because the test browser can hover.
 - **By hand.** The halo fallback colours against the fallback page colour, as AGENTS.md requires.
 
 ## Boundaries
@@ -131,6 +136,14 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to the
 
 10. `docs/design/concepts.md` describes the box size, the centring, the `space-6` alignment and the halo, including when it shows, its colours and that Switch has none. `src/docs/Forms.mdx` shows lining text up under a control with `var(--sui-space-6)`, embedding the alignment story. `.design-sync/conventions.md` states the `space-6` rule.
 11. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
+
+### Review fixes
+
+12. The input is not positioned: its `position` is `static`, checked in the Checkbox `AlignedText` story.
+13. A label padded through a consumer's class, and a wrapping label under a parent with `text-align: center`, keep the box inside the label, their text at `space-6`, and wrapped lines under the first line's text. Proven by a Checkbox `OuterStyles` story.
+14. In a right-to-left layout, criteria 1 to 3 hold, measured from the box's right edge. Proven by a Checkbox `RightToLeft` story.
+15. A unit test in `Checkbox.test.tsx` fails if a `:hover` rule in the ChoiceControl stylesheet sits outside `@media (hover: hover)`.
+16. concepts.md and the Checkbox, Radio and Switch `children` JSDoc say the label's text is inline content and descriptions go outside the label. concepts.md and Forms.mdx give the target size of a control without text, and Forms.mdx says to link a description with `aria-describedby`. AGENTS.md describes `src/test/choiceControl.ts`, the private `--_sui-` prefix in components, and that an element inside an `input` gets no computed style.
 
 ## Follow-ups
 

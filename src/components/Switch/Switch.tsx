@@ -13,7 +13,8 @@ export interface SwitchProps extends Omit<
 > {
   /**
    * Label shown beside the track, which names the switch. Without it, give the switch an accessible name, for
-   * example with `aria-label` or the `label` of the `Field` around it.
+   * example with `aria-label` or the `label` of the `Field` around it. It is inline content, as a `label` holds: a child
+   * laid out as a block drops below the track.
    */
   children?: ReactNode;
 }

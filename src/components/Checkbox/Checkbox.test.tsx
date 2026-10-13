@@ -162,6 +162,15 @@ describe("Checkbox", () => {
     expect(transitionedProperties(reducedMotionBlock)).toEqual(["background-color"]);
   });
 
+  it("must show the hover halo in the choice control stylesheet only when the device can hover", () => {
+    const css = choiceControlCss.replace(/\/\*.*?\*\//gs, "");
+    const hoverGates = css.match(/@media \(hover: hover\) \{.*?\n\}/gs) ?? [];
+    const ungated = hoverGates.reduce((rest, gate) => rest.replace(gate, ""), css);
+
+    expect(hoverGates.join("")).toContain(":hover");
+    expect(ungated).not.toContain(":hover");
+  });
+
   it("must never transition the outline or all properties when the choice control stylesheet declares a transition", () => {
     const properties = transitionedProperties(choiceControlCss);
 

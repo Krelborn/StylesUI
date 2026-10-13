@@ -8,33 +8,34 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 
 - **Centred between the capitals and the lowercase letters.** Checkpoint A found that a box centred on the line looks high against a long lowercase label, so Task 3 centred it on the lowercase letters with `vertical-align: middle` in an inline layout. That hung low beside short capitalised labels, so Task 4 lifts it halfway towards the capitals, as the spec's Centring decision sets out.
 - **Two slices: size, then halo.** The size change is the risky one, because axe's `target-size` rule might reject a 16px input, so it lands and is checked first. The halo is independent of it and builds on the same helpers.
-- **Hover and press colours are custom properties on the input.** `--sui-choice-control-halo-hover` and `--sui-choice-control-halo-press` hold the 8% and 16% mixes of the tint, as Button's `--sui-button-bg-hover` holds its hover fill. `:hover` and `:active` on the label point `--sui-choice-control-halo` at one of them. A story can then measure every palette's halo without moving the pointer, as the palette showcase does for Buttons. This replaces the strength variable in the spec's sample, with the same behaviour, so the spec's sample is updated to match in Task 5.
+- **Hover and press colours are custom properties on the input.** `--_sui-choice-control-halo-hover` and `--_sui-choice-control-halo-press` hold the 8% and 16% mixes of the tint, as Button's `--sui-button-bg-hover` holds its hover fill. `:hover` and `:active` on the label point `--sui-choice-control-halo` at one of them. A story can then measure every palette's halo without moving the pointer, as the palette showcase does for Buttons. This replaces the strength variable in the spec's sample, with the same behaviour, so the spec's sample is updated to match in Task 5.
 
   ```css
   .input {
-    --sui-choice-control-halo: transparent;
-    --sui-choice-control-halo-hover: color-mix(in srgb, var(--sui-choice-control-halo-tint) 8%, transparent);
-    --sui-choice-control-halo-press: color-mix(in srgb, var(--sui-choice-control-halo-tint) 16%, transparent);
+    --_sui-choice-control-halo: transparent;
+    --_sui-choice-control-halo-hover: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 8%, transparent);
+    --_sui-choice-control-halo-press: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 16%, transparent);
   }
 
   @media (hover: hover) {
     .choiceControl:hover .input {
-      --sui-choice-control-halo: var(--sui-choice-control-halo-hover);
+      --_sui-choice-control-halo: var(--_sui-choice-control-halo-hover);
     }
   }
 
   .choiceControl:active .input {
-    --sui-choice-control-halo: var(--sui-choice-control-halo-press);
+    --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
   }
 
   .input:enabled {
-    box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--sui-choice-control-halo);
+    box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--_sui-choice-control-halo);
   }
   ```
 
 - **Shared story helpers in `src/test/choiceControl.ts`.** Checkbox and Radio stories make the same measurements: a token resolved to pixels in the control's scope, the box's position against the label's first line and text, and the halo read from the computed `box-shadow`. The module is committed with its first consumer, because the fallow gate rejects a file nothing reachable imports.
 - **Measured against resolved tokens.** Each assertion compares pixels with `--sui-space-4`, `--sui-space-6` and `--sui-space-2` resolved in the story's own theme, within 0.5px, so the same story passes in `default` (16, 24, 8) and `playful` (19.2, 28.8, 9.6).
 - **Switch is pinned, not changed.** Its rule sets `--sui-choice-control-size: 1.5rem` and `--sui-choice-control-halo-spread: 0px`, so it looks the same as now.
+- **Review fixes.** An independent review before the pull request found that `position: relative` changed the input's paint order and that a consumer's padding on the label moved the box. Task 7 lifts the box with a margin instead, guards the padding and inherited text alignment, makes the derived custom properties private, and adds right-to-left and hover-gate tests and the docs the review asked for.
 - **Order.** The tasks touch the same stylesheet and story files, so they run in sequence, one commit each. `SPEC.md` and `tasks/` are committed with Task 1.
 
 ## Task List
@@ -56,11 +57,12 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 
 - [x] Task 5: Add the halo to Checkbox and Radio, with none on Switch
 - [x] Task 6: Check the halo in every palette
+- [x] Task 7: Apply the code review's fixes
 
 ### Checkpoint B: complete
 
-- [ ] Spec success criteria 1 to 11 hold
-- [ ] `pnpm verify`, `pnpm build` and the fallow audit pass
+- [x] Spec success criteria 1 to 16 hold
+- [x] `pnpm verify`, `pnpm build` and the fallow audit pass
 - [ ] You review the branch before anything is pushed
 
 ## Risks and Mitigations

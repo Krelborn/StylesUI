@@ -117,7 +117,7 @@ export const InAField: Story = {
 
 /**
  * Stacked closely, each checkbox's label is a target at least 24px tall, and only as wide as its
- * text
+ * box and text
  */
 export const Stacked: Story = {
   render: (args) => (
@@ -173,6 +173,50 @@ export const AlignedText: Story = {
       textStart(canvas.getByText("Send me product updates")),
       0
     );
+    await expect(
+      getComputedStyle(canvas.getByRole("checkbox", { name: "Send me product updates" })).position,
+      "the box paints in flow, so it passes under positioned content such as a sticky header"
+    ).toBe("static");
+  },
+};
+
+/**
+ * In a right-to-left layout the box sits at the right, and the label text, its wrapped lines and
+ * text padded by `var(--sui-space-6)` below start `--sui-space-6` to its left
+ */
+export const RightToLeft: Story = {
+  ...AlignedText,
+  decorators: [
+    (Story) => (
+      <div dir="rtl">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * Padding a consumer gives the label through a class, and text alignment inherited from a parent,
+ * leave the box inside the label and every line of the text at `--sui-space-6`
+ */
+export const OuterStyles: Story = {
+  render: (args) => (
+    <Stack gap={2} style={{ maxInlineSize: "18rem", textAlign: "center" }}>
+      <style>{".outer-styles-padded { padding: var(--sui-space-3); }"}</style>
+      <Checkbox {...args} className="outer-styles-padded" />
+      <Checkbox>{wrappingLabel}</Checkbox>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    for (const name of ["Send me product updates", wrappingLabel]) {
+      const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name });
+      const [label] = checkbox.labels ?? [];
+
+      await expect(checkbox.getBoundingClientRect().left, `${name} box inside its label`).toBeGreaterThanOrEqual(
+        label.getBoundingClientRect().left
+      );
+      await expectOnSpaceScale(checkbox, canvas.getByText(name));
+    }
   },
 };
 

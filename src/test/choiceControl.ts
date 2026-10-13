@@ -74,8 +74,8 @@ export async function expectDistinctHaloStates(
  */
 export async function expectDistinctDeclaredHalos(control: HTMLInputElement, name: string): Promise<void> {
   const style = getComputedStyle(control);
-  const hovered = style.getPropertyValue("--sui-choice-control-halo-hover");
-  const pressed = style.getPropertyValue("--sui-choice-control-halo-press");
+  const hovered = style.getPropertyValue("--_sui-choice-control-halo-hover");
+  const pressed = style.getPropertyValue("--_sui-choice-control-halo-press");
   // A probe inside an input gets no style, so the colours the input declares are resolved on its label
   const [label] = control.labels ?? [];
 
@@ -123,43 +123,45 @@ export async function settledHalo(control: HTMLInputElement, state: ":active" | 
 
 /**
  * Checks that a choice control's box is `--sui-space-4` square and centred halfway between the middles of the capital
- * and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the baseline, and that the label
- * text starts `--sui-space-6` from the box, each to within half a pixel in the control's own theme, in a left-to-right
- * layout
+ * and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the baseline, and that every
+ * line of the label text starts `--sui-space-6` from the box, each to within half a pixel in the control's own theme and
+ * writing direction
  *
  * Needs a real browser, because jsdom lays nothing out.
  *
  * @param input the control's input, which draws the box
- * @param text the element holding the label text, beside the input
+ * @param text the element holding the label text, beside the input; plain text, so each line is one fragment
  */
 export async function expectOnSpaceScale(input: HTMLInputElement, text: HTMLElement): Promise<void> {
   const box = input.getBoundingClientRect();
   const boxSize = resolvedLength(text, "var(--sui-space-4)");
   const letterMiddle = firstBaseline(text) - (resolvedLength(text, "1cap") + resolvedLength(text, "1ex")) / 4;
+  const indent = resolvedLength(text, "var(--sui-space-6)");
+  const { direction } = getComputedStyle(text);
   const name = text.textContent;
 
   await expect(box.width, `${name} box width`).toBeCloseTo(boxSize, 0);
   await expect(box.height, `${name} box height`).toBeCloseTo(boxSize, 0);
   await expect(box.top + box.height / 2, `${name} box centre`).toBeCloseTo(letterMiddle, 0);
-  await expect(textStart(text) - box.left, `${name} text start`).toBeCloseTo(
-    resolvedLength(text, "var(--sui-space-6)"),
-    0
-  );
+
+  for (const [index, line] of textLines(text).entries()) {
+    await expect(startOffset(box, line, direction), `${name} line ${index + 1} start`).toBeCloseTo(indent, 0);
+  }
 }
 
 /**
- * Finds where an element's text starts, in a left-to-right layout
+ * Finds where an element's text starts: its left edge in a left-to-right layout and its right edge in a right-to-left
+ * one
  *
  * Needs a real browser, because jsdom lays nothing out.
  *
  * @param element the element holding the text
- * @returns the left edge of its text, in viewport pixels
+ * @returns the start edge of its text, in viewport pixels
  */
 export function textStart(element: HTMLElement): number {
-  const range = document.createRange();
-  range.selectNodeContents(element);
+  const { left, right } = textRange(element).getBoundingClientRect();
 
-  return range.getBoundingClientRect().left;
+  return getComputedStyle(element).direction === "rtl" ? right : left;
 }
 
 // An empty inline-block is zero high and sits with its bottom edge on the baseline
@@ -183,4 +185,20 @@ function resolvedLength(element: HTMLElement, length: string): number {
   probe.remove();
 
   return width;
+}
+
+// How far a line starts after the box's start edge, along the writing direction
+function startOffset(box: DOMRect, line: DOMRect, direction: string): number {
+  return direction === "rtl" ? box.right - line.right : line.left - box.left;
+}
+
+function textLines(element: HTMLElement): DOMRect[] {
+  return [...textRange(element).getClientRects()];
+}
+
+function textRange(element: HTMLElement): Range {
+  const range = document.createRange();
+  range.selectNodeContents(element);
+
+  return range;
 }

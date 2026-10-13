@@ -2,7 +2,7 @@
   --sui-choice-control-size: var(--sui-space-4, 1rem);
   --sui-choice-control-track-size: var(--sui-choice-control-size);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
-  --sui-choice-control-indent: calc(var(--sui-choice-control-track-size) + var(--sui-choice-control-gap));
+  --_sui-choice-control-indent: calc(var(--sui-choice-control-track-size) + var(--sui-choice-control-gap));
   --sui-choice-control-bg: var(--sui-color-field, #fff);
   --sui-choice-control-border: var(--sui-color-input-border, #6b7280);
   --sui-choice-control-border-width: var(--sui-border-width, 1px);
@@ -20,9 +20,12 @@
   --sui-choice-control-mark-transform-unchecked: scale(0);
   --sui-choice-control-spring: var(--sui-motion-spring, 120ms ease-out);
   --sui-choice-control-halo-spread: var(--sui-choice-control-gap);
-  --sui-choice-control-halo-tint: var(--sui-color-text, #111827);
+  --_sui-choice-control-halo-tint: var(--sui-color-text, #111827);
 
   display: inline-block;
+  /* Inherited alignment would move the box and the first line away from the wrapped lines */
+  text-align: start;
+  text-indent: 0;
   /* Stops a flex or grid parent stretching the label, which would make the empty space beside the text clickable */
   inline-size: fit-content;
   font-family: var(--sui-font-body, system-ui, sans-serif);
@@ -56,13 +59,16 @@
   --sui-choice-control-mark-transform-unchecked: none;
 }
 
-/* The box sits in the padding, so a wrapped line starts where the first line's text does */
-.withText {
-  padding-inline-start: var(--sui-choice-control-indent);
+/*
+ * The box sits in the padding, so a wrapped line starts where the first line's text does. Two classes, so a
+ * consumer's class cannot override the padding.
+ */
+.choiceControl.withText {
+  padding-inline-start: var(--_sui-choice-control-indent);
 }
 
 .withText > .input {
-  margin-inline-start: calc(-1 * var(--sui-choice-control-indent));
+  margin-inline-start: calc(-1 * var(--_sui-choice-control-indent));
 }
 
 /* translateX has no logical direction, so the thumb's travel is reversed by hand */
@@ -73,25 +79,28 @@
 }
 
 .input {
-  --sui-choice-control-halo: transparent;
-  --sui-choice-control-halo-hover: color-mix(in srgb, var(--sui-choice-control-halo-tint) 8%, transparent);
-  --sui-choice-control-halo-press: color-mix(in srgb, var(--sui-choice-control-halo-tint) 16%, transparent);
+  --_sui-choice-control-halo: transparent;
+  --_sui-choice-control-halo-hover: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 8%, transparent);
+  --_sui-choice-control-halo-press: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 16%, transparent);
 
-  /* vertical-align: middle centres the box on the lowercase letters, and this lifts it halfway to the capitals */
-  position: relative;
-  inset-block-start: calc((1ex - 1cap) / 4);
   display: inline-grid;
   align-content: center;
   justify-content: var(--sui-choice-control-mark-justify);
   inline-size: var(--sui-choice-control-track-size);
   block-size: var(--sui-choice-control-size);
   margin: 0;
+  /*
+   * vertical-align: middle centres the margin box on the lowercase letters, so the negative block-start margin lifts
+   * the box halfway to the capitals. A margin rather than a relative offset, because a positioned box paints over later
+   * positioned content, such as a sticky table header.
+   */
+  margin-block-start: calc((1ex - 1cap) / 2);
+  vertical-align: middle;
   /* So 1ex and 1cap measure the label's font, not the browser's form control font */
   font: inherit;
   border: var(--sui-choice-control-border-width) solid var(--sui-choice-control-border);
   border-radius: var(--sui-choice-control-radius);
   background-color: var(--sui-choice-control-bg);
-  vertical-align: middle;
   cursor: pointer;
   transition:
     background-color 120ms ease,
@@ -117,7 +126,7 @@
 .input:checked {
   --sui-choice-control-bg: var(--sui-choice-control-fill);
   --sui-choice-control-border: var(--sui-choice-control-fill-border);
-  --sui-choice-control-halo-tint: var(--sui-choice-control-fill);
+  --_sui-choice-control-halo-tint: var(--sui-choice-control-fill);
 }
 
 /* A spring on the way out would overshoot to a negative scale and flash a mirrored mark, so only checking bounces */
@@ -132,16 +141,16 @@
 /* Touch screens keep :hover after a tap, which would leave the halo showing */
 @media (hover: hover) {
   .choiceControl:hover .input {
-    --sui-choice-control-halo: var(--sui-choice-control-halo-hover);
+    --_sui-choice-control-halo: var(--_sui-choice-control-halo-hover);
   }
 }
 
 .choiceControl:active .input {
-  --sui-choice-control-halo: var(--sui-choice-control-halo-press);
+  --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
 }
 
 .input:enabled {
-  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--sui-choice-control-halo);
+  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--_sui-choice-control-halo);
 }
 
 .input:focus-visible {

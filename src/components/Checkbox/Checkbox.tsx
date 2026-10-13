@@ -10,7 +10,8 @@ import { ChoiceControl } from "../ChoiceControl";
 export interface CheckboxProps extends Omit<BoxProps<"input">, "as" | "children" | "dangerouslySetInnerHTML" | "type"> {
   /**
    * Label shown beside the box, which names the checkbox. Without it, give the checkbox an accessible name, for
-   * example with `aria-label` or the `label` of the `Field` around it.
+   * example with `aria-label` or the `label` of the `Field` around it. It is inline content, as a `label` holds: a child
+   * laid out as a block drops below the box, so put a description after the checkbox, padded by `var(--sui-space-6)`.
    */
   children?: ReactNode;
 }
