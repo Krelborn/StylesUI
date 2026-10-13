@@ -37,9 +37,15 @@ export function ChoiceControl({
   ...inputProps
 }: ChoiceControlProps): JSX.Element {
   const fieldControlProps = useFieldControl(inputProps);
+  const hasText = hasContent(children);
 
   return (
-    <Box as="label" className={clsx(styles.choiceControl, className)} style={style} data-kind={kind}>
+    <Box
+      as="label"
+      className={clsx(styles.choiceControl, { [styles.withText]: hasText }, className)}
+      style={style}
+      data-kind={kind}
+    >
       <Box
         {...inputProps}
         {...fieldControlProps}
@@ -48,7 +54,7 @@ export function ChoiceControl({
         role={kind === "switch" ? "switch" : role}
         type={kind === "radio" ? "radio" : "checkbox"}
       />
-      {hasContent(children) && (
+      {hasText && (
         <Box as="span" className={styles.text}>
           {children}
           {fieldControlProps.required && kind !== "radio" && <RequiredIndicator />}

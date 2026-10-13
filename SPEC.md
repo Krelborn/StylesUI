@@ -1,162 +1,158 @@
-# Spec: Markdown Review follow-ups
+# Spec: Compact checkbox and radio
 
-Gaps Markdown Review found while polishing its comment cards ([Krelborn/markdown-review#19](https://github.com/Krelborn/markdown-review/pull/19)), on `@krelborn/stylesui` 0.6.0, and the follow-ups agreed in review.
+On `@krelborn/stylesui` 0.7.0, a `Checkbox` or `Radio` draws a 24px box beside 16px text, which looks too big. This change shrinks the box, adds a hover halo like MUI's, and puts every edge on the space scale. Option B and focus option F1 were chosen from prototypes reviewed in conversation.
 
 ## Objective
 
-1. **Status buttons.** `Button` has no destructive variant, so Markdown Review's confirming Discard button is `secondary`. Button gains filled `danger`, `warning`, `info` and `success` variants.
-2. **Aligned placements.** An overlay can only be centred on its trigger. Near a container's edge, such as Discard at the start of a narrow comments panel, the centred popover covers the content and spills past the panel. Markdown Review overrides `position-area` in its own CSS. Overlays gain placements aligned to the trigger's start or end edge.
-3. **Controlled reopening.** In 0.6.0, a controlled `usePopover` reopened after Escape threw `InvalidStateError: Invalid to show a popover during another show operation`, which unmounted the app. Check that the current code fixes it, with a test in a real browser.
-4. **An outline per colour.** `outline` is replaced by an outline variant for each colour: `outline-primary`, `outline-secondary`, `outline-danger`, `outline-warning`, `outline-info` and `outline-success`. This breaks `variant="outline"`, which the beta allows.
-5. **Popover focus.** Markdown Review's `DiscardDraftButton` moves focus itself: into the popover as it opens, back to the trigger as it closes with focus inside, and to the trigger from Cancel, because WebKit doesn't focus a clicked button. `usePopover` does this instead.
+1. **A smaller box.** The box or dot of a `Checkbox` or `Radio` shrinks from a fixed 1.5rem to `--sui-space-4`, centred halfway between the capital and the lowercase letters of the first line of its label.
+2. **Edges on the space scale.** The label text starts `--sui-space-6` from the box's start edge in every theme: `--sui-space-4` box plus `--sui-space-2` gap. Text placed under a control lines up with the label when it is padded by `var(--sui-space-6)`. Today the text starts at 32px in `default` (`space-8`) and 33.6px in `playful` (`space-7`), so no single token lines it up.
+3. **A hover halo.** Hovering anywhere on the label tints a halo around the box that fills the gap, and pressing darkens it, like MUI's. The halo is painted, not laid out, so it never moves anything.
+4. **Focus unchanged.** The focus ring stays as it is (option F1): 2px (3px in `playful`) at a 2px offset on the input. It clears the label text in both themes.
 
-Users are app developers building with StylesUI, Markdown Review first. Success looks like this: Markdown Review's confirming Discard becomes `variant="danger"`, its `.confirmation` override gives way to `placement="top-start"`, it can go back to a controlled popover, and `DiscardDraftButton`'s focus code gives way to `initialFocus` and `close()`.
+Users are app developers building with StylesUI. Success looks like this: a settings list of checkboxes and radios with descriptions lines up on space tokens in both themes, and the controls look in proportion to their text.
 
 ## Decisions
 
-- **Variants, not a tone prop.** `ButtonVariant` gains `danger`, `info`, `success` and `warning`. Each is filled in its status colour with `--sui-color-on-<status>` text, and keeps the outline, lip, sizes, `disabled` and `busy` that `primary` has. `IconButton` takes Button's variants, so it gains them too.
-- **A hover token per status.** Each palette declares `--sui-color-<status>-hover`, one ramp step further from the status's `on-*` text than the fill: darker under light text, lighter under dark text. That is the rule `primary-hover` already follows in every palette. `danger-text` can't double as the hover, because Pop draws ink on its danger fill, and ink on `red-700` is about 3:1. The values are below.
-- **Placements on the shared type.** `OverlayPlacement` gains `top-start`, `top-end`, `bottom-start` and `bottom-end`, the naming Floating UI uses, with `start` and `end` following the writing direction as they already do. `Overlay` owns placement, so `Popover`, `Tooltip` and `IconButton`'s tooltip all take them.
-- **Placement CSS.** `top-start` is `position-area: self-block-start span-self-inline-end`, with no inline-start margin, so the overlay's start edge meets the trigger's. It flips to the other side, the other edge, or both, when even its narrowest width doesn't fit (`position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline`); with room to spare it shrinks rather than flips. The other three mirror it. A throwaway spike checked the keywords in Playwright's Chromium and WebKit: the `self-` keywords line up in both directions, and in a right-to-left container inside a left-to-right page. Markdown Review's `block-start span-inline-end` misses by the margin there, and `top span-x-self-end` is unsupported in both browsers. Playwright's Firefox would not launch here, so Firefox is unchecked, as it is for every story.
-- **Controlled reopening is already fixed.** 0.6.1 guards both calls that could show the popover during the browser's own show: `Overlay`'s effect (#45) and `usePopover`'s re-show effect (#46), each through `syncPopover`, which retries a refusal on the next task. No test reopens a controlled popover after Escape with real input, so a story is added. It must fail with #46's guard removed.
-- **Outline variants.** Each `outline-<colour>` is transparent at rest and, like ghost, hovering tints it with its text colour at 8% over whatever is behind it. Review measured the status subtles as hover fills first: against a light page they changed the fill by only 1.01:1 to 1.05:1 in Pop, and 1.04:1 for warning and success in Bright, under the 1.1:1 a change of state needs. A status outline draws its text and border in `--sui-color-<status>-text`, the grade made for text on the page, a surface and the status's own subtle. `outline-primary` keeps `outline`'s colours. Secondary has no text grade, so `outline-secondary` draws `--sui-color-text` inside a `--sui-color-input-border` border. Status text on `overlay` is added to the Contrast stories, because an outline button can sit in a popover.
-- **Focus moves with the popover.** `usePopover` takes `initialFocus`, a ref to the element to focus when the popover opens. Without one, focus stays where it is, as now. When the popover closes with focus inside it, the browser's own return of focus stands: the trigger when the trigger opened it, or whatever had focus before. Where the browser leaves focus on the page or in the hidden popover, as WebKit does, the hook moves it to the trigger. `close()` also returns focus when it is lost to the page as the popover hides, which is where WebKit leaves it after a click on a button. The decision is made in `beforetoggle`, as the popover starts to hide, so focus that `close()`'s caller moves elsewhere stays there, and so does focus after a click outside. The hook finds the trigger through its `popovertarget`, skipping elements inside the popover, so a consumer's own `ref` on the trigger still works. It searches the document only: StylesUI's CSS is injected into the document, so its components are not styled inside a shadow root.
-- One pull request, one commit per task, and no version bump unless asked. Breaking changes are acceptable while the package is in beta.
-
-### Hover values
-
-Bright, Mist, Paper and Dusk share the status fills, so they share the hovers:
-
-- `success-hover`: `green-800` light, `green-300` dark
-- `warning-hover`: `yellow-400` light, `yellow-200` dark
-- `danger-hover`: `red-700` light, `red-300` dark
-- `info-hover`: `indigo-800` light, `indigo-200` dark
-
-Pop draws ink on every status fill, so its hovers are lighter in both modes:
-
-- `success-hover`: `green-300` light, `green-200` dark
-- `warning-hover`: `yellow-300` light, `yellow-200` dark
-- `danger-hover`: `red-300` light, `red-200` dark
-- `info-hover`: `blue-300` light, `blue-200` dark
+- **The input stays the box.** The box, dot and halo are all drawn on the native input, as now, so its border, focus ring and the contrast tests that measure them carry over. The rejected alternative is MUI's: an input the size of the hit area, with the box drawn inside it. That would move the border onto a pseudo-element, which `borderContrast` cannot measure.
+- **Size.** `--sui-choice-control-size` becomes `var(--sui-space-4, 1rem)`: 16px in `default` and 19.2px in `playful`. The gap stays `var(--sui-space-2, 0.5rem)`. Tying the box to the space scale, not to `em`, is what keeps the label at `space-6` in both themes.
+- **Centring.** The box's centre sits halfway between the middle of the capitals and the middle of the lowercase letters on the label's first line, `(1cap + 1ex) / 4` above the baseline, so it looks centred against short capitalised labels such as "Email" and long lowercase ones alike. Reviewed in Storybook at Checkpoint A against two alternatives: centred on the lowercase letters, it hung low beside short capitalised labels, and centred on the capitals it looked slightly high. Centring on the line, as first built, lands near the capitals in `default` only because of system-ui's measurements. The label is an `inline-block` with `--_sui-choice-control-indent` (the box's width plus the gap) of inline-start padding, but only when it has text, so a control named by `aria-label` alone is as wide as its box. The input is an `inline-grid` pulled back into that padding by a negative margin, with `vertical-align: middle`, which CSS defines as centring a box's margin box on the middle of the parent's lowercase letters (half an `ex` above the baseline). A block-start margin of `calc((1ex - 1cap) / 2)` then lifts the border box a quarter of the gap between the two, and the input sets `font: inherit` so those units measure the label's font. The lift is a margin, not a `position: relative` offset, because a positioned input paints over later positioned content, such as a sticky table header without a `z-index`, that it used to pass under. `cap` needs Chrome 118, Firefox 97 and Safari 17.2, within the `build.cssTarget` floor. The label sets `text-align: start` and `text-indent: 0`, so alignment inherited from a parent cannot move the box, and wrapped lines start at the padding, under the first line's text. Checked in Chromium and WebKit, where the box lands within 0.01px of its target in both themes. Playwright's Firefox does not launch here.
+- **The halo is a box-shadow.** It is `0 0 0 var(--sui-choice-control-halo-spread)`, with the spread equal to the gap, so it stops exactly where the text starts. It follows the box's shape: a rounded square around a checkbox and a circle around a radio. MUI's circle around a checkbox (prototype B2) was not chosen. No `:has()` is needed, which matters because Firefox 120 lacks it.
+- **Halo colours.** The halo tints with `--sui-color-text` around an unchecked box, and with `--sui-choice-control-fill` (primary) around a checked one. It is 8% on hover and 16% while pressed, the strengths the ghost Button uses. Computed from every palette, light and dark, on the page and on a surface, the lowest step is 1.112:1, primary in Bright light on a surface, against the 1.1:1 `distinctFillContrast` a change of state needs. The stories measure the real values.
+- **When the halo shows.** Hover anywhere on the label shows it, not only hover on the box, because the whole label is the click target. Hover is gated by `@media (hover: hover)`, as Button's lift is, so a tap on a touch screen doesn't leave a halo behind. Press shows on every device. A disabled input has no halo. Under forced colours the browser removes box-shadows, so the halo disappears and the rest is unchanged. A control with keyboard focus draws none, even under the pointer: under the focus ring, the 8% text tint on a Bright surface lowers the ring's contrast to about 2.85:1, below 3:1. While focused, the input does not transition its `box-shadow`, so a halo already showing when focus arrives vanishes at once rather than fading under the ring. Both found in review on the pull request.
+- **Click target.** The click target stays the label: box, gap and text, one line tall (24px at 16px text). The part of the halo outside the label is not clickable. A control named by `aria-label` alone is a 16px box in a 16px by 24px label, down from 24px square, so it meets WCAG 2.5.8 through spacing: neighbouring controls need 24px between their centres.
+- **The label holds the box in its padding.** The inline-start padding is set by two classes (`.choiceControl.withText`), so a consumer's single class cannot override it, but padding in the `style` prop still can, and moves the box out of the label. The label's text is inline content, as HTML requires of a `label`: a child laid out as a block, such as a `Stack`, drops below the box. A description goes after the control, outside the label, padded by `var(--sui-space-6)` and linked with `aria-describedby`. A layout that keeps block children beside the box, an `inline-block` text span with `baseline-source: first`, failed in WebKit, which ignores `baseline-source`.
+- **Switch keeps its size.** `Switch` shares ChoiceControl but keeps its 2.75rem by 1.5rem track and its gap, and shows no halo (`--sui-choice-control-halo-spread: 0px`). It takes the same centring, so its track moves down about 1.1px in `default`, and its label grows to about 25.1px tall, because a 24px track laid out on the lowercase letters overhangs a 24px line. The Switch follow-up revisits its size.
+- **No new public props or tokens.** This change adds no `description` prop and no space token. Text padded by `var(--sui-space-6)` already lines up under a control, and the Forms guide documents it. A `description` prop is not planned. Of the new custom properties, only `--sui-choice-control-halo-spread` is public: set on the label, `0px` turns the halo off. The derived and state values, `--_sui-choice-control-indent`, `-halo`, `-halo-hover`, `-halo-press` and `-halo-tint`, take the private `--_sui-` prefix, which only palettes used before.
+- **No version bump.** The version is bumped when a release is cut, which won't follow this change straight away.
+- One pull request, one commit per task.
 
 ## Tech Stack
 
-React 19, TypeScript 7, Vite 8 (rolldown) library mode, CSS modules and custom properties, CSS anchor positioning, Vitest 5 (jsdom unit project plus four Chromium storybook projects), Storybook 10, oxlint and oxfmt, pnpm. No new dependencies.
+React 19, TypeScript 7, Vite 8 (rolldown) library mode, CSS modules and custom properties, Vitest 5 (a jsdom unit project and four Chromium storybook projects), Storybook 10, oxlint and oxfmt, pnpm. No new dependencies.
 
 ## Commands
 
 ```sh
-pnpm verify                                          # lint, format check, typecheck, every test; before every commit
-pnpm test:unit src/components/Button/Button.test.tsx # one unit test file
-pnpm test:storybook src/components/Popover/Popover.stories.tsx  # one story file, in all four projects
-pnpm build                                           # dist/
-fallow audit --format json --quiet --explain --gate-marker agent  # before every commit
+pnpm verify                                                        # lint, format check, typecheck, every test; before every commit
+pnpm test:storybook src/components/Checkbox/Checkbox.stories.tsx   # one story file, in all four projects
+pnpm test:unit src/components/Checkbox/Checkbox.test.tsx           # one unit test file
+pnpm build                                                         # dist/
+fallow audit --format json --quiet --explain --gate-marker agent   # before every commit
 ```
 
 ## Project Structure
 
 ```
-src/styles/palettes/*.css            ← four status hover tokens in each palette
-src/styles/Contrast.stories.tsx      ← on-<status> on <status>-hover
-src/styles/PaletteShowcase.stories.tsx ← the status buttons
-src/components/Button/               ← variants, CSS, tests, stories
-src/overlays/OverlayPlacement.ts     ← four aligned placements
-src/components/Overlay/Overlay.module.css ← their position-area rules
-src/components/Popover/              ← entrance motion for them, focus handling, tests and stories
-src/components/IconButton/IconButton.stories.tsx ← every Button variant
-src/styles/ThemeShowcase.stories.tsx, src/components/Card/Card.stories.tsx ← outline-primary in place of outline
-src/components/Tooltip/Tooltip.stories.tsx ← the aligned placements
-docs/design/concepts.md, docs/design/palettes.md, src/docs/Theming.mdx, .design-sync/conventions.md, AGENTS.md ← docs
+src/components/ChoiceControl/ChoiceControl.module.css  ← size, centring, halo, Switch overrides
+src/components/ChoiceControl/ChoiceControl.tsx          ← a class for a label that has text
+src/components/Checkbox/Checkbox.test.tsx               ← the hover gate on the stylesheet
+src/components/{Checkbox,Radio,Switch}/*.tsx           ← children JSDoc: inline content only
+AGENTS.md                                              ← the test helpers and the private --_sui- prefix
+src/components/Checkbox/Checkbox.stories.tsx           ← alignment, halo, Stacked, KeyboardInteraction
+src/components/Radio/Radio.stories.tsx                 ← alignment, halo
+src/components/Switch/Switch.stories.tsx               ← unchanged size, no halo, Stacked wording
+src/docs/Forms.mdx                                     ← lining text up under a control
+docs/design/concepts.md                                ← Forms section
+.design-sync/conventions.md                            ← the space-6 rule for forms
 ```
 
 ## Code Style
 
-Follow `docs/standards/`. Every token read keeps a literal fallback equal to Bright's light value:
+Follow `docs/standards/`. Every token read keeps a literal fallback equal to the `default` theme's or Bright's light value:
 
 ```css
-.button[data-variant="danger"] {
-  --sui-button-bg: var(--sui-color-danger, #dc2626);
-  --sui-button-bg-hover: var(--sui-color-danger-hover, #b91c1c);
-  --sui-button-fg: var(--sui-color-on-danger, #fff);
+.choiceControl {
+  --sui-choice-control-size: var(--sui-space-4, 1rem);
+  --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
+  --sui-choice-control-halo-spread: var(--sui-choice-control-gap);
+  --_sui-choice-control-halo-tint: var(--sui-color-text, #111827);
 }
-```
 
-```css
-.overlay[data-placement="top-start"] {
-  margin-inline-start: 0;
-  position-area: self-block-start span-self-inline-end;
-  position-try-fallbacks:
-    flip-block,
-    flip-inline,
-    flip-block flip-inline;
+.input {
+  --_sui-choice-control-halo: transparent;
+  --_sui-choice-control-halo-hover: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 8%, transparent);
+  --_sui-choice-control-halo-press: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 16%, transparent);
+}
+
+.input:checked {
+  --_sui-choice-control-halo-tint: var(--sui-choice-control-fill);
+}
+
+@media (hover: hover) {
+  .choiceControl:hover .input {
+    --_sui-choice-control-halo: var(--_sui-choice-control-halo-hover);
+  }
+}
+
+.choiceControl:active .input {
+  --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
+}
+
+.input:enabled {
+  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--_sui-choice-control-halo);
 }
 ```
 
 ## Testing Strategy
 
-- **Unit (jsdom).** `Button.test.tsx` covers each new variant, and its existing `@ts-expect-error` keeps rejecting an unknown one, now including `outline`. `usePopover.test.tsx` covers `initialFocus`, focus returning on close from inside, focus left alone from outside, and `close()` with focus lost to the page, which only WebKit and Firefox on macOS produce, so no story can. `themeTokens.test.ts` already requires every palette to declare the same tokens, with different light and dark values.
-- **Stories (Chromium, all four mode and theme projects).**
-  - Contrast stories assert `on-<status>` on `<status>-hover` at 4.5:1 in every palette.
-  - A Button story renders each status variant at every size, disabled and busy, under axe. `HoverContrast` measures each variant's hover text, and the new story checks that rest and hover fills can be told apart.
-  - The palette showcase adds the four buttons, so axe checks them in every palette.
-  - The Popover `Placement` story checks that each aligned placement is on its side and meets the trigger's edge. A right-to-left story checks that the edges swap.
-  - `ControlledReopening` opens a controlled popover with real keys, closes it with Escape, and opens it again.
-  - A Button story renders each outline variant at every size, disabled and busy, under axe, and the palette showcase renders them in every palette.
-  - A confirmation popover story checks with real keys and clicks that focus moves to Cancel on opening, returns to the trigger on Escape and on Cancel, and stays put after a click outside.
-- **Proof the reopening story bites.** It must fail with `usePopover`'s re-show effect put back to 0.6.0's bare `showPopover()`. That run is throwaway.
-- **By hand.** Fallback colour pairs, as AGENTS.md requires.
+- **Stories (Chromium, all four mode and theme projects).** Layout and paint can't be measured in jsdom, so the new checks are stories. Each one compares measured pixels with the tokens resolved in the story's own theme, so the same assertions hold in `default` and `playful`.
+  - Checkbox and Radio alignment: the box is `space-4` square and centred halfway between the capitals and the lowercase letters of the label's first line, including on a label that wraps, and the label text starts `space-6` from the box. Text padded by `var(--sui-space-6)` below the control starts where the label text does.
+  - Checkbox and Radio halo, with real pointer input (`hoverByTestId`, `holdPointerByTestId`, as Button's `expectDistinctPointerStates` does): hovering the label text spreads the halo by `space-2`. Rest, hover and press are each at least `distinctFillContrast` apart, measured with `fillContrast` against the background behind the control, unchecked and checked. A disabled control has no halo.
+  - `KeyboardInteraction` keeps its focus ring assertions, and Checkbox's adds that the ring ends before the label text starts.
+  - Switch: the track is still 2.75rem by 1.5rem, and hovering it shows no halo.
+  - Palette showcase: in all five palettes, the hover and press halos an unchecked and a checked checkbox declare are each at least `distinctFillContrast` from the step before, as it checks every Button's hover fill. The story projects only run Bright and Pop.
+  - axe, including `target-size`, keeps passing on every Checkbox, Radio, RadioGroup, Switch, Field and Fieldset story.
+  - Review fixes: the input is not positioned; a label padded through a consumer class and a wrapping label under a centred parent keep the box inside the label and their text at `space-6`; and a right-to-left layout passes the same alignment checks, measured from the box's right edge.
+- **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, and only colour transitions under reduced motion. A new one fails if a `:hover` rule sits outside `@media (hover: hover)`, which no story can catch, because the test browser can hover.
+- **By hand.** The halo fallback colours against the fallback page colour, as AGENTS.md requires.
 
 ## Boundaries
 
 - **Always:** run `pnpm verify` and the fallow audit before every commit. Give every token read a literal fallback. Keep the docs in the same commit as the behaviour they describe.
-- **Ask first:** pushing or opening a pull request; bumping the version or publishing; a Claude Design sync; changing an existing colour.
-- **Never:** lower a contrast threshold, skip an assertion or set a story to `a11y.test: "todo"`; edit `dist/`; hand-write a dependency version.
+- **Ask first:** pushing or opening a pull request; bumping the version or publishing; a Claude Design sync; adding a space token; changing `Switch`'s size or giving it a halo; adding a `description` prop.
+- **Never:** lower a contrast threshold, skip an assertion or set a story to `a11y.test: "todo"`; change `SegmentedControl`; edit `dist/`; hand-write a dependency version.
 
 ## Success Criteria
 
-### Status buttons
+### Size and alignment
 
-1. `ButtonVariant` gains `danger`, `info`, `success` and `warning`, and each sets `data-variant`. Proven by `Button.test.tsx`.
-2. All five palettes declare `--sui-color-danger-hover`, `--sui-color-info-hover`, `--sui-color-success-hover` and `--sui-color-warning-hover` with the values above, through `light-dark()`. Proven by `themeTokens.test.ts`.
-3. The Contrast stories pass `on-<status>` on `<status>-hover` at 4.5:1 for every palette in all four projects.
-4. A status variant is filled with `--sui-color-<status>`, hovers to `--sui-color-<status>-hover` and draws `--sui-color-on-<status>` text, each read with Bright's light value as its fallback. Every fallback pair is at least 4.5:1, checked by hand.
-5. The Button status story passes axe at every size, disabled and busy, and its rest and hover fills differ by at least the 1.1 the ghost Button's story requires. `HoverContrast` passes for every variant. The palette showcase passes axe with the four buttons.
-6. `docs/design/concepts.md` and `src/docs/Theming.mdx` document the hover in the status fill grade. `docs/design/palettes.md` documents the hover rule. The Buttons section of concepts.md and `.design-sync/conventions.md` list the variants.
+1. In every storybook project, a Checkbox's and a Radio's input is as wide and as tall as the resolved `--sui-space-4`, within 0.5px.
+2. The input's vertical centre is within 0.5px of the point halfway between the middles of the capitals and the lowercase letters on the label's first line, a quarter of the resolved `1cap + 1ex` above its baseline, on a one-line label and on one that wraps.
+3. The label text's start edge is the resolved `--sui-space-6` from the input's start edge, within 0.5px, and a `Text` padded by `var(--sui-space-6)` under the control starts within 0.5px of it.
+4. The Checkbox `Stacked` story still finds each label as wide as its input plus its text, and each label at least 24px tall. Its JSDoc and Switch's say the label is the 24px target. A Checkbox named by `aria-label` alone has a label as wide as its box.
 
-### Aligned placements
+### Halo
 
-7. `OverlayPlacement` is `"bottom" | "bottom-end" | "bottom-start" | "end" | "start" | "top" | "top-end" | "top-start"`, and `Popover`, `usePopover`, `Tooltip`, `useTooltip` and `IconButton` take every value.
-8. In Chromium, in a left-to-right page, each aligned placement puts the popover wholly on its side of the trigger. A `-start` popover's left edge, and an `-end` popover's right edge, is within 1px of the trigger's. Proven by the Popover `Placement` story.
-9. In a right-to-left container, `top-start`'s right edge and `top-end`'s left edge meet the trigger's. Proven by a new story.
-10. An aligned popover's entrance moves out from the trigger as `top` and `bottom` do, and `Tooltip`'s `Placement` story and controls offer every placement.
-11. `docs/design/concepts.md` and `.design-sync/conventions.md` describe the aligned placements.
+5. At rest, the input's box-shadow colour is transparent. With the pointer over the label text, it is spread by the resolved `--sui-space-2`, and its colour differs from rest by at least `distinctFillContrast`. While pressed, it differs from hover by at least `distinctFillContrast`. Proven for unchecked and checked, Checkbox and Radio, in all four projects. The palette showcase proves the same steps for the colours an unchecked and a checked checkbox declare, in all five palettes.
+6. A checked control's halo is tinted with `--sui-color-primary`, and an unchecked one's with `--sui-color-text`, checked with `isSameColor` against the mixes the stylesheet declares.
+7. A disabled Checkbox's and Radio's box-shadow is `none` while hovered.
+8. A Switch's track is 2.75rem by 1.5rem and shows no halo while hovered.
 
-### Controlled reopening
+### Focus
 
-12. `ControlledReopening` passes in all four projects: Tab and Enter open the controlled popover, Escape closes it and reports `false`, and Enter opens it again, reporting `true` with the link visible and no error.
-13. The same story fails with `usePopover`'s re-show effect put back to 0.6.0's bare `showPopover()`. The run is reported in the PR, not committed.
+9. Every `KeyboardInteraction` story still passes its focus ring width and 3:1 contrast checks, and in Checkbox's the ring's end edge (input edge plus `outline-offset` plus `outline-width`) is before the label text's start edge.
 
-### An outline per colour
+### Docs and whole change
 
-14. `ButtonVariant` is `"danger" | "ghost" | "info" | "outline-danger" | "outline-info" | "outline-primary" | "outline-secondary" | "outline-success" | "outline-warning" | "primary" | "secondary" | "success" | "warning"`, and `variant="outline"` is a type error. Proven by `Button.test.tsx`.
-15. Each outline variant reads the tokens in the decision above, each with Bright's light value as its fallback. Every fallback pair is at least 4.5:1 for text and 3:1 for the secondary border, checked by hand.
-16. The Contrast stories pass `<status>-text` on `overlay` for every palette in all four projects.
-17. The Button outline story passes axe at every size, disabled and busy, and its hover fill differs from rest by at least 1.1. `HoverContrast` passes for every outline variant. The palette showcase passes axe with them and checks every Button's hover text (4.5:1) and fill (1.1) in every palette.
-18. `IconButton` takes every Button variant. Its unit test and its `Variants` story each list the variants in a `Record<ButtonVariant, true>`, so a variant missing from either fails to compile, and the story checks that each renders square.
-19. Nothing in the repository uses `variant="outline"` on a Button. The `ButtonVariant` JSDoc, concepts.md, Theming.mdx and `.design-sync/conventions.md` describe the outline variants.
+10. `docs/design/concepts.md` describes the box size, the centring, the `space-6` alignment and the halo, including when it shows, its colours and that Switch has none. `src/docs/Forms.mdx` shows lining text up under a control with `var(--sui-space-6)`, embedding the alignment story. `.design-sync/conventions.md` states the `space-6` rule.
+11. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
 
-### Popover focus
+### Review fixes
 
-20. With `initialFocus`, the element it points at has focus once the popover has opened, uncontrolled or controlled.
-21. When the popover closes with focus inside it, by Escape or by `close()`, focus goes where the browser returns it, or to the trigger when the browser leaves it on the page or in the hidden popover. In Chromium, a confirmation opened from another button returns focus to that button, and one open from the start, with nothing focused before, returns it to the trigger. When it closes after a click outside, focus stays where the click left it.
-22. A popover hidden by `close()` with focus on the page's `body` moves focus to the trigger. Focus that `close()`'s caller moves elsewhere stays there.
-23. A consumer's `ref` on the trigger is unaffected, and a button inside the popover that also targets it is never taken for the trigger.
-24. The Popover and `usePopover` JSDoc, concepts.md, `.design-sync/conventions.md` and AGENTS.md describe the behaviour.
+12. The input is not positioned: its `position` is `static`, checked in the Checkbox `AlignedText` story.
+13. A label padded through a consumer's class, and a wrapping label under a parent with `text-align: center`, keep the box inside the label, their text at `space-6`, and wrapped lines under the first line's text. Proven by a Checkbox `OuterStyles` story.
+14. In a right-to-left layout, criteria 1 to 3 hold, measured from the box's right edge. Proven by a Checkbox `RightToLeft` story.
+15. A unit test in `Checkbox.test.tsx` fails if a `:hover` rule in the ChoiceControl stylesheet sits outside `@media (hover: hover)`.
+16. concepts.md and the Checkbox, Radio and Switch `children` JSDoc say the label's text is inline content and descriptions go outside the label. concepts.md and Forms.mdx give the target size of a control without text, and Forms.mdx says to link a description with `aria-describedby`. AGENTS.md describes `src/test/choiceControl.ts`, the private `--_sui-` prefix in components, and that an element inside an `input` gets no computed style.
 
-### Whole change
+### Pull request review
 
-25. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
+17. A Checkbox with keyboard focus draws no halo while hovered, and on a surface its focus ring keeps 3:1. Focused under a pointer that already shows the halo, it does not transition its `box-shadow`. Proven by a Checkbox `FocusedHalo` story.
+
+## Follow-ups
+
+- **Switch.** Once this change lands, a new thread takes `Switch` through its own spec, so it matches the new Checkbox and Radio for consistency and polish. Next to a 16px box, its 44 by 24 track may look heavy, and it has no halo. Its label can't start at a single space token unless the scale gains a `space-10`.
 
 ## Open Questions
 
-- **Release.** Markdown Review needs a published version to drop its workarounds. Bump to 0.7.0 (new variants, placements, tokens and `initialFocus`, and `outline` removed) once this merges?
+None.

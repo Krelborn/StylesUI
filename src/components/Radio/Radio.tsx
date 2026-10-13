@@ -14,7 +14,8 @@ export interface RadioProps extends Omit<
 > {
   /**
    * Label shown beside the button, which names the radio. Without it, give the radio an accessible name, for
-   * example with `aria-label`.
+   * example with `aria-label`. It is inline content, as a `label` holds: a child laid out as a block drops below the
+   * button, so put a description after the radio, padded by `var(--sui-space-6)`.
    */
   children?: ReactNode;
 

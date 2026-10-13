@@ -1,9 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { borderContrast, focusRingContrast } from "../../test/colorContrast";
+import {
+  expectDistinctHaloStates,
+  expectOnSpaceScale,
+  readHalo,
+  settledHalo,
+  textStart,
+} from "../../test/choiceControl";
+import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
+import { Card } from "../Card";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
+import { Text } from "../Text";
 
 import { Checkbox } from "./Checkbox";
 
@@ -37,6 +47,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const wrappingLabel = "Send me offers from partners we work with, chosen to match my plan";
 
 /**
  * The children are the label that names the checkbox, and clicking the label toggles it
@@ -105,8 +117,8 @@ export const InAField: Story = {
 };
 
 /**
- * Checkboxes stacked closely each keep a target of at least 24px, and each label is only as wide
- * as its text
+ * Stacked closely, each checkbox's label is a target at least 24px tall, and only as wide as its
+ * box and text
  */
 export const Stacked: Story = {
   render: (args) => (
@@ -121,6 +133,7 @@ export const Stacked: Story = {
     const text = canvas.getByText("Send me partner offers");
     const [label] = offers.labels ?? [];
 
+    await expect(label.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
     await expect(label.getBoundingClientRect().width).toBeCloseTo(
       offers.getBoundingClientRect().width + text.getBoundingClientRect().width,
       0
@@ -129,8 +142,104 @@ export const Stacked: Story = {
 };
 
 /**
- * Tab moves focus to the checkbox and shows a focus ring on the box, Space toggles it, and the next
- * Tab skips a disabled checkbox
+ * The box is `--sui-space-4` square and centred halfway between the capital and the lowercase
+ * letters of the first line of its label, and the label text starts `--sui-space-6` from the box in
+ * every theme. Text below a checkbox lines up with its label when it is padded by
+ * `var(--sui-space-6)`.
+ */
+export const AlignedText: Story = {
+  render: (args) => (
+    <Stack gap={2} style={{ maxInlineSize: "18rem" }}>
+      <Stack gap={0}>
+        <Checkbox {...args} />
+        <Text as="p" size="sm" style={{ paddingInlineStart: "var(--sui-space-6)" }} tone="muted">
+          New features, about once a month
+        </Text>
+      </Stack>
+      <Checkbox>{wrappingLabel}</Checkbox>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const wrappingText = canvas.getByText(wrappingLabel);
+
+    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThan(
+      parseFloat(getComputedStyle(wrappingText).lineHeight)
+    );
+
+    for (const name of ["Send me product updates", wrappingLabel]) {
+      await expectOnSpaceScale(canvas.getByRole<HTMLInputElement>("checkbox", { name }), canvas.getByText(name));
+    }
+
+    await expect(textStart(canvas.getByText("New features, about once a month"))).toBeCloseTo(
+      textStart(canvas.getByText("Send me product updates")),
+      0
+    );
+    await expect(
+      getComputedStyle(canvas.getByRole("checkbox", { name: "Send me product updates" })).position,
+      "the box paints in flow, so it passes under positioned content such as a sticky header"
+    ).toBe("static");
+  },
+};
+
+/**
+ * In a right-to-left layout the box sits at the right, and the label text, its wrapped lines and
+ * text padded by `var(--sui-space-6)` below start `--sui-space-6` to its left
+ */
+export const RightToLeft: Story = {
+  ...AlignedText,
+  decorators: [
+    (Story) => (
+      <div dir="rtl">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * Padding a consumer gives the label through a class, and text alignment inherited from a parent,
+ * leave the box inside the label and every line of the text at `--sui-space-6`
+ */
+export const OuterStyles: Story = {
+  render: (args) => (
+    <Stack gap={2} style={{ maxInlineSize: "18rem", textAlign: "center" }}>
+      <style>{".outer-styles-padded { padding: var(--sui-space-3); }"}</style>
+      <Checkbox {...args} className="outer-styles-padded" />
+      <Checkbox>{wrappingLabel}</Checkbox>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    for (const name of ["Send me product updates", wrappingLabel]) {
+      const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name });
+      const [label] = checkbox.labels ?? [];
+
+      await expect(checkbox.getBoundingClientRect().left, `${name} box inside its label`).toBeGreaterThanOrEqual(
+        label.getBoundingClientRect().left
+      );
+      await expectOnSpaceScale(checkbox, canvas.getByText(name));
+    }
+  },
+};
+
+/**
+ * A checkbox named by `aria-label` alone takes up no more room than its box
+ */
+export const WithoutText: Story = {
+  args: {
+    "aria-label": "Select every row",
+    children: undefined,
+  },
+  play: async ({ canvas }) => {
+    const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Select every row" });
+    const [label] = checkbox.labels ?? [];
+
+    await expect(label.getBoundingClientRect().width).toBeCloseTo(checkbox.getBoundingClientRect().width, 0);
+  },
+};
+
+/**
+ * Tab moves focus to the checkbox and shows a focus ring on the box, which stops short of the label
+ * text. Space toggles it, and the next Tab skips a disabled checkbox.
  */
 export const KeyboardInteraction: Story = {
   render: (args) => (
@@ -151,6 +260,11 @@ export const KeyboardInteraction: Story = {
     await expect(focusRingContrast(updates)).toBeGreaterThanOrEqual(3);
     await expect(borderContrast(updates)).toBeGreaterThanOrEqual(3);
 
+    const { outlineOffset, outlineWidth } = getComputedStyle(updates);
+    const ringEnd = updates.getBoundingClientRect().right + parseFloat(outlineOffset) + parseFloat(outlineWidth);
+
+    await expect(ringEnd, "focus ring end").toBeLessThan(textStart(canvas.getByText("Send me product updates")));
+
     await userEvent.keyboard(" ");
     await expect(updates).toBeChecked();
     await expect(args.onChange).toHaveBeenCalled();
@@ -160,5 +274,87 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.tab();
     await expect(offers).toHaveFocus();
+  },
+};
+
+/**
+ * Hovering anywhere on the label tints a halo around the box that fills the gap before the text,
+ * and pressing darkens it. The halo is the text colour around an unchecked box and the primary
+ * colour around a checked one, and a disabled checkbox has none.
+ */
+export const Halo: Story = {
+  render: (args) => (
+    <Stack gap={2}>
+      <Checkbox {...args}>
+        <span data-testid="unchecked">Send me product updates</span>
+      </Checkbox>
+      <Checkbox defaultChecked={true}>
+        <span data-testid="checked">Send me security alerts</span>
+      </Checkbox>
+      <Checkbox disabled={true}>
+        <span data-testid="disabled">Send me partner offers</span>
+      </Checkbox>
+    </Stack>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    const input = trustedInput();
+    const unchecked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
+    const checked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me security alerts" });
+    const disabled = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me partner offers" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.hoverByTestId("disabled");
+    await settledHalo(disabled, ":hover");
+    await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
+
+    for (const control of [unchecked, checked]) {
+      await expect(isSameColor(canvasElement, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
+    }
+
+    await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
+    await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+  },
+};
+
+/**
+ * A checkbox with keyboard focus draws no halo, even under the pointer, so nothing lowers the
+ * contrast of its focus ring, here on a surface. A halo the pointer showed before the focus
+ * vanishes at once rather than fading under the ring.
+ */
+export const FocusedHalo: Story = {
+  render: (args) => (
+    <Card padding="sm">
+      <Checkbox {...args}>
+        <span data-testid="focused">Send me product updates</span>
+      </Checkbox>
+    </Card>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    const input = trustedInput();
+    const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.hoverByTestId("focused");
+    const hovered = await settledHalo(checkbox, ":hover");
+
+    await expect(isSameColor(canvasElement, hovered.color, "transparent"), "halo before the focus").toBe(false);
+
+    await input.pressKey("Tab");
+    await expect(checkbox).toHaveFocus();
+    await expect(checkbox.matches(":focus-visible")).toBe(true);
+    await expect(getComputedStyle(checkbox).transitionProperty, "halo transition under the focus ring").not.toContain(
+      "box-shadow"
+    );
+
+    const focused = await settledHalo(checkbox, ":hover");
+
+    await expect(isSameColor(canvasElement, focused.color, "transparent"), "halo under the focus ring").toBe(true);
+    await expect(focusRingContrast(checkbox)).toBeGreaterThanOrEqual(3);
   },
 };

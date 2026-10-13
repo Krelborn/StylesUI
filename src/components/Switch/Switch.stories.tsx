@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { settledHalo } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
 
@@ -105,8 +107,8 @@ export const InAField: Story = {
 };
 
 /**
- * Switches stacked closely each keep a target of at least 24px, and each label is only as wide as
- * its text
+ * Stacked closely, each switch's label is a target at least 24px tall, and only as wide as its
+ * text. The track is 2.75rem by 1.5rem.
  */
 export const Stacked: Story = {
   render: (args) => (
@@ -120,7 +122,12 @@ export const Stacked: Story = {
     const push = canvas.getByRole<HTMLInputElement>("switch", { name: "Push notifications" });
     const text = canvas.getByText("Push notifications");
     const [label] = push.labels ?? [];
+    const track = push.getBoundingClientRect();
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
+    await expect(track.width, "track width").toBeCloseTo(2.75 * rootFontSize, 0);
+    await expect(track.height, "track height").toBeCloseTo(1.5 * rootFontSize, 0);
+    await expect(label.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
     await expect(label.getBoundingClientRect().width).toBeCloseTo(
       push.getBoundingClientRect().width + text.getBoundingClientRect().width,
       0
@@ -160,5 +167,27 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.tab();
     await expect(push).toHaveFocus();
+  },
+};
+
+/**
+ * A switch draws no halo when its label is hovered, unlike a checkbox or radio
+ */
+export const NoHalo: Story = {
+  render: (args) => (
+    <Switch {...args}>
+      <span data-testid="switch">Email notifications</span>
+    </Switch>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+    const email = canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.hoverByTestId("switch");
+    await expect((await settledHalo(email, ":hover")).spread, "halo spread").toBe(0);
   },
 };
