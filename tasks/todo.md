@@ -39,12 +39,12 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Acceptance criteria:**
 
-- [ ] SC 1 to 3 hold for Radio in all four projects.
-- [ ] The size half of SC 8: the Switch track is 2.75rem by 1.5rem. Switch's `Stacked` JSDoc is updated (SC 4).
+- [x] SC 1 to 3 hold for Radio in all four projects.
+- [x] The size half of SC 8: the Switch track is 2.75rem by 1.5rem. Switch's `Stacked` JSDoc is updated (SC 4).
 
 **Verification:**
 
-- [ ] `pnpm test:storybook src/components/Radio/Radio.stories.tsx src/components/Switch/Switch.stories.tsx`
+- [x] `pnpm test:storybook src/components/Radio/Radio.stories.tsx src/components/Switch/Switch.stories.tsx`
 
 **Dependencies:** Task 1
 

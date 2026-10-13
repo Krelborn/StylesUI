@@ -105,8 +105,8 @@ export const InAField: Story = {
 };
 
 /**
- * Switches stacked closely each keep a target of at least 24px, and each label is only as wide as
- * its text
+ * Stacked closely, each switch's label is a target at least 24px tall, and only as wide as its
+ * text. The track is 2.75rem by 1.5rem.
  */
 export const Stacked: Story = {
   render: (args) => (
@@ -120,7 +120,12 @@ export const Stacked: Story = {
     const push = canvas.getByRole<HTMLInputElement>("switch", { name: "Push notifications" });
     const text = canvas.getByText("Push notifications");
     const [label] = push.labels ?? [];
+    const track = push.getBoundingClientRect();
+    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
+    await expect(track.width, "track width").toBeCloseTo(2.75 * rootFontSize, 0);
+    await expect(track.height, "track height").toBeCloseTo(1.5 * rootFontSize, 0);
+    await expect(label.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
     await expect(label.getBoundingClientRect().width).toBeCloseTo(
       push.getBoundingClientRect().width + text.getBoundingClientRect().width,
       0

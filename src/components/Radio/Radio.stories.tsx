@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { expectOnSpaceScale, textStart } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { Button } from "../Button";
 import { Stack } from "../Stack";
+import { Text } from "../Text";
 
 import { Radio } from "./Radio";
 
@@ -42,6 +44,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const wrappingLabel = "Pay yearly, with two months free and a reminder before each renewal";
+
 /**
  * The children are the label that names the radio, and clicking the label selects it. An unselected
  * radio has a boundary that stands out from the page, and a selected radio fills with the primary
@@ -71,6 +75,43 @@ export const Disabled: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByRole("radio", { name: "Pay monthly" })).toBeDisabled();
     await expect(Number(getComputedStyle(canvas.getByText("Pay monthly")).opacity)).toBeLessThan(1);
+  },
+};
+
+/**
+ * The dot is `--sui-space-4` across and centred on the first line of its label, and the label text
+ * starts `--sui-space-6` from it in every theme. Text below a radio lines up with its label when it
+ * is padded by `var(--sui-space-6)`.
+ */
+export const AlignedText: Story = {
+  render: (args) => (
+    <Stack gap={2} style={{ maxInlineSize: "18rem" }}>
+      <Stack gap={0}>
+        <Radio {...args} name="billing" />
+        <Text as="p" size="sm" style={{ paddingInlineStart: "var(--sui-space-6)" }} tone="muted">
+          Cancel any time
+        </Text>
+      </Stack>
+      <Radio name="billing" value="yearly">
+        {wrappingLabel}
+      </Radio>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const wrappingText = canvas.getByText(wrappingLabel);
+
+    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThanOrEqual(
+      2 * parseFloat(getComputedStyle(wrappingText).lineHeight)
+    );
+
+    for (const name of ["Pay monthly", wrappingLabel]) {
+      await expectOnSpaceScale(canvas.getByRole<HTMLInputElement>("radio", { name }), canvas.getByText(name));
+    }
+
+    await expect(textStart(canvas.getByText("Cancel any time"))).toBeCloseTo(
+      textStart(canvas.getByText("Pay monthly")),
+      0
+    );
   },
 };
 

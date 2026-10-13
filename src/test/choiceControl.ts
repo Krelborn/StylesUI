@@ -1,68 +1,28 @@
-/**
- * Where a choice control's box sits beside its label, in pixels, in a left-to-right layout
- */
-export interface ChoiceControlLayout {
-  /**
-   * Height of the box
-   */
-  boxHeight: number;
-
-  /**
-   * How far the centre of the box is from the centre of the label's first line; 0 when it is centred on it
-   */
-  boxOffsetFromFirstLine: number;
-
-  /**
-   * Width of the box
-   */
-  boxWidth: number;
-
-  /**
-   * Distance from the box's start edge to where the label text starts
-   */
-  textInset: number;
-}
+import { expect } from "storybook/test";
 
 /**
- * Measures where a choice control's box sits beside its label text
+ * Checks that a choice control's box is `--sui-space-4` square and centred on the first line of its label, and that
+ * the label text starts `--sui-space-6` from the box, each to within half a pixel of the tokens in the control's own
+ * theme, in a left-to-right layout
  *
  * Needs a real browser, because jsdom lays nothing out.
  *
  * @param input the control's input, which draws the box
  * @param text the element holding the label text, beside the input
- * @returns the measurements
  */
-export function choiceControlLayout(input: HTMLInputElement, text: HTMLElement): ChoiceControlLayout {
+export async function expectOnSpaceScale(input: HTMLInputElement, text: HTMLElement): Promise<void> {
   const box = input.getBoundingClientRect();
+  const boxSize = resolvedLength(text, "var(--sui-space-4)");
   const firstLineCentre = text.getBoundingClientRect().top + parseFloat(getComputedStyle(text).lineHeight) / 2;
+  const name = text.textContent;
 
-  return {
-    boxHeight: box.height,
-    boxOffsetFromFirstLine: box.top + box.height / 2 - firstLineCentre,
-    boxWidth: box.width,
-    textInset: textStart(text) - box.left,
-  };
-}
-
-/**
- * Resolves a CSS length, such as a space token, to pixels in an element's scope
- *
- * Needs a real browser to resolve custom properties.
- *
- * @param element an element that can hold children, whose custom properties and font size the length is resolved
- *   against
- * @param length a CSS length, such as `"var(--sui-space-6)"`
- * @returns the length in pixels
- */
-export function resolvedLength(element: HTMLElement, length: string): number {
-  const probe = document.createElement("span");
-  probe.style.position = "absolute";
-  probe.style.inlineSize = length;
-  element.append(probe);
-  const { width } = probe.getBoundingClientRect();
-  probe.remove();
-
-  return width;
+  await expect(box.width, `${name} box width`).toBeCloseTo(boxSize, 0);
+  await expect(box.height, `${name} box height`).toBeCloseTo(boxSize, 0);
+  await expect(box.top + box.height / 2, `${name} box centre`).toBeCloseTo(firstLineCentre, 0);
+  await expect(textStart(text) - box.left, `${name} text start`).toBeCloseTo(
+    resolvedLength(text, "var(--sui-space-6)"),
+    0
+  );
 }
 
 /**
@@ -78,4 +38,16 @@ export function textStart(element: HTMLElement): number {
   range.selectNodeContents(element);
 
   return range.getBoundingClientRect().left;
+}
+
+// Measured on a child so custom properties take the element's values
+function resolvedLength(element: HTMLElement, length: string): number {
+  const probe = document.createElement("span");
+  probe.style.position = "absolute";
+  probe.style.inlineSize = length;
+  element.append(probe);
+  const { width } = probe.getBoundingClientRect();
+  probe.remove();
+
+  return width;
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { choiceControlLayout, resolvedLength, textStart } from "../../test/choiceControl";
+import { expectOnSpaceScale, textStart } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
@@ -158,15 +158,7 @@ export const AlignedText: Story = {
     );
 
     for (const name of ["Send me product updates", wrappingLabel]) {
-      const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name });
-      const text = canvas.getByText(name);
-      const layout = choiceControlLayout(checkbox, text);
-      const boxSize = resolvedLength(text, "var(--sui-space-4)");
-
-      await expect(layout.boxWidth, `${name} box width`).toBeCloseTo(boxSize, 0);
-      await expect(layout.boxHeight, `${name} box height`).toBeCloseTo(boxSize, 0);
-      await expect(layout.boxOffsetFromFirstLine, `${name} box centring`).toBeCloseTo(0, 0);
-      await expect(layout.textInset, `${name} text start`).toBeCloseTo(resolvedLength(text, "var(--sui-space-6)"), 0);
+      await expectOnSpaceScale(canvas.getByRole<HTMLInputElement>("checkbox", { name }), canvas.getByText(name));
     }
 
     await expect(textStart(canvas.getByText("New features, about once a month"))).toBeCloseTo(

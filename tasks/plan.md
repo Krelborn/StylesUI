@@ -41,7 +41,7 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 ### Phase 1: Compact box on the space scale
 
 - [x] Task 1: Shrink and centre the box, and line Checkbox text up at `space-6`
-- [ ] Task 2: Check the Radio's alignment and that Switch is unchanged
+- [x] Task 2: Check the Radio's alignment and that Switch is unchanged
 
 ### Checkpoint A: after Tasks 1 and 2
 
