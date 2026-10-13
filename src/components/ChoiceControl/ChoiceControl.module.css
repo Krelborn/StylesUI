@@ -28,6 +28,8 @@
   text-indent: 0;
   /* Stops a flex or grid parent stretching the label, which would make the empty space beside the text clickable */
   inline-size: fit-content;
+  /* Keeps the label a 24px target in text smaller than 16px, with its first line centred in it */
+  padding-block: max(0px, (24px - 1lh) / 2);
   font-family: var(--sui-font-body, system-ui, sans-serif);
   line-height: var(--sui-line-height-normal, 1.5);
 }

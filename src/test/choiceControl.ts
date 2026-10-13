@@ -252,6 +252,28 @@ export async function expectOnSpaceScale(
 }
 
 /**
+ * Checks that a choice control's label is a target at least 24px tall, with its one line of text in the middle of it,
+ * to within 1.5px, which allows for the rounding of the font's ascent and descent and for a box that overhangs the line
+ *
+ * Needs a real browser, because jsdom lays nothing out.
+ *
+ * @param control the control's input
+ * @param text the element holding the label's one line of text
+ */
+export async function expectCentredTarget(control: HTMLInputElement, text: HTMLElement): Promise<void> {
+  const [label] = control.labels ?? [];
+  const target = label.getBoundingClientRect();
+  const line = textRange(text).getBoundingClientRect();
+  const name = text.textContent;
+
+  await expect(target.height, `${name} target height`).toBeGreaterThanOrEqual(24);
+  await expect(
+    Math.abs(line.top + line.height / 2 - (target.top + target.height / 2)),
+    `${name} line off centre`
+  ).toBeLessThanOrEqual(1.5);
+}
+
+/**
  * Finds where an element's text starts: its left edge in a left-to-right layout and its right edge in a right-to-left
  * one
  *

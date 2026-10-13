@@ -31,6 +31,7 @@ Users are app developers building with StylesUI. Success looks like this: in a s
 
 - **Focus ring.** Unchanged: 2px (3px in `playful`) at a 2px offset on the input, around the track. It ends 4px (5px) past the track, before the text at 8px (9.6px).
 - **Target size.** The label is one line tall: 24px at 16px text. A Switch named by `aria-label` alone is a 24 by 24px target in `default` and 28.8 by 24px in `playful`. Unlike a Checkbox named that way, it meets WCAG 2.5.8 without extra spacing.
+- **Target height in small text.** The old 1.5rem track kept a Switch's label 24px tall at any text size, but the 16px track leaves it one line of the inherited font: 18px at 12px text, so switches stacked with `gap={1}` sat 22px apart. Every choice control's label now has block padding of `max(0px, (24px - 1lh) / 2)`, which keeps it at least 24px tall with a single line in the middle, so it still lines up in a row. At 16px text the padding is 0px. Checkbox and Radio share the rule and had the same gap since their own resize. A `min-block-size` was rejected because it leaves the line at the top of the target. Found by Codex in review on the pull request.
 - **Right to left.** The track sits at the right, and the existing `:dir(rtl)` rule reverses the thumb's travel. The text starts `space-8` to the left of the track's right edge.
 - **Reduced motion.** Unchanged: only colours transition, so the thumb jumps. The existing stylesheet test in `Checkbox.test.tsx` covers every kind of control.
 - **Forced colours.** Unchanged: the track and thumb use system colours, and the browser removes box-shadows, so there is no halo. Checked in the prototypes with Chromium's forced-colours emulation. No story project runs in forced colours.
@@ -174,6 +175,10 @@ export async function expectOnSpaceScale(
     - `.design-sync/conventions.md` states the `space-8` rule.
     - AGENTS.md describes `expectOnSpaceScale`'s width and indent.
 14. The Checkbox and Radio stories keep every check they had, through `expectOnSpaceScale`'s defaults and the shared halo steps. `pnpm verify`, `pnpm build` and the fallow audit pass.
+
+### Pull request review
+
+15. In 12px text, a Checkbox's and a Switch's label is at least 24px tall, with its one line within 1.5px of the label's middle, and the box or track still passes `expectOnSpaceScale`. A label named by `aria-label` alone is at least 24px tall too, and closely stacked controls pass axe's `target-size`. Proven by the Checkbox and Switch `SmallText` stories.
 
 ## Open Questions
 

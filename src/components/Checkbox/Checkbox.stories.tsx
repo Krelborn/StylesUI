@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { expectHaloHiddenUnderFocus, expectHaloStates, expectOnSpaceScale, textStart } from "../../test/choiceControl";
+import {
+  expectCentredTarget,
+  expectHaloHiddenUnderFocus,
+  expectHaloStates,
+  expectOnSpaceScale,
+  textStart,
+} from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Card } from "../Card";
@@ -228,6 +234,32 @@ export const WithoutText: Story = {
     const [label] = checkbox.labels ?? [];
 
     await expect(label.getBoundingClientRect().width).toBeCloseTo(checkbox.getBoundingClientRect().width, 0);
+  },
+};
+
+/**
+ * In text smaller than 16px each label is still a target 24px tall, with its line centred in it,
+ * so checkboxes stacked closely keep 24px between their centres
+ */
+export const SmallText: Story = {
+  render: (args) => (
+    <Stack gap={1} style={{ fontSize: "0.75rem" }}>
+      <Checkbox {...args} />
+      <Checkbox defaultChecked={true}>Send me security alerts</Checkbox>
+      <Checkbox aria-label="Send me partner offers" />
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const [offers] = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me partner offers" }).labels ?? [];
+
+    for (const name of ["Send me product updates", "Send me security alerts"]) {
+      const control = canvas.getByRole<HTMLInputElement>("checkbox", { name });
+
+      await expectCentredTarget(control, canvas.getByText(name));
+      await expectOnSpaceScale(control, canvas.getByText(name));
+    }
+
+    await expect(offers.getBoundingClientRect().height, "target height without text").toBeGreaterThanOrEqual(24);
   },
 };
 

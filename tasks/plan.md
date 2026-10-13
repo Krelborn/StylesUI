@@ -32,10 +32,11 @@ This plan implements [SPEC.md](../SPEC.md). The `Switch` track shrinks to `space
 ### Phase 3: Review
 
 - [x] Task 4: Apply the review's fixes
+- [x] Task 5: Keep every choice control a 24px target in small text
 
 ### Checkpoint B: complete
 
-- [x] Spec success criteria 1 to 14 hold
+- [x] Spec success criteria 1 to 15 hold
 - [x] `pnpm verify`, `pnpm build` and the fallow audit pass
 - [x] Screenshots of the Switch stories in both themes and modes, under forced colours, and in WebKit, published for your review
 - [ ] You review the branch before anything is pushed

@@ -3,6 +3,7 @@ import { expect, fn, userEvent } from "storybook/test";
 
 import type { SpaceScaleLayout } from "../../test/choiceControl";
 import {
+  expectCentredTarget,
   expectHaloHiddenUnderFocus,
   expectHaloStates,
   expectOnSpaceScale,
@@ -314,6 +315,32 @@ export const Thumb: Story = {
     );
     await expectThumbInsideTrack(email);
     await expect(thumbOffset(textMessages), "thumb travel").toBeCloseTo(checkedTravel(textMessages), 0);
+  },
+};
+
+/**
+ * In text smaller than 16px each label is still a target 24px tall, with its line centred in it,
+ * so switches stacked closely keep 24px between their centres
+ */
+export const SmallText: Story = {
+  render: (args) => (
+    <Stack gap={1} style={{ fontSize: "0.75rem" }}>
+      <Switch {...args} />
+      <Switch defaultChecked={true}>Text message notifications</Switch>
+      <Switch aria-label="Push notifications" />
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const [push] = canvas.getByRole<HTMLInputElement>("switch", { name: "Push notifications" }).labels ?? [];
+
+    for (const name of ["Email notifications", "Text message notifications"]) {
+      const control = canvas.getByRole<HTMLInputElement>("switch", { name });
+
+      await expectCentredTarget(control, canvas.getByText(name));
+      await expectOnSpaceScale(control, canvas.getByText(name), switchLayout);
+    }
+
+    await expect(push.getBoundingClientRect().height, "target height without text").toBeGreaterThanOrEqual(24);
   },
 };
 

@@ -145,9 +145,34 @@ concepts.md no longer says a Switch has no halo.
 
 **Estimated scope:** S
 
+## Task 5: Keep every choice control a 24px target in small text
+
+**Description:** Codex's review of the pull request found that the 16px track no longer keeps a Switch's label 24px tall, as the 1.5rem track did: at 12px text the label is one 18px line, and switches stacked with `gap={1}` sit 22px apart, which meets neither WCAG 2.5.8's size nor its spacing exception. Checkbox and Radio have had the same gap since their resize. The shared label rule gains block padding of `max(0px, (24px - 1lh) / 2)`, which is 0px at 16px text. `expectCentredTarget` in `src/test/choiceControl.ts` checks a label is at least 24px tall with its line in the middle, and new Checkbox and Switch `SmallText` stories render controls in 12px text, stacked with `gap={1}`, one named by `aria-label` alone.
+
+**Acceptance criteria:**
+
+- [x] SC 15 holds in all four projects.
+- [x] concepts.md, Forms.mdx, SPEC.md and AGENTS.md describe the padding and the helper.
+
+**Verification:**
+
+- [x] Before the CSS change, both `SmallText` stories fail on the target height: 18px in `default` and 18.9px in `playful`.
+- [x] With the padding only below the line, they fail on the line being 3.5px off centre.
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
+
+**Dependencies:** Task 4
+
+**Files likely touched:**
+
+- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/test/choiceControl.ts`
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Switch/Switch.stories.tsx`
+- `docs/design/concepts.md`, `src/docs/Forms.mdx`, `AGENTS.md`, `SPEC.md`, `tasks/`
+
+**Estimated scope:** S
+
 ## Checkpoint B: complete
 
-- [x] Spec success criteria 1 to 14 hold
+- [x] Spec success criteria 1 to 15 hold
 - [x] `pnpm verify`, `pnpm build` and the fallow audit pass
 - [x] By hand: screenshots of the Switch stories in both themes and modes, under Chromium's forced colours, and in WebKit, published with `html_render`
 - [ ] You review the branch; pushing and opening a pull request wait for your go-ahead
