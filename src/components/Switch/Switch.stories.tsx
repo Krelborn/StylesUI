@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
+import type { SpaceScaleLayout } from "../../test/choiceControl";
 import {
   expectHaloHiddenUnderFocus,
   expectHaloStates,
@@ -48,7 +49,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const switchLayout = { boxWidth: "var(--sui-space-6)", indent: "var(--sui-space-8)" };
+const switchLayout = { boxWidth: "var(--sui-space-6)", indent: "var(--sui-space-8)" } satisfies SpaceScaleLayout;
 
 const wrappingLabel = "Show a preview of every new message on the lock screen";
 
@@ -57,12 +58,53 @@ function thumbOffset(control: HTMLInputElement): number {
   return new DOMMatrixReadOnly(getComputedStyle(control, "::before").transform).m41;
 }
 
+// +1 when the thumb travels right to reach the end of the track, and -1 when it travels left
+function travelSign(control: HTMLInputElement): number {
+  return getComputedStyle(control).direction === "rtl" ? -1 : 1;
+}
+
 // Where a switch's thumb rests when it is on: --sui-space-2 towards the end of the track, in its writing direction
 function checkedTravel(control: HTMLInputElement): number {
   const [label] = control.labels ?? [];
-  const direction = getComputedStyle(control).direction === "rtl" ? -1 : 1;
 
-  return direction * resolvedLength(label, "var(--sui-space-2)");
+  return travelSign(control) * resolvedLength(label, "var(--sui-space-2)");
+}
+
+// Turns an unchecked switch on and checks that its thumb's far edge stays inside the track's border throughout the
+// slide; does nothing under reduced motion, where the thumb jumps
+async function expectThumbInsideTrack(control: HTMLInputElement): Promise<void> {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  // click() is synchronous, so no frame of the slide runs before it is paused
+  control.click();
+  const [slide] = control
+    .getAnimations({ subtree: true })
+    .filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === "transform");
+
+  await expect(slide, "thumb slide").toBeDefined();
+
+  slide.pause();
+  const steps = 50;
+  const duration = Number(slide.effect?.getComputedTiming().duration);
+  const style = getComputedStyle(control);
+  const thumb = getComputedStyle(control, "::before");
+  const sign = travelSign(control);
+  const farEdgeUnchecked =
+    parseFloat(style.paddingInlineStart) + parseFloat(thumb.marginInlineStart) + parseFloat(thumb.inlineSize);
+  const innerWidth =
+    control.getBoundingClientRect().width -
+    parseFloat(style.borderInlineStartWidth) -
+    parseFloat(style.borderInlineEndWidth);
+  const farEdges = Array.from({ length: steps + 1 }, (_, step) => {
+    slide.currentTime = (duration * step) / steps;
+
+    return farEdgeUnchecked + sign * thumbOffset(control);
+  });
+  slide.cancel();
+
+  await expect(Math.max(...farEdges), "thumb far edge").toBeLessThanOrEqual(innerWidth);
 }
 
 /**
@@ -251,8 +293,7 @@ export const WithoutText: Story = {
 /**
  * The thumb is as tall as the track less its border and a 0.125rem inset on each side, and slides
  * `--sui-space-2` to the end of the track when the switch is turned on. The `playful` theme's
- * spring carries it past the end and back, but never by more than its inset, so it stays clear of
- * the border.
+ * spring carries it past the end and back, but never into the track's border.
  */
 export const Thumb: Story = {
   render: (args) => (
@@ -271,26 +312,7 @@ export const Thumb: Story = {
       email.getBoundingClientRect().height - 2 * parseFloat(getComputedStyle(email).borderTopWidth) - 2 * inset,
       0
     );
-
-    // A native click starts the slide at once, so it is paused before even a short one ends
-    email.click();
-    const [slide] = email
-      .getAnimations({ subtree: true })
-      .filter((animation) => animation instanceof CSSTransition && animation.transitionProperty === "transform");
-    slide.pause();
-    const duration = Number(slide.effect?.getComputedTiming().duration);
-    const offsets = Array.from({ length: 51 }, (_, step) => {
-      slide.currentTime = (duration * step) / 50;
-
-      return thumbOffset(email);
-    });
-    const end = offsets.at(-1) ?? Number.NaN;
-
-    await expect(duration, "slide duration").toBeGreaterThan(0);
-    await expect(
-      Math.max(...offsets.map((offset) => Math.sign(end) * (offset - end))),
-      "thumb overshoot"
-    ).toBeLessThanOrEqual(inset);
+    await expectThumbInsideTrack(email);
     await expect(thumbOffset(textMessages), "thumb travel").toBeCloseTo(checkedTravel(textMessages), 0);
   },
 };

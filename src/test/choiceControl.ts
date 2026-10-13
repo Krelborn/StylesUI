@@ -86,9 +86,10 @@ interface HaloControls {
 }
 
 /**
- * Checks a choice control's halo with the real pointer: a disabled control has none when hovered, a checked and an
- * unchecked one have a transparent halo at rest, and each passes `expectDistinctHaloStates`, tinted with
- * `--sui-color-primary` when checked and `--sui-color-text` when not
+ * Checks a choice control's halo with the real pointer: a disabled control has none when hovered, and a checked and an
+ * unchecked one have a transparent halo at rest. Hovering each one's label spreads its halo by `--sui-space-2` in the 8%
+ * mix of `--sui-color-primary` when checked or `--sui-color-text` when not, pressing deepens it to the 16% mix, and
+ * rest, hover and press can each be told from the step before.
  *
  * @param input the trusted input that moves and presses the pointer
  * @param controls the checked, disabled and unchecked controls; pressing may toggle the checked and unchecked ones
@@ -206,7 +207,7 @@ async function settledHalo(control: HTMLInputElement, state: ":active" | ":hover
 /**
  * Where a choice control's box and text sit on the space scale
  */
-interface SpaceScaleLayout {
+export interface SpaceScaleLayout {
   /**
    * Width of the box, such as `"var(--sui-space-6)"` for a switch's track; defaults to `--sui-space-4`
    */
@@ -278,7 +279,7 @@ export function textStart(element: HTMLElement): number {
 export function resolvedLength(element: HTMLElement, length: string): number {
   const probe = document.createElement("span");
   probe.style.position = "absolute";
-  probe.style.inlineSize = length;
+  probe.style.width = length;
   element.append(probe);
   const { width } = probe.getBoundingClientRect();
   probe.remove();

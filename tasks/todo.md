@@ -111,6 +111,40 @@ concepts.md no longer says a Switch has no halo.
 
 **Estimated scope:** S
 
+## Task 4: Apply the review's fixes
+
+**Description:** A review of Tasks 1 to 3, by a reviewer agent and by hand, with two stylesheet mutations, asked for these fixes:
+
+- The docs claimed a switch named by `aria-label` alone is a target at least 24px square. That only holds at 16px text, because the label is one line of its inherited font, so concepts.md and Forms.mdx now say so.
+- The spec said the Checkbox and Radio stories were unchanged, but they now use the shared halo steps. SPEC.md records the shared steps, lists those story files and rewords SC 8 and SC 14.
+- `Thumb` threw under reduced motion, where there is no slide, and its duration check could never fail. It now skips the sampling under reduced motion, asserts the slide was found, and cancels it when done.
+- Each sampled step now checks the thumb's far edge against the inner edge of the track's border, not its overshoot against the inset, so the check no longer assumes the thumb's start margin equals the inset.
+- `SpaceScaleLayout` is exported and `switchLayout` declared with `satisfies`. `resolvedLength` sets `width`, the axis it reads.
+- Nits: AGENTS.md, conventions.md and concepts.md wording, the `expectHaloStates` contract, the comment on why the click is native, a named step count, and `sign` for the travel's direction.
+
+**Acceptance criteria:**
+
+- [x] SC 6 and 8 as reworded hold in all four projects, and the docs give the 24px target at 16px text.
+- [x] `Thumb` raises no error in Storybook under `prefers-reduced-motion: reduce`.
+- [x] SPEC.md, plan.md and AGENTS.md match the code.
+
+**Verification:**
+
+- [x] With the old track, `Thumb` fails on the far edge in the `playful` projects (41.24px against a 40px inner width) and on travel in the `default` ones.
+- [x] Loaded under reduced motion in Chromium, `Thumb` logs no error. Before the fix it logged a `TypeError` reading `pause`.
+- [x] `pnpm test:storybook` on the Checkbox, Radio and Switch stories
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
+
+**Dependencies:** Task 3
+
+**Files likely touched:**
+
+- `src/components/Switch/Switch.stories.tsx`, `src/test/choiceControl.ts`
+- `docs/design/concepts.md`, `src/docs/Forms.mdx`, `.design-sync/conventions.md`, `AGENTS.md`
+- `SPEC.md`, `tasks/`
+
+**Estimated scope:** S
+
 ## Checkpoint B: complete
 
 - [x] Spec success criteria 1 to 14 hold

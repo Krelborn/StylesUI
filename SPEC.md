@@ -34,9 +34,10 @@ Users are app developers building with StylesUI. Success looks like this: in a s
 - **Right to left.** The track sits at the right, and the existing `:dir(rtl)` rule reverses the thumb's travel. The text starts `space-8` to the left of the track's right edge.
 - **Reduced motion.** Unchanged: only colours transition, so the thumb jumps. The existing stylesheet test in `Checkbox.test.tsx` covers every kind of control.
 - **Forced colours.** Unchanged: the track and thumb use system colours, and the browser removes box-shadows, so there is no halo. Checked in the prototypes with Chromium's forced-colours emulation. No story project runs in forced colours.
-- **Measuring helper.** `expectOnSpaceScale` measures a Checkbox's or Radio's box. It gains the box's width and the text's indent as lengths, with defaults of `var(--sui-space-4)` and `var(--sui-space-6)`. Switch stories pass `var(--sui-space-6)` and `var(--sui-space-8)` and get the same checks.
+- **Measuring helper.** `expectOnSpaceScale` measures a Checkbox's or Radio's box. It gains the box's width and the text's indent as lengths, with defaults of `var(--sui-space-4)` and `var(--sui-space-6)`. Switch stories pass `var(--sui-space-6)` and `var(--sui-space-8)` and get the same checks. The options type, `SpaceScaleLayout`, is exported, so a story declares its layout with `satisfies` and a misspelt key fails to compile.
 - **No new props or tokens.** `--sui-choice-control-track-size` is already public. As with a Checkbox, `--sui-choice-control-halo-spread: 0px` on the label turns the halo off. The palette showcase keeps measuring only checkboxes, because a switch declares its halo colours through the same rules.
 - **Visual change for consumers.** Every Switch shrinks, its text starts 20px sooner in `default` and 15.2px sooner in `playful`, and it gains a halo. Text that was padded by hand to line up under a switch needs `var(--sui-space-8)`. The release notes say so when a release is cut. No version bump.
+- **Shared halo story steps.** The Checkbox, Radio and Switch `Halo` stories call one helper, `expectHaloStates`, and the Checkbox and Switch `FocusedHalo` stories call `expectHaloHiddenUnderFocus`, both in `src/test/choiceControl.ts`. The helpers only they use are no longer exported. `expectHaloHiddenUnderFocus` also checks that the halo has a spread before focus, because a 0px halo still declares its colour. Checkbox's `Halo` measures the checked control first, as Radio's did, because pressing an unchecked radio checks it.
 - **Prototypes.** `src/components/Switch/SwitchPrototypes.stories.tsx` is a scratch file for the review and is deleted before the first commit.
 - One pull request, one commit per task.
 
@@ -58,8 +59,9 @@ fallow audit --format json --quiet --explain --gate-marker agent   # before ever
 
 ```
 src/components/ChoiceControl/ChoiceControl.module.css  ← Switch's track size and halo
-src/test/choiceControl.ts                              ← expectOnSpaceScale takes the box width and the indent
+src/test/choiceControl.ts                              ← expectOnSpaceScale takes the box width and the indent; shared halo steps
 src/components/Switch/Switch.stories.tsx               ← size, alignment, thumb, halo, focus, right to left, no text
+src/components/{Checkbox,Radio}/*.stories.tsx          ← Halo and FocusedHalo through the shared halo steps
 src/docs/Forms.mdx                                     ← lining text up under a switch, its target size
 docs/design/concepts.md                                ← Forms section
 .design-sync/conventions.md                            ← the space-8 rule for a switch
@@ -123,12 +125,12 @@ export async function expectOnSpaceScale(
   - `AlignedText` (new): a one-line label and a wrapping one pass `expectOnSpaceScale` with `space-6` and `space-8`. A `Text` padded by `var(--sui-space-8)` starts where the label text does, and the one-line label is exactly one line tall.
   - `RightToLeft` (new): `AlignedText` inside `dir="rtl"`, and a checked thumb moves left.
   - `WithoutText` (new): a Switch named by `aria-label` alone has a label as wide as its track and at least 24px in both dimensions.
-  - `Thumb` (new): the thumb's size and travel are read from the `::before` computed style. The checking transition's transform is paused at steps through its duration, and at each step the overshoot past the end position is at most the inset.
+  - `Thumb` (new): the thumb's size and travel are read from the `::before` computed style. The checking transition's transform is paused at steps through its duration, and at each step the thumb's far edge must be inside the inner edge of the track's border. Under reduced motion, where the thumb jumps, the sampling is skipped, so the story doesn't throw in Storybook.
   - `Halo` replaces `NoHalo`, as Checkbox's `Halo` does: real hover and press through `expectDistinctHaloStates`, unchecked and checked, and no halo on a disabled switch.
   - `FocusedHalo` (new), as Checkbox's: no halo and no `box-shadow` transition under keyboard focus, and a 3:1 ring on a surface.
   - `KeyboardInteraction` adds that the ring ends before the label text.
   - axe, including `target-size`, keeps passing on every Switch, Field, Fieldset and contact form story.
-  - Checkbox and Radio stories pass unchanged through the helper's defaults.
+  - Checkbox and Radio stories keep every check they had, through `expectOnSpaceScale`'s defaults and the shared halo steps.
 - **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, only colour transitions under reduced motion, and every `:hover` rule inside `@media (hover: hover)`. No new unit tests.
 - **By hand.** Before the pull request: forced colours in Chromium, and a pass in WebKit, from screenshots in both themes and modes.
 
@@ -152,7 +154,7 @@ export async function expectOnSpaceScale(
 ### Thumb
 
 7. The thumb is as wide as the track's height less twice the border width and twice 0.125rem, within 0.5px. A checked thumb is translated by the resolved `--sui-space-2` towards the end of the track: right in a left-to-right layout and left in a right-to-left one. Proven by `Thumb` and `RightToLeft`.
-8. At every sampled step of the checking transition, the thumb's overshoot past its end position is at most its 0.125rem inset. With today's track this fails in the `playful` projects. Proven by `Thumb`.
+8. At every sampled step of the checking transition, the thumb's far edge is inside the inner edge of the track's border. With today's track this fails in the `playful` projects. Proven by `Thumb`.
 
 ### Halo
 
@@ -171,7 +173,7 @@ export async function expectOnSpaceScale(
     - `src/docs/Forms.mdx` shows lining text up under a switch with `var(--sui-space-8)`, embedding the Switch `AlignedText` story, and gives the target size of a switch without text.
     - `.design-sync/conventions.md` states the `space-8` rule.
     - AGENTS.md describes `expectOnSpaceScale`'s width and indent.
-14. The Checkbox and Radio stories pass unchanged. `pnpm verify`, `pnpm build` and the fallow audit pass.
+14. The Checkbox and Radio stories keep every check they had, through `expectOnSpaceScale`'s defaults and the shared halo steps. `pnpm verify`, `pnpm build` and the fallow audit pass.
 
 ## Open Questions
 
