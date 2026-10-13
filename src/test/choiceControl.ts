@@ -66,6 +66,28 @@ export async function expectDistinctHaloStates(
 }
 
 /**
+ * Checks, without the pointer, that the hover and press halos a choice control declares can each be told from the step
+ * before: rest from hover, and hover from press
+ *
+ * @param control the control's input
+ * @param name what the control is, for the failure messages
+ */
+export async function expectDistinctDeclaredHalos(control: HTMLInputElement, name: string): Promise<void> {
+  const style = getComputedStyle(control);
+  const hovered = style.getPropertyValue("--sui-choice-control-halo-hover");
+  const pressed = style.getPropertyValue("--sui-choice-control-halo-press");
+  // A probe inside an input gets no style, so the colours the input declares are resolved on its label
+  const [label] = control.labels ?? [];
+
+  await expect(fillContrast(label, "transparent", hovered), `${name} rest to hover`).toBeGreaterThanOrEqual(
+    distinctFillContrast
+  );
+  await expect(fillContrast(label, hovered, pressed), `${name} hover to press`).toBeGreaterThanOrEqual(
+    distinctFillContrast
+  );
+}
+
+/**
  * Reads the halo a choice control's input draws now
  *
  * @param control the control's input

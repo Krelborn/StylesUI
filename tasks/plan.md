@@ -55,7 +55,7 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 ### Phase 2: Hover and press halo
 
 - [x] Task 5: Add the halo to Checkbox and Radio, with none on Switch
-- [ ] Task 6: Check the halo in every palette
+- [x] Task 6: Check the halo in every palette
 
 ### Checkpoint B: complete
 
@@ -76,5 +76,4 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 
 ## Open Questions
 
-- **Task 6 goes past the spec.** The spec's criteria measure the halo in Bright and Pop only, the palettes the story projects run. Task 6 checks the declared colours in all five palettes, as the palette showcase already does for Button hover fills. If you agree, the spec's Testing Strategy and Success Criteria gain it in Task 6's commit.
-- **`tasks/` in the repo.** Commit `tasks/plan.md` and `tasks/todo.md` with the spec, or keep them local?
+None. Task 6 stayed in the plan, and `tasks/` is committed with the spec.

@@ -96,6 +96,7 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to the
   - Checkbox and Radio halo, with real pointer input (`hoverByTestId`, `holdPointerByTestId`, as Button's `expectDistinctPointerStates` does): hovering the label text spreads the halo by `space-2`. Rest, hover and press are each at least `distinctFillContrast` apart, measured with `fillContrast` against the background behind the control, unchecked and checked. A disabled control has no halo.
   - `KeyboardInteraction` keeps its focus ring assertions, and Checkbox's adds that the ring ends before the label text starts.
   - Switch: the track is still 2.75rem by 1.5rem, and hovering it shows no halo.
+  - Palette showcase: in all five palettes, the hover and press halos an unchecked and a checked checkbox declare are each at least `distinctFillContrast` from the step before, as it checks every Button's hover fill. The story projects only run Bright and Pop.
   - axe, including `target-size`, keeps passing on every Checkbox, Radio, RadioGroup, Switch, Field and Fieldset story.
 - **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, and only colour transitions under reduced motion.
 - **By hand.** The halo fallback colours against the fallback page colour, as AGENTS.md requires.
@@ -117,7 +118,7 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to the
 
 ### Halo
 
-5. At rest, the input's box-shadow colour is transparent. With the pointer over the label text, it is spread by the resolved `--sui-space-2`, and its colour differs from rest by at least `distinctFillContrast`. While pressed, it differs from hover by at least `distinctFillContrast`. Proven for unchecked and checked, Checkbox and Radio, in all four projects.
+5. At rest, the input's box-shadow colour is transparent. With the pointer over the label text, it is spread by the resolved `--sui-space-2`, and its colour differs from rest by at least `distinctFillContrast`. While pressed, it differs from hover by at least `distinctFillContrast`. Proven for unchecked and checked, Checkbox and Radio, in all four projects. The palette showcase proves the same steps for the colours an unchecked and a checked checkbox declare, in all five palettes.
 6. A checked control's halo is tinted with `--sui-color-primary`, and an unchecked one's with `--sui-color-text`, checked with `isSameColor` against the mixes the stylesheet declares.
 7. A disabled Checkbox's and Radio's box-shadow is `none` while hovered.
 8. A Switch's track is 2.75rem by 1.5rem and shows no halo while hovered.

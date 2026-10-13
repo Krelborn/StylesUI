@@ -143,16 +143,16 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 ## Task 6: Check the halo in every palette
 
-**Description:** The palette showcase gains a checked Checkbox beside its unchecked one. Its play function checks each palette's two checkboxes: transparent against `var(--sui-choice-control-halo-hover)`, and hover against `var(--sui-choice-control-halo-press)`, each at least `distinctFillContrast` with `fillContrast`. This is how it already checks every Button's hover fill. The spec's Testing Strategy and Success Criteria gain the check. This task depends on your answer to the plan's first open question.
+**Description:** The palette showcase gains a checked Checkbox beside its unchecked one. Its play function checks each palette's two checkboxes: transparent against `var(--sui-choice-control-halo-hover)`, and hover against `var(--sui-choice-control-halo-press)`, each at least `distinctFillContrast` with `fillContrast`. This is how it already checks every Button's hover fill. The spec's Testing Strategy and Success Criteria gain the check.
 
 **Acceptance criteria:**
 
-- [ ] In all four projects, every palette's unchecked and checked halos clear `distinctFillContrast` from rest to hover and from hover to press.
-- [ ] The palette showcase still passes axe.
+- [x] In all four projects, every palette's unchecked and checked halos clear `distinctFillContrast` from rest to hover and from hover to press.
+- [x] The palette showcase still passes axe.
 
 **Verification:**
 
-- [ ] `pnpm test:storybook src/styles/PaletteShowcase.stories.tsx`
+- [x] `pnpm test:storybook src/styles/PaletteShowcase.stories.tsx`
 
 **Dependencies:** Task 5
 
