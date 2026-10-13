@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { settledHalo } from "../../test/choiceControl";
+import { expectOnSpaceScale, settledHalo, textStart } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
+import { Text } from "../Text";
 
 import { Switch } from "./Switch";
 
@@ -39,6 +40,10 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const switchLayout = { boxWidth: "var(--sui-space-6)", indent: "var(--sui-space-8)" };
+
+const wrappingLabel = "Show a preview of every new message on the lock screen";
 
 /**
  * The children are the label that names the switch, and clicking the label toggles it
@@ -108,7 +113,7 @@ export const InAField: Story = {
 
 /**
  * Stacked closely, each switch's label is a target at least 24px tall, and only as wide as its
- * text. The track is 2.75rem by 1.5rem.
+ * track and text. The track is `--sui-space-6` by `--sui-space-4`.
  */
 export const Stacked: Story = {
   render: (args) => (
@@ -122,11 +127,8 @@ export const Stacked: Story = {
     const push = canvas.getByRole<HTMLInputElement>("switch", { name: "Push notifications" });
     const text = canvas.getByText("Push notifications");
     const [label] = push.labels ?? [];
-    const track = push.getBoundingClientRect();
-    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
 
-    await expect(track.width, "track width").toBeCloseTo(2.75 * rootFontSize, 0);
-    await expect(track.height, "track height").toBeCloseTo(1.5 * rootFontSize, 0);
+    await expectOnSpaceScale(push, text, switchLayout);
     await expect(label.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
     await expect(label.getBoundingClientRect().width).toBeCloseTo(
       push.getBoundingClientRect().width + text.getBoundingClientRect().width,
@@ -136,8 +138,88 @@ export const Stacked: Story = {
 };
 
 /**
- * Tab moves focus to the switch and shows a focus ring on the track, Space toggles it, and the next
- * Tab skips a disabled switch
+ * The track is `--sui-space-6` by `--sui-space-4`, centred halfway between the capital and the
+ * lowercase letters of the first line of its label, so a one-line label is one line tall, and the
+ * label text starts `--sui-space-8` from the track in every theme. Text below a switch lines up
+ * with its label when it is padded by `var(--sui-space-8)`.
+ */
+export const AlignedText: Story = {
+  render: (args) => (
+    <Stack gap={2} style={{ maxInlineSize: "18rem" }}>
+      <Stack gap={0}>
+        <Switch {...args} />
+        <Text as="p" size="sm" style={{ paddingInlineStart: "var(--sui-space-8)" }} tone="muted">
+          When someone replies to you
+        </Text>
+      </Stack>
+      <Switch>{wrappingLabel}</Switch>
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const wrappingText = canvas.getByText(wrappingLabel);
+    const [label] = canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" }).labels ?? [];
+
+    await expect(wrappingText.getBoundingClientRect().height, "the long label wraps").toBeGreaterThan(
+      parseFloat(getComputedStyle(wrappingText).lineHeight)
+    );
+    await expect(label.getBoundingClientRect().height, "one-line label height").toBeCloseTo(
+      parseFloat(getComputedStyle(label).lineHeight),
+      0
+    );
+
+    for (const name of ["Email notifications", wrappingLabel]) {
+      await expectOnSpaceScale(
+        canvas.getByRole<HTMLInputElement>("switch", { name }),
+        canvas.getByText(name),
+        switchLayout
+      );
+    }
+
+    await expect(textStart(canvas.getByText("When someone replies to you"))).toBeCloseTo(
+      textStart(canvas.getByText("Email notifications")),
+      0
+    );
+  },
+};
+
+/**
+ * In a right-to-left layout the track sits at the right, and the label text, its wrapped lines
+ * and text padded by `var(--sui-space-8)` below start `--sui-space-8` to its left
+ */
+export const RightToLeft: Story = {
+  ...AlignedText,
+  decorators: [
+    (Story) => (
+      <div dir="rtl">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * A switch named by `aria-label` alone takes up no more room than its track, which is still a
+ * target at least 24px square
+ */
+export const WithoutText: Story = {
+  args: {
+    "aria-label": "Email notifications",
+    children: undefined,
+  },
+  play: async ({ canvas }) => {
+    const notifications = canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" });
+    const [label] = notifications.labels ?? [];
+    const { height, width } = label.getBoundingClientRect();
+
+    await expect(width, "label width").toBeCloseTo(notifications.getBoundingClientRect().width, 0);
+    await expect(width, "target width").toBeGreaterThanOrEqual(24);
+    await expect(height, "target height").toBeGreaterThanOrEqual(24);
+  },
+};
+
+/**
+ * Tab moves focus to the switch and shows a focus ring on the track, which stops short of the label
+ * text. Space toggles it, and the next Tab skips a disabled switch.
  */
 export const KeyboardInteraction: Story = {
   render: (args) => (
@@ -157,6 +239,11 @@ export const KeyboardInteraction: Story = {
     await expect(parseFloat(getComputedStyle(email).outlineWidth)).toBeGreaterThanOrEqual(2);
     await expect(focusRingContrast(email)).toBeGreaterThanOrEqual(3);
     await expect(borderContrast(email)).toBeGreaterThanOrEqual(3);
+
+    const { outlineOffset, outlineWidth } = getComputedStyle(email);
+    const ringEnd = email.getBoundingClientRect().right + parseFloat(outlineOffset) + parseFloat(outlineWidth);
+
+    await expect(ringEnd, "focus ring end").toBeLessThan(textStart(canvas.getByText("Email notifications")));
 
     await userEvent.keyboard(" ");
     await expect(email).toBeChecked();

@@ -5,6 +5,7 @@ import * as CheckboxStories from "../components/Checkbox/Checkbox.stories";
 import * as FieldStories from "../components/Field/Field.stories";
 import * as FieldsetStories from "../components/Fieldset/Fieldset.stories";
 import * as RadioGroupStories from "../components/RadioGroup/RadioGroup.stories";
+import * as SwitchStories from "../components/Switch/Switch.stories";
 import * as TextInputStories from "../components/TextInput/TextInput.stories";
 
 <Meta title="Guides/Forms" />
@@ -88,6 +89,13 @@ the label's text is inline content, and a child laid out as a block drops below 
 
 A checkbox named by `aria-label` alone is a 16px box, so leave 24px between the centres of
 neighbouring controls.
+
+A switch's track is wider than a checkbox's box, so its label text starts `--sui-space-8` from the
+track. Pad text below a switch by `var(--sui-space-8)`, and link it in the same way:
+
+<Canvas of={SwitchStories.AlignedText} />
+
+A switch named by `aria-label` alone is as wide as its track, a target at least 24px square.
 
 Use `Switch` for a setting that takes effect at once, and `Checkbox` for a choice that is submitted
 with a form.

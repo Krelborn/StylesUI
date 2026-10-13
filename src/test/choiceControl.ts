@@ -122,30 +122,49 @@ export async function settledHalo(control: HTMLInputElement, state: ":active" | 
 }
 
 /**
- * Checks that a choice control's box is `--sui-space-4` square and centred halfway between the middles of the capital
- * and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the baseline, and that every
- * line of the label text starts `--sui-space-6` from the box, each to within half a pixel in the control's own theme and
- * writing direction
+ * Where a choice control's box and text sit on the space scale
+ */
+interface SpaceScaleLayout {
+  /**
+   * Width of the box, such as `"var(--sui-space-6)"` for a switch's track; defaults to `--sui-space-4`
+   */
+  boxWidth?: string;
+
+  /**
+   * How far every line of the text starts from the box's start edge; defaults to `--sui-space-6`
+   */
+  indent?: string;
+}
+
+/**
+ * Checks that a choice control's box is `--sui-space-4` tall and the given width, and centred halfway between the
+ * middles of the capital and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the
+ * baseline, and that every line of the label text starts the given indent from the box, each to within half a pixel in
+ * the control's own theme and writing direction
  *
  * Needs a real browser, because jsdom lays nothing out.
  *
  * @param input the control's input, which draws the box
  * @param text the element holding the label text, beside the input; plain text, so each line is one fragment
+ * @param layout the box's width and the text's indent, as CSS lengths resolved in the text's scope
  */
-export async function expectOnSpaceScale(input: HTMLInputElement, text: HTMLElement): Promise<void> {
+export async function expectOnSpaceScale(
+  input: HTMLInputElement,
+  text: HTMLElement,
+  { boxWidth = "var(--sui-space-4)", indent = "var(--sui-space-6)" }: SpaceScaleLayout = {}
+): Promise<void> {
   const box = input.getBoundingClientRect();
-  const boxSize = resolvedLength(text, "var(--sui-space-4)");
   const letterMiddle = firstBaseline(text) - (resolvedLength(text, "1cap") + resolvedLength(text, "1ex")) / 4;
-  const indent = resolvedLength(text, "var(--sui-space-6)");
+  const textIndent = resolvedLength(text, indent);
   const { direction } = getComputedStyle(text);
   const name = text.textContent;
 
-  await expect(box.width, `${name} box width`).toBeCloseTo(boxSize, 0);
-  await expect(box.height, `${name} box height`).toBeCloseTo(boxSize, 0);
+  await expect(box.width, `${name} box width`).toBeCloseTo(resolvedLength(text, boxWidth), 0);
+  await expect(box.height, `${name} box height`).toBeCloseTo(resolvedLength(text, "var(--sui-space-4)"), 0);
   await expect(box.top + box.height / 2, `${name} box centre`).toBeCloseTo(letterMiddle, 0);
 
   for (const [index, line] of textLines(text).entries()) {
-    await expect(startOffset(box, line, direction), `${name} line ${index + 1} start`).toBeCloseTo(indent, 0);
+    await expect(startOffset(box, line, direction), `${name} line ${index + 1} start`).toBeCloseTo(textIndent, 0);
   }
 }
 

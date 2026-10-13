@@ -40,8 +40,7 @@
 }
 
 .choiceControl[data-kind="switch"] {
-  --sui-choice-control-size: 1.5rem;
-  --sui-choice-control-track-size: 2.75rem;
+  --sui-choice-control-track-size: var(--sui-space-6, 1.5rem);
   --sui-choice-control-halo-spread: 0px;
   --sui-choice-control-radius: var(--sui-radius-full, 9999px);
   --sui-choice-control-mark-unchecked: var(--sui-color-input-border, #6b7280);
