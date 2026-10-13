@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
+import { settledHalo } from "../../test/choiceControl";
 import { borderContrast, focusRingContrast } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
 
@@ -165,5 +167,27 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.tab();
     await expect(push).toHaveFocus();
+  },
+};
+
+/**
+ * A switch draws no halo when its label is hovered, unlike a checkbox or radio
+ */
+export const NoHalo: Story = {
+  render: (args) => (
+    <Switch {...args}>
+      <span data-testid="switch">Email notifications</span>
+    </Switch>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+    const email = canvas.getByRole<HTMLInputElement>("switch", { name: "Email notifications" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.hoverByTestId("switch");
+    await expect((await settledHalo(email, ":hover")).spread, "halo spread").toBe(0);
   },
 };

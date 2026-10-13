@@ -19,7 +19,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 - [x] `pnpm test:storybook src/components/Checkbox/Checkbox.stories.tsx`
 - [x] Every other form story file still passes axe, including `target-size`: `pnpm test:storybook src/components/Radio src/components/RadioGroup src/components/Switch src/components/Field src/components/Fieldset`
 - [x] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
-- [ ] By hand: the Checkbox stories and the Forms guide in Storybook, in both themes
+- [x] By hand: the Checkbox stories and the Forms guide in Storybook, in both themes
 
 **Dependencies:** None
 
@@ -69,7 +69,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 - [x] The updated alignment stories fail before the CSS change, by about 1.8px in `default` and 1.1px in `playful`
 - [x] `pnpm test:storybook` on every story file that renders a choice control: Checkbox, Radio, RadioGroup, Switch, Field, Fieldset, Tooltip, the contact form and the palette showcase
-- [ ] By hand: screenshots of Checkbox, Radio, RadioGroup and Switch in both themes for Checkpoint A
+- [x] By hand: screenshots of Checkbox, Radio, RadioGroup and Switch in both themes for Checkpoint A
 
 **Dependencies:** Task 2
 
@@ -95,7 +95,7 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 - [x] The updated alignment stories fail before the CSS change, by about 0.7px in `default` and 0.9px in `playful`
 - [x] `pnpm test:storybook` on every story file that renders a choice control
-- [ ] By hand: screenshots of RadioGroup and stacked checkboxes in both themes for Checkpoint A
+- [x] By hand: screenshots of RadioGroup and stacked checkboxes in both themes for Checkpoint A
 
 **Dependencies:** Task 3
 
@@ -110,9 +110,9 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 ## Checkpoint A: after Tasks 1 to 4
 
-- [ ] `pnpm verify` and the fallow audit pass
-- [ ] Every form story passes axe, including `target-size`, in all four projects
-- [ ] You review Checkbox, Radio and the Forms guide in Storybook before the halo goes in
+- [x] `pnpm verify` and the fallow audit pass
+- [x] Every form story passes axe, including `target-size`, in all four projects
+- [x] You review Checkbox, Radio and the Forms guide in Storybook before the halo goes in
 
 ## Task 5: Add the halo to Checkbox and Radio, with none on Switch
 
@@ -120,14 +120,14 @@ Before every commit: `pnpm verify` and `fallow audit --format json --quiet --exp
 
 **Acceptance criteria:**
 
-- [ ] SC 5: with the pointer over the label text, the halo is spread by `space-2`, and rest, hover and press are each at least `distinctFillContrast` apart, unchecked and checked, for Checkbox and Radio in all four projects.
-- [ ] SC 6 and 7: the tint is primary when checked and text otherwise, checked with `isSameColor`, and a hovered disabled control has no `box-shadow`. The other half of SC 8: a hovered Switch has no halo.
-- [ ] concepts.md describes the halo: when it shows, its colours, that disabled controls and Switch have none, and that forced colours remove it. The halo fallback colours are checked by hand against the fallback page colour.
+- [x] SC 5: with the pointer over the label text, the halo is spread by `space-2`, and rest, hover and press are each at least `distinctFillContrast` apart, unchecked and checked, for Checkbox and Radio in all four projects.
+- [x] SC 6 and 7: the tint is primary when checked and text otherwise, checked with `isSameColor`, and a hovered disabled control has no `box-shadow`. The other half of SC 8: a hovered Switch has no halo.
+- [x] concepts.md describes the halo: when it shows, its colours, that disabled controls and Switch have none, and that forced colours remove it. The halo fallback colours are checked by hand against the fallback page colour.
 
 **Verification:**
 
-- [ ] `pnpm test:storybook src/components/Checkbox src/components/Radio src/components/Switch`
-- [ ] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
+- [x] `pnpm test:storybook src/components/Checkbox src/components/Radio src/components/Switch`
+- [x] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
 - [ ] By hand: hover and press in Storybook, both themes and modes
 
 **Dependencies:** Task 4

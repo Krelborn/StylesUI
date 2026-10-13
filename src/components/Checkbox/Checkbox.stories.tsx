@@ -1,8 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { expectOnSpaceScale, textStart } from "../../test/choiceControl";
-import { borderContrast, focusRingContrast } from "../../test/colorContrast";
+import {
+  expectDistinctHaloStates,
+  expectOnSpaceScale,
+  readHalo,
+  settledHalo,
+  textStart,
+} from "../../test/choiceControl";
+import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Field } from "../Field";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
@@ -222,5 +229,47 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.tab();
     await expect(offers).toHaveFocus();
+  },
+};
+
+/**
+ * Hovering anywhere on the label tints a halo around the box that fills the gap before the text,
+ * and pressing darkens it. The halo is the text colour around an unchecked box and the primary
+ * colour around a checked one, and a disabled checkbox has none.
+ */
+export const Halo: Story = {
+  render: (args) => (
+    <Stack gap={2}>
+      <Checkbox {...args}>
+        <span data-testid="unchecked">Send me product updates</span>
+      </Checkbox>
+      <Checkbox defaultChecked={true}>
+        <span data-testid="checked">Send me security alerts</span>
+      </Checkbox>
+      <Checkbox disabled={true}>
+        <span data-testid="disabled">Send me partner offers</span>
+      </Checkbox>
+    </Stack>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    const input = trustedInput();
+    const unchecked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
+    const checked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me security alerts" });
+    const disabled = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me partner offers" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.hoverByTestId("disabled");
+    await settledHalo(disabled, ":hover");
+    await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
+
+    for (const control of [unchecked, checked]) {
+      await expect(isSameColor(canvasElement, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
+    }
+
+    await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
+    await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
   },
 };

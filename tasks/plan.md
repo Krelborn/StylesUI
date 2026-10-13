@@ -48,13 +48,13 @@ Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to 
 
 ### Checkpoint A: after Tasks 1 to 4
 
-- [ ] `pnpm verify` and the fallow audit pass
-- [ ] Every form story passes axe, including `target-size`, in all four projects
-- [ ] You look at Checkbox, Radio and the Forms guide in Storybook, in both themes, before the halo goes in
+- [x] `pnpm verify` and the fallow audit pass
+- [x] Every form story passes axe, including `target-size`, in all four projects
+- [x] You look at Checkbox, Radio and the Forms guide in Storybook, in both themes, before the halo goes in
 
 ### Phase 2: Hover and press halo
 
-- [ ] Task 5: Add the halo to Checkbox and Radio, with none on Switch
+- [x] Task 5: Add the halo to Checkbox and Radio, with none on Switch
 - [ ] Task 6: Check the halo in every palette
 
 ### Checkpoint B: complete

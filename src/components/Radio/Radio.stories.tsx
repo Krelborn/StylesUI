@@ -1,8 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
-import { expectOnSpaceScale, textStart } from "../../test/choiceControl";
-import { borderContrast, focusRingContrast } from "../../test/colorContrast";
+import {
+  expectDistinctHaloStates,
+  expectOnSpaceScale,
+  readHalo,
+  settledHalo,
+  textStart,
+} from "../../test/choiceControl";
+import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
+import { trustedInput } from "../../test/trustedInput";
 import { Button } from "../Button";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
@@ -157,5 +164,48 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.tab({ shift: true });
     await expect(yearly).toHaveFocus();
+  },
+};
+
+/**
+ * Hovering anywhere on the label tints a halo around the dot that fills the gap before the text,
+ * and pressing darkens it. The halo is the text colour around an unselected radio and the primary
+ * colour around a selected one, and a disabled radio has none.
+ */
+export const Halo: Story = {
+  render: (args) => (
+    <Stack gap={2}>
+      <Radio {...args} name="billing">
+        <span data-testid="unchecked">Pay monthly</span>
+      </Radio>
+      <Radio defaultChecked={true} name="billing" value="yearly">
+        <span data-testid="checked">Pay yearly</span>
+      </Radio>
+      <Radio disabled={true} name="billing" value="quarterly">
+        <span data-testid="disabled">Pay quarterly</span>
+      </Radio>
+    </Stack>
+  ),
+  play: async ({ canvas, canvasElement }) => {
+    const input = trustedInput();
+    const unchecked = canvas.getByRole<HTMLInputElement>("radio", { name: "Pay monthly" });
+    const checked = canvas.getByRole<HTMLInputElement>("radio", { name: "Pay yearly" });
+    const disabled = canvas.getByRole<HTMLInputElement>("radio", { name: "Pay quarterly" });
+
+    if (input === null) {
+      return;
+    }
+
+    await input.hoverByTestId("disabled");
+    await settledHalo(disabled, ":hover");
+    await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
+
+    for (const control of [unchecked, checked]) {
+      await expect(isSameColor(canvasElement, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
+    }
+
+    // Pressing selects the radio, so the selected one is measured before the other takes its place
+    await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+    await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
   },
 };

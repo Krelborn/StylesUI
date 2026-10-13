@@ -61,27 +61,31 @@ Follow `docs/standards/`. Every token read keeps a literal fallback equal to the
   --sui-choice-control-size: var(--sui-space-4, 1rem);
   --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
   --sui-choice-control-halo-spread: var(--sui-choice-control-gap);
-  --sui-choice-control-halo-strength: 0%;
   --sui-choice-control-halo-tint: var(--sui-color-text, #111827);
 }
 
-@media (hover: hover) {
-  .choiceControl:hover {
-    --sui-choice-control-halo-strength: 8%;
-  }
-}
-
-.choiceControl:active {
-  --sui-choice-control-halo-strength: 16%;
+.input {
+  --sui-choice-control-halo: transparent;
+  --sui-choice-control-halo-hover: color-mix(in srgb, var(--sui-choice-control-halo-tint) 8%, transparent);
+  --sui-choice-control-halo-press: color-mix(in srgb, var(--sui-choice-control-halo-tint) 16%, transparent);
 }
 
 .input:checked {
   --sui-choice-control-halo-tint: var(--sui-choice-control-fill);
 }
 
+@media (hover: hover) {
+  .choiceControl:hover .input {
+    --sui-choice-control-halo: var(--sui-choice-control-halo-hover);
+  }
+}
+
+.choiceControl:active .input {
+  --sui-choice-control-halo: var(--sui-choice-control-halo-press);
+}
+
 .input:enabled {
-  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread)
-    color-mix(in srgb, var(--sui-choice-control-halo-tint) var(--sui-choice-control-halo-strength), transparent);
+  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--sui-choice-control-halo);
 }
 ```
 
