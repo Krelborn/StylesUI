@@ -2,13 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 
 import {
-  expectDistinctHaloStates,
+  expectCentredTarget,
+  expectHaloHiddenUnderFocus,
+  expectHaloStates,
   expectOnSpaceScale,
-  readHalo,
-  settledHalo,
   textStart,
 } from "../../test/choiceControl";
-import { borderContrast, focusRingContrast, isSameColor } from "../../test/colorContrast";
+import { borderContrast, focusRingContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Card } from "../Card";
 import { Field } from "../Field";
@@ -238,6 +238,32 @@ export const WithoutText: Story = {
 };
 
 /**
+ * In text smaller than 16px each label is still a target 24px tall, with its line centred in it,
+ * so checkboxes stacked closely keep 24px between their centres
+ */
+export const SmallText: Story = {
+  render: (args) => (
+    <Stack gap={1} style={{ fontSize: "0.75rem" }}>
+      <Checkbox {...args} />
+      <Checkbox defaultChecked={true}>Send me security alerts</Checkbox>
+      <Checkbox aria-label="Send me partner offers" />
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const [offers] = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me partner offers" }).labels ?? [];
+
+    for (const name of ["Send me product updates", "Send me security alerts"]) {
+      const control = canvas.getByRole<HTMLInputElement>("checkbox", { name });
+
+      await expectCentredTarget(control, canvas.getByText(name));
+      await expectOnSpaceScale(control, canvas.getByText(name));
+    }
+
+    await expect(offers.getBoundingClientRect().height, "target height without text").toBeGreaterThanOrEqual(24);
+  },
+};
+
+/**
  * Tab moves focus to the checkbox and shows a focus ring on the box, which stops short of the label
  * text. Space toggles it, and the next Tab skips a disabled checkbox.
  */
@@ -296,7 +322,7 @@ export const Halo: Story = {
       </Checkbox>
     </Stack>
   ),
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas }) => {
     const input = trustedInput();
     const unchecked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
     const checked = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me security alerts" });
@@ -306,16 +332,7 @@ export const Halo: Story = {
       return;
     }
 
-    await input.hoverByTestId("disabled");
-    await settledHalo(disabled, ":hover");
-    await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
-
-    for (const control of [unchecked, checked]) {
-      await expect(isSameColor(canvasElement, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
-    }
-
-    await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
-    await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+    await expectHaloStates(input, { checked, disabled, unchecked });
   },
 };
 
@@ -332,7 +349,7 @@ export const FocusedHalo: Story = {
       </Checkbox>
     </Card>
   ),
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas }) => {
     const input = trustedInput();
     const checkbox = canvas.getByRole<HTMLInputElement>("checkbox", { name: "Send me product updates" });
 
@@ -340,21 +357,6 @@ export const FocusedHalo: Story = {
       return;
     }
 
-    await input.hoverByTestId("focused");
-    const hovered = await settledHalo(checkbox, ":hover");
-
-    await expect(isSameColor(canvasElement, hovered.color, "transparent"), "halo before the focus").toBe(false);
-
-    await input.pressKey("Tab");
-    await expect(checkbox).toHaveFocus();
-    await expect(checkbox.matches(":focus-visible")).toBe(true);
-    await expect(getComputedStyle(checkbox).transitionProperty, "halo transition under the focus ring").not.toContain(
-      "box-shadow"
-    );
-
-    const focused = await settledHalo(checkbox, ":hover");
-
-    await expect(isSameColor(canvasElement, focused.color, "transparent"), "halo under the focus ring").toBe(true);
-    await expect(focusRingContrast(checkbox)).toBeGreaterThanOrEqual(3);
+    await expectHaloHiddenUnderFocus(input, checkbox, "focused");
   },
 };

@@ -1,29 +1,45 @@
-# Spec: Compact checkbox and radio
+# Spec: Compact switch
 
-On `@krelborn/stylesui` 0.7.0, a `Checkbox` or `Radio` draws a 24px box beside 16px text, which looks too big. This change shrinks the box, adds a hover halo like MUI's, and puts every edge on the space scale. Option B and focus option F1 were chosen from prototypes reviewed in conversation.
+PR #50 (8b4fe25) put `Checkbox` and `Radio` on the space scale and gave them a hover halo, and left `Switch` as it was. Its 2.75rem by 1.5rem track now looks heavy beside a 16px box. Its text starts at 52px in `default` and 53.6px in `playful`, which is not a space token, its label is 25.06px tall in `default`, and it has no halo. This change brings Switch in line with Checkbox and Radio. Track B, halo H1 and the 0.125rem thumb inset were chosen from prototypes reviewed in conversation.
 
 ## Objective
 
-1. **A smaller box.** The box or dot of a `Checkbox` or `Radio` shrinks from a fixed 1.5rem to `--sui-space-4`, centred halfway between the capital and the lowercase letters of the first line of its label.
-2. **Edges on the space scale.** The label text starts `--sui-space-6` from the box's start edge in every theme: `--sui-space-4` box plus `--sui-space-2` gap. Text placed under a control lines up with the label when it is padded by `var(--sui-space-6)`. Today the text starts at 32px in `default` (`space-8`) and 33.6px in `playful` (`space-7`), so no single token lines it up.
-3. **A hover halo.** Hovering anywhere on the label tints a halo around the box that fills the gap, and pressing darkens it, like MUI's. The halo is painted, not laid out, so it never moves anything.
-4. **Focus unchanged.** The focus ring stays as it is (option F1): 2px (3px in `playful`) at a 2px offset on the input. It clears the label text in both themes.
+1. **A smaller track.** The track shrinks from a fixed 2.75rem by 1.5rem to `--sui-space-6` by `--sui-space-4`: 24 by 16px in `default` and 28.8 by 19.2px in `playful`. It is as tall as a Checkbox's box and centred the same way, so a one-line label is one line tall.
+2. **Text on the space scale.** The gap stays `--sui-space-2`, so the label text starts `--sui-space-8` from the track's start edge in every theme. Text under a Switch lines up with its label when it is padded by `var(--sui-space-8)`.
+3. **The halo.** Hovering anywhere on the label of an enabled Switch tints the Checkbox's halo around the track, a pill spread by the gap. Pressing darkens it.
+4. **A thumb that stays inside the track.** The thumb keeps its 0.125rem inset and travels `--sui-space-2`, so the `playful` spring no longer carries it into the border.
 
-Users are app developers building with StylesUI. Success looks like this: a settings list of checkboxes and radios with descriptions lines up on space tokens in both themes, and the controls look in proportion to their text.
+Users are app developers building with StylesUI. Success looks like this: in a settings list that mixes switches, checkboxes and radios with descriptions, every control is in proportion to its text, every edge sits on a space token, and every control responds to the pointer in the same way.
 
 ## Decisions
 
-- **The input stays the box.** The box, dot and halo are all drawn on the native input, as now, so its border, focus ring and the contrast tests that measure them carry over. The rejected alternative is MUI's: an input the size of the hit area, with the box drawn inside it. That would move the border onto a pseudo-element, which `borderContrast` cannot measure.
-- **Size.** `--sui-choice-control-size` becomes `var(--sui-space-4, 1rem)`: 16px in `default` and 19.2px in `playful`. The gap stays `var(--sui-space-2, 0.5rem)`. Tying the box to the space scale, not to `em`, is what keeps the label at `space-6` in both themes.
-- **Centring.** The box's centre sits halfway between the middle of the capitals and the middle of the lowercase letters on the label's first line, `(1cap + 1ex) / 4` above the baseline, so it looks centred against short capitalised labels such as "Email" and long lowercase ones alike. Reviewed in Storybook at Checkpoint A against two alternatives: centred on the lowercase letters, it hung low beside short capitalised labels, and centred on the capitals it looked slightly high. Centring on the line, as first built, lands near the capitals in `default` only because of system-ui's measurements. The label is an `inline-block` with `--_sui-choice-control-indent` (the box's width plus the gap) of inline-start padding, but only when it has text, so a control named by `aria-label` alone is as wide as its box. The input is an `inline-grid` pulled back into that padding by a negative margin, with `vertical-align: middle`, which CSS defines as centring a box's margin box on the middle of the parent's lowercase letters (half an `ex` above the baseline). A block-start margin of `calc((1ex - 1cap) / 2)` then lifts the border box a quarter of the gap between the two, and the input sets `font: inherit` so those units measure the label's font. The lift is a margin, not a `position: relative` offset, because a positioned input paints over later positioned content, such as a sticky table header without a `z-index`, that it used to pass under. `cap` needs Chrome 118, Firefox 97 and Safari 17.2, within the `build.cssTarget` floor. The label sets `text-align: start` and `text-indent: 0`, so alignment inherited from a parent cannot move the box, and wrapped lines start at the padding, under the first line's text. Checked in Chromium and WebKit, where the box lands within 0.01px of its target in both themes. Playwright's Firefox does not launch here.
-- **The halo is a box-shadow.** It is `0 0 0 var(--sui-choice-control-halo-spread)`, with the spread equal to the gap, so it stops exactly where the text starts. It follows the box's shape: a rounded square around a checkbox and a circle around a radio. MUI's circle around a checkbox (prototype B2) was not chosen. No `:has()` is needed, which matters because Firefox 120 lacks it.
-- **Halo colours.** The halo tints with `--sui-color-text` around an unchecked box, and with `--sui-choice-control-fill` (primary) around a checked one. It is 8% on hover and 16% while pressed, the strengths the ghost Button uses. Computed from every palette, light and dark, on the page and on a surface, the lowest step is 1.112:1, primary in Bright light on a surface, against the 1.1:1 `distinctFillContrast` a change of state needs. The stories measure the real values.
-- **When the halo shows.** Hover anywhere on the label shows it, not only hover on the box, because the whole label is the click target. Hover is gated by `@media (hover: hover)`, as Button's lift is, so a tap on a touch screen doesn't leave a halo behind. Press shows on every device. A disabled input has no halo. Under forced colours the browser removes box-shadows, so the halo disappears and the rest is unchanged. A control with keyboard focus draws none, even under the pointer: under the focus ring, the 8% text tint on a Bright surface lowers the ring's contrast to about 2.85:1, below 3:1. While focused, the input does not transition its `box-shadow`, so a halo already showing when focus arrives vanishes at once rather than fading under the ring. Both found in review on the pull request.
-- **Click target.** The click target stays the label: box, gap and text, one line tall (24px at 16px text). The part of the halo outside the label is not clickable. A control named by `aria-label` alone is a 16px box in a 16px by 24px label, down from 24px square, so it meets WCAG 2.5.8 through spacing: neighbouring controls need 24px between their centres.
-- **The label holds the box in its padding.** The inline-start padding is set by two classes (`.choiceControl.withText`), so a consumer's single class cannot override it, but padding in the `style` prop still can, and moves the box out of the label. The label's text is inline content, as HTML requires of a `label`: a child laid out as a block, such as a `Stack`, drops below the box. A description goes after the control, outside the label, padded by `var(--sui-space-6)` and linked with `aria-describedby`. A layout that keeps block children beside the box, an `inline-block` text span with `baseline-source: first`, failed in WebKit, which ignores `baseline-source`.
-- **Switch keeps its size.** `Switch` shares ChoiceControl but keeps its 2.75rem by 1.5rem track and its gap, and shows no halo (`--sui-choice-control-halo-spread: 0px`). It takes the same centring, so its track moves down about 1.1px in `default`, and its label grows to about 25.1px tall, because a 24px track laid out on the lowercase letters overhangs a 24px line. The Switch follow-up revisits its size.
-- **No new public props or tokens.** This change adds no `description` prop and no space token. Text padded by `var(--sui-space-6)` already lines up under a control, and the Forms guide documents it. A `description` prop is not planned. Of the new custom properties, only `--sui-choice-control-halo-spread` is public: set on the label, `0px` turns the halo off. The derived and state values, `--_sui-choice-control-indent`, `-halo`, `-halo-hover`, `-halo-press` and `-halo-tint`, take the private `--_sui-` prefix, which only palettes used before.
-- **No version bump.** The version is bumped when a release is cut, which won't follow this change straight away.
+- **Track.** The switch rule no longer pins `--sui-choice-control-size`, so the track is as tall as a Checkbox's box (`var(--sui-space-4, 1rem)`). It sets `--sui-choice-control-track-size: var(--sui-space-6, 1.5rem)`, a 3:2 pill. Tying both to the space scale is what puts the text on a token in every theme. The prototypes rejected three alternatives:
+  - `space-7` by `space-4` with a `space-1` gap: its text is also at `space-8`, but its gap and halo differ from Checkbox's, and the `playful` spring overshoots 0.3px into the border.
+  - `space-8` by `space-4`: its text starts at 40px in `default` and 48px in `playful`, which is not a token unless the scale gains a `space-10`.
+  - Today's track.
+- **Text start.** The `space-6` track plus the `space-2` gap put the text at `space-8`, which is `space-2` after a Checkbox's or Radio's text. A track wider than the box cannot share their `space-6`. Text placed under a Switch is padded by `var(--sui-space-8)`.
+- **Centring.** The mechanism is unchanged. The track is centred halfway between the middles of the capitals and the lowercase letters of the label's first line. At 16px it no longer overhangs the 24px line, so the label is 24px tall, down from 25.06px in `default` and 24.2px in `playful`.
+- **Thumb.** The size formula is unchanged: the track's height, less twice the border width and twice the 0.125rem inset. That gives 10px in `default` and 11.2px in `playful`. The travel is the track's width less its height, `space-2`: 8px and 9.6px. The `playful` spring peaks at 116.2% of the travel, so the thumb overshoots by 1.6px, inside its 2px inset. Today's 20px travel overshoots by 3.2px, which is 1.2px into the 2px border. Insets of 1px and 3px were rejected.
+- **Halo.** The switch rule no longer sets `--sui-choice-control-halo-spread: 0px`, so the Checkbox's halo applies unchanged:
+  - It is a box-shadow spread by the gap that follows the track's pill radius: 40 by 32px in `default`, the same 32px height as a Checkbox's or Radio's halo.
+  - It is tinted with the text colour when unchecked and the primary colour when checked, at 8% on hover and 16% while pressed.
+  - Hover is gated on `@media (hover: hover)`.
+  - A disabled Switch has none.
+  - A focused Switch has none and does not transition its `box-shadow`.
+
+  A halo on the thumb, as MUI draws, was rejected for three reasons. It needs a second shadow on the `::before` pseudo-element and a second path through the tests, and it tints the track around the thumb.
+
+- **Focus ring.** Unchanged: 2px (3px in `playful`) at a 2px offset on the input, around the track. It ends 4px (5px) past the track, before the text at 8px (9.6px).
+- **Target size.** The label is one line tall: 24px at 16px text. A Switch named by `aria-label` alone is a 24 by 24px target in `default` and 28.8 by 24px in `playful`. Unlike a Checkbox named that way, it meets WCAG 2.5.8 without extra spacing.
+- **Target height in small text.** The old 1.5rem track kept a Switch's label 24px tall at any text size, but the 16px track leaves it one line of the inherited font: 18px at 12px text, so switches stacked with `gap={1}` sat 22px apart. Every choice control's label now has block padding of `max(0px, (24px - 1lh) / 2)`, which keeps it at least 24px tall with a single line in the middle, so it still lines up in a row. At 16px text the padding is 0px. Checkbox and Radio share the rule and had the same gap since their own resize. A `min-block-size` was rejected because it leaves the line at the top of the target. Found by Codex in review on the pull request.
+- **Right to left.** The track sits at the right, and the existing `:dir(rtl)` rule reverses the thumb's travel. The text starts `space-8` to the left of the track's right edge.
+- **Reduced motion.** Unchanged: only colours transition, so the thumb jumps. The existing stylesheet test in `Checkbox.test.tsx` covers every kind of control.
+- **Forced colours.** Unchanged: the track and thumb use system colours, and the browser removes box-shadows, so there is no halo. Checked in the prototypes with Chromium's forced-colours emulation. No story project runs in forced colours.
+- **Measuring helper.** `expectOnSpaceScale` measures a Checkbox's or Radio's box. It gains the box's width and the text's indent as lengths, with defaults of `var(--sui-space-4)` and `var(--sui-space-6)`. Switch stories pass `var(--sui-space-6)` and `var(--sui-space-8)` and get the same checks. The options type, `SpaceScaleLayout`, is exported, so a story declares its layout with `satisfies` and a misspelt key fails to compile.
+- **No new props or tokens.** `--sui-choice-control-track-size` is already public. As with a Checkbox, `--sui-choice-control-halo-spread: 0px` on the label turns the halo off. The palette showcase keeps measuring only checkboxes, because a switch declares its halo colours through the same rules.
+- **Visual change for consumers.** Every Switch shrinks, its text starts 20px sooner in `default` and 15.2px sooner in `playful`, and it gains a halo. Text that was padded by hand to line up under a switch needs `var(--sui-space-8)`. The release notes say so when a release is cut. No version bump.
+- **Shared halo story steps.** The Checkbox, Radio and Switch `Halo` stories call one helper, `expectHaloStates`, and the Checkbox and Switch `FocusedHalo` stories call `expectHaloHiddenUnderFocus`, both in `src/test/choiceControl.ts`. The helpers only they use are no longer exported. `expectHaloHiddenUnderFocus` also checks that the halo has a spread before focus, because a 0px halo still declares its colour. Checkbox's `Halo` measures the checked control first, as Radio's did, because pressing an unchecked radio checks it.
+- **Prototypes.** `src/components/Switch/SwitchPrototypes.stories.tsx` is a scratch file for the review and is deleted before the first commit.
 - One pull request, one commit per task.
 
 ## Tech Stack
@@ -34,8 +50,8 @@ React 19, TypeScript 7, Vite 8 (rolldown) library mode, CSS modules and custom p
 
 ```sh
 pnpm verify                                                        # lint, format check, typecheck, every test; before every commit
-pnpm test:storybook src/components/Checkbox/Checkbox.stories.tsx   # one story file, in all four projects
-pnpm test:unit src/components/Checkbox/Checkbox.test.tsx           # one unit test file
+pnpm test:storybook src/components/Switch/Switch.stories.tsx       # one story file, in all four projects
+pnpm test:storybook src/components/Checkbox src/components/Radio   # the helper's defaults keep these passing
 pnpm build                                                         # dist/
 fallow audit --format json --quiet --explain --gate-marker agent   # before every commit
 ```
@@ -43,115 +59,126 @@ fallow audit --format json --quiet --explain --gate-marker agent   # before ever
 ## Project Structure
 
 ```
-src/components/ChoiceControl/ChoiceControl.module.css  ← size, centring, halo, Switch overrides
-src/components/ChoiceControl/ChoiceControl.tsx          ← a class for a label that has text
-src/components/Checkbox/Checkbox.test.tsx               ← the hover gate on the stylesheet
-src/components/{Checkbox,Radio,Switch}/*.tsx           ← children JSDoc: inline content only
-AGENTS.md                                              ← the test helpers and the private --_sui- prefix
-src/components/Checkbox/Checkbox.stories.tsx           ← alignment, halo, Stacked, KeyboardInteraction
-src/components/Radio/Radio.stories.tsx                 ← alignment, halo
-src/components/Switch/Switch.stories.tsx               ← unchanged size, no halo, Stacked wording
-src/docs/Forms.mdx                                     ← lining text up under a control
+src/components/ChoiceControl/ChoiceControl.module.css  ← Switch's track size and halo
+src/test/choiceControl.ts                              ← expectOnSpaceScale takes the box width and the indent; shared halo steps
+src/components/Switch/Switch.stories.tsx               ← size, alignment, thumb, halo, focus, right to left, no text
+src/components/{Checkbox,Radio}/*.stories.tsx          ← Halo and FocusedHalo through the shared halo steps
+src/docs/Forms.mdx                                     ← lining text up under a switch, its target size
 docs/design/concepts.md                                ← Forms section
-.design-sync/conventions.md                            ← the space-6 rule for forms
+.design-sync/conventions.md                            ← the space-8 rule for a switch
+AGENTS.md                                              ← expectOnSpaceScale's width and indent
+SPEC.md, tasks/                                        ← this spec and its plan
 ```
 
 ## Code Style
 
-Follow `docs/standards/`. Every token read keeps a literal fallback equal to the `default` theme's or Bright's light value:
+Follow `docs/standards/`. Every token read keeps a literal fallback equal to the `default` theme's value. The switch rule loses its size and halo overrides:
 
 ```css
-.choiceControl {
-  --sui-choice-control-size: var(--sui-space-4, 1rem);
-  --sui-choice-control-gap: var(--sui-space-2, 0.5rem);
-  --sui-choice-control-halo-spread: var(--sui-choice-control-gap);
-  --_sui-choice-control-halo-tint: var(--sui-color-text, #111827);
+.choiceControl[data-kind="switch"] {
+  --sui-choice-control-track-size: var(--sui-space-6, 1.5rem);
+  --sui-choice-control-radius: var(--sui-radius-full, 9999px);
+  --sui-choice-control-mark-unchecked: var(--sui-color-input-border, #6b7280);
+  --sui-choice-control-mark-size: calc(
+    var(--sui-choice-control-size) - 2 * var(--sui-choice-control-border-width) - 2 *
+      var(--sui-choice-control-mark-inset)
+  );
+  --sui-choice-control-mark-shape: none;
+  --sui-choice-control-mark-radius: 50%;
+  --sui-choice-control-mark-justify: start;
+  --sui-choice-control-mark-inset: 0.125rem;
+  --sui-choice-control-mark-transform: translateX(
+    calc(var(--sui-choice-control-track-size) - var(--sui-choice-control-size))
+  );
+  --sui-choice-control-mark-transform-unchecked: none;
+}
+```
+
+The helper takes the layout to measure against as an options object with defaults, so existing calls don't change:
+
+```ts
+/**
+ * Where a choice control's box and text sit on the space scale
+ */
+export interface SpaceScaleLayout {
+  /**
+   * Width of the box, such as `"var(--sui-space-6)"` for a switch's track; defaults to `--sui-space-4`
+   */
+  boxWidth?: string;
+
+  /**
+   * How far every line of the text starts from the box's start edge; defaults to `--sui-space-6`
+   */
+  indent?: string;
 }
 
-.input {
-  --_sui-choice-control-halo: transparent;
-  --_sui-choice-control-halo-hover: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 8%, transparent);
-  --_sui-choice-control-halo-press: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 16%, transparent);
-}
-
-.input:checked {
-  --_sui-choice-control-halo-tint: var(--sui-choice-control-fill);
-}
-
-@media (hover: hover) {
-  .choiceControl:hover .input {
-    --_sui-choice-control-halo: var(--_sui-choice-control-halo-hover);
-  }
-}
-
-.choiceControl:active .input {
-  --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
-}
-
-.input:enabled {
-  box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--_sui-choice-control-halo);
-}
+export async function expectOnSpaceScale(
+  input: HTMLInputElement,
+  text: HTMLElement,
+  { boxWidth = "var(--sui-space-4)", indent = "var(--sui-space-6)" }: SpaceScaleLayout = {}
+): Promise<void>;
 ```
 
 ## Testing Strategy
 
-- **Stories (Chromium, all four mode and theme projects).** Layout and paint can't be measured in jsdom, so the new checks are stories. Each one compares measured pixels with the tokens resolved in the story's own theme, so the same assertions hold in `default` and `playful`.
-  - Checkbox and Radio alignment: the box is `space-4` square and centred halfway between the capitals and the lowercase letters of the label's first line, including on a label that wraps, and the label text starts `space-6` from the box. Text padded by `var(--sui-space-6)` below the control starts where the label text does.
-  - Checkbox and Radio halo, with real pointer input (`hoverByTestId`, `holdPointerByTestId`, as Button's `expectDistinctPointerStates` does): hovering the label text spreads the halo by `space-2`. Rest, hover and press are each at least `distinctFillContrast` apart, measured with `fillContrast` against the background behind the control, unchecked and checked. A disabled control has no halo.
-  - `KeyboardInteraction` keeps its focus ring assertions, and Checkbox's adds that the ring ends before the label text starts.
-  - Switch: the track is still 2.75rem by 1.5rem, and hovering it shows no halo.
-  - Palette showcase: in all five palettes, the hover and press halos an unchecked and a checked checkbox declare are each at least `distinctFillContrast` from the step before, as it checks every Button's hover fill. The story projects only run Bright and Pop.
-  - axe, including `target-size`, keeps passing on every Checkbox, Radio, RadioGroup, Switch, Field and Fieldset story.
-  - Review fixes: the input is not positioned; a label padded through a consumer class and a wrapping label under a centred parent keep the box inside the label and their text at `space-6`; and a right-to-left layout passes the same alignment checks, measured from the box's right edge.
-- **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, and only colour transitions under reduced motion. A new one fails if a `:hover` rule sits outside `@media (hover: hover)`, which no story can catch, because the test browser can hover.
-- **By hand.** The halo fallback colours against the fallback page colour, as AGENTS.md requires.
+- **Stories (Chromium, all four mode and theme projects).** Layout and paint can't be measured in jsdom, so the new checks are Switch stories. Each one compares measured pixels with the tokens resolved in the story's own theme, so the same assertions hold in `default` and `playful`.
+  - `Stacked`: the track is the resolved `space-6` by `space-4`. Each label is at least 24px tall and as wide as its track plus its text.
+  - `AlignedText` (new): a one-line label and a wrapping one pass `expectOnSpaceScale` with `space-6` and `space-8`. A `Text` padded by `var(--sui-space-8)` starts where the label text does, and the one-line label is exactly one line tall.
+  - `RightToLeft` (new): `AlignedText` inside `dir="rtl"`, and a checked thumb moves left.
+  - `WithoutText` (new): a Switch named by `aria-label` alone has a label as wide as its track and at least 24px in both dimensions.
+  - `Thumb` (new): the thumb's size and travel are read from the `::before` computed style. The checking transition's transform is paused at steps through its duration, and at each step the thumb's far edge must be inside the inner edge of the track's border. Under reduced motion, where the thumb jumps, the sampling is skipped, so the story doesn't throw in Storybook.
+  - `Halo` replaces `NoHalo`, as Checkbox's `Halo` does: real hover and press through `expectDistinctHaloStates`, unchecked and checked, and no halo on a disabled switch.
+  - `FocusedHalo` (new), as Checkbox's: no halo and no `box-shadow` transition under keyboard focus, and a 3:1 ring on a surface.
+  - `KeyboardInteraction` adds that the ring ends before the label text.
+  - axe, including `target-size`, keeps passing on every Switch, Field, Fieldset and contact form story.
+  - Checkbox and Radio stories keep every check they had, through `expectOnSpaceScale`'s defaults and the shared halo steps.
+- **Unit (jsdom).** The existing stylesheet tests in `Checkbox.test.tsx` keep passing: no `outline` or `all` transition, only colour transitions under reduced motion, and every `:hover` rule inside `@media (hover: hover)`. No new unit tests.
+- **By hand.** Before the pull request: forced colours in Chromium, and a pass in WebKit, from screenshots in both themes and modes.
 
 ## Boundaries
 
-- **Always:** run `pnpm verify` and the fallow audit before every commit. Give every token read a literal fallback. Keep the docs in the same commit as the behaviour they describe.
-- **Ask first:** pushing or opening a pull request; bumping the version or publishing; a Claude Design sync; adding a space token; changing `Switch`'s size or giving it a halo; adding a `description` prop.
-- **Never:** lower a contrast threshold, skip an assertion or set a story to `a11y.test: "todo"`; change `SegmentedControl`; edit `dist/`; hand-write a dependency version.
+- **Always:** run `pnpm verify` and the fallow audit before every commit. Give every token read a literal fallback. Keep the docs in the same commit as the behaviour they describe. Prove each new test fails without its fix.
+- **Ask first:** pushing or opening a pull request; bumping the version or publishing; a Claude Design sync; adding a space token; changing a Checkbox's or Radio's size, gap or halo; adding a prop.
+- **Never:** lower a contrast threshold, skip an assertion or set a story to `a11y.test: "todo"`; change `SegmentedControl`; edit `dist/`; hand-write a dependency version; commit the prototype story.
 
 ## Success Criteria
 
 ### Size and alignment
 
-1. In every storybook project, a Checkbox's and a Radio's input is as wide and as tall as the resolved `--sui-space-4`, within 0.5px.
-2. The input's vertical centre is within 0.5px of the point halfway between the middles of the capitals and the lowercase letters on the label's first line, a quarter of the resolved `1cap + 1ex` above its baseline, on a one-line label and on one that wraps.
-3. The label text's start edge is the resolved `--sui-space-6` from the input's start edge, within 0.5px, and a `Text` padded by `var(--sui-space-6)` under the control starts within 0.5px of it.
-4. The Checkbox `Stacked` story still finds each label as wide as its input plus its text, and each label at least 24px tall. Its JSDoc and Switch's say the label is the 24px target. A Checkbox named by `aria-label` alone has a label as wide as its box.
+1. In every storybook project, a Switch's track is as wide as the resolved `--sui-space-6` and as tall as the resolved `--sui-space-4`, within 0.5px. Proven by `Stacked` and `AlignedText`.
+2. The track's vertical centre is within 0.5px of the point halfway between the middles of the capitals and the lowercase letters on the label's first line, on a one-line label and on one that wraps. Proven by `AlignedText`.
+3. Every line of the label text starts the resolved `--sui-space-8` from the track's start edge, within 0.5px. A `Text` padded by `var(--sui-space-8)` under the switch starts within 0.5px of it. Proven by `AlignedText`.
+4. A one-line label is one line tall, within 0.5px. Each label in `Stacked` is at least 24px tall and as wide as its track plus its text. Proven by `AlignedText` and `Stacked`.
+5. In a right-to-left layout, criteria 1 to 3 hold, measured from the track's right edge. Proven by `RightToLeft`.
+6. A Switch named by `aria-label` alone has a label as wide as its track, within 0.5px, and at least 24px in both dimensions. Proven by `WithoutText`.
+
+### Thumb
+
+7. The thumb is as wide as the track's height less twice the border width and twice 0.125rem, within 0.5px. A checked thumb is translated by the resolved `--sui-space-2` towards the end of the track: right in a left-to-right layout and left in a right-to-left one. Proven by `Thumb` and `RightToLeft`.
+8. At every sampled step of the checking transition, the thumb's far edge is inside the inner edge of the track's border. With today's track this fails in the `playful` projects. Proven by `Thumb`.
 
 ### Halo
 
-5. At rest, the input's box-shadow colour is transparent. With the pointer over the label text, it is spread by the resolved `--sui-space-2`, and its colour differs from rest by at least `distinctFillContrast`. While pressed, it differs from hover by at least `distinctFillContrast`. Proven for unchecked and checked, Checkbox and Radio, in all four projects. The palette showcase proves the same steps for the colours an unchecked and a checked checkbox declare, in all five palettes.
-6. A checked control's halo is tinted with `--sui-color-primary`, and an unchecked one's with `--sui-color-text`, checked with `isSameColor` against the mixes the stylesheet declares.
-7. A disabled Checkbox's and Radio's box-shadow is `none` while hovered.
-8. A Switch's track is 2.75rem by 1.5rem and shows no halo while hovered.
+9. At rest the input's box-shadow colour is transparent. With the pointer over the label text, the halo spreads by the resolved `--sui-space-2`. Its colour is the 8% mix of `--sui-color-text` when unchecked or `--sui-color-primary` when checked, checked with `isSameColor`, and it differs from rest by at least `distinctFillContrast`. While pressed it is the 16% mix and differs from hover by at least `distinctFillContrast`. Proven for unchecked and checked in all four projects by `Halo`.
+10. A disabled Switch's box-shadow is `none` while hovered. Proven by `Halo`.
+11. A Switch with keyboard focus draws no halo while hovered and does not transition its `box-shadow`, and on a surface its focus ring keeps 3:1. Proven by `FocusedHalo`.
 
 ### Focus
 
-9. Every `KeyboardInteraction` story still passes its focus ring width and 3:1 contrast checks, and in Checkbox's the ring's end edge (input edge plus `outline-offset` plus `outline-width`) is before the label text's start edge.
+12. `KeyboardInteraction` still passes its focus ring width and 3:1 contrast checks. The ring's end edge (track edge plus `outline-offset` plus `outline-width`) is before the label text's start edge.
 
 ### Docs and whole change
 
-10. `docs/design/concepts.md` describes the box size, the centring, the `space-6` alignment and the halo, including when it shows, its colours and that Switch has none. `src/docs/Forms.mdx` shows lining text up under a control with `var(--sui-space-6)`, embedding the alignment story. `.design-sync/conventions.md` states the `space-6` rule.
-11. `pnpm verify` and `pnpm build` pass, and the fallow audit passes.
-
-### Review fixes
-
-12. The input is not positioned: its `position` is `static`, checked in the Checkbox `AlignedText` story.
-13. A label padded through a consumer's class, and a wrapping label under a parent with `text-align: center`, keep the box inside the label, their text at `space-6`, and wrapped lines under the first line's text. Proven by a Checkbox `OuterStyles` story.
-14. In a right-to-left layout, criteria 1 to 3 hold, measured from the box's right edge. Proven by a Checkbox `RightToLeft` story.
-15. A unit test in `Checkbox.test.tsx` fails if a `:hover` rule in the ChoiceControl stylesheet sits outside `@media (hover: hover)`.
-16. concepts.md and the Checkbox, Radio and Switch `children` JSDoc say the label's text is inline content and descriptions go outside the label. concepts.md and Forms.mdx give the target size of a control without text, and Forms.mdx says to link a description with `aria-describedby`. AGENTS.md describes `src/test/choiceControl.ts`, the private `--_sui-` prefix in components, and that an element inside an `input` gets no computed style.
+13. The docs are updated:
+    - `docs/design/concepts.md` gives the track size, the `space-8` text start, the thumb's travel and inset, and the Switch's halo. It no longer says the track stays 2.75rem by 1.5rem or that a Switch has no halo.
+    - `src/docs/Forms.mdx` shows lining text up under a switch with `var(--sui-space-8)`, embedding the Switch `AlignedText` story, and gives the target size of a switch without text.
+    - `.design-sync/conventions.md` states the `space-8` rule.
+    - AGENTS.md describes `expectOnSpaceScale`'s width and indent.
+14. The Checkbox and Radio stories keep every check they had, through `expectOnSpaceScale`'s defaults and the shared halo steps. `pnpm verify`, `pnpm build` and the fallow audit pass.
 
 ### Pull request review
 
-17. A Checkbox with keyboard focus draws no halo while hovered, and on a surface its focus ring keeps 3:1. Focused under a pointer that already shows the halo, it does not transition its `box-shadow`. Proven by a Checkbox `FocusedHalo` story.
-
-## Follow-ups
-
-- **Switch.** Once this change lands, a new thread takes `Switch` through its own spec, so it matches the new Checkbox and Radio for consistency and polish. Next to a 16px box, its 44 by 24 track may look heavy, and it has no halo. Its label can't start at a single space token unless the scale gains a `space-10`.
+15. In 12px text, a Checkbox's and a Switch's label is at least 24px tall, with its one line within 1.5px of the label's middle, and the box or track still passes `expectOnSpaceScale`. A label named by `aria-label` alone is at least 24px tall too, and closely stacked controls pass axe's `target-size`. Proven by the Checkbox and Switch `SmallText` stories.
 
 ## Open Questions
 

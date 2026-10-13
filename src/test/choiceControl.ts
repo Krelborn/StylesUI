@@ -1,12 +1,12 @@
 import { expect, waitFor } from "storybook/test";
 
-import { distinctFillContrast, fillContrast, isSameColor } from "./colorContrast";
+import { distinctFillContrast, fillContrast, focusRingContrast, isSameColor } from "./colorContrast";
 import type { TrustedInput } from "./trustedInput";
 
 /**
  * The halo a choice control draws around its box
  */
-export interface Halo {
+interface Halo {
   /**
    * Colour of the halo, as the browser reports it
    */
@@ -28,7 +28,7 @@ export interface Halo {
  * @param testId the `data-testid` of an element in the control's label
  * @param tint the colour the halo is tinted with, such as `"var(--sui-color-primary)"`
  */
-export async function expectDistinctHaloStates(
+async function expectDistinctHaloStates(
   input: TrustedInput,
   control: HTMLInputElement,
   testId: string,
@@ -66,6 +66,89 @@ export async function expectDistinctHaloStates(
 }
 
 /**
+ * The controls whose halos `expectHaloStates` checks
+ */
+interface HaloControls {
+  /**
+   * Input of a checked control, whose label holds an element with `data-testid="checked"`
+   */
+  checked: HTMLInputElement;
+
+  /**
+   * Input of a disabled control, whose label holds an element with `data-testid="disabled"`
+   */
+  disabled: HTMLInputElement;
+
+  /**
+   * Input of an unchecked control, whose label holds an element with `data-testid="unchecked"`
+   */
+  unchecked: HTMLInputElement;
+}
+
+/**
+ * Checks a choice control's halo with the real pointer: a disabled control has none when hovered, and a checked and an
+ * unchecked one have a transparent halo at rest. Hovering each one's label spreads its halo by `--sui-space-2` in the 8%
+ * mix of `--sui-color-primary` when checked or `--sui-color-text` when not, pressing deepens it to the 16% mix, and
+ * rest, hover and press can each be told from the step before.
+ *
+ * @param input the trusted input that moves and presses the pointer
+ * @param controls the checked, disabled and unchecked controls; pressing may toggle the checked and unchecked ones
+ */
+export async function expectHaloStates(
+  input: TrustedInput,
+  { checked, disabled, unchecked }: HaloControls
+): Promise<void> {
+  await input.hoverByTestId("disabled");
+  await settledHalo(disabled, ":hover");
+  await expect(getComputedStyle(disabled).boxShadow, "disabled halo").toBe("none");
+
+  for (const control of [unchecked, checked]) {
+    const [label] = control.labels ?? [];
+
+    await expect(isSameColor(label, readHalo(control).color, "transparent"), "halo at rest").toBe(true);
+  }
+
+  // Pressing an unchecked radio checks it and unchecks the other, so the checked control is measured first
+  await expectDistinctHaloStates(input, checked, "checked", "var(--sui-color-primary)");
+  await expectDistinctHaloStates(input, unchecked, "unchecked", "var(--sui-color-text)");
+}
+
+/**
+ * Hovers a choice control's label with the real pointer until its halo shows, then moves keyboard focus to the control
+ * with Tab, and checks that the halo vanishes at once, without a `box-shadow` transition, and that the focus ring keeps
+ * 3:1
+ *
+ * @param input the trusted input that moves the pointer and presses Tab
+ * @param control the control's input, which must be the next Tab stop
+ * @param testId the `data-testid` of an element in the control's label
+ */
+export async function expectHaloHiddenUnderFocus(
+  input: TrustedInput,
+  control: HTMLInputElement,
+  testId: string
+): Promise<void> {
+  const [label] = control.labels ?? [];
+
+  await input.hoverByTestId(testId);
+  const hovered = await settledHalo(control, ":hover");
+
+  await expect(hovered.spread, "halo spread before the focus").toBeGreaterThan(0);
+  await expect(isSameColor(label, hovered.color, "transparent"), "halo before the focus").toBe(false);
+
+  await input.pressKey("Tab");
+  await expect(control).toHaveFocus();
+  await expect(control.matches(":focus-visible")).toBe(true);
+  await expect(getComputedStyle(control).transitionProperty, "halo transition under the focus ring").not.toContain(
+    "box-shadow"
+  );
+
+  const focused = await settledHalo(control, ":hover");
+
+  await expect(isSameColor(label, focused.color, "transparent"), "halo under the focus ring").toBe(true);
+  await expect(focusRingContrast(control)).toBeGreaterThanOrEqual(3);
+}
+
+/**
  * Checks, without the pointer, that the hover and press halos a choice control declares can each be told from the step
  * before: rest from hover, and hover from press
  *
@@ -93,7 +176,7 @@ export async function expectDistinctDeclaredHalos(control: HTMLInputElement, nam
  * @param control the control's input
  * @returns the halo; fully transparent with no spread when the input draws none
  */
-export function readHalo(control: HTMLInputElement): Halo {
+function readHalo(control: HTMLInputElement): Halo {
   const shadow = getComputedStyle(control).boxShadow;
 
   if (shadow === "none") {
@@ -112,7 +195,7 @@ export function readHalo(control: HTMLInputElement): Halo {
  * @param state the pseudo-class the pointer applies to the label
  * @returns the halo in that state
  */
-export async function settledHalo(control: HTMLInputElement, state: ":active" | ":hover"): Promise<Halo> {
+async function settledHalo(control: HTMLInputElement, state: ":active" | ":hover"): Promise<Halo> {
   const [label] = control.labels ?? [];
 
   await waitFor(() => expect(label.matches(state)).toBe(true));
@@ -122,31 +205,72 @@ export async function settledHalo(control: HTMLInputElement, state: ":active" | 
 }
 
 /**
- * Checks that a choice control's box is `--sui-space-4` square and centred halfway between the middles of the capital
- * and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the baseline, and that every
- * line of the label text starts `--sui-space-6` from the box, each to within half a pixel in the control's own theme and
- * writing direction
+ * Where a choice control's box and text sit on the space scale
+ */
+export interface SpaceScaleLayout {
+  /**
+   * Width of the box, such as `"var(--sui-space-6)"` for a switch's track; defaults to `--sui-space-4`
+   */
+  boxWidth?: string;
+
+  /**
+   * How far every line of the text starts from the box's start edge; defaults to `--sui-space-6`
+   */
+  indent?: string;
+}
+
+/**
+ * Checks that a choice control's box is `--sui-space-4` tall and the given width, and centred halfway between the
+ * middles of the capital and lowercase letters of the first line of its label, a quarter of `1cap + 1ex` above the
+ * baseline, and that every line of the label text starts the given indent from the box, each to within half a pixel in
+ * the control's own theme and writing direction
  *
  * Needs a real browser, because jsdom lays nothing out.
  *
  * @param input the control's input, which draws the box
  * @param text the element holding the label text, beside the input; plain text, so each line is one fragment
+ * @param layout the box's width and the text's indent, as CSS lengths resolved in the text's scope
  */
-export async function expectOnSpaceScale(input: HTMLInputElement, text: HTMLElement): Promise<void> {
+export async function expectOnSpaceScale(
+  input: HTMLInputElement,
+  text: HTMLElement,
+  { boxWidth = "var(--sui-space-4)", indent = "var(--sui-space-6)" }: SpaceScaleLayout = {}
+): Promise<void> {
   const box = input.getBoundingClientRect();
-  const boxSize = resolvedLength(text, "var(--sui-space-4)");
   const letterMiddle = firstBaseline(text) - (resolvedLength(text, "1cap") + resolvedLength(text, "1ex")) / 4;
-  const indent = resolvedLength(text, "var(--sui-space-6)");
+  const textIndent = resolvedLength(text, indent);
   const { direction } = getComputedStyle(text);
   const name = text.textContent;
 
-  await expect(box.width, `${name} box width`).toBeCloseTo(boxSize, 0);
-  await expect(box.height, `${name} box height`).toBeCloseTo(boxSize, 0);
+  await expect(box.width, `${name} box width`).toBeCloseTo(resolvedLength(text, boxWidth), 0);
+  await expect(box.height, `${name} box height`).toBeCloseTo(resolvedLength(text, "var(--sui-space-4)"), 0);
   await expect(box.top + box.height / 2, `${name} box centre`).toBeCloseTo(letterMiddle, 0);
 
   for (const [index, line] of textLines(text).entries()) {
-    await expect(startOffset(box, line, direction), `${name} line ${index + 1} start`).toBeCloseTo(indent, 0);
+    await expect(startOffset(box, line, direction), `${name} line ${index + 1} start`).toBeCloseTo(textIndent, 0);
   }
+}
+
+/**
+ * Checks that a choice control's label is a target at least 24px tall, with its one line of text in the middle of it,
+ * to within 1.5px, which allows for the rounding of the font's ascent and descent and for a box that overhangs the line
+ *
+ * Needs a real browser, because jsdom lays nothing out.
+ *
+ * @param control the control's input
+ * @param text the element holding the label's one line of text
+ */
+export async function expectCentredTarget(control: HTMLInputElement, text: HTMLElement): Promise<void> {
+  const [label] = control.labels ?? [];
+  const target = label.getBoundingClientRect();
+  const line = textRange(text).getBoundingClientRect();
+  const name = text.textContent;
+
+  await expect(target.height, `${name} target height`).toBeGreaterThanOrEqual(24);
+  await expect(
+    Math.abs(line.top + line.height / 2 - (target.top + target.height / 2)),
+    `${name} line off centre`
+  ).toBeLessThanOrEqual(1.5);
 }
 
 /**
@@ -164,6 +288,27 @@ export function textStart(element: HTMLElement): number {
   return getComputedStyle(element).direction === "rtl" ? right : left;
 }
 
+/**
+ * Resolves a CSS length, such as a space token, to pixels in an element's scope
+ *
+ * Needs a real browser, because jsdom lays nothing out.
+ *
+ * @param element the element whose custom properties and font resolve the length; not an `input`, whose children get
+ *   no style
+ * @param length the length to resolve, such as `"var(--sui-space-2)"`
+ * @returns the length in pixels
+ */
+export function resolvedLength(element: HTMLElement, length: string): number {
+  const probe = document.createElement("span");
+  probe.style.position = "absolute";
+  probe.style.width = length;
+  element.append(probe);
+  const { width } = probe.getBoundingClientRect();
+  probe.remove();
+
+  return width;
+}
+
 // An empty inline-block is zero high and sits with its bottom edge on the baseline
 function firstBaseline(element: HTMLElement): number {
   const marker = document.createElement("span");
@@ -173,18 +318,6 @@ function firstBaseline(element: HTMLElement): number {
   marker.remove();
 
   return bottom;
-}
-
-// Measured on a child so custom properties take the element's values
-function resolvedLength(element: HTMLElement, length: string): number {
-  const probe = document.createElement("span");
-  probe.style.position = "absolute";
-  probe.style.inlineSize = length;
-  element.append(probe);
-  const { width } = probe.getBoundingClientRect();
-  probe.remove();
-
-  return width;
 }
 
 // How far a line starts after the box's start edge, along the writing direction

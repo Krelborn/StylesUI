@@ -1,242 +1,178 @@
-# Tasks: Compact checkbox and radio
+# Tasks: Compact switch
 
 Spec: [SPEC.md](../SPEC.md). Plan: [plan.md](plan.md). "SC n" is the spec's success criterion n.
 
 Before every commit: `pnpm verify` and `fallow audit --format json --quiet --explain --gate-marker agent`.
 
-## Task 1: Shrink and centre the box, and line Checkbox text up at `space-6`
+## Task 1: Shrink the track and start the text at `space-8`
 
-**Description:** `--sui-choice-control-size` becomes `var(--sui-space-4, 1rem)`. The input sets `font: inherit` and `margin-block: calc((1lh - var(--sui-choice-control-size)) / 2)`, so the box is centred on the label's first line. Switch's rule pins its size at `1.5rem`. New helpers in `src/test/choiceControl.ts` resolve a token to pixels in an element's scope and measure the box against the label. A new Checkbox `AlignedText` story renders a one-line label, a wrapping one and a `Text` padded by `var(--sui-space-6)`. The docs describe the size, the centring and how to line text up.
+**Description:** The switch rule in `ChoiceControl.module.css` drops `--sui-choice-control-size: 1.5rem`, so the track is as tall as the box, and sets `--sui-choice-control-track-size: var(--sui-space-6, 1.5rem)`. `expectOnSpaceScale` takes an optional `{ boxWidth, indent }`, which default to `var(--sui-space-4)` and `var(--sui-space-6)`. Story changes in `Switch.stories.tsx`:
+
+- `Stacked` checks the track against the resolved `space-6` and `space-4`, not 2.75rem by 1.5rem.
+- A new `AlignedText` story renders a one-line label, a wrapping one and a `Text` padded by `var(--sui-space-8)`, and runs `expectOnSpaceScale` with `space-6` and `space-8`. It also checks that the one-line label is one line tall.
+- A new `RightToLeft` story runs `AlignedText` inside `dir="rtl"`.
+- A new `WithoutText` story checks a switch named by `aria-label` alone.
+- `KeyboardInteraction` checks that the ring ends before the label text.
+
+The docs describe the new size and the `space-8` rule. The prototype story is deleted, and the spec and plan are committed with this task.
 
 **Acceptance criteria:**
 
-- [x] SC 1 to 3 hold for Checkbox in all four projects: the box is `space-4` square, centred on the first line of a one-line and a wrapping label, and the label text and the padded `Text` start at `space-6`.
-- [x] SC 4: `Stacked` checks each label is at least 24px tall, and its JSDoc says the label is the target. Checkbox's `KeyboardInteraction` checks that the ring ends before the label text (SC 9).
-- [x] concepts.md's Forms section gives the box size, the centring and the `space-6` alignment. Forms.mdx shows lining text up under a control and embeds `AlignedText`. `.design-sync/conventions.md` states the `space-6` rule.
+- [x] SC 1 to 6 hold in all four projects.
+- [x] SC 12: Switch's `KeyboardInteraction` checks that the ring ends before the text.
+- [x] The doc parts of SC 13 for the size are done:
+  - concepts.md gives the track size and the `space-8` text start, and drops "stays 2.75rem by 1.5rem".
+  - Forms.mdx shows lining text up under a switch, embedding `AlignedText`, and gives the target size of a switch without text.
+  - conventions.md states the `space-8` rule.
+  - AGENTS.md describes `expectOnSpaceScale`'s width and indent.
 
 **Verification:**
 
-- [x] `pnpm test:storybook src/components/Checkbox/Checkbox.stories.tsx`
-- [x] Every other form story file still passes axe, including `target-size`: `pnpm test:storybook src/components/Radio src/components/RadioGroup src/components/Switch src/components/Field src/components/Fieldset`
-- [x] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
-- [x] By hand: the Checkbox stories and the Forms guide in Storybook, in both themes
+- [x] Before the CSS change, `Stacked`, `AlignedText` and `RightToLeft` fail on the track's size and the text's start. `AlignedText` also fails on the label's height in `default`. `WithoutText` and the ring check pass before and after, as guards on the smaller track.
+- [x] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
+- [x] Unchanged calls still pass: `pnpm test:storybook src/components/Checkbox src/components/Radio`
+- [x] axe, including `target-size`, on every story file that renders a Switch: `pnpm test:storybook src/components/Switch src/components/Field src/components/Fieldset src/docs/ContactForm.stories.tsx`
+- [x] `pnpm verify` and the fallow audit
 
 **Dependencies:** None
 
 **Files likely touched:**
 
 - `src/components/ChoiceControl/ChoiceControl.module.css`
-- `src/test/choiceControl.ts` (new)
-- `src/components/Checkbox/Checkbox.stories.tsx`
-- `docs/design/concepts.md`, `src/docs/Forms.mdx`, `.design-sync/conventions.md` (a paragraph each)
-- `SPEC.md`, `tasks/plan.md`, `tasks/todo.md` (committed with this task)
+- `src/test/choiceControl.ts`
+- `src/components/Switch/Switch.stories.tsx`
+- `docs/design/concepts.md`, `src/docs/Forms.mdx`, `.design-sync/conventions.md`, `AGENTS.md`
+- `SPEC.md`, `tasks/`; delete `src/components/Switch/SwitchPrototypes.stories.tsx`
 
-**Estimated scope:** M. Three of the files are short doc edits.
+**Estimated scope:** M. The code is in three files, and the rest are doc edits that ship in the same commit.
 
-## Task 2: Check the Radio's alignment and that Switch is unchanged
+## Task 2: Prove the thumb's size, travel and overshoot
 
-**Description:** A Radio `AlignedText` story makes the same measurements with the helpers from Task 1. Switch's `Stacked` story checks that the track is still 2.75rem by 1.5rem, and its JSDoc says the label is the 24px target.
+**Description:** A new `Thumb` story renders a checked and an unchecked switch, and reads each thumb from its `::before` computed style. The thumb is as wide as the track's height, less twice the border width and twice `0.125rem`, and a checked thumb is translated by the resolved `space-2`. A helper in the story file gives the travel's sign from the writing direction, so `RightToLeft` also checks that a checked thumb moves left. The story then clicks the unchecked switch, pauses the `::before` `transform` transition, and steps through its duration in 2% steps. At each step the thumb's overshoot past its end position must be at most the inset. concepts.md gives the thumb's travel and inset. No CSS changes: Task 1's track already makes the travel `space-2`.
 
 **Acceptance criteria:**
 
-- [x] SC 1 to 3 hold for Radio in all four projects.
-- [x] The size half of SC 8: the Switch track is 2.75rem by 1.5rem. Switch's `Stacked` JSDoc is updated (SC 4).
+- [x] SC 7 holds in all four projects, in both writing directions.
+- [x] SC 8 holds in all four projects: the overshoot is at most 0.125rem.
+- [x] The doc part of SC 13 for the thumb: concepts.md gives the thumb's travel and inset, and says the `playful` spring stays inside the track.
 
 **Verification:**
 
-- [x] `pnpm test:storybook src/components/Radio/Radio.stories.tsx src/components/Switch/Switch.stories.tsx`
+- [x] With the switch rule's track set back to 2.75rem by 1.5rem for one run, `Thumb` fails on the travel in all four projects and on the overshoot in the two `playful` ones. The track is then restored.
+- [x] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
+- [x] `pnpm verify` and the fallow audit
 
 **Dependencies:** Task 1
 
 **Files likely touched:**
 
-- `src/components/Radio/Radio.stories.tsx`
 - `src/components/Switch/Switch.stories.tsx`
+- `src/test/choiceControl.ts` (exports `resolvedLength`, so the story resolves `--sui-space-2` on the label)
+- `docs/design/concepts.md`, `AGENTS.md`, `tasks/`
 
 **Estimated scope:** S
 
-## Task 3: Centre the box on the lowercase letters
+## Checkpoint A: after Tasks 1 and 2
 
-**Description:** Checkpoint A found that the box, centred on the line, sits 1.8px above the middle of the lowercase letters in `default` (1.1px in `playful`), so it looks high. The label becomes an `inline-block` with `--sui-choice-control-indent` (the box's width plus the gap) of inline-start padding when it has text, through a `withText` class that `ChoiceControl.tsx` adds. The input becomes an `inline-grid` with `vertical-align: middle`, pulled back into the padding by a negative margin. The `1lh` margin and `font: inherit` go. `expectOnSpaceScale` checks the box's centre against the middle of the lowercase letters, half the resolved `1ex` above the first baseline. A Checkbox `WithoutText` story checks that a checkbox named by `aria-label` alone is as wide as its box. concepts.md says what the box is centred on, and the spec already records the decision.
+- [x] `pnpm verify` and the fallow audit pass
+- [x] Every story that renders a Switch passes axe, including `target-size`, in all four projects
+
+## Task 3: Turn on the halo for Switch
+
+**Description:** The switch rule drops `--sui-choice-control-halo-spread: 0px`, so the Checkbox's halo applies to the track. Story changes, both last in the file:
+
+- A `Halo` story replaces `NoHalo`, as Checkbox's does. It checks a transparent halo at rest, then runs `expectDistinctHaloStates` on an unchecked switch with the text tint and a checked one with the primary tint, and finds no box-shadow on a disabled switch while hovered.
+- A new `FocusedHalo` story puts a switch on a `Card`, as Checkbox's does. It hovers it, tabs to it, and checks that the halo goes at once, that no `box-shadow` transition runs, and that the ring keeps 3:1.
+
+concepts.md no longer says a Switch has no halo.
 
 **Acceptance criteria:**
 
-- [x] SC 1 to 3 hold for Checkbox and Radio in all four projects, with SC 2 measured against the lowercase letters.
-- [x] SC 4: a Checkbox named by `aria-label` alone has a label as wide as its box.
-- [x] Switch's track is still 2.75rem by 1.5rem, and its label is at least 24px tall.
+- [x] SC 9 to 11 hold in all four projects.
+- [x] The doc part of SC 13 for the halo: concepts.md describes the Switch's halo and no longer says it has none.
 
 **Verification:**
 
-- [x] The updated alignment stories fail before the CSS change, by about 1.8px in `default` and 1.1px in `playful`
-- [x] `pnpm test:storybook` on every story file that renders a choice control: Checkbox, Radio, RadioGroup, Switch, Field, Fieldset, Tooltip, the contact form and the palette showcase
-- [x] By hand: screenshots of Checkbox, Radio, RadioGroup and Switch in both themes for Checkpoint A
+- [x] Before the CSS change, `Halo` fails on the spread, and `FocusedHalo` fails on the halo shown before focus.
+- [x] With the `.choiceControl .input:focus-visible` rule removed for one run, `FocusedHalo` fails on the halo under the ring. The rule is then restored.
+- [x] `pnpm test:storybook src/components/Switch/Switch.stories.tsx`
+- [x] The Checkbox unit tests: `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
 
-**Dependencies:** Task 2
+**Dependencies:** Task 1
 
 **Files likely touched:**
 
-- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/components/ChoiceControl/ChoiceControl.tsx`
-- `src/test/choiceControl.ts`
-- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx` (JSDoc)
-- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
+- `src/components/ChoiceControl/ChoiceControl.module.css`
+- `src/components/Switch/Switch.stories.tsx`
+- `src/test/choiceControl.ts`: `expectHaloStates`, shared by the Checkbox, Radio and Switch `Halo` stories, and `expectHaloHiddenUnderFocus`, shared with Checkbox's `FocusedHalo`, which now also checks the halo's spread before focus
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx`
+- `docs/design/concepts.md`, `AGENTS.md`, `tasks/`
 
-**Estimated scope:** M
+**Estimated scope:** S
 
-## Task 4: Centre the box between the capitals and the lowercase letters
+## Task 4: Apply the review's fixes
 
-**Description:** Reviewed at Checkpoint A, the box centred on the lowercase letters hung low beside short capitalised labels such as "Email", and centred on the capitals it looked slightly high. You chose halfway between. The input gains `position: relative`, an `inset-block-start` of `calc((1ex - 1cap) / 4)` and `font: inherit`, so it rises a quarter of the gap between the two middles, measured in the label's font. `expectOnSpaceScale` checks the box's centre a quarter of `1cap + 1ex` above the first baseline. concepts.md and the story JSDoc say where the box is centred, and the spec already records the decision.
+**Description:** A review of Tasks 1 to 3, by a reviewer agent and by hand, with two stylesheet mutations, asked for these fixes:
+
+- The docs claimed a switch named by `aria-label` alone is a target at least 24px square. That only holds at 16px text, because the label is one line of its inherited font, so concepts.md and Forms.mdx now say so.
+- The spec said the Checkbox and Radio stories were unchanged, but they now use the shared halo steps. SPEC.md records the shared steps, lists those story files and rewords SC 8 and SC 14.
+- `Thumb` threw under reduced motion, where there is no slide, and its duration check could never fail. It now skips the sampling under reduced motion, asserts the slide was found, and cancels it when done.
+- Each sampled step now checks the thumb's far edge against the inner edge of the track's border, not its overshoot against the inset, so the check no longer assumes the thumb's start margin equals the inset.
+- `SpaceScaleLayout` is exported and `switchLayout` declared with `satisfies`. `resolvedLength` sets `width`, the axis it reads.
+- Nits: AGENTS.md, conventions.md and concepts.md wording, the `expectHaloStates` contract, the comment on why the click is native, a named step count, and `sign` for the travel's direction.
 
 **Acceptance criteria:**
 
-- [x] SC 1 to 3 hold for Checkbox and Radio in all four projects, with SC 2 measured halfway between the capitals and the lowercase letters.
-- [x] Checkbox and radio labels are still 24px tall, and Switch's track is still 2.75rem by 1.5rem.
+- [x] SC 6 and 8 as reworded hold in all four projects, and the docs give the 24px target at 16px text.
+- [x] `Thumb` raises no error in Storybook under `prefers-reduced-motion: reduce`.
+- [x] SPEC.md, plan.md and AGENTS.md match the code.
 
 **Verification:**
 
-- [x] The updated alignment stories fail before the CSS change, by about 0.7px in `default` and 0.9px in `playful`
-- [x] `pnpm test:storybook` on every story file that renders a choice control
-- [x] By hand: screenshots of RadioGroup and stacked checkboxes in both themes for Checkpoint A
+- [x] With the old track, `Thumb` fails on the far edge in the `playful` projects (41.24px against a 40px inner width) and on travel in the `default` ones.
+- [x] Loaded under reduced motion in Chromium, `Thumb` logs no error. Before the fix it logged a `TypeError` reading `pause`.
+- [x] `pnpm test:storybook` on the Checkbox, Radio and Switch stories
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
 
 **Dependencies:** Task 3
 
 **Files likely touched:**
 
-- `src/components/ChoiceControl/ChoiceControl.module.css`
-- `src/test/choiceControl.ts`
-- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx` (JSDoc)
-- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
+- `src/components/Switch/Switch.stories.tsx`, `src/test/choiceControl.ts`
+- `docs/design/concepts.md`, `src/docs/Forms.mdx`, `.design-sync/conventions.md`, `AGENTS.md`
+- `SPEC.md`, `tasks/`
 
 **Estimated scope:** S
 
-## Checkpoint A: after Tasks 1 to 4
+## Task 5: Keep every choice control a 24px target in small text
 
-- [x] `pnpm verify` and the fallow audit pass
-- [x] Every form story passes axe, including `target-size`, in all four projects
-- [x] You review Checkbox, Radio and the Forms guide in Storybook before the halo goes in
-
-## Task 5: Add the halo to Checkbox and Radio, with none on Switch
-
-**Description:** The stylesheet gains the halo as the plan's Architecture Decisions set out: a `box-shadow` on an enabled input, spread by the gap, tinted with the text colour or, on a checked input, with the fill. Hover on the label (inside `@media (hover: hover)`) uses the 8% colour, and press uses the 16% one. `box-shadow` joins the input's transition. Switch's rule sets the spread to `0px`. A helper in `src/test/choiceControl.ts` reads the colour and spread from the computed `box-shadow`, and another drives real hover and press, as Button's `expectDistinctPointerStates` does. New `Halo` stories, last in their files, cover Checkbox and Radio unchecked, checked and disabled. A Switch story checks that hovering shows no halo. The spec's code sample is updated to the custom properties.
+**Description:** Codex's review of the pull request found that the 16px track no longer keeps a Switch's label 24px tall, as the 1.5rem track did: at 12px text the label is one 18px line, and switches stacked with `gap={1}` sit 22px apart, which meets neither WCAG 2.5.8's size nor its spacing exception. Checkbox and Radio have had the same gap since their resize. The shared label rule gains block padding of `max(0px, (24px - 1lh) / 2)`, which is 0px at 16px text. `expectCentredTarget` in `src/test/choiceControl.ts` checks a label is at least 24px tall with its line in the middle, and new Checkbox and Switch `SmallText` stories render controls in 12px text, stacked with `gap={1}`, one named by `aria-label` alone.
 
 **Acceptance criteria:**
 
-- [x] SC 5: with the pointer over the label text, the halo is spread by `space-2`, and rest, hover and press are each at least `distinctFillContrast` apart, unchecked and checked, for Checkbox and Radio in all four projects.
-- [x] SC 6 and 7: the tint is primary when checked and text otherwise, checked with `isSameColor`, and a hovered disabled control has no `box-shadow`. The other half of SC 8: a hovered Switch has no halo.
-- [x] concepts.md describes the halo: when it shows, its colours, that disabled controls and Switch have none, and that forced colours remove it. The halo fallback colours are checked by hand against the fallback page colour.
+- [x] SC 15 holds in all four projects.
+- [x] concepts.md, Forms.mdx, SPEC.md and AGENTS.md describe the padding and the helper.
 
 **Verification:**
 
-- [x] `pnpm test:storybook src/components/Checkbox src/components/Radio src/components/Switch`
-- [x] `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
-- [ ] By hand: hover and press in Storybook, both themes and modes
+- [x] Before the CSS change, both `SmallText` stories fail on the target height: 18px in `default` and 18.9px in `playful`.
+- [x] With the padding only below the line, they fail on the line being 3.5px off centre.
+- [x] `pnpm verify`, `pnpm build` and the fallow audit
 
 **Dependencies:** Task 4
 
 **Files likely touched:**
 
-- `src/components/ChoiceControl/ChoiceControl.module.css`
-- `src/test/choiceControl.ts`
-- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Radio/Radio.stories.tsx`, `src/components/Switch/Switch.stories.tsx`
-- `docs/design/concepts.md`, `SPEC.md`
-
-**Estimated scope:** M
-
-## Task 6: Check the halo in every palette
-
-**Description:** The palette showcase gains a checked Checkbox beside its unchecked one. Its play function checks each palette's two checkboxes: transparent against `var(--sui-choice-control-halo-hover)`, and hover against `var(--sui-choice-control-halo-press)`, each at least `distinctFillContrast` with `fillContrast`. This is how it already checks every Button's hover fill. The spec's Testing Strategy and Success Criteria gain the check.
-
-**Acceptance criteria:**
-
-- [x] In all four projects, every palette's unchecked and checked halos clear `distinctFillContrast` from rest to hover and from hover to press.
-- [x] The palette showcase still passes axe.
-
-**Verification:**
-
-- [x] `pnpm test:storybook src/styles/PaletteShowcase.stories.tsx`
-
-**Dependencies:** Task 5
-
-**Files likely touched:**
-
-- `src/styles/PaletteShowcase.stories.tsx`
-- `SPEC.md`
-
-**Estimated scope:** S
-
-## Task 7: Apply the code review's fixes
-
-**Description:** The review before the pull request asked for these fixes, which the spec's review-fix decisions and criteria 12 to 16 record. The input loses `position: relative` and `inset-block-start` and is lifted by `margin-block-start: calc((1ex - 1cap) / 2)`. The padding rule becomes `.choiceControl.withText`. The label sets `text-align: start` and `text-indent: 0`. `--sui-choice-control-indent`, `-halo`, `-halo-hover`, `-halo-press` and `-halo-tint` become `--_sui-`. `expectOnSpaceScale` and `textStart` measure from the start edge in either direction. New Checkbox stories, `OuterStyles` and `RightToLeft`, and an `AlignedText` check that the input is not positioned. A unit test checks the hover gate. The docs and nits from the review are fixed.
-
-**Acceptance criteria:**
-
-- [x] SC 12 to 15 hold in all four projects, and the existing criteria still hold.
-- [x] SC 16: the docs, JSDoc and AGENTS.md say what the review asked.
-- [x] The new tests fail on the code before the fix: `OuterStyles` with single-class padding, `AlignedText` with the positioned input, and the hover-gate test with the hover rule moved out of its media query.
-
-**Verification:**
-
-- [x] `pnpm test:storybook` on every story file that renders a choice control, and `pnpm test:unit src/components/Checkbox/Checkbox.test.tsx`
-- [x] `pnpm verify`, `pnpm build` and the fallow audit
-
-**Dependencies:** Task 6
-
-**Files likely touched:**
-
 - `src/components/ChoiceControl/ChoiceControl.module.css`, `src/test/choiceControl.ts`
-- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Checkbox/Checkbox.test.tsx`
-- `src/components/Checkbox/Checkbox.tsx`, `src/components/Radio/Radio.tsx`, `src/components/Switch/Switch.tsx` (JSDoc)
+- `src/components/Checkbox/Checkbox.stories.tsx`, `src/components/Switch/Switch.stories.tsx`
 - `docs/design/concepts.md`, `src/docs/Forms.mdx`, `AGENTS.md`, `SPEC.md`, `tasks/`
-
-**Estimated scope:** L. Most files take a sentence of documentation.
-
-## Task 8: Draw no halo under the focus ring
-
-**Description:** Codex's review of the pull request found that a checkbox with keyboard focus, under the pointer, drew its halo beneath the focus ring, which lowered the ring's contrast on a Bright surface to about 2.85:1. `.choiceControl .input:focus-visible` sets the halo transparent, after the hover and press rules. A Checkbox `FocusedHalo` story, last in its file, focuses a checkbox on a `Card` with a real Tab, hovers it, and checks the halo is transparent and the ring keeps 3:1. concepts.md and the spec record it.
-
-**Acceptance criteria:**
-
-- [x] SC 17 holds in all four projects.
-- [x] `FocusedHalo` fails before the fix, with the halo drawn under the ring.
-
-**Verification:**
-
-- [x] `pnpm test:storybook` on the Checkbox, Radio, Switch and palette showcase stories
-- [x] `pnpm verify`, `pnpm build` and the fallow audit
-
-**Dependencies:** Task 7
-
-**Files likely touched:**
-
-- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/components/Checkbox/Checkbox.stories.tsx`
-- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
-
-**Estimated scope:** S
-
-## Task 9: Remove the halo at once when focus arrives
-
-**Description:** Codex's second review found that, with the pointer already over the label, Tab focused the input while the halo spent 120ms fading out under the new focus ring. While focused, the input now transitions only its background and border, so the halo vanishes at once and keyboard checking still fades its colours. `FocusedHalo` now hovers first, then focuses with a real Tab, and checks that the focused input does not transition its `box-shadow`.
-
-**Acceptance criteria:**
-
-- [x] SC 17's hover-then-focus clause holds in all four projects.
-- [x] `FocusedHalo` fails before the fix, with `box-shadow` still in the focused input's transitions.
-
-**Verification:**
-
-- [x] `pnpm test:storybook` on the Checkbox, Radio, Switch and palette showcase stories, and the Checkbox unit tests
-- [x] `pnpm verify`, `pnpm build` and the fallow audit
-
-**Dependencies:** Task 8
-
-**Files likely touched:**
-
-- `src/components/ChoiceControl/ChoiceControl.module.css`, `src/components/Checkbox/Checkbox.stories.tsx`
-- `docs/design/concepts.md`, `SPEC.md`, `tasks/`
 
 **Estimated scope:** S
 
 ## Checkpoint B: complete
 
-- [x] Spec success criteria 1 to 17 hold
+- [x] Spec success criteria 1 to 15 hold
 - [x] `pnpm verify`, `pnpm build` and the fallow audit pass
+- [x] By hand: screenshots of the Switch stories in both themes and modes, under Chromium's forced colours, and in WebKit, published with `html_render`
 - [ ] You review the branch; pushing and opening a pull request wait for your go-ahead

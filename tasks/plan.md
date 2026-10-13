@@ -1,83 +1,58 @@
-# Implementation Plan: Compact checkbox and radio
+# Implementation Plan: Compact switch
 
 ## Overview
 
-Implements [SPEC.md](../SPEC.md). The box of a `Checkbox` or `Radio` shrinks to `space-4`, centred between the capital and lowercase letters of the label's first line, so the label text starts at `space-6` in every theme. Then a hover and press halo is added around the box. Every change is in `ChoiceControl.module.css`, and the checks are stories, because layout and paint can't be measured in jsdom. Tasks are in [todo.md](todo.md).
+This plan implements [SPEC.md](../SPEC.md). The `Switch` track shrinks to `space-6` by `space-4`, so its label text starts at `space-8` in every theme. The thumb's travel becomes `space-2`, which keeps the `playful` spring inside the track, and the Checkbox's halo is turned on for Switch. Every change to the component is in the switch rule of `ChoiceControl.module.css`, and every check is a Switch story, because jsdom can't measure layout or paint. Tasks are in [todo.md](todo.md).
 
 ## Architecture Decisions
 
-- **Centred between the capitals and the lowercase letters.** Checkpoint A found that a box centred on the line looks high against a long lowercase label, so Task 3 centred it on the lowercase letters with `vertical-align: middle` in an inline layout. That hung low beside short capitalised labels, so Task 4 lifts it halfway towards the capitals, as the spec's Centring decision sets out.
-- **Two slices: size, then halo.** The size change is the risky one, because axe's `target-size` rule might reject a 16px input, so it lands and is checked first. The halo is independent of it and builds on the same helpers.
-- **Hover and press colours are custom properties on the input.** `--_sui-choice-control-halo-hover` and `--_sui-choice-control-halo-press` hold the 8% and 16% mixes of the tint, as Button's `--sui-button-bg-hover` holds its hover fill. `:hover` and `:active` on the label point `--sui-choice-control-halo` at one of them. A story can then measure every palette's halo without moving the pointer, as the palette showcase does for Buttons. This replaces the strength variable in the spec's sample, with the same behaviour, so the spec's sample is updated to match in Task 5.
-
-  ```css
-  .input {
-    --_sui-choice-control-halo: transparent;
-    --_sui-choice-control-halo-hover: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 8%, transparent);
-    --_sui-choice-control-halo-press: color-mix(in srgb, var(--_sui-choice-control-halo-tint) 16%, transparent);
-  }
-
-  @media (hover: hover) {
-    .choiceControl:hover .input {
-      --_sui-choice-control-halo: var(--_sui-choice-control-halo-hover);
-    }
-  }
-
-  .choiceControl:active .input {
-    --_sui-choice-control-halo: var(--_sui-choice-control-halo-press);
-  }
-
-  .input:enabled {
-    box-shadow: 0 0 0 var(--sui-choice-control-halo-spread) var(--_sui-choice-control-halo);
-  }
-  ```
-
-- **Shared story helpers in `src/test/choiceControl.ts`.** Checkbox and Radio stories make the same measurements: a token resolved to pixels in the control's scope, the box's position against the label's first line and text, and the halo read from the computed `box-shadow`. The module is committed with its first consumer, because the fallow gate rejects a file nothing reachable imports.
-- **Measured against resolved tokens.** Each assertion compares pixels with `--sui-space-4`, `--sui-space-6` and `--sui-space-2` resolved in the story's own theme, within 0.5px, so the same story passes in `default` (16, 24, 8) and `playful` (19.2, 28.8, 9.6).
-- **Switch is pinned, not changed.** Its rule sets `--sui-choice-control-size: 1.5rem` and `--sui-choice-control-halo-spread: 0px`, so it looks the same as now.
-- **Review fixes.** An independent review before the pull request found that `position: relative` changed the input's paint order and that a consumer's padding on the label moved the box. Task 7 lifts the box with a margin instead, guards the padding and inherited text alignment, makes the derived custom properties private, and adds right-to-left and hover-gate tests and the docs the review asked for.
-- **Order.** The tasks touch the same stylesheet and story files, so they run in sequence, one commit each. `SPEC.md` and `tasks/` are committed with Task 1.
+- **Three slices: size, thumb, halo.** The size change carries the layout risk and the most docs, so it goes first. The thumb needs no CSS of its own, since the smaller track brings the shorter travel, so its task only adds the proof. The halo is independent of both.
+- **A thumb test that passes on arrival is proven against the old track.** The spec's rule is that every new test must be shown to fail without its fix. The `Thumb` story's fix is Task 1's track, so Task 2 proves the story by setting the track back to 2.75rem by 1.5rem for one run and watching it fail, then restores the track. `FocusedHalo` is handled the same way in Task 3. It is proven by removing the existing `.choiceControl .input:focus-visible` rule for one run.
+- **`expectOnSpaceScale` takes an options object.** The box width and the indent default to `var(--sui-space-4)` and `var(--sui-space-6)`, so no Checkbox or Radio call changes. The options type, `SpaceScaleLayout`, is exported, and Switch stories declare their layout with `satisfies` so a misspelt key fails to compile.
+- **The thumb is read from the `::before` computed style.** A pseudo-element has no bounding box, so a story reads the thumb's size from its computed `inline-size` and its travel from the `m41` of its computed `transform`. Helpers that only Switch stories use stay in `Switch.stories.tsx`.
+- **The overshoot is sampled, not computed.** The story checks the switch with a click and finds the `transform` transition on its `::before`. It pauses the transition and steps `currentTime` through its duration, reading the transform at each step. This measures whatever easing the theme sets, not a copy of the `linear()` peak, so changing the spring can't silently invalidate it. Since the review, each step checks the thumb's far edge against the inner edge of the track's border, rather than its overshoot against the inset, so the check does not rely on the thumb's start margin equalling the inset. Under reduced motion there is no slide, and the sampling is skipped.
+- **Halo stories go last in the file.** As in Checkbox's file, `Halo` and `FocusedHalo` use real pointer input, which leaves `:hover` behind and stops `userEvent.tab()` giving `:focus-visible` to later stories.
 
 ## Task List
 
-### Phase 1: Compact box on the space scale
+### Phase 1: Size and thumb
 
-- [x] Task 1: Shrink and centre the box, and line Checkbox text up at `space-6`
-- [x] Task 2: Check the Radio's alignment and that Switch is unchanged
-- [x] Task 3: Centre the box on the lowercase letters
-- [x] Task 4: Centre the box between the capitals and the lowercase letters
+- [x] Task 1: Shrink the track and start the text at `space-8`
+- [x] Task 2: Prove the thumb's size, travel and overshoot
 
-### Checkpoint A: after Tasks 1 to 4
+### Checkpoint A: after Tasks 1 and 2
 
 - [x] `pnpm verify` and the fallow audit pass
-- [x] Every form story passes axe, including `target-size`, in all four projects
-- [x] You look at Checkbox, Radio and the Forms guide in Storybook, in both themes, before the halo goes in
+- [x] Every story that renders a Switch passes axe, including `target-size`, in all four projects
 
-### Phase 2: Hover and press halo
+### Phase 2: Halo
 
-- [x] Task 5: Add the halo to Checkbox and Radio, with none on Switch
-- [x] Task 6: Check the halo in every palette
-- [x] Task 7: Apply the code review's fixes
-- [x] Task 8: Draw no halo under the focus ring
-- [x] Task 9: Remove the halo at once when focus arrives
+- [x] Task 3: Turn on the halo for Switch
+
+### Phase 3: Review
+
+- [x] Task 4: Apply the review's fixes
+- [x] Task 5: Keep every choice control a 24px target in small text
 
 ### Checkpoint B: complete
 
-- [x] Spec success criteria 1 to 17 hold
+- [x] Spec success criteria 1 to 15 hold
 - [x] `pnpm verify`, `pnpm build` and the fallow audit pass
+- [x] Screenshots of the Switch stories in both themes and modes, under forced colours, and in WebKit, published for your review
 - [ ] You review the branch before anything is pushed
 
 ## Risks and Mitigations
 
-| Risk                                                                                                                                                                  | Impact | Mitigation                                                                                                                                                                                                                |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| axe's `target-size` rejects the 16px input, in `Stacked` (`gap={1}`) or elsewhere                                                                                     | High   | Task 1 runs every form story file before committing. Its spacing exception should pass: neighbouring inputs' centres are 28px apart, and 24px is needed. If it fails, stop and bring options rather than loosen the rule. |
-| `vertical-align: middle` can't be checked in Firefox, because Playwright's Firefox does not launch here                                                               | Low    | It is CSS 2.1 and long supported. Chromium and WebKit agree to within 0.01px, and the alignment stories run in Chromium on every change.                                                                                  |
-| Sub-pixel rounding at `playful`'s 19.2px box and 28.8px indent                                                                                                        | Low    | Assertions allow 0.5px.                                                                                                                                                                                                   |
-| Real hover or press in a halo story changes later stories in the same file: `:hover` lingers, and `userEvent.tab()` stops giving `:focus-visible` after trusted input | Medium | Halo stories go last in their files and release the pointer in `finally`, as Button's do. A story that needs `:focus-visible` after them starts with `pressKey("Shift")`.                                                 |
-| The primary halo is close to the 1.1:1 bar (lowest computed 1.112)                                                                                                    | Medium | Stories measure the real colours in Bright and Pop (Task 5) and the declared colours in all five palettes (Task 6). If one fails, stop and bring options rather than lower `distinctFillContrast`.                        |
-| The reduced-motion unit test in `Checkbox.test.tsx` only allows colour transitions                                                                                    | Low    | The halo transitions `box-shadow`, whose spread never changes, only its colour. It is added to the input's transition, not the reduced-motion block, and the unit tests run in Tasks 1 and 5.                             |
+| Risk                                                                                                                           | Impact | Mitigation                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `getAnimations({ subtree: true })` does not return the `::before` transition, or pausing it does not update its computed style | Medium | Fall back to `document.getAnimations()`, filtered on `effect.target` and `effect.pseudoElement`. If no Chromium API can seek the transition, stop and bring options, rather than check only the end position. |
+| The `playful` margin is small: at the spring's peak the thumb is 0.45px inside the border                                      | Low    | Measured, not computed, so a change to the spring or the inset fails the story. Sampling in 2% steps gets within a few hundredths of a pixel of the 38% peak.                                                 |
+| Real hover or press in a halo story changes later stories in the same file                                                     | Medium | `Halo` and `FocusedHalo` go last and release the pointer in `finally`, through `expectHaloStates`. A story that needs `:focus-visible` after them starts with `pressKey("Shift")`.                            |
+| Sub-pixel rounding in `playful` (28.8px track, 19.2px height, 38.4px indent)                                                   | Low    | Assertions allow 0.5px, as Checkbox's do.                                                                                                                                                                     |
+| A smaller switch fails axe's `target-size` somewhere                                                                           | Low    | A one-line label is 24px tall and at least 24px wide, so it passes on its own. Task 1 runs every story file that renders a Switch.                                                                            |
+| Firefox can't be checked, because Playwright's Firefox does not launch here                                                    | Low    | The layout is the one Checkbox and Radio use, and Chromium and WebKit agree on it. WebKit is checked by hand at Checkpoint B.                                                                                 |
+| A consumer that padded text by hand to 52px under a switch                                                                     | Low    | Forms.mdx and concepts.md give `var(--sui-space-8)`, and the spec records the change for the release notes.                                                                                                   |
 
 ## Open Questions
 
-None. Task 6 stayed in the plan, and `tasks/` is committed with the spec.
+None. The plan and the task list are committed with the spec in Task 1.

@@ -28,6 +28,8 @@
   text-indent: 0;
   /* Stops a flex or grid parent stretching the label, which would make the empty space beside the text clickable */
   inline-size: fit-content;
+  /* Keeps the label a 24px target in text smaller than 16px, with its first line centred in it */
+  padding-block: max(0px, (24px - 1lh) / 2);
   font-family: var(--sui-font-body, system-ui, sans-serif);
   line-height: var(--sui-line-height-normal, 1.5);
 }
@@ -40,9 +42,7 @@
 }
 
 .choiceControl[data-kind="switch"] {
-  --sui-choice-control-size: 1.5rem;
-  --sui-choice-control-track-size: 2.75rem;
-  --sui-choice-control-halo-spread: 0px;
+  --sui-choice-control-track-size: var(--sui-space-6, 1.5rem);
   --sui-choice-control-radius: var(--sui-radius-full, 9999px);
   --sui-choice-control-mark-unchecked: var(--sui-color-input-border, #6b7280);
   --sui-choice-control-mark-size: calc(
