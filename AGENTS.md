@@ -119,6 +119,10 @@ Claude Code hooks in `.claude/settings.json` run `.claude/hooks/standards.mjs` s
 
 To add a standard, add the document under `docs/standards/` and a rule in `.claude/standards.json`.
 
+## Specs
+
+A feature is specified before it is built, through the agent-skills `spec-driven-development` workflow: the spec in `SPEC.md`, then the plan in `tasks/plan.md` and the task list in `tasks/todo.md`, each approved before the next. The skills write to those root paths, so they hold only the feature in progress. The feature's PR ends by moving them to `docs/specs/<YYYY-MM-DD>-<slug>/` as `spec.md`, `plan.md` and `todo.md`, dated from when the spec was written, pointing their links at the new names and listing the folder in `docs/specs/README.md`, so `main` never has a spec at the root.
+
 ---
 
 <!-- fallow:setup-hooks:start -->

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan implements [SPEC.md](../SPEC.md). The `Switch` track shrinks to `space-6` by `space-4`, so its label text starts at `space-8` in every theme. The thumb's travel becomes `space-2`, which keeps the `playful` spring inside the track, and the Checkbox's halo is turned on for Switch. Every change to the component is in the switch rule of `ChoiceControl.module.css`, and every check is a Switch story, because jsdom can't measure layout or paint. Tasks are in [todo.md](todo.md).
+This plan implements [spec.md](spec.md). The `Switch` track shrinks to `space-6` by `space-4`, so its label text starts at `space-8` in every theme. The thumb's travel becomes `space-2`, which keeps the `playful` spring inside the track, and the Checkbox's halo is turned on for Switch. Every change to the component is in the switch rule of `ChoiceControl.module.css`, and every check is a Switch story, because jsdom can't measure layout or paint. Tasks are in [todo.md](todo.md).
 
 ## Architecture Decisions
 

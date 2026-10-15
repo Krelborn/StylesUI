@@ -1,6 +1,6 @@
 # Tasks: Compact switch
 
-Spec: [SPEC.md](../SPEC.md). Plan: [plan.md](plan.md). "SC n" is the spec's success criterion n.
+Spec: [spec.md](spec.md). Plan: [plan.md](plan.md). "SC n" is the spec's success criterion n.
 
 Before every commit: `pnpm verify` and `fallow audit --format json --quiet --explain --gate-marker agent`.
 
