@@ -1,6 +1,6 @@
 # Specs
 
-Each file is the spec a StylesUI feature was built from, written with a coding agent through the [agent-skills](https://github.com/addyosmani/agent-skills) `spec-driven-development` workflow and approved before any code. [`AGENTS.md`](../../AGENTS.md) describes where a spec lives while its feature is in progress.
+This folder is where StylesUI's specs live, however they were written. Each file is the spec a feature was built from, named for the date it was written. Plans and task lists are needed only while building, so they are not kept.
 
 - [Palettes](2026-10-11-palettes.md): split colour from themes and add the Mist, Paper and Dusk palettes. Released in 0.5.0 ([#42](https://github.com/Krelborn/StylesUI/pull/42)).
 - [Markdown Review follow-ups](2026-10-12-markdown-review-follow-ups.md): status and per-colour outline Buttons, aligned placements and popover focus, for gaps [Markdown Review](https://github.com/Krelborn/markdown-review) found. Released in 0.7.0 ([#48](https://github.com/Krelborn/StylesUI/pull/48)).

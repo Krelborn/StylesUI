@@ -121,7 +121,7 @@ To add a standard, add the document under `docs/standards/` and a rule in `.clau
 
 ## Specs
 
-A feature is specified before it is built, through the agent-skills `spec-driven-development` workflow: the spec in `SPEC.md`, then the plan in `tasks/plan.md` and the task list in `tasks/todo.md`, each approved before the next. The skills write to those root paths, so they hold only the feature in progress. The plan and task list are needed only while building, so `tasks/` is gitignored and never committed. The feature's PR ends by moving `SPEC.md` to `docs/specs/<YYYY-MM-DD>-<slug>.md`, dated from when the spec was written, and listing it in `docs/specs/README.md`, so `main` never has a spec at the root.
+`docs/specs/` is where specs live, however they are written: one file per feature, `<YYYY-MM-DD>-<slug>.md`, dated from when the spec was written and listed in `docs/specs/README.md`. A spec a tool writes elsewhere, such as the root `SPEC.md` of the agent-skills `spec-driven-development` workflow, is moved there by the PR that builds the feature, so `main` never has a spec at the root. Plans and task lists, such as that workflow's `tasks/plan.md` and `tasks/todo.md`, are needed only while building, so `tasks/` is gitignored and never committed.
 
 ---
 
