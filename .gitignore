@@ -25,6 +25,9 @@ dist-ssr
 storybook-static
 .fallow/
 
+# Plan and task list of the feature in progress, needed only while building it
+/tasks/
+
 # design-sync
 .design-sync/sb-reference/
 .design-sync/learnings/

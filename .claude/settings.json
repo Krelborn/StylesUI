@@ -36,15 +36,6 @@
             "timeout": 10
           }
         ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/fallow-gate.sh"
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -134,8 +125,29 @@
       }
     ]
   },
+  "extraKnownMarketplaces": {
+    "addy-agent-skills": {
+      "source": {
+        "repo": "addyosmani/agent-skills",
+        "source": "github"
+      }
+    },
+    "fallow-skills": {
+      "source": {
+        "repo": "fallow-rs/fallow-skills",
+        "source": "github"
+      }
+    },
+    "open-code-review": {
+      "source": {
+        "repo": "alibaba/open-code-review",
+        "source": "github"
+      }
+    }
+  },
   "enabledPlugins": {
     "open-code-review@open-code-review": true,
-    "agent-skills@addy-agent-skills": true
+    "agent-skills@addy-agent-skills": true,
+    "fallow@fallow-skills": true
   }
 }

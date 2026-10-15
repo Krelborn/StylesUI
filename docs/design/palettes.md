@@ -1,6 +1,6 @@
 # Palettes
 
-Status: accepted. [`SPEC.md`](../../SPEC.md) turns this into acceptance criteria.
+Status: accepted. [`docs/specs/2026-10-11-palettes.md`](../specs/2026-10-11-palettes.md) turns this into acceptance criteria.
 
 ## Problem
 
