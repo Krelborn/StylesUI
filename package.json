@@ -1,6 +1,24 @@
 {
   "name": "@krelborn/stylesui",
   "version": "0.8.0",
+  "description": "Tree-shakable React 19 component library styled with CSS modules and custom properties, with themes, palettes, light and dark modes, and accessibility tests against WCAG 2.2 AA.",
+  "keywords": [
+    "accessibility",
+    "component-library",
+    "css-custom-properties",
+    "css-modules",
+    "dark-mode",
+    "design-system",
+    "react",
+    "react-components",
+    "theming",
+    "ui-library",
+    "wcag"
+  ],
+  "homepage": "https://github.com/Krelborn/StylesUI#readme",
+  "bugs": {
+    "url": "https://github.com/Krelborn/StylesUI/issues"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -25,7 +43,8 @@
     "./fonts/playful.css": "./fonts/playful.css"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "@krelborn:registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json",
