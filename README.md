@@ -2,6 +2,9 @@
 
 A React component library styled with CSS modules and CSS custom properties.
 
+> [!WARNING]
+> StylesUI is in beta and, for now, a personal project. It works, but expect rough edges, and expect components, props and tokens to change between releases until 1.0.
+
 ## Installation
 
 ```sh
@@ -115,6 +118,12 @@ Create `src/components/<Name>/` with `<Name>.tsx`, `<Name>.module.css`, `<Name>.
 Form components share code in `src/forms/`: the `ControlSize` type, the `FieldContext` and `RadioGroupContext` contexts (each in its own module), the `useFieldControl` hook that merges a `Field`'s state into a control's props, the `useRadioGroupItem` hook that gives `Radio` and `Segment` their `RadioGroup`'s name and selection, and `hasContent`. Only `ControlSize` is exported from the package. `TextControl` (behind `TextInput`, `Textarea` and `Select`), `ChoiceControl` (behind `Checkbox`, `Switch` and `Radio`) and `RequiredIndicator` are internal components: they are not exported from `src/index.ts` and have no stories or tests of their own, since the public components built on them cover them. `TextControl` and `ChoiceControl` own the one CSS module their wrappers share, so those wrappers have none.
 
 Tree-shaking relies on the build preserving one output module per source module and on `"sideEffects": ["**/*.css"]` in `package.json`. Avoid top-level side effects in component modules.
+
+## Feedback
+
+Bug reports, questions and ideas are very welcome: please [open an issue](https://github.com/Krelborn/StylesUI/issues).
+
+I'm not accepting pull requests. StylesUI is a personal project I maintain in my spare time, and for now I want to keep its design in one place. If you have a fix in mind, describe it in an issue and I'll take it from there.
 
 ## Licence
 

@@ -1,6 +1,6 @@
 {
   "name": "@krelborn/stylesui",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Tree-shakable React 19 component library styled with CSS modules and custom properties, with themes, palettes, light and dark modes, and accessibility tests against WCAG 2.2 AA.",
   "keywords": [
     "accessibility",
