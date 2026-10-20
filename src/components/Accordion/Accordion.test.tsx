@@ -1,4 +1,4 @@
-import { render as renderBase, screen, within } from "@testing-library/react";
+import { fireEvent, render as renderBase, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -195,6 +195,105 @@ describe("Accordion", () => {
     expect(new Set(allIds).size).toBe(6);
   });
 
+  it("must hide a closed panel until it is found when it renders and when it closes again", async () => {
+    const consoleError = vi.spyOn(console, "error");
+    const { render, user } = setUpTest();
+    render();
+
+    const afterRender = elements.panelOf("Fill")?.getAttribute("hidden");
+    await user.click(elements.toggle("Fill"));
+    const whileOpen = elements.panelOf("Fill")?.getAttribute("hidden");
+    await user.click(elements.toggle("Fill"));
+
+    expect(afterRender).toBe("until-found");
+    expect(whileOpen).toBeNull();
+    expect(elements.panelOf("Fill")).toHaveAttribute("hidden", "until-found");
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it("must open an item and report the open items when the browser finds a match in its panel", () => {
+    const { onValueChange, render } = setUpTest();
+    render({ selection: { defaultValue: ["layout"] } });
+
+    findInPage(elements.panelOf("Stroke"));
+
+    expect(elements.toggle("Stroke")).toHaveAttribute("aria-expanded", "true");
+    expect(elements.panelOf("Stroke")).toBeVisible();
+    expect(onValueChange).toHaveBeenLastCalledWith(["layout", "stroke"]);
+  });
+
+  it("must close the other items when the browser finds a match in an exclusive accordion", () => {
+    const { render } = setUpTest();
+    render({ exclusive: true, selection: { defaultValue: ["layout"] } });
+
+    findInPage(elements.panelOf("Stroke"));
+
+    expect(elements.toggle("Stroke")).toHaveAttribute("aria-expanded", "true");
+    expect(elements.toggle("Layout")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must hide the panel until it is found again when a controlled parent keeps a found item closed", () => {
+    const { onValueChange, render } = setUpTest();
+    render({ selection: { value: [] } });
+
+    findInPage(elements.panelOf("Stroke"));
+
+    expect(onValueChange).toHaveBeenLastCalledWith(["stroke"]);
+    expect(elements.toggle("Stroke")).toHaveAttribute("aria-expanded", "false");
+    expect(elements.panelOf("Stroke")).toHaveAttribute("hidden", "until-found");
+  });
+
+  it("must keep a disabled item closed and reachable when its toggle is clicked or pressed", async () => {
+    const { onValueChange, render, user } = setUpTest();
+    render({ disabledValue: "layout" });
+
+    await user.click(elements.toggle("Layout"));
+    await user.keyboard("{Enter}");
+    await user.keyboard(" ");
+
+    expect(elements.toggle("Layout")).toHaveFocus();
+    expect(elements.toggle("Layout")).toHaveAttribute("aria-disabled", "true");
+    expect(elements.toggle("Layout")).toHaveAttribute("aria-expanded", "false");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("must hide a disabled item's closed panel from find-in-page when it renders", () => {
+    const { render } = setUpTest();
+
+    render({ disabledValue: "layout" });
+
+    expect(elements.panelOf("Layout")).toHaveAttribute("hidden", "");
+    expect(elements.panelOf("Fill")).toHaveAttribute("hidden", "until-found");
+  });
+
+  it("must hide a closed panel from find-in-page when its item becomes disabled", () => {
+    const item = (disabled: boolean) => (
+      <Accordion headingLevel={3}>
+        <AccordionItem disabled={disabled} title="Fill" value="fill">
+          Fill content
+        </AccordionItem>
+      </Accordion>
+    );
+    const { rerender } = renderBase(item(false));
+
+    rerender(item(true));
+
+    expect(elements.panelOf("Fill")).toHaveAttribute("hidden", "");
+  });
+
+  it("must render a lazy item's content only once it has opened when the item is lazy", async () => {
+    const { render, user } = setUpTest();
+    render({ lazyValue: "stroke" });
+
+    const beforeOpening = elements.panelOf("Stroke")?.textContent;
+    await user.click(elements.toggle("Stroke"));
+    await user.click(elements.toggle("Stroke"));
+
+    expect(beforeOpening).toBe("");
+    expect(elements.panelOf("Stroke")).toHaveTextContent("Stroke content");
+    expect(elements.panelOf("Fill")).toHaveTextContent("Fill content");
+  });
+
   it("must pass other props to the item's element when they are given", () => {
     renderBase(
       <Accordion headingLevel={3}>
@@ -248,8 +347,10 @@ describe("Accordion", () => {
 });
 
 interface RenderOptions {
+  disabledValue?: string;
   exclusive?: boolean;
   headingLevel?: 2 | 3 | 4;
+  lazyValue?: string;
   regions?: boolean;
   selection?: { defaultValue: string[] } | { value: string[] };
   variant?: AccordionVariant;
@@ -260,8 +361,10 @@ function setUpTest() {
   const onValueChange = vi.fn();
 
   const render = ({
+    disabledValue,
     exclusive,
     headingLevel = 3,
+    lazyValue,
     regions,
     selection = { defaultValue: [] },
     variant,
@@ -276,7 +379,13 @@ function setUpTest() {
         variant={variant}
       >
         {inspectorSections.map(({ title, value }) => (
-          <AccordionItem key={value} title={title} value={value}>
+          <AccordionItem
+            disabled={value === disabledValue}
+            key={value}
+            lazy={value === lazyValue}
+            title={title}
+            value={value}
+          >
             {`${title} content`}
           </AccordionItem>
         ))}
@@ -285,6 +394,20 @@ function setUpTest() {
   };
 
   return { onValueChange, render, user };
+}
+
+/**
+ * Does what the browser does when find-in-page or a fragment link matches inside a panel hidden until found
+ *
+ * @param panel the panel holding the match
+ */
+function findInPage(panel: HTMLElement | null): void {
+  if (panel === null) {
+    throw new Error("No panel to find a match in");
+  }
+
+  panel.removeAttribute("hidden");
+  fireEvent(panel, new Event("beforematch", { bubbles: true }));
 }
 
 const elements = {
