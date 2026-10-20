@@ -294,6 +294,93 @@ describe("Accordion", () => {
     expect(elements.panelOf("Fill")).toHaveTextContent("Fill content");
   });
 
+  it("must move focus to the next and previous toggle without wrapping when Down and Up are pressed", async () => {
+    const { render, user } = setUpTest();
+    render({ disabledValue: "fill" });
+    await user.tab();
+
+    await user.keyboard("{ArrowDown}");
+    const afterDown = document.activeElement;
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    const atEnd = document.activeElement;
+    await user.keyboard("{ArrowUp}{ArrowUp}{ArrowUp}");
+
+    expect(afterDown).toBe(elements.toggle("Fill"));
+    expect(atEnd).toBe(elements.toggle("Stroke"));
+    expect(elements.toggle("Layout")).toHaveFocus();
+  });
+
+  it("must move focus to the first and last toggle when Home and End are pressed", async () => {
+    const { render, user } = setUpTest();
+    render();
+    await user.tab();
+
+    await user.keyboard("{End}");
+    const afterEnd = document.activeElement;
+    await user.keyboard("{Home}");
+
+    expect(afterEnd).toBe(elements.toggle("Stroke"));
+    expect(elements.toggle("Layout")).toHaveFocus();
+  });
+
+  it("must move only between a nested accordion's toggles when a key is pressed inside it", async () => {
+    const user = userEvent.setup();
+    renderBase(
+      <Accordion defaultValue={["layout"]} headingLevel={3}>
+        <AccordionItem title="Layout" value="layout">
+          <Accordion headingLevel={4}>
+            <AccordionItem title="Constraints" value="constraints" />
+            <AccordionItem title="Spacing" value="spacing" />
+          </Accordion>
+        </AccordionItem>
+        <AccordionItem title="Fill" value="fill" />
+      </Accordion>
+    );
+    elements.toggle("Constraints").focus();
+
+    await user.keyboard("{ArrowDown}");
+    const afterDown = document.activeElement;
+    await user.keyboard("{ArrowDown}{End}");
+    const afterEnd = document.activeElement;
+    await user.keyboard("{Home}{ArrowUp}");
+
+    expect(afterDown).toBe(elements.toggle("Spacing"));
+    expect(afterEnd).toBe(elements.toggle("Spacing"));
+    expect(elements.toggle("Constraints")).toHaveFocus();
+  });
+
+  it.each([
+    "{Alt>}{ArrowDown}{/Alt}",
+    "{Control>}{ArrowDown}{/Control}",
+    "{Meta>}{End}{/Meta}",
+    "{Shift>}{End}{/Shift}",
+  ])("must leave focus where it is when '%s' is pressed", async (keys) => {
+    const { render, user } = setUpTest();
+    render();
+    await user.tab();
+
+    await user.keyboard(keys);
+
+    expect(elements.toggle("Layout")).toHaveFocus();
+  });
+
+  it("must leave focus where it is when a consumer prevents the key's default", async () => {
+    const user = userEvent.setup();
+    renderBase(
+      <div onKeyDownCapture={(event) => event.preventDefault()}>
+        <Accordion headingLevel={3}>
+          <AccordionItem title="Layout" value="layout" />
+          <AccordionItem title="Fill" value="fill" />
+        </Accordion>
+      </div>
+    );
+    await user.tab();
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(elements.toggle("Layout")).toHaveFocus();
+  });
+
   it("must pass other props to the item's element when they are given", () => {
     renderBase(
       <Accordion headingLevel={3}>

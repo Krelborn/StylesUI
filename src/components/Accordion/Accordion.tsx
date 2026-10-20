@@ -1,7 +1,8 @@
 import { clsx } from "clsx";
-import type { JSX, ReactNode } from "react";
+import type { JSX, KeyboardEvent, ReactNode } from "react";
 import { useId, useState } from "react";
 
+import { targetIndexForKey } from "../../collections";
 import type { ControlSize } from "../../forms";
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
@@ -117,6 +118,7 @@ export function Accordion({
   exclusive = false,
   headingLevel,
   indicator = "chevron",
+  onKeyDown,
   onValueChange,
   regions,
   size = "md",
@@ -146,6 +148,37 @@ export function Accordion({
     onValueChange?.(nextValue);
   }
 
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
+    onKeyDown?.(event);
+
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
+      return;
+    }
+
+    const accordion = event.currentTarget;
+    const toggles = Array.from(accordion.querySelectorAll<HTMLElement>(`.${styles.toggle}`)).filter(
+      (toggle) => toggle.closest(`.${styles.accordion}`) === accordion && toggle.closest("[hidden], [inert]") === null
+    );
+    const currentIndex = toggles.findIndex((toggle) => toggle === event.target);
+
+    if (currentIndex === -1) {
+      return;
+    }
+
+    const target = targetIndexForKey({
+      count: toggles.length,
+      currentIndex,
+      key: event.key,
+      orientation: "vertical",
+      wraps: false,
+    });
+
+    if (target !== null) {
+      event.preventDefault();
+      toggles[target].focus();
+    }
+  }
+
   return (
     <AccordionContext.Provider
       value={{
@@ -162,6 +195,7 @@ export function Accordion({
       <Box
         {...rest}
         className={clsx(styles.accordion, className)}
+        onKeyDown={handleKeyDown}
         data-indicator={indicator}
         data-size={size}
         data-variant={variant}
