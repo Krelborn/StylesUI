@@ -1,0 +1,44 @@
+.accordion {
+  color: var(--sui-color-text, #111827);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.heading {
+  flex: 1;
+  min-inline-size: 0;
+  /* Otherwise a container's type selector for raw headings would give it a margin and the heading font */
+  margin: 0;
+  font: inherit;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.label {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.trailing {
+  margin-inline-start: auto;
+}
+
+.actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+}

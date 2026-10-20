@@ -101,7 +101,7 @@ Renders a `div` holding the header row and the panel, and every other `div` prop
     <div aria-labelledby="…-toggle" class="panel" hidden="until-found" id="…-panel" role="region">…</div>
   </div>
   ```
-  The heading is a `Heading` at `headingLevel`. Only one of the two indicator places is filled, and the indicator is `aria-hidden`, because `aria-expanded` carries the state. `role` and `aria-labelledby` are on the panel only when `regions` is on. The actions wrapper renders only when `actions` has content.
+  The heading is the `h1` to `h6` element `headingLevel` gives, rendered through `Box` rather than `Heading`, whose sizes and weight the toggle would have to undo. Only one of the two indicator places is filled, and the indicator is `aria-hidden`, because `aria-expanded` carries the state. `role` and `aria-labelledby` are on the panel only when `regions` is on. The actions wrapper renders only when `actions` has content.
 - **Why not `details` and `summary`.** A heading inside `summary` is exposed inconsistently by screen readers, interactive content inside `summary` is invalid, so actions would have no place, and a `details` element cannot be controlled from React without fighting its own toggling.
 - **Context.** `AccordionContext.ts` sits alone in the `Accordion` folder and is read through `useAccordionContext`. An `AccordionItem` outside an `Accordion` throws `MissingContextError`. A nested `Accordion` provides its own context, so its items read only it.
 - **Ids.** Both ids are built from a `useId` base and `idSegment(value)`, in `accordionIds.ts`, as `tabIds.ts` does for `Tabs`.
@@ -226,7 +226,7 @@ export function AccordionItem({
   - `lazy`: no content before the first opening, content kept after closing.
   - Keyboard: Down, Up, Home and End move between toggles without wrapping, reach disabled ones, stay inside a nested accordion, and ignore modified keys and prevented defaults.
   - `MissingContextError` outside an `Accordion`.
-  - Types: `value` with `defaultValue`, a missing `headingLevel` and a string `title` attribute override rejected with `@ts-expect-error`.
+  - Types: `value` with `defaultValue`, a missing `headingLevel`, a missing `title` and `dangerouslySetInnerHTML` rejected with `@ts-expect-error`.
   - Stylesheet: transitions under reduced motion are colours only, every `:hover` rule is inside `@media (hover: hover)`, and a print rule shows closed panels.
 - **Stories (Chromium, all four mode and theme projects).** Story files set `a11y.test: "error"`.
   - `Inspector` (flush, `sm`, actions, a `Counter`, a disabled item, a nested accordion), `Settings` (joined, descriptions, `exclusive`), `Faq` (separated, `lg`, `plusMinus`, rich content), `Sizes` and `Indicators`.

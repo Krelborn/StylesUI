@@ -6,6 +6,8 @@
     "jsx-a11y": {
       "polymorphicPropName": "as",
       "components": {
+        "Accordion": "div",
+        "AccordionItem": "div",
         "AddIcon": "svg",
         "Alert": "div",
         "Avatar": "span",
