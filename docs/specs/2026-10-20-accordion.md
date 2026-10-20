@@ -15,7 +15,7 @@ Users are app developers building with StylesUI. Success looks like this: an ins
 ## Assumptions
 
 1. One pull request, one commit per task, as for earlier specs.
-2. No new dependencies. The chevron is `ChevronDownIcon`. The plus/minus indicator is drawn from Lucide's `plus` shapes, which `AddIcon` already copies, inside the internal `Icon`.
+2. No new dependencies. The chevron is `ChevronDownIcon`, and the plus/minus indicator is `AddIcon`, Lucide's `plus`, whose second (vertical) stroke the stylesheet lays flat.
 3. React 19.3 does not render `hidden="until-found"` (it treats `hidden` as a boolean) and has no `onBeforeMatch` prop, so the panel's `hidden` attribute and its `beforematch` listener are set from an effect on a ref.
 4. `hidden="until-found"` and `beforematch` have been Baseline since December 2025. Height animation needs `interpolate-size`, which only Chromium supports, so Firefox and Safari open and close a panel at once. No polyfill.
 5. The default look is `flush` and the default size `md`, as `Tabs` defaults to its lighter look.
@@ -160,7 +160,9 @@ fallow audit --format json --quiet --explain --gate-marker agent   # before ever
 ```
 src/components/Accordion/Accordion.tsx            ← root: state, keyboard, context provider
 src/components/Accordion/AccordionItem.tsx        ← header, toggle, actions, panel, until-found
-src/components/Accordion/AccordionIndicator.tsx   ← internal chevron and plus/minus
+src/components/Accordion/AccordionToggleContent.tsx ← indicator, title, description and trailing content
+src/components/Accordion/useFindablePanel.ts      ← hidden until found and beforematch
+src/components/Accordion/useHasOpened.ts          ← whether a lazy item has opened
 src/components/Accordion/AccordionContext.ts      ← context alone in its module
 src/components/Accordion/useAccordionContext.ts   ← throws MissingContextError
 src/components/Accordion/accordionIds.ts          ← toggle and panel ids
@@ -229,7 +231,7 @@ export function AccordionItem({
   - Types: `value` with `defaultValue`, a missing `headingLevel`, a missing `title` and `dangerouslySetInnerHTML` rejected with `@ts-expect-error`.
   - Stylesheet: transitions under reduced motion are colours only, every `:hover` rule is inside `@media (hover: hover)`, and a print rule shows closed panels.
 - **Stories (Chromium, all four mode and theme projects).** Story files set `a11y.test: "error"`.
-  - `Inspector` (flush, `sm`, actions, a `Counter`, a disabled item, a nested accordion), `Settings` (joined, descriptions, `exclusive`), `Faq` (separated, `lg`, `plusMinus`, rich content), `Sizes` and `Indicators`.
+  - `InspectorPanel` (flush, `sm`, actions, a `Counter`, a disabled item, a nested accordion), `SettingsPage` (joined, descriptions, `exclusive`), `FaqPage` (separated, `lg`, `plusMinus`, rich content), `Sizes` and `Indicators`.
   - `KeyboardInteraction` in each look: tab order through toggles and actions, the arrow keys, Home and End, Enter and Space toggling `aria-expanded`, a disabled item reached but not opened, and `focusRingContrast(toggle) >= 3`.
   - `States`: hover and press over each look through `trustedInput()`, with `fillContrast` at least `distinctFillContrast` between rest, hover and press in every look, the lift in `separated` equal to half the resolved `--sui-control-depth`, and no tint or lift on a disabled item.
   - `FragmentLink`: navigating to a fragment inside a closed panel opens the item and its toggle reports `aria-expanded="true"`.
@@ -260,7 +262,7 @@ export function AccordionItem({
 
 8. In every storybook project, the header's block padding and font size equal the resolved `Button` values at each size, within 0.5px, and every toggle is at least 24px tall. Proven by `Sizes`.
 9. The indicator is at the start in `flush` and the end in `joined` and `separated`; a closed flush chevron points the way the text runs, in both directions. Proven by `Indicators` and `RightToLeft`.
-10. The panel's content starts where the title does, within 0.5px, in every look and both directions. Proven by `Inspector`, `Settings`, `Faq` and `RightToLeft`.
+10. The panel's content starts where the title does, within 0.5px, in every look and both directions. Proven by `InspectorPanel`, `SettingsPage`, `FaqPage` and `RightToLeft`.
 11. The focus ring keeps 3:1 in every look, the indicator keeps 3:1 against what is behind it, and hover and press differ from rest by at least `distinctFillContrast`. Proven by `KeyboardInteraction` and `States`.
 12. In `separated`, hovering lifts an enabled card by half the resolved `--sui-control-depth` (0 in `default`), and a disabled card does not move. Proven by `States`.
 13. Under reduced motion only colours transition, and closed panels print open. Proven by the stylesheet unit tests.
