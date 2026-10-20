@@ -23,11 +23,12 @@ import { Stack } from "../Stack";
 import { Text } from "../Text";
 import { TextInput } from "../TextInput";
 
-import type { AccordionProps } from "./Accordion";
+import type { AccordionProps, AccordionVariant } from "./Accordion";
 import { Accordion } from "./Accordion";
 import { AccordionItem } from "./AccordionItem";
 
 const sizes: ControlSize[] = ["sm", "md", "lg"];
+const variants: AccordionVariant[] = ["flush", "joined"];
 
 /**
  * A design tool's inspector: dense sections, some with an action beside the toggle, a count, a disabled section and a
@@ -92,6 +93,36 @@ function Inspector(props: AccordionProps): JSX.Element {
           value="prototype"
           data-testid="prototype-item"
         />
+      </Accordion>
+    </Box>
+  );
+}
+
+/**
+ * A settings page: joined items with descriptions, one open at a time
+ */
+function Settings(props: AccordionProps): JSX.Element {
+  return (
+    <Box style={{ maxInlineSize: "28rem" }}>
+      <Accordion {...props} exclusive={true} size="md" variant="joined">
+        <AccordionItem
+          description="Mentions, reviews and the weekly digest"
+          title="Notifications"
+          value="notifications"
+        >
+          <Text as="p">Mentions arrive at once, and the digest goes out on Monday mornings.</Text>
+        </AccordionItem>
+        <AccordionItem
+          description="Who can see your profile"
+          title="Privacy"
+          value="privacy"
+          data-testid="privacy-item"
+        >
+          <Text as="p">Your profile is public. Activity is shown only to your organisation.</Text>
+        </AccordionItem>
+        <AccordionItem description="GitHub and Google" title="Connected accounts" value="accounts">
+          <Text as="p">Two accounts are connected.</Text>
+        </AccordionItem>
       </Accordion>
     </Box>
   );
@@ -309,11 +340,13 @@ export const Sizes: Story = {
     <Stack gap={6}>
       {sizes.map((size) => (
         <Stack gap={2} key={size}>
-          <Accordion {...args} size={size}>
-            <AccordionItem title={`Size ${size}`} value={size}>
-              <Text as="p">Content</Text>
-            </AccordionItem>
-          </Accordion>
+          {variants.map((variant) => (
+            <Accordion {...args} key={variant} size={size} variant={variant}>
+              <AccordionItem title={`${variant} ${size}`} value={size}>
+                <Text as="p">Content</Text>
+              </AccordionItem>
+            </Accordion>
+          ))}
           <Box>
             <Button size={size} variant="ghost">
               {`Button ${size}`}
@@ -325,30 +358,69 @@ export const Sizes: Story = {
   ),
   play: async ({ canvas }) => {
     for (const size of sizes) {
-      const toggle = getComputedStyle(canvas.getByRole("button", { name: `Size ${size}` }));
       const button = getComputedStyle(canvas.getByRole("button", { name: `Button ${size}` }));
 
-      await expect(Math.abs(parseFloat(toggle.paddingTop) - parseFloat(button.paddingTop))).toBeLessThanOrEqual(0.5);
-      await expect(Math.abs(parseFloat(toggle.paddingBottom) - parseFloat(button.paddingBottom))).toBeLessThanOrEqual(
-        0.5
-      );
-      await expect(toggle.fontSize).toBe(button.fontSize);
-      await expect(parseFloat(toggle.height)).toBeGreaterThanOrEqual(24);
+      for (const variant of variants) {
+        const toggle = getComputedStyle(canvas.getByRole("button", { name: `${variant} ${size}` }));
+
+        await expect(
+          Math.abs(parseFloat(toggle.paddingTop) - parseFloat(button.paddingTop)),
+          `${variant} ${size} padding`
+        ).toBeLessThanOrEqual(0.5);
+        await expect(
+          Math.abs(parseFloat(toggle.paddingBottom) - parseFloat(button.paddingBottom)),
+          `${variant} ${size} padding`
+        ).toBeLessThanOrEqual(0.5);
+        await expect(toggle.fontSize, `${variant} ${size} text`).toBe(button.fontSize);
+        await expect(parseFloat(toggle.height), `${variant} ${size} height`).toBeGreaterThanOrEqual(24);
+      }
     }
   },
 };
 
 /**
- * Right to left, a closed section's chevron points left, and content starts where the title does, from the right
+ * Joined items for a settings page: one bordered box, a heading-font title with a description, and a chevron after the
+ * title that turns up as the item opens. Each panel is a region named by its title, and opening one item closes the
+ * other.
+ */
+export const SettingsPage: Story = {
+  args: {
+    defaultValue: ["notifications"],
+  },
+  render: (args) => <Settings {...args} />,
+  play: async ({ canvas }) => {
+    const notifications = canvas.getByRole("button", { name: "Notifications Mentions, reviews and the weekly digest" });
+    const privacy = canvas.getByRole("button", { name: "Privacy Who can see your profile" });
+
+    await expect(canvas.getByRole("region", { name: "Notifications" })).toBeVisible();
+    await expect(indicatorOf(notifications).getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      canvas.getByText("Notifications").getBoundingClientRect().right
+    );
+    await expect(getComputedStyle(indicatorOf(notifications)).rotate).toBe("180deg");
+    await expect(getComputedStyle(indicatorOf(privacy)).rotate).toBe("none");
+    await expectContentAlignedWithTitle(notifications, canvas.getByText("Notifications"));
+
+    await userEvent.click(privacy);
+    await expect(privacy).toHaveAttribute("aria-expanded", "true");
+    await expect(notifications).toHaveAttribute("aria-expanded", "false");
+    await expectContentAlignedWithTitle(privacy, canvas.getByText("Privacy"));
+  },
+};
+
+/**
+ * Right to left, a closed flush section's chevron points left, a joined item's chevron sits left of its title, and
+ * content starts where the title does, from the right
  */
 export const RightToLeft: Story = {
   render: (args) => (
-    <Box dir="rtl">
+    <Stack dir="rtl" gap={6}>
       <Inspector {...args} />
-    </Box>
+      <Settings defaultValue={["notifications"]} headingLevel={2} />
+    </Stack>
   ),
   play: async ({ canvas }) => {
     const layout = canvas.getByRole("button", { name: "Layout Fixed" });
+    const notifications = canvas.getByRole("button", { name: "Notifications Mentions, reviews and the weekly digest" });
 
     await expect(indicatorOf(layout).getBoundingClientRect().left).toBeGreaterThanOrEqual(
       canvas.getByText("Layout").getBoundingClientRect().right
@@ -359,6 +431,10 @@ export const RightToLeft: Story = {
       canvas.getByRole("button", { name: "Constraints Left, Top" }),
       canvas.getByText("Constraints")
     );
+    await expect(indicatorOf(notifications).getBoundingClientRect().right).toBeLessThanOrEqual(
+      canvas.getByText("Notifications").getBoundingClientRect().left
+    );
+    await expectContentAlignedWithTitle(notifications, canvas.getByText("Notifications"));
   },
 };
 
@@ -377,6 +453,7 @@ export const KeyboardInteraction: Story = {
         <Button>Before the inspector</Button>
       </Box>
       <Inspector {...args} />
+      <Settings headingLevel={2} />
     </Stack>
   ),
   play: async ({ canvas }) => {
@@ -417,6 +494,18 @@ export const KeyboardInteraction: Story = {
 
     await userEvent.keyboard("{ArrowDown}");
     await expectFocusRing(fill);
+
+    await input.pressKey("Tab");
+    await input.pressKey("Tab");
+    await input.pressKey("Tab");
+    await input.pressKey("Tab");
+    await input.pressKey("Tab");
+    await input.pressKey("Tab");
+    await expectFocusRing(
+      canvas.getByRole("button", { name: "Notifications Mentions, reviews and the weekly digest" })
+    );
+    await userEvent.keyboard("{End}");
+    await expectFocusRing(canvas.getByRole("button", { name: "Connected accounts GitHub and Google" }));
   },
 };
 
@@ -428,6 +517,12 @@ export const States: Story = {
   args: {
     defaultValue: [],
   },
+  render: (args) => (
+    <Stack gap={6}>
+      <Inspector {...args} />
+      <Settings headingLevel={2} />
+    </Stack>
+  ),
   play: async ({ canvas }) => {
     const input = trustedInput();
 
@@ -436,6 +531,11 @@ export const States: Story = {
     }
 
     await expectDistinctToggleStates(input, canvas.getByRole("button", { name: "Effects 2" }), "effects-item");
+    await expectDistinctToggleStates(
+      input,
+      canvas.getByRole("button", { name: "Privacy Who can see your profile" }),
+      "privacy-item"
+    );
 
     const prototype = canvas.getByRole("button", { name: "Prototype Select a frame" });
 

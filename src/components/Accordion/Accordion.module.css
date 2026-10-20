@@ -8,8 +8,34 @@
   --sui-accordion-divider: var(--sui-color-border, #d1d5db);
   --sui-accordion-indicator-color: var(--sui-color-text-muted, #4b5563);
   --sui-accordion-radius: var(--sui-radius-md, 4px);
+  --_sui-accordion-indicator-space: calc(var(--sui-accordion-font-size) + var(--sui-accordion-gap));
+  --_sui-accordion-actions-end: 0px;
 
   color: var(--sui-color-text, #111827);
+}
+
+/* The toggle fills the row, padded as a Button is, with the indicator after the title */
+.accordion:not([data-variant="flush"]) {
+  --sui-accordion-padding-x: var(--sui-space-4, 1rem);
+  --sui-accordion-inset: 0px;
+  --sui-accordion-radius: 0px;
+  --_sui-accordion-indicator-space: 0px;
+  --_sui-accordion-actions-end: var(--sui-accordion-padding-x);
+}
+
+.accordion:not([data-variant="flush"])[data-size="sm"] {
+  --sui-accordion-padding-x: var(--sui-space-3, 0.75rem);
+}
+
+.accordion:not([data-variant="flush"])[data-size="lg"] {
+  --sui-accordion-padding-x: var(--sui-space-6, 1.5rem);
+}
+
+/* Clipped, so a toggle's tint follows the box's corners */
+.accordion[data-variant="joined"] {
+  overflow: clip;
+  border: var(--sui-border-width, 1px) solid var(--sui-accordion-divider);
+  border-radius: var(--sui-radius-lg, 8px);
 }
 
 .accordion[data-size="sm"] {
@@ -24,7 +50,7 @@
   --sui-accordion-description-font-size: var(--sui-font-size-md, 1rem);
 }
 
-.accordion[data-variant="flush"] > .item + .item {
+.accordion:is([data-variant="flush"], [data-variant="joined"]) > .item + .item {
   border-block-start: var(--sui-border-width, 1px) solid var(--sui-accordion-divider);
 }
 
@@ -84,8 +110,20 @@
   cursor: not-allowed;
 }
 
+.toggle:not([data-variant="flush"]) {
+  font-family: var(--sui-font-heading, system-ui, sans-serif);
+}
+
 .indicator {
   color: var(--sui-accordion-indicator-color);
+}
+
+.toggle:not([data-variant="flush"]) .indicator {
+  order: 1;
+}
+
+.toggle:not([data-variant="flush"])[aria-expanded="true"] .indicator {
+  rotate: 180deg;
 }
 
 .toggle[aria-disabled="true"] :is(.indicator, .description, .trailing) {
@@ -114,6 +152,7 @@
 .description,
 .trailing {
   color: var(--sui-color-text-muted, #4b5563);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
   font-size: var(--sui-accordion-description-font-size);
   font-weight: var(--sui-font-weight-regular, 400);
 }
@@ -127,14 +166,14 @@
   flex: none;
   align-items: center;
   gap: var(--sui-accordion-inset);
+  padding-inline-end: var(--_sui-accordion-actions-end);
 }
 
-/* Starts where the title does: past the header's inset, the toggle's padding, the indicator and the gap */
+/* Starts where the title does: past the header's inset, the toggle's padding and any indicator before the title */
 .content {
   padding-block: 0 var(--sui-space-3, 0.75rem);
   padding-inline: calc(
-      var(--sui-accordion-inset) + var(--sui-accordion-padding-x) + var(--sui-accordion-font-size) +
-        var(--sui-accordion-gap)
+      var(--sui-accordion-inset) + var(--sui-accordion-padding-x) + var(--_sui-accordion-indicator-space)
     )
     calc(var(--sui-accordion-inset) + var(--sui-accordion-padding-x));
 }

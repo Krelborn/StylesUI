@@ -21,3 +21,14 @@ export function toggleId(baseId: string, value: string): string {
 export function panelId(baseId: string, value: string): string {
   return `${baseId}-panel-${idSegment(value)}`;
 }
+
+/**
+ * Builds the id of an item's title, which names its panel when the panel is a region
+ *
+ * @param baseId the `Accordion`'s generated id
+ * @param value the item's value
+ * @returns an id unique to the value within its `Accordion`, whatever characters the value holds
+ */
+export function titleId(baseId: string, value: string): string {
+  return `${baseId}-title-${idSegment(value)}`;
+}

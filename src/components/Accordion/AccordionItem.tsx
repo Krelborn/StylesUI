@@ -6,7 +6,7 @@ import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Accordion.module.css";
-import { panelId, toggleId } from "./accordionIds";
+import { panelId, titleId, toggleId } from "./accordionIds";
 import { AccordionToggleContent } from "./AccordionToggleContent";
 import { useAccordionContext } from "./useAccordionContext";
 import { useFindablePanel } from "./useFindablePanel";
@@ -84,9 +84,10 @@ export function AccordionItem({
   const open = accordion.openValues.includes(value);
   const itemToggleId = toggleId(accordion.baseId, value);
   const itemPanelId = panelId(accordion.baseId, value);
+  const itemTitleId = titleId(accordion.baseId, value);
   const hasOpened = useHasOpened(open);
   const panelRef = useFindablePanel({ disabled, onMatch: () => accordion.toggle(value), open });
-  const regionProps = accordion.regions ? { role: "region", "aria-labelledby": itemToggleId } : {};
+  const regionProps = accordion.regions ? { role: "region", "aria-labelledby": itemTitleId } : {};
 
   function handleClick(): void {
     if (!disabled) {
@@ -109,7 +110,7 @@ export function AccordionItem({
             aria-expanded={open}
             data-variant={accordion.variant}
           >
-            <AccordionToggleContent description={description} title={title} trailing={trailing} />
+            <AccordionToggleContent description={description} title={title} titleId={itemTitleId} trailing={trailing} />
           </Box>
         </Box>
         {hasContent(actions) && <Box className={styles.actions}>{actions}</Box>}

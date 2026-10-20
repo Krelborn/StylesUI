@@ -18,6 +18,11 @@ interface AccordionToggleContentProps {
   title: ReactNode;
 
   /**
+   * Id of the element holding the title
+   */
+  titleId: string;
+
+  /**
    * Shown at the end of the toggle
    */
   trailing: ReactNode;
@@ -27,12 +32,17 @@ interface AccordionToggleContentProps {
  * What an `AccordionItem`'s toggle shows: the indicator, which the stylesheet places for the look, then its title, and
  * its description and trailing content, each after a space, so the toggle's name reads them in that order
  */
-export function AccordionToggleContent({ description, title, trailing }: AccordionToggleContentProps): JSX.Element {
+export function AccordionToggleContent({
+  description,
+  title,
+  titleId,
+  trailing,
+}: AccordionToggleContentProps): JSX.Element {
   return (
     <>
       <ChevronDownIcon className={styles.indicator} />
       <Box as="span" className={styles.label}>
-        <Box as="span" className={styles.title}>
+        <Box as="span" className={styles.title} id={titleId}>
           {title}
         </Box>
         {hasContent(description) && (

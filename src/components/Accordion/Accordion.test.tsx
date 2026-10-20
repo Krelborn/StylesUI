@@ -128,6 +128,18 @@ describe("Accordion", () => {
     }
   );
 
+  it("must name a region by its title alone when the item has a description and trailing content", () => {
+    renderBase(
+      <Accordion defaultValue={["fill"]} headingLevel={3} variant="joined">
+        <AccordionItem description="Two layers" title="Fill" trailing="3" value="fill">
+          Fill content
+        </AccordionItem>
+      </Accordion>
+    );
+
+    expect(screen.getByRole("region", { name: "Fill" })).toHaveTextContent("Fill content");
+  });
+
   it.each<{ regions: boolean; variant: AccordionVariant }>([
     { regions: true, variant: "flush" },
     { regions: false, variant: "joined" },
