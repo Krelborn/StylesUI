@@ -2,8 +2,9 @@ import type { JSX, ReactNode } from "react";
 
 import { hasContent } from "../../forms";
 import { Box } from "../Box";
-import { ChevronDownIcon } from "../Icon";
+import { AddIcon, ChevronDownIcon } from "../Icon";
 
+import type { AccordionIndicator } from "./Accordion";
 import styles from "./Accordion.module.css";
 
 interface AccordionToggleContentProps {
@@ -11,6 +12,11 @@ interface AccordionToggleContentProps {
    * Muted text under the title
    */
   description: ReactNode;
+
+  /**
+   * Shape of the indicator
+   */
+  indicator: AccordionIndicator;
 
   /**
    * The header's text
@@ -34,13 +40,18 @@ interface AccordionToggleContentProps {
  */
 export function AccordionToggleContent({
   description,
+  indicator,
   title,
   titleId,
   trailing,
 }: AccordionToggleContentProps): JSX.Element {
   return (
     <>
-      <ChevronDownIcon className={styles.indicator} />
+      {indicator === "plusMinus" ? (
+        <AddIcon className={`${styles.indicator} ${styles.plusMinus}`} />
+      ) : (
+        <ChevronDownIcon className={`${styles.indicator} ${styles.chevron}`} />
+      )}
       <Box as="span" className={styles.label}>
         <Box as="span" className={styles.title} id={titleId}>
           {title}

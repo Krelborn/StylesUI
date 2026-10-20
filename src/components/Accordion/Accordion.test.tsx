@@ -1,5 +1,6 @@
 import { fireEvent, render as renderBase, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import plusArtwork from "lucide-static/icons/plus.svg?raw";
 import { isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -393,6 +394,20 @@ describe("Accordion", () => {
     expect(elements.toggle("Layout")).toHaveFocus();
   });
 
+  it("must draw Lucide's plus as the indicator when the indicator is plusMinus", () => {
+    const lucidePlus = new DOMParser().parseFromString(plusArtwork, "image/svg+xml").documentElement;
+    renderBase(
+      <Accordion headingLevel={3} indicator="plusMinus">
+        <AccordionItem title="Fill" value="fill" />
+      </Accordion>
+    );
+
+    const indicator = elements.toggle("Fill").querySelector("svg");
+
+    expect(pathsOf(indicator)).toEqual(pathsOf(lucidePlus));
+    expect(indicator).toHaveAttribute("aria-hidden", "true");
+  });
+
   it("must pass other props to the item's element when they are given", () => {
     renderBase(
       <Accordion headingLevel={3}>
@@ -493,6 +508,16 @@ function setUpTest() {
   };
 
   return { onValueChange, render, user };
+}
+
+/**
+ * Lists the path data an svg draws
+ *
+ * @param svg the svg element, or null when there is none
+ * @returns each path's `d`, in document order
+ */
+function pathsOf(svg: Element | null): (string | null)[] {
+  return Array.from(svg?.querySelectorAll("path") ?? [], (path) => path.getAttribute("d"));
 }
 
 /**

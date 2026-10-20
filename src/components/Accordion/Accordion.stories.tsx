@@ -25,12 +25,13 @@ import { Stack } from "../Stack";
 import { Text } from "../Text";
 import { TextInput } from "../TextInput";
 
-import type { AccordionProps, AccordionVariant } from "./Accordion";
+import type { AccordionIndicator, AccordionProps, AccordionVariant } from "./Accordion";
 import { Accordion } from "./Accordion";
 import { AccordionItem } from "./AccordionItem";
 
 const sizes: ControlSize[] = ["sm", "md", "lg"];
 const variants: AccordionVariant[] = ["flush", "joined", "separated"];
+const indicators: AccordionIndicator[] = ["chevron", "plusMinus"];
 
 /**
  * A design tool's inspector: dense sections, some with an action beside the toggle, a count, a disabled section and a
@@ -301,6 +302,37 @@ async function expectCardLift(input: TrustedInput, card: HTMLElement, testId: st
 }
 
 /**
+ * Checks where an item's indicator sits, that it keeps 3:1, and that a plus has turned into a minus while the item is
+ * open
+ *
+ * @param toggle the item's toggle
+ * @param titleElement the element holding the item's title
+ * @param variant the accordion's look
+ * @param indicator the accordion's indicator
+ */
+async function expectIndicator(
+  toggle: HTMLElement,
+  titleElement: HTMLElement,
+  variant: AccordionVariant,
+  indicator: AccordionIndicator
+): Promise<void> {
+  const name = `${titleElement.textContent}`;
+  const mark = indicatorOf(toggle).getBoundingClientRect();
+  const title = titleElement.getBoundingClientRect();
+  const [first, second] = variant === "flush" ? [mark.right, title.left] : [title.right, mark.left];
+
+  await expect(first, `${name} indicator placement`).toBeLessThanOrEqual(second);
+  await expect(graphicContrast(indicatorOf(toggle)), `${name} contrast`).toBeGreaterThanOrEqual(3);
+
+  if (indicator === "plusMinus") {
+    const verticalStroke = indicatorOf(toggle).querySelectorAll("path")[1];
+    const open = toggle.getAttribute("aria-expanded") === "true";
+
+    await expect(getComputedStyle(verticalStroke).rotate, `${name} stroke`).toBe(open ? "90deg" : "none");
+  }
+}
+
+/**
  * Checks a toggle has keyboard focus and shows a focus ring that keeps 3:1
  *
  * @param toggle the toggle that should have focus
@@ -479,13 +511,15 @@ export const SettingsPage: Story = {
 };
 
 /**
- * Separated cards for rich content on a website. Each card is drawn as a Card is, with a chevron in a disc after the
- * title that fills with the primary colour as the card opens. Each panel is a region named by its title.
+ * Separated cards for rich content on a website. Each card is drawn as a Card is, with a plus in a disc after the
+ * title that turns into a minus and fills with the primary colour as the card opens. Each panel is a region named by
+ * its title.
  */
 export const FaqPage: Story = {
   args: {
     defaultValue: ["delivery"],
     headingLevel: 2,
+    indicator: "plusMinus",
   },
   render: (args) => <Faq {...args} />,
   play: async ({ canvas }) => {
@@ -499,6 +533,44 @@ export const FaqPage: Story = {
     await expect(graphicContrast(indicatorOf(delivery)), "open indicator").toBeGreaterThanOrEqual(3);
     await expect(graphicContrast(indicatorOf(returns)), "closed indicator").toBeGreaterThanOrEqual(3);
     await expectContentAlignedWithTitle(delivery, canvas.getByText("How long does delivery take?"));
+  },
+};
+
+/**
+ * Both indicators in every look. A chevron points the way the text runs in a closed flush section and turns down as
+ * it opens, and in the other looks points down and turns up. A plus turns into a minus as its item opens. The
+ * indicator comes before the title in `flush` and after it in `joined` and `separated`.
+ */
+export const Indicators: Story = {
+  args: {
+    defaultValue: ["open"],
+  },
+  render: (args) => (
+    <Stack gap={6}>
+      {variants.flatMap((variant) =>
+        indicators.map((indicator) => (
+          <Box key={`${variant} ${indicator}`} style={{ maxInlineSize: "24rem" }}>
+            <Accordion {...args} indicator={indicator} size="md" variant={variant}>
+              <AccordionItem title={`${variant} ${indicator} open`} value="open">
+                <Text as="p">Content</Text>
+              </AccordionItem>
+              <AccordionItem title={`${variant} ${indicator} closed`} value="closed">
+                <Text as="p">Content</Text>
+              </AccordionItem>
+            </Accordion>
+          </Box>
+        ))
+      )}
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    for (const variant of variants) {
+      for (const indicator of indicators) {
+        for (const name of [`${variant} ${indicator} open`, `${variant} ${indicator} closed`]) {
+          await expectIndicator(canvas.getByRole("button", { name }), canvas.getByText(name), variant, indicator);
+        }
+      }
+    }
   },
 };
 

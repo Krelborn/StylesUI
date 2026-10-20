@@ -148,7 +148,7 @@
   order: 1;
 }
 
-.toggle:not([data-variant="flush"])[aria-expanded="true"] .indicator {
+.toggle:not([data-variant="flush"])[aria-expanded="true"] .chevron {
   rotate: 180deg;
 }
 
@@ -176,11 +176,21 @@
 }
 
 /* Turned a quarter from pointing down, so a closed flush item points the way the text runs */
-.toggle[data-variant="flush"][aria-expanded="false"] .indicator {
+.toggle[data-variant="flush"][aria-expanded="false"] .chevron {
   rotate: -90deg;
 }
 
-.toggle[data-variant="flush"][aria-expanded="false"] .indicator:dir(rtl) {
+.toggle[data-variant="flush"][aria-expanded="false"] .chevron:dir(rtl) {
+  rotate: 90deg;
+}
+
+/* AddIcon draws Lucide's plus, whose second stroke is the vertical one: laid flat, it leaves a minus */
+.plusMinus path:nth-child(2) {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.toggle[aria-expanded="true"] .plusMinus path:nth-child(2) {
   rotate: 90deg;
 }
 

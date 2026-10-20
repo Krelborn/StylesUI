@@ -110,7 +110,13 @@ export function AccordionItem({
             aria-expanded={open}
             data-variant={accordion.variant}
           >
-            <AccordionToggleContent description={description} title={title} titleId={itemTitleId} trailing={trailing} />
+            <AccordionToggleContent
+              description={description}
+              indicator={accordion.indicator}
+              title={title}
+              titleId={itemTitleId}
+              trailing={trailing}
+            />
           </Box>
         </Box>
         {hasContent(actions) && <Box className={styles.actions}>{actions}</Box>}
