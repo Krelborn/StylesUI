@@ -64,6 +64,9 @@
   border-radius: var(--sui-radius-lg, 8px);
   background-color: var(--sui-color-surface, #f3f4f6);
   box-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
+  transition:
+    box-shadow var(--sui-motion-spring, 120ms ease-out),
+    translate var(--sui-motion-spring, 120ms ease-out);
 }
 
 /* Rises by half the theme's control depth onto a shadow grown by as much, so a flat theme's card stays put */
@@ -115,7 +118,7 @@
 }
 
 @media (hover: hover) {
-  .toggle:hover:not([aria-disabled="true"], [data-variant="separated"]) {
+  .toggle:hover:not([aria-disabled="true"]) {
     background-color: color-mix(in srgb, currentColor 8%, transparent);
   }
 }
@@ -142,6 +145,10 @@
 
 .indicator {
   color: var(--sui-accordion-indicator-color);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    rotate var(--sui-motion-spring, 120ms ease-out);
 }
 
 .toggle:not([data-variant="flush"]) .indicator {
@@ -188,6 +195,7 @@
 .plusMinus path:nth-child(2) {
   transform-box: fill-box;
   transform-origin: center;
+  transition: rotate var(--sui-motion-spring, 120ms ease-out);
 }
 
 .toggle[aria-expanded="true"] .plusMinus path:nth-child(2) {
@@ -231,4 +239,58 @@
       var(--sui-accordion-inset) + var(--sui-accordion-padding-x) + var(--_sui-accordion-indicator-space)
     )
     calc(var(--sui-accordion-inset) + var(--sui-accordion-padding-x));
+}
+
+/* A spring would overshoot the content's height, so the height eases; browsers without interpolate-size open at once */
+.panel {
+  overflow: clip;
+  interpolate-size: allow-keywords;
+  transition:
+    block-size 200ms ease-out,
+    content-visibility 200ms ease-out allow-discrete;
+}
+
+.panel[hidden] {
+  block-size: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+  }
+
+  .plusMinus path:nth-child(2),
+  .panel,
+  .accordion[data-variant="separated"] > .item {
+    transition: none;
+  }
+}
+
+/* Forced colours replace the text colours that dim a disabled item and the fills that mark the separated disc */
+@media (forced-colors: active) {
+  .toggle[aria-disabled="true"] {
+    color: GrayText;
+  }
+
+  .toggle[data-variant="separated"] .indicator,
+  .toggle[data-variant="separated"][aria-expanded="true"] .indicator {
+    border-color: ButtonText;
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+/* A printed page reads as a document, so every section that can open shows its content */
+@media print {
+  .panel[hidden="until-found"] {
+    block-size: auto;
+    content-visibility: visible;
+    transition: none;
+  }
+
+  .indicator {
+    display: none;
+  }
 }

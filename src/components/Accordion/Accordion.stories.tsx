@@ -215,6 +215,27 @@ function contentOf(toggle: HTMLElement): HTMLElement {
 }
 
 /**
+ * Waits for an item's panel to finish opening or closing, and checks it ends as tall as its content when open and with
+ * no height when closed
+ *
+ * @param toggle the item's toggle
+ */
+async function expectSettledPanelHeight(toggle: HTMLElement): Promise<void> {
+  const content = contentOf(toggle);
+  const panel = content.parentElement;
+
+  if (panel === null) {
+    throw new Error("The toggle's content has no panel");
+  }
+
+  await Promise.all(panel.getAnimations().map((animation) => animation.finished));
+
+  const expected = toggle.getAttribute("aria-expanded") === "true" ? content.getBoundingClientRect().height : 0;
+
+  await expect(panel.getBoundingClientRect().height).toBeCloseTo(expected, 0);
+}
+
+/**
  * Checks an item's panel content starts where its title does, from the left or, right to left, from the right
  *
  * @param toggle the item's toggle
@@ -291,6 +312,8 @@ async function expectDistinctToggleStates(input: TrustedInput, toggle: HTMLEleme
  * @param lifts whether the card should rise
  */
 async function expectCardLift(input: TrustedInput, card: HTMLElement, testId: string, lifts: boolean): Promise<void> {
+  // A section opened above the card moves it until the panel finishes growing
+  await Promise.all(document.getAnimations().map((animation) => animation.finished));
   const top = card.getBoundingClientRect().top;
   const depth = parseFloat(getComputedStyle(card).getPropertyValue("--sui-control-depth"));
 
@@ -484,7 +507,7 @@ export const Sizes: Story = {
 /**
  * Joined items for a settings page: one bordered box, a heading-font title with a description, and a chevron after the
  * title that turns up as the item opens. Each panel is a region named by its title, and opening one item closes the
- * other.
+ * other. A panel grows to its content's height as it opens and shrinks away as it closes.
  */
 export const SettingsPage: Story = {
   args: {
@@ -507,6 +530,8 @@ export const SettingsPage: Story = {
     await expect(privacy).toHaveAttribute("aria-expanded", "true");
     await expect(notifications).toHaveAttribute("aria-expanded", "false");
     await expectContentAlignedWithTitle(privacy, canvas.getByText("Privacy"));
+    await expectSettledPanelHeight(privacy);
+    await expectSettledPanelHeight(notifications);
   },
 };
 
@@ -689,9 +714,9 @@ export const KeyboardInteraction: Story = {
 };
 
 /**
- * Hovering a flush or joined toggle tints it with the text colour and pressing darkens the tint, so rest, hover and
- * press can be told apart, while the title and the chevron stay readable. Hovering a separated card lifts it by half
- * the theme's control depth. A disabled item shows no tint and does not move.
+ * Hovering a toggle tints it with the text colour and pressing darkens the tint, so rest, hover and press can be told
+ * apart, while the title and the indicator stay readable. Hovering a separated card also lifts it by half the theme's
+ * control depth. A disabled item shows no tint and does not move.
  */
 export const States: Story = {
   args: {
@@ -726,6 +751,11 @@ export const States: Story = {
 
     await expectCardLift(input, canvas.getByTestId("returns-item"), "returns-item", true);
     await expectCardLift(input, canvas.getByTestId("gifts-item"), "gifts-item", false);
+    await expectDistinctToggleStates(
+      input,
+      canvas.getByRole("button", { name: "How long does delivery take?" }),
+      "delivery-item"
+    );
   },
 };
 

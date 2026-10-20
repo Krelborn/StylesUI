@@ -5,9 +5,11 @@ import { isValidElement } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
+import { transitionedProperties } from "../../test/transitionedProperties";
 
 import type { AccordionVariant } from "./Accordion";
 import { Accordion } from "./Accordion";
+import accordionCss from "./Accordion.module.css?raw";
 import { AccordionItem } from "./AccordionItem";
 
 const inspectorSections = [
@@ -406,6 +408,43 @@ describe("Accordion", () => {
 
     expect(pathsOf(indicator)).toEqual(pathsOf(lucidePlus));
     expect(indicator).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("must leave only colour transitions in the stylesheet when reduced motion is requested", () => {
+    const reducedMotionBlock = accordionCss.match(/@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(transitionedProperties(reducedMotionBlock).toSorted()).toEqual(["background-color", "color", "none"]);
+  });
+
+  it("must hover only when the device can hover in the stylesheet", () => {
+    const css = accordionCss.replace(/\/\*.*?\*\//gs, "");
+    const hoverGates = css.match(/@media \(hover: hover\) \{.*?\n\}/gs) ?? [];
+    const ungated = hoverGates.reduce((rest, gate) => rest.replace(gate, ""), css);
+
+    expect(hoverGates.join("")).toContain(":hover");
+    expect(ungated).not.toContain(":hover");
+  });
+
+  it("must never transition the outline or all properties when the stylesheet declares a transition", () => {
+    const properties = transitionedProperties(accordionCss);
+
+    expect(properties).toContain("block-size");
+    expect(properties).not.toContain("all");
+    expect(properties).not.toContain("outline");
+  });
+
+  it("must show closed panels and hide indicators in the stylesheet when the page is printed", () => {
+    const printBlock = accordionCss.match(/@media print \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(printBlock).toContain('.panel[hidden="until-found"]');
+    expect(printBlock).toContain("content-visibility: visible");
+    expect(printBlock).toContain("display: none");
+  });
+
+  it("must draw a disabled toggle in GrayText in the stylesheet when colours are forced", () => {
+    const forcedColorsBlock = accordionCss.match(/@media \(forced-colors: active\) \{(.*?)\n\}/s)?.[1] ?? "";
+
+    expect(forcedColorsBlock).toMatch(/\.toggle\[aria-disabled="true"\][^{]*\{[^}]*color: GrayText/);
   });
 
   it("must pass other props to the item's element when they are given", () => {
