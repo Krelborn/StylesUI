@@ -1,8 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { JSX } from "react";
-import { expect, fn } from "storybook/test";
+import { useId } from "react";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import type { ControlSize } from "../../forms";
+import {
+  distinctFillContrast,
+  fillContrast,
+  focusRingContrast,
+  graphicContrast,
+  textContrast,
+} from "../../test/colorContrast";
+import type { TrustedInput } from "../../test/trustedInput";
+import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Counter } from "../Counter";
@@ -70,12 +80,18 @@ function Inspector(props: AccordionProps): JSX.Element {
             No strokes
           </Text>
         </AccordionItem>
-        <AccordionItem title="Effects" trailing={<Counter count={2} />} value="effects">
+        <AccordionItem title="Effects" trailing={<Counter count={2} />} value="effects" data-testid="effects-item">
           <Text as="p" size="sm">
             Drop shadow, background blur
           </Text>
         </AccordionItem>
-        <AccordionItem disabled={true} title="Prototype" trailing="Select a frame" value="prototype" />
+        <AccordionItem
+          disabled={true}
+          title="Prototype"
+          trailing="Select a frame"
+          value="prototype"
+          data-testid="prototype-item"
+        />
       </Accordion>
     </Box>
   );
@@ -130,6 +146,93 @@ async function expectContentAlignedWithTitle(toggle: HTMLElement, title: HTMLEle
   const contentStart = rightToLeft ? contentBox.right - paddingStart : contentBox.left + paddingStart;
 
   await expect(Math.abs(contentStart - (rightToLeft ? titleBox.right : titleBox.left))).toBeLessThanOrEqual(0.5);
+}
+
+/**
+ * Waits for a toggle's fill to finish changing into the state the real pointer has just put it in
+ *
+ * @param toggle the toggle under the pointer
+ * @param state the pseudo-class the pointer applies
+ * @returns the toggle's background colour in that state
+ */
+async function settledToggleFill(toggle: HTMLElement, state: ":active" | ":hover"): Promise<string> {
+  await waitFor(() => expect(toggle.matches(state)).toBe(true));
+  await Promise.all(toggle.getAnimations().map((animation) => animation.finished));
+
+  return getComputedStyle(toggle).backgroundColor;
+}
+
+/**
+ * Hovers and then presses an item with the real pointer, and checks that rest, hover and press are fills that can be
+ * told apart while the title and the indicator stay readable
+ *
+ * @param input the trusted input that moves and presses the pointer
+ * @param toggle the item's toggle
+ * @param testId the item's `data-testid`
+ */
+async function expectDistinctToggleStates(input: TrustedInput, toggle: HTMLElement, testId: string): Promise<void> {
+  await expect(getComputedStyle(toggle).backgroundColor, `${testId} at rest`).toBe("rgba(0, 0, 0, 0)");
+  await expect(graphicContrast(indicatorOf(toggle)), `${testId} indicator at rest`).toBeGreaterThanOrEqual(3);
+
+  await input.hoverByTestId(testId);
+  const hovered = await settledToggleFill(toggle, ":hover");
+
+  await expect(fillContrast(toggle, "transparent", hovered), `${testId} rest to hover`).toBeGreaterThanOrEqual(
+    distinctFillContrast
+  );
+  await expect(textContrast(toggle), `${testId} hovered title`).toBeGreaterThanOrEqual(4.5);
+  await expect(graphicContrast(indicatorOf(toggle)), `${testId} hovered indicator`).toBeGreaterThanOrEqual(3);
+
+  // Synthetic pointer events never apply :active
+  await input.holdPointerByTestId(testId);
+
+  try {
+    const pressed = await settledToggleFill(toggle, ":active");
+
+    await expect(fillContrast(toggle, hovered, pressed), `${testId} hover to press`).toBeGreaterThanOrEqual(
+      distinctFillContrast
+    );
+    await expect(textContrast(toggle), `${testId} pressed title`).toBeGreaterThanOrEqual(4.5);
+  } finally {
+    await input.releasePointer();
+  }
+}
+
+/**
+ * Checks a toggle has keyboard focus and shows a focus ring that keeps 3:1
+ *
+ * @param toggle the toggle that should have focus
+ */
+async function expectFocusRing(toggle: HTMLElement): Promise<void> {
+  await expect(toggle).toHaveFocus();
+  await expect(toggle.matches(":focus-visible")).toBe(true);
+  await expect(parseFloat(getComputedStyle(toggle).outlineWidth)).toBeGreaterThanOrEqual(2);
+  await expect(focusRingContrast(toggle)).toBeGreaterThanOrEqual(3);
+}
+
+/**
+ * A short FAQ whose closed answer holds a fragment a link can point at
+ */
+function ReturnsFaq(props: AccordionProps): JSX.Element {
+  const policyId = useId();
+
+  return (
+    <Stack gap={4}>
+      <Accordion {...props}>
+        <AccordionItem title="How long does delivery take?" value="delivery">
+          <Text as="p">Orders ship within two working days.</Text>
+        </AccordionItem>
+        <AccordionItem title="Can I return a kit?" value="returns">
+          <Text as="p" id={policyId}>
+            Returns are free for 30 days after delivery.
+          </Text>
+        </AccordionItem>
+      </Accordion>
+      <Text as="p">
+        <a href={`#${policyId}`}>Read the returns policy</a>
+      </Text>
+    </Stack>
+  );
 }
 
 const meta = {
@@ -256,5 +359,116 @@ export const RightToLeft: Story = {
       canvas.getByRole("button", { name: "Constraints Left, Top" }),
       canvas.getByText("Constraints")
     );
+  },
+};
+
+/**
+ * Every toggle and action is in the tab order, and nothing inside a closed section is. Down and Up move between the
+ * toggles without wrapping, Home and End go to either end, Enter and Space open and close a section, and a disabled
+ * section is reached but never opens. Each toggle shows a focus ring inside its edge.
+ */
+export const KeyboardInteraction: Story = {
+  args: {
+    defaultValue: [],
+  },
+  render: (args) => (
+    <Stack gap={4}>
+      <Box>
+        <Button>Before the inspector</Button>
+      </Box>
+      <Inspector {...args} />
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    // Synthetic Tab cannot see that content hidden until found is skipped by the browser's focus navigation
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const layout = canvas.getByRole("button", { name: "Layout Fixed" });
+    const fill = canvas.getByRole("button", { name: "Fill" });
+    const prototype = canvas.getByRole("button", { name: "Prototype Select a frame" });
+
+    canvas.getByRole("button", { name: "Before the inspector" }).focus();
+    await input.pressKey("Tab");
+    await expectFocusRing(layout);
+
+    await input.pressKey("Tab");
+    await expect(fill).toHaveFocus();
+    await input.pressKey("Tab");
+    await expect(canvas.getByRole("button", { name: "Add fill" })).toHaveFocus();
+
+    await input.pressKey("Shift+Tab");
+    await userEvent.keyboard("{ArrowUp}");
+    await expectFocusRing(layout);
+
+    await userEvent.keyboard("{End}");
+    await expectFocusRing(prototype);
+    await userEvent.keyboard("{Enter}");
+    await expect(prototype).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.keyboard("{Home}");
+    await userEvent.keyboard("{Enter}");
+    await expect(layout).toHaveAttribute("aria-expanded", "true");
+    await userEvent.keyboard(" ");
+    await expect(layout).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.keyboard("{ArrowDown}");
+    await expectFocusRing(fill);
+  },
+};
+
+/**
+ * Hovering a section's toggle tints it with the text colour and pressing darkens the tint, so rest, hover and press
+ * can be told apart, while the title and the chevron stay readable. A disabled section shows no tint.
+ */
+export const States: Story = {
+  args: {
+    defaultValue: [],
+  },
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await expectDistinctToggleStates(input, canvas.getByRole("button", { name: "Effects 2" }), "effects-item");
+
+    const prototype = canvas.getByRole("button", { name: "Prototype Select a frame" });
+
+    await input.hoverByTestId("prototype-item");
+    await waitFor(() => expect(prototype.matches(":hover")).toBe(true));
+    await expect(getComputedStyle(prototype).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+  },
+};
+
+/**
+ * A link to text inside a closed section opens that section, because a closed panel is hidden until found. Find in
+ * page opens it the same way.
+ */
+export const FragmentLink: Story = {
+  args: {
+    defaultValue: [],
+    headingLevel: 2,
+    size: "md",
+  },
+  render: (args) => <ReturnsFaq {...args} />,
+  play: async ({ canvas }) => {
+    const returns = canvas.getByRole("button", { name: "Can I return a kit?" });
+    const link = canvas.getByRole("link", { name: "Read the returns policy" });
+    const url = window.location.href;
+
+    await expect(returns).toHaveAttribute("aria-expanded", "false");
+
+    try {
+      window.location.hash = link.getAttribute("href") ?? "";
+      await waitFor(() => expect(returns).toHaveAttribute("aria-expanded", "true"));
+      await expect(canvas.getByText("Returns are free for 30 days after delivery.")).toBeVisible();
+    } finally {
+      window.history.replaceState(window.history.state, "", url);
+    }
   },
 };
