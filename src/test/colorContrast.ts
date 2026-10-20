@@ -83,8 +83,8 @@ export function textContrast(element: HTMLElement, background?: string): number 
 }
 
 /**
- * Measures the WCAG contrast ratio between a graphic drawn in `currentColor`, such as an icon, and the background
- * behind it. WCAG 1.4.11 requires at least 3:1 for a graphic that conveys state.
+ * Measures the WCAG contrast ratio between a graphic drawn in `currentColor`, such as an icon, and its own background
+ * over the background behind it. WCAG 1.4.11 requires at least 3:1 for a graphic that conveys state.
  *
  * Needs a real browser; throws under jsdom.
  *
@@ -92,7 +92,7 @@ export function textContrast(element: HTMLElement, background?: string): number 
  * @returns the contrast ratio, from 1 to 21
  */
 export function graphicContrast(graphic: SVGElement): number {
-  const surface = backgroundBehind(graphic);
+  const surface = composite(toRgba(getComputedStyle(graphic).backgroundColor), backgroundBehind(graphic));
 
   return contrastRatio(composite(toRgba(getComputedStyle(graphic).color), surface), surface);
 }

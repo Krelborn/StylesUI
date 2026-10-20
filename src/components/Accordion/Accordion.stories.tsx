@@ -15,10 +15,12 @@ import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
+import { Code } from "../Code";
 import { Counter } from "../Counter";
 import { Grid } from "../Grid";
 import { AddIcon } from "../Icon";
 import { IconButton } from "../IconButton";
+import { Link } from "../Link";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
 import { TextInput } from "../TextInput";
@@ -28,7 +30,7 @@ import { Accordion } from "./Accordion";
 import { AccordionItem } from "./AccordionItem";
 
 const sizes: ControlSize[] = ["sm", "md", "lg"];
-const variants: AccordionVariant[] = ["flush", "joined"];
+const variants: AccordionVariant[] = ["flush", "joined", "separated"];
 
 /**
  * A design tool's inspector: dense sections, some with an action beside the toggle, a count, a disabled section and a
@@ -123,6 +125,55 @@ function Settings(props: AccordionProps): JSX.Element {
         <AccordionItem description="GitHub and Google" title="Connected accounts" value="accounts">
           <Text as="p">Two accounts are connected.</Text>
         </AccordionItem>
+      </Accordion>
+    </Box>
+  );
+}
+
+/**
+ * A shop's FAQ: separated cards holding rich answers, any number open
+ */
+function Faq(props: AccordionProps): JSX.Element {
+  return (
+    <Box style={{ maxInlineSize: "36rem" }}>
+      <Accordion {...props} size="lg" variant="separated">
+        <AccordionItem title="How long does delivery take?" value="delivery" data-testid="delivery-item">
+          <Stack gap={2}>
+            <Text as="p">Orders ship within two working days, and a tracking link arrives by email.</Text>
+            <Box as="ul">
+              <Box as="li">UK: 1 to 2 days</Box>
+              <Box as="li">EU: 3 to 5 days</Box>
+            </Box>
+            <Text as="p">
+              <Link href="#delivery-policy">Read the delivery policy</Link>
+            </Text>
+          </Stack>
+        </AccordionItem>
+        <AccordionItem
+          description="Up to 30 days after delivery"
+          title="Can I return a kit?"
+          value="returns"
+          data-testid="returns-item"
+        >
+          <Stack gap={3}>
+            <Text as="p">Print the label from your order page and drop the box at any post office.</Text>
+            <Box>
+              <Button size="sm">Start a return</Button>
+            </Box>
+          </Stack>
+        </AccordionItem>
+        <AccordionItem title="Do you ship outside Europe?" value="worldwide">
+          <Text as="p">
+            Not yet. Use the code <Code>NOTIFY</Code> at checkout to hear when we do.
+          </Text>
+        </AccordionItem>
+        <AccordionItem
+          disabled={true}
+          title="Gift wrapping"
+          trailing="Coming soon"
+          value="gifts"
+          data-testid="gifts-item"
+        />
       </Accordion>
     </Box>
   );
@@ -227,6 +278,26 @@ async function expectDistinctToggleStates(input: TrustedInput, toggle: HTMLEleme
   } finally {
     await input.releasePointer();
   }
+}
+
+/**
+ * Hovers a separated card's toggle with the real pointer and checks the card rises by half the theme's control depth,
+ * or stays put when it is disabled
+ *
+ * @param input the trusted input that moves the pointer
+ * @param card the card's element
+ * @param testId the card's `data-testid`
+ * @param lifts whether the card should rise
+ */
+async function expectCardLift(input: TrustedInput, card: HTMLElement, testId: string, lifts: boolean): Promise<void> {
+  const top = card.getBoundingClientRect().top;
+  const depth = parseFloat(getComputedStyle(card).getPropertyValue("--sui-control-depth"));
+
+  await input.hoverByTestId(testId);
+  await waitFor(() => expect(card.matches(":hover")).toBe(true));
+  await Promise.all(card.getAnimations().map((animation) => animation.finished));
+
+  await expect(card.getBoundingClientRect().top - top, `${testId} lift`).toBeCloseTo(lifts ? -depth / 2 : 0, 1);
 }
 
 /**
@@ -408,18 +479,44 @@ export const SettingsPage: Story = {
 };
 
 /**
- * Right to left, a closed flush section's chevron points left, a joined item's chevron sits left of its title, and
- * content starts where the title does, from the right
+ * Separated cards for rich content on a website. Each card is drawn as a Card is, with a chevron in a disc after the
+ * title that fills with the primary colour as the card opens. Each panel is a region named by its title.
+ */
+export const FaqPage: Story = {
+  args: {
+    defaultValue: ["delivery"],
+    headingLevel: 2,
+  },
+  render: (args) => <Faq {...args} />,
+  play: async ({ canvas }) => {
+    const delivery = canvas.getByRole("button", { name: "How long does delivery take?" });
+    const returns = canvas.getByRole("button", { name: "Can I return a kit? Up to 30 days after delivery" });
+
+    await expect(canvas.getByRole("region", { name: "How long does delivery take?" })).toBeVisible();
+    await expect(indicatorOf(delivery).getBoundingClientRect().left).toBeGreaterThanOrEqual(
+      canvas.getByText("How long does delivery take?").getBoundingClientRect().right
+    );
+    await expect(graphicContrast(indicatorOf(delivery)), "open indicator").toBeGreaterThanOrEqual(3);
+    await expect(graphicContrast(indicatorOf(returns)), "closed indicator").toBeGreaterThanOrEqual(3);
+    await expectContentAlignedWithTitle(delivery, canvas.getByText("How long does delivery take?"));
+  },
+};
+
+/**
+ * Right to left, a closed flush section's chevron points left, a joined or separated item's chevron sits left of its
+ * title, and content starts where the title does, from the right
  */
 export const RightToLeft: Story = {
   render: (args) => (
     <Stack dir="rtl" gap={6}>
       <Inspector {...args} />
       <Settings defaultValue={["notifications"]} headingLevel={2} />
+      <Faq defaultValue={["delivery"]} headingLevel={2} />
     </Stack>
   ),
   play: async ({ canvas }) => {
     const layout = canvas.getByRole("button", { name: "Layout Fixed" });
+    const delivery = canvas.getByRole("button", { name: "How long does delivery take?" });
     const notifications = canvas.getByRole("button", { name: "Notifications Mentions, reviews and the weekly digest" });
 
     await expect(indicatorOf(layout).getBoundingClientRect().left).toBeGreaterThanOrEqual(
@@ -435,6 +532,10 @@ export const RightToLeft: Story = {
       canvas.getByText("Notifications").getBoundingClientRect().left
     );
     await expectContentAlignedWithTitle(notifications, canvas.getByText("Notifications"));
+    await expect(indicatorOf(delivery).getBoundingClientRect().right).toBeLessThanOrEqual(
+      canvas.getByText("How long does delivery take?").getBoundingClientRect().left
+    );
+    await expectContentAlignedWithTitle(delivery, canvas.getByText("How long does delivery take?"));
   },
 };
 
@@ -454,6 +555,7 @@ export const KeyboardInteraction: Story = {
       </Box>
       <Inspector {...args} />
       <Settings headingLevel={2} />
+      <Faq headingLevel={2} />
     </Stack>
   ),
   play: async ({ canvas }) => {
@@ -506,12 +608,18 @@ export const KeyboardInteraction: Story = {
     );
     await userEvent.keyboard("{End}");
     await expectFocusRing(canvas.getByRole("button", { name: "Connected accounts GitHub and Google" }));
+
+    await input.pressKey("Tab");
+    await expectFocusRing(canvas.getByRole("button", { name: "How long does delivery take?" }));
+    await userEvent.keyboard("{End}");
+    await expectFocusRing(canvas.getByRole("button", { name: "Gift wrapping Coming soon" }));
   },
 };
 
 /**
- * Hovering a section's toggle tints it with the text colour and pressing darkens the tint, so rest, hover and press
- * can be told apart, while the title and the chevron stay readable. A disabled section shows no tint.
+ * Hovering a flush or joined toggle tints it with the text colour and pressing darkens the tint, so rest, hover and
+ * press can be told apart, while the title and the chevron stay readable. Hovering a separated card lifts it by half
+ * the theme's control depth. A disabled item shows no tint and does not move.
  */
 export const States: Story = {
   args: {
@@ -521,6 +629,7 @@ export const States: Story = {
     <Stack gap={6}>
       <Inspector {...args} />
       <Settings headingLevel={2} />
+      <Faq headingLevel={2} />
     </Stack>
   ),
   play: async ({ canvas }) => {
@@ -542,6 +651,9 @@ export const States: Story = {
     await input.hoverByTestId("prototype-item");
     await waitFor(() => expect(prototype.matches(":hover")).toBe(true));
     await expect(getComputedStyle(prototype).backgroundColor).toBe("rgba(0, 0, 0, 0)");
+
+    await expectCardLift(input, canvas.getByTestId("returns-item"), "returns-item", true);
+    await expectCardLift(input, canvas.getByTestId("gifts-item"), "gifts-item", false);
   },
 };
 
