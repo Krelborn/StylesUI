@@ -2,6 +2,7 @@ import type { JSX, ReactNode } from "react";
 
 import { hasContent } from "../../forms";
 import { Box } from "../Box";
+import { ChevronDownIcon } from "../Icon";
 
 import styles from "./Accordion.module.css";
 
@@ -23,12 +24,13 @@ interface AccordionToggleContentProps {
 }
 
 /**
- * What an `AccordionItem`'s toggle shows: its title, then its description and trailing content, each after a space,
- * so the toggle's name reads them in that order
+ * What an `AccordionItem`'s toggle shows: the indicator, which the stylesheet places for the look, then its title, and
+ * its description and trailing content, each after a space, so the toggle's name reads them in that order
  */
 export function AccordionToggleContent({ description, title, trailing }: AccordionToggleContentProps): JSX.Element {
   return (
     <>
+      <ChevronDownIcon className={styles.indicator} />
       <Box as="span" className={styles.label}>
         <Box as="span" className={styles.title}>
           {title}

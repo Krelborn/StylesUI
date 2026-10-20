@@ -107,6 +107,7 @@ export function AccordionItem({
             aria-controls={itemPanelId}
             aria-disabled={disabled ? true : undefined}
             aria-expanded={open}
+            data-variant={accordion.variant}
           >
             <AccordionToggleContent description={description} title={title} trailing={trailing} />
           </Box>
@@ -114,7 +115,7 @@ export function AccordionItem({
         {hasContent(actions) && <Box className={styles.actions}>{actions}</Box>}
       </Box>
       <Box className={styles.panel} hidden={!open} id={itemPanelId} ref={panelRef} {...regionProps}>
-        {!lazy || hasOpened ? children : null}
+        <Box className={styles.content}>{!lazy || hasOpened ? children : null}</Box>
       </Box>
     </Box>
   );

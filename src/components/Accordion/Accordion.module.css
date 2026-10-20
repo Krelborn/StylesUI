@@ -1,10 +1,38 @@
 .accordion {
+  --sui-accordion-padding-y: var(--sui-space-2, 0.5rem);
+  --sui-accordion-padding-x: var(--sui-space-2, 0.5rem);
+  --sui-accordion-inset: var(--sui-space-1, 0.25rem);
+  --sui-accordion-gap: var(--sui-space-2, 0.5rem);
+  --sui-accordion-font-size: var(--sui-font-size-md, 1rem);
+  --sui-accordion-description-font-size: var(--sui-font-size-sm, 0.875rem);
+  --sui-accordion-divider: var(--sui-color-border, #d1d5db);
+  --sui-accordion-indicator-color: var(--sui-color-text-muted, #4b5563);
+  --sui-accordion-radius: var(--sui-radius-md, 4px);
+
   color: var(--sui-color-text, #111827);
+}
+
+.accordion[data-size="sm"] {
+  --sui-accordion-padding-y: var(--sui-space-1, 0.25rem);
+  --sui-accordion-font-size: var(--sui-font-size-sm, 0.875rem);
+  --sui-accordion-description-font-size: var(--sui-font-size-xs, 0.75rem);
+}
+
+.accordion[data-size="lg"] {
+  --sui-accordion-padding-y: var(--sui-space-3, 0.75rem);
+  --sui-accordion-font-size: var(--sui-font-size-lg, 1.125rem);
+  --sui-accordion-description-font-size: var(--sui-font-size-md, 1rem);
+}
+
+.accordion[data-variant="flush"] > .item + .item {
+  border-block-start: var(--sui-border-width, 1px) solid var(--sui-accordion-divider);
 }
 
 .header {
   display: flex;
   align-items: center;
+  gap: var(--sui-accordion-inset);
+  padding: var(--sui-accordion-inset);
 }
 
 .heading {
@@ -18,27 +46,95 @@
 .toggle {
   display: flex;
   align-items: center;
+  gap: var(--sui-accordion-gap);
   inline-size: 100%;
-  padding: 0;
+  padding: var(--sui-accordion-padding-y) var(--sui-accordion-padding-x);
   border: 0;
-  background: none;
+  border-radius: var(--sui-accordion-radius);
+  background-color: transparent;
   color: inherit;
-  font: inherit;
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-accordion-font-size);
+  font-weight: var(--sui-font-weight-control, 500);
+  line-height: var(--sui-line-height-tight, 1.25);
   text-align: start;
   cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) {
+  .toggle:hover:not([aria-disabled="true"]) {
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+  }
+}
+
+.toggle:active:not([aria-disabled="true"]) {
+  background-color: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+/* Inside the edge, so a scrolling pane, a neighbouring item or a joined box cannot clip or cover it */
+.toggle:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(-1 * var(--sui-focus-ring-width, 2px));
+}
+
+/* Mixed down rather than faded with opacity, so the focus ring keeps its full strength */
+.toggle[aria-disabled="true"] {
+  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
+  cursor: not-allowed;
+}
+
+.indicator {
+  color: var(--sui-accordion-indicator-color);
+}
+
+.toggle[aria-disabled="true"] :is(.indicator, .description, .trailing) {
+  color: inherit;
+}
+
+/* Turned a quarter from pointing down, so a closed flush item points the way the text runs */
+.toggle[data-variant="flush"][aria-expanded="false"] .indicator {
+  rotate: -90deg;
+}
+
+.toggle[data-variant="flush"][aria-expanded="false"] .indicator:dir(rtl) {
+  rotate: 90deg;
 }
 
 .label {
   display: grid;
+  flex: 1;
   min-inline-size: 0;
 }
 
+.title {
+  overflow-wrap: anywhere;
+}
+
+.description,
 .trailing {
-  margin-inline-start: auto;
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-accordion-description-font-size);
+  font-weight: var(--sui-font-weight-regular, 400);
+}
+
+.trailing {
+  flex: none;
 }
 
 .actions {
   display: flex;
   flex: none;
   align-items: center;
+  gap: var(--sui-accordion-inset);
+}
+
+/* Starts where the title does: past the header's inset, the toggle's padding, the indicator and the gap */
+.content {
+  padding-block: 0 var(--sui-space-3, 0.75rem);
+  padding-inline: calc(
+      var(--sui-accordion-inset) + var(--sui-accordion-padding-x) + var(--sui-accordion-font-size) +
+        var(--sui-accordion-gap)
+    )
+    calc(var(--sui-accordion-inset) + var(--sui-accordion-padding-x));
 }
