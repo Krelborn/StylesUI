@@ -90,6 +90,8 @@
 }
 
 .item {
+  /* A component given in `as` is not rendered through Box, which sets this */
+  box-sizing: border-box;
   position: relative;
   display: flex;
   align-items: center;
