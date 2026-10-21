@@ -29,6 +29,8 @@
         "Kbd": "kbd",
         "Link": "a",
         "Listbox": "div",
+        "Menu": "div",
+        "MenuItem": "button",
         "MoreHorizontalIcon": "svg",
         "MoreVerticalIcon": "svg",
         "ListboxOption": "div",

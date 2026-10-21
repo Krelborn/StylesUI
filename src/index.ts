@@ -63,6 +63,8 @@ export { Link } from "./components/Link";
 export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
 export { Listbox, ListboxOption } from "./components/Listbox";
 export type { ListboxOptionProps, ListboxProps } from "./components/Listbox";
+export { Menu, MenuItem, useMenu } from "./components/Menu";
+export type { MenuItemProps, MenuOverlayProps, MenuProps, UseMenuOptions, UseMenuResult } from "./components/Menu";
 export { NavList, NavListGroup, NavListItem } from "./components/NavList";
 export type { NavListGroupProps, NavListItemElement, NavListItemProps, NavListProps } from "./components/NavList";
 export { PageLayout } from "./components/PageLayout";

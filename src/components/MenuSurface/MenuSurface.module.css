@@ -1,0 +1,117 @@
+/* Only while open: a display set on the closed popover would beat the browser's rule that hides it */
+.menu:popover-open {
+  display: flex;
+}
+
+.menu {
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 12rem;
+  max-inline-size: min(20rem, 100vw - var(--sui-space-2, 0.5rem) * 2);
+  padding: var(--sui-space-1, 0.25rem);
+  border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+  border-radius: var(--sui-radius-lg, 8px);
+  background-color: var(--sui-color-overlay, #fff);
+  box-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+  line-height: var(--sui-line-height-tight, 1.25);
+  transition:
+    opacity 120ms ease-out,
+    translate var(--sui-motion-spring, 120ms ease-out);
+}
+
+/* Inside the edge, as Listbox's, so nothing around the menu can cover it */
+.menu:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+/* Starts nearer the trigger and moves out, so it reads as coming from it */
+@starting-style {
+  .menu {
+    opacity: 0;
+  }
+
+  .menu[data-placement^="top"] {
+    translate: 0 var(--sui-popover-offset, 4px);
+  }
+
+  .menu[data-placement^="bottom"] {
+    translate: 0 calc(var(--sui-popover-offset, 4px) * -1);
+  }
+
+  .menu[data-placement="start"] {
+    translate: var(--sui-popover-offset, 4px) 0;
+  }
+
+  .menu[data-placement="end"] {
+    translate: calc(var(--sui-popover-offset, 4px) * -1) 0;
+  }
+
+  /* translate has no logical direction, so start and end swap by hand */
+  .menu[data-placement="start"]:dir(rtl) {
+    translate: calc(var(--sui-popover-offset, 4px) * -1) 0;
+  }
+
+  .menu[data-placement="end"]:dir(rtl) {
+    translate: var(--sui-popover-offset, 4px) 0;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: var(--sui-space-2, 0.5rem);
+  inline-size: 100%;
+  min-block-size: 2rem;
+  padding: var(--sui-space-1, 0.25rem) var(--sui-space-2, 0.5rem);
+  border: 0;
+  border-radius: var(--sui-radius-md, 4px);
+  background-color: transparent;
+  color: var(--sui-color-text, #111827);
+  font: inherit;
+  text-align: start;
+  cursor: default;
+  scroll-margin-block: var(--sui-space-1, 0.25rem);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+/*
+ * The highlight tokens are never declared here, so an ancestor can set them. The tint follows focus, which the
+ * pointer moves too; the ring shows only for keyboard focus.
+ */
+.item:focus {
+  outline: none;
+  background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
+  color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+}
+
+.item:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+.leading {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: var(--sui-color-text-muted, #4b5563);
+}
+
+.label {
+  flex: 1;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    transition: opacity 120ms ease-out;
+  }
+}
