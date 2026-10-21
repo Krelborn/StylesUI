@@ -87,15 +87,26 @@ function potentialIndicatedElement(fragment: string): Element | null {
 }
 
 /**
- * Percent-decodes a URL fragment
+ * Percent-decodes a URL fragment as the browser does
  *
  * @param fragment the fragment without its `#`
- * @returns the decoded fragment, or the fragment as written when it holds a malformed escape
+ * @returns the decoded fragment, with a malformed escape left as written and bytes that are not UTF-8 replaced by
+ *   U+FFFD
  */
 function decodedFragment(fragment: string): string {
-  try {
-    return decodeURIComponent(fragment);
-  } catch {
-    return fragment;
+  const input = new TextEncoder().encode(fragment);
+  const bytes: number[] = [];
+
+  for (let i = 0; i < input.length; i++) {
+    const hex = String.fromCharCode(input[i + 1] ?? 0, input[i + 2] ?? 0);
+
+    if (input[i] === 0x25 && /^[\da-f]{2}$/i.test(hex)) {
+      bytes.push(Number.parseInt(hex, 16));
+      i += 2;
+    } else {
+      bytes.push(input[i]);
+    }
   }
+
+  return new TextDecoder("utf-8", { ignoreBOM: true }).decode(new Uint8Array(bytes));
 }

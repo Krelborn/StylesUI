@@ -273,6 +273,7 @@ describe("Accordion", () => {
     { fragment: "#returns-policy", kind: "an id", target: "Returns are free" },
     { fragment: "#returns-form", kind: "a named anchor", target: "Return form" },
     { fragment: "#d%C3%A9lai", kind: "a percent-encoded id", target: "Within 30 days" },
+    { fragment: "#%FF-legacy", kind: "an id whose escapes are not UTF-8", target: "Legacy link" },
   ])(
     "must open an item and scroll to the target when the page loads with a fragment matching $kind inside its closed panel",
     ({ fragment, target }) => {
@@ -648,6 +649,7 @@ function setUpFragmentTest(fragment: string) {
             {/* oxlint-disable-next-line jsx-a11y/anchor-is-valid -- a legacy named anchor, which a fragment can still target */}
             <a {...legacyAnchorName}>Return form</a>
             <p id="délai">Within 30 days</p>
+            <p id={"�-legacy"}>Legacy link</p>
           </AccordionItem>
         </Accordion>
         <p id="elsewhere">Elsewhere</p>
