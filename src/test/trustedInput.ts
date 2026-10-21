@@ -34,6 +34,12 @@ export interface TrustedInput {
    * Releases the primary pointer button that `holdPointerByTestId` holds down
    */
   releasePointer: () => Promise<void>;
+
+  /**
+   * Slides the pointer slowly from the middle of one element to the near edge of another, both with the given role
+   * and found by their accessible names, over 800ms, crossing whatever lies between
+   */
+  slidePointerByRole: (role: string, fromName: string, toName: string) => Promise<void>;
 }
 
 let registeredInput: TrustedInput | null = null;

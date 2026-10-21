@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { JSX, KeyboardEvent, ToggleEventHandler } from "react";
+import type { JSX, KeyboardEvent, PointerEvent, ToggleEventHandler } from "react";
 import { useRef } from "react";
 
 import type { TypeAheadQuery } from "../../collections";
@@ -11,6 +11,7 @@ import styles from "../MenuSurface/MenuSurface.module.css";
 import { Overlay } from "../Overlay";
 
 import { MenuContext } from "./MenuContext";
+import { useMenuPointer } from "./useMenuPointer";
 
 /**
  * Props `getMenuProps` from `useMenu` returns, which every `Menu` takes
@@ -89,14 +90,20 @@ export interface MenuProps
  *   <MenuItem onClick={duplicate}>Duplicate</MenuItem>
  * </Menu>
  */
-export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.Element {
+export function Menu({ className, close, onKeyDown, onPointerMove, ...rest }: MenuProps): JSX.Element {
   const typeAheadQueryRef = useRef<TypeAheadQuery | null>(null);
   const keepsOpenAfterChoosingRef = useRef(false);
+  const pointer = useMenuPointer();
 
   function closeAfterChoosing(): void {
     if (!keepsOpenAfterChoosingRef.current) {
       close();
     }
+  }
+
+  function handlePointerMove(event: PointerEvent<HTMLDivElement>): void {
+    onPointerMove?.(event);
+    pointer.handlePointerMove(event);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
@@ -170,12 +177,13 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
   }
 
   return (
-    <MenuContext.Provider value={{ closeAfterChoosing, closeAll: close }}>
+    <MenuContext.Provider value={{ closeAfterChoosing, closeAll: close, startPointerGrace: pointer.startPointerGrace }}>
       <Overlay
         {...rest}
         as="div"
         className={clsx(styles.menu, className)}
         onKeyDown={handleKeyDown}
+        onPointerMove={handlePointerMove}
         popover="auto"
         role="menu"
         tabIndex={-1}

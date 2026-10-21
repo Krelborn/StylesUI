@@ -39,6 +39,11 @@ declare module "vitest/browser" {
      * Releases the real primary pointer button
      */
     releasePointer: () => Promise<void>;
+
+    /**
+     * Slides the real pointer slowly from one element with the given role and name to another
+     */
+    slidePointerByRole: (role: string, fromName: string, toName: string) => Promise<void>;
   }
 }
 
@@ -49,6 +54,7 @@ registerTrustedInput({
   hoverByTestId: (testId) => commands.hoverByTestId(testId),
   pressKey: (key) => commands.pressKey(key),
   releasePointer: () => commands.releasePointer(),
+  slidePointerByRole: (role, fromName, toName) => commands.slidePointerByRole(role, fromName, toName),
 });
 
 // Chromium on Linux can apply :hover to whatever a story renders under the pointer, without the pointer moving

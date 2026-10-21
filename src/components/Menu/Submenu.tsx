@@ -1,5 +1,5 @@
-import type { FocusEvent, JSX, KeyboardEvent, ReactNode, ToggleEvent } from "react";
-import { useId, useRef, useState } from "react";
+import type { FocusEvent, JSX, KeyboardEvent, PointerEvent, ReactNode, ToggleEvent } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { focusItem, renderedItems } from "../../menus";
 import { anchorNameFor } from "../../overlays";
@@ -10,6 +10,9 @@ import styles from "../MenuSurface/MenuSurface.module.css";
 import { Menu } from "./Menu";
 import { useMenuContext } from "./useMenuContext";
 import { useMenuItemContent } from "./useMenuItemContent";
+
+// How long the pointer must rest on a submenu's item before the submenu opens
+const hoverOpenDelay = 100;
 
 /**
  * Props for `Submenu`
@@ -57,6 +60,7 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   const [open, setOpen] = useState(false);
   const pressedByPointerRef = useRef(false);
   const focusesFirstItemRef = useRef(false);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const item = useMenuItemContent({
     describedBy: undefined,
     description: undefined,
@@ -64,6 +68,8 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
     leading: icon,
     trailing: <ChevronRightIcon />,
   });
+
+  useEffect(() => () => clearTimeout(hoverTimerRef.current), []);
 
   function openSubmenu(page: Document, focusesFirstItem: boolean): void {
     const submenu = page.getElementById(menuId);
@@ -83,6 +89,28 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   function handleItemClick(event: { currentTarget: HTMLElement }): void {
     openSubmenu(event.currentTarget.ownerDocument, !pressedByPointerRef.current);
     pressedByPointerRef.current = false;
+  }
+
+  function handleItemPointerMove(event: PointerEvent<HTMLButtonElement>): void {
+    const page = event.currentTarget.ownerDocument;
+
+    if (event.pointerType !== "touch" && !open && hoverTimerRef.current === undefined) {
+      hoverTimerRef.current = setTimeout(() => {
+        hoverTimerRef.current = undefined;
+        openSubmenu(page, false);
+      }, hoverOpenDelay);
+    }
+  }
+
+  function handleItemPointerLeave(event: PointerEvent<HTMLButtonElement>): void {
+    const submenu = event.currentTarget.ownerDocument.getElementById(menuId);
+
+    clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = undefined;
+
+    if (open && submenu !== null) {
+      parent.startPointerGrace({ x: event.clientX, y: event.clientY }, submenu);
+    }
   }
 
   function handleItemKeyDown(event: KeyboardEvent<HTMLButtonElement>): void {
@@ -162,6 +190,8 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
         onPointerDown={() => {
           pressedByPointerRef.current = true;
         }}
+        onPointerLeave={handleItemPointerLeave}
+        onPointerMove={handleItemPointerMove}
         role="menuitem"
         style={{ anchorName }}
         tabIndex={-1}

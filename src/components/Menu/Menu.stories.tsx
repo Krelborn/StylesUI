@@ -251,7 +251,7 @@ function FileMenu(): JSX.Element {
   return (
     <Stack align="start" gap={3}>
       <Box>
-        <Button {...menu.getTriggerProps()} variant="secondary">
+        <Button {...menu.getTriggerProps()} variant="secondary" data-testid="file-trigger">
           File
         </Button>
         <Menu {...menu.getMenuProps()}>
@@ -792,5 +792,45 @@ export const SubmenuPlacement: Story = {
     const noRoomSubmenu = noRoom.submenu.getBoundingClientRect();
     await expect(noRoomSubmenu.top).toBeGreaterThanOrEqual(noRoom.item.getBoundingClientRect().bottom);
     await expect(noRoomSubmenu.right).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+/**
+ * The pointer and the keyboard share one active item: moving the pointer onto an item focuses it. Resting on a
+ * submenu's item for 100ms opens the submenu, with focus left on the item. Moving diagonally into the submenu crosses
+ * the items below without closing it, and a click outside closes every menu, leaving focus where the click put it.
+ */
+export const PointerInteraction: Story = {
+  render: () => <FileMenu />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const item = (name: string): HTMLElement => canvas.getByRole("menuitem", { hidden: true, name });
+    let deleteTookFocus = false;
+    item("Delete…").addEventListener("focus", () => {
+      deleteTookFocus = true;
+    });
+
+    await input.clickByTestId("file-trigger");
+    const menu = await canvas.findByRole("menu", { name: "File" });
+    await waitFor(() => expect(menu).toHaveFocus());
+
+    await input.slidePointerByRole("menuitem", "Rename…", "Move to");
+    await waitFor(() => expect(item("Move to")).toHaveAttribute("aria-expanded", "true"));
+    await expect(item("Move to")).toHaveFocus();
+    await waitFor(() => expect(item("Archive")).toBeVisible());
+
+    await input.slidePointerByRole("menuitem", "Move to", "Archive");
+    await waitFor(() => expect(item("Archive")).toHaveFocus());
+    await expect(deleteTookFocus).toBe(false);
+    await expect(item("Move to")).toHaveAttribute("aria-expanded", "true");
+
+    await input.clickPageCorner();
+    await waitFor(() => expect(menu).not.toBeVisible());
+    await expect(canvas.getByRole("button", { name: "File" })).not.toHaveFocus();
   },
 };

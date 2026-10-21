@@ -89,6 +89,48 @@ const hoverByTestId: BrowserCommand<[testId: string]> = async ({ iframe }, testI
 };
 
 /**
+ * Slides the real pointer slowly from the middle of one element to the near edge of another in the story's frame, so
+ * it crosses whatever lies between, as a person moving diagonally into a submenu does
+ *
+ * @param context the command context, holding the page and the frame the story runs in
+ * @param role the ARIA role both elements have
+ * @param fromName the accessible name of the element the slide starts on
+ * @param toName the accessible name of the element it ends on
+ */
+const slidePointerByRole: BrowserCommand<[role: string, fromName: string, toName: string]> = async (
+  { iframe, page },
+  role,
+  fromName,
+  toName
+) => {
+  // Playwright types the role as its own union of ARIA roles, which a command's arguments cannot carry
+  const ariaRole = role as Parameters<typeof iframe.getByRole>[0];
+  const from = await iframe.getByRole(ariaRole, { exact: true, name: fromName }).boundingBox();
+  const to = await iframe.getByRole(ariaRole, { exact: true, name: toName }).boundingBox();
+
+  if (from === null || to === null) {
+    throw new StoryFrameError(`The story's frame does not show both ${fromName} and ${toName}`);
+  }
+
+  const start = { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+  const end = { x: to.x + 6, y: to.y + to.height / 2 };
+
+  await page.mouse.move(start.x, start.y);
+
+  for (let step = 1; step <= slideSteps; step += 1) {
+    await page.mouse.move(
+      start.x + ((end.x - start.x) * step) / slideSteps,
+      start.y + ((end.y - start.y) * step) / slideSteps
+    );
+    await page.waitForTimeout(slideStepPause);
+  }
+};
+
+// Forty 20ms steps: slow enough that the pointer stays over what lies between for longer than a menu's 100ms delay
+const slideSteps = 40;
+const slideStepPause = 20;
+
+/**
  * Releases the real primary pointer button where the pointer is
  *
  * @param context the command context, holding the page the story runs in
@@ -189,6 +231,7 @@ export default defineConfig({
                   movePointerOffPage,
                   pressKey,
                   releasePointer,
+                  slidePointerByRole,
                 },
               },
             },

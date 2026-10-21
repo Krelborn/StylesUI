@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentPropsWithRef, JSX, MouseEvent } from "react";
 import { useState } from "react";
@@ -838,6 +838,93 @@ describe("Menu", () => {
 
     expect(elements.item("Share")).toHaveAttribute("aria-disabled", "true");
     expect(elements.item("Share")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must focus an item when the pointer moves onto it", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.hover(elements.item("Delete"));
+
+    expect(elements.item("Delete")).toHaveFocus();
+  });
+
+  it("must open a submenu 100ms after the pointer rests on its item, leaving focus on the item", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.hover(elements.item("Move to"));
+    act(() => vi.advanceTimersByTime(99));
+    const expandedEarly = elements.item("Move to").getAttribute("aria-expanded");
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(expandedEarly).toBe("false");
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+    expect(elements.item("Move to")).toHaveFocus();
+  });
+
+  it("must leave a submenu closed when the pointer leaves its item within 100ms", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.hover(elements.item("Move to"));
+    act(() => vi.advanceTimersByTime(50));
+    await user.hover(elements.item("Delete"));
+    act(() => vi.advanceTimersByTime(200));
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close an open submenu 100ms after the pointer moves onto another item away from it", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    await user.hover(elements.item("Move to"));
+    act(() => vi.advanceTimersByTime(100));
+
+    await user.hover(elements.item("Edit"));
+    act(() => vi.advanceTimersByTime(99));
+    const expandedEarly = elements.item("Move to").getAttribute("aria-expanded");
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(expandedEarly).toBe("true");
+    expect(elements.item("Edit")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep a submenu open while the pointer crosses other items towards it", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    vi.spyOn(elements.submenu("Move to"), "getBoundingClientRect").mockReturnValue(new DOMRect(200, 40, 150, 160));
+    await user.pointer({ coords: { clientX: 180, clientY: 60 }, target: elements.item("Move to") });
+    act(() => vi.advanceTimersByTime(100));
+
+    await user.pointer({ coords: { clientX: 185, clientY: 80 }, target: elements.item("Delete") });
+    act(() => vi.advanceTimersByTime(300));
+    await user.pointer({ coords: { clientX: 192, clientY: 110 }, target: elements.item("Delete") });
+    act(() => vi.advanceTimersByTime(300));
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+    expect(elements.item("Delete")).not.toHaveFocus();
+  });
+
+  it("must close a submenu 400ms after the pointer stops on another item inside the triangle", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    vi.spyOn(elements.submenu("Move to"), "getBoundingClientRect").mockReturnValue(new DOMRect(200, 40, 150, 160));
+    await user.pointer({ coords: { clientX: 180, clientY: 60 }, target: elements.item("Move to") });
+    act(() => vi.advanceTimersByTime(100));
+
+    await user.pointer({ coords: { clientX: 185, clientY: 80 }, target: elements.item("Delete") });
+    act(() => vi.advanceTimersByTime(400));
+
+    expect(elements.item("Delete")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
   });
 
   it("must reject role when an item is given one", () => {
