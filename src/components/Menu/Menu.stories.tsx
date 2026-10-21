@@ -8,7 +8,7 @@ import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Cluster } from "../Cluster";
-import { MoreHorizontalIcon } from "../Icon";
+import { AddIcon, DeleteIcon, MoreHorizontalIcon, SendIcon } from "../Icon";
 import { IconButton } from "../IconButton";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
@@ -78,10 +78,52 @@ function ToolbarMenu(): JSX.Element {
         <MenuItem>Edit</MenuItem>
         <MenuItem>Duplicate</MenuItem>
         <MenuItem>Archive</MenuItem>
+        <MenuItem tone="danger">Delete…</MenuItem>
       </Menu>
       <Button variant="ghost">Share</Button>
     </Cluster>
   );
+}
+
+/**
+ * Rows with icons, descriptions and shortcuts, a disabled item and a destructive one
+ */
+function DocumentMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "18rem" }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Document
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem description="Keep this one as it is" icon={<AddIcon />}>
+          New version
+        </MenuItem>
+        <MenuItem shortcut="⌘D" aria-keyshortcuts="Meta+D">
+          Duplicate
+        </MenuItem>
+        <MenuItem description="Ask an admin to turn on exports" disabled={true} icon={<SendIcon />}>
+          Export
+        </MenuItem>
+        <MenuItem icon={<DeleteIcon />} shortcut="⌘⌫" tone="danger" aria-keyshortcuts="Meta+Backspace">
+          Delete…
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
+/**
+ * The left edge of an item's label
+ *
+ * @param item the item element
+ * @returns the left edge in pixels
+ */
+function labelStart(item: HTMLElement): number {
+  const label = item.ownerDocument.getElementById(item.getAttribute("aria-labelledby") ?? "");
+
+  return label?.getBoundingClientRect().left ?? Number.NaN;
 }
 
 const meta = {
@@ -159,7 +201,7 @@ export const IconButtonTrigger: Story = {
  * at both ends, Home and End go to the first and last, and typing moves to the item whose label starts with the typed
  * text. The focused item shows the inset focus ring over the highlight. Escape closes the menu and returns focus to
  * the button; Tab closes it and moves on past the button, and Shift+Tab closes it and returns to the button. The rings
- * keep 3:1 and the highlighted label keeps 4.5:1.
+ * keep 3:1 and the highlighted label keeps 4.5:1, on a destructive item's danger highlight too.
  */
 export const KeyboardInteraction: Story = {
   render: () => <ToolbarMenu />,
@@ -185,11 +227,13 @@ export const KeyboardInteraction: Story = {
     await userEvent.keyboard("{ArrowDown}");
     await expect(item("Duplicate")).toHaveFocus();
     await userEvent.keyboard("{ArrowUp}{ArrowUp}");
-    await expect(item("Archive")).toHaveFocus();
+    await expect(item("Delete…")).toHaveFocus();
+    await expect(focusRingContrast(item("Delete…"))).toBeGreaterThanOrEqual(3);
+    await expect(textContrast(item("Delete…"))).toBeGreaterThanOrEqual(4.5);
     await userEvent.keyboard("{Home}");
     await expect(item("Edit")).toHaveFocus();
     await userEvent.keyboard("{End}");
-    await expect(item("Archive")).toHaveFocus();
+    await expect(item("Delete…")).toHaveFocus();
     await userEvent.keyboard("d");
     await expect(item("Duplicate")).toHaveFocus();
     await userEvent.keyboard("{End}");
@@ -201,15 +245,15 @@ export const KeyboardInteraction: Story = {
     }
 
     await input.pressKey("Escape");
-    await waitFor(() => expect(item("Archive")).not.toBeVisible());
+    await waitFor(() => expect(item("Delete…")).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(focusRingContrast(trigger)).toBeGreaterThanOrEqual(3);
 
     await input.pressKey("ArrowUp");
-    await waitFor(() => expect(item("Archive")).toHaveFocus());
+    await waitFor(() => expect(item("Delete…")).toHaveFocus());
 
     await input.pressKey("Tab");
-    await waitFor(() => expect(item("Archive")).not.toBeVisible());
+    await waitFor(() => expect(item("Delete…")).not.toBeVisible());
     await expect(canvas.getByRole("button", { name: "Share" })).toHaveFocus();
 
     await input.pressKey("Shift+Tab");
@@ -220,5 +264,68 @@ export const KeyboardInteraction: Story = {
     await waitFor(() => expect(item("Edit")).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  },
+};
+
+/**
+ * An item can have an icon, a description below its label and a shortcut after it. Once any item has an icon, every
+ * label lines up after the icons; a menu with none has no icon column. A disabled item is dimmed and a destructive one
+ * is drawn in the danger colour. Shortcuts are hidden from assistive technology and announced with
+ * `aria-keyshortcuts`.
+ */
+export const ItemContent: Story = {
+  render: () => <DocumentMenu />,
+  play: async ({ canvas }) => {
+    const items = await canvas.findAllByRole("menuitem");
+    const starts = items.map(labelStart);
+
+    await waitFor(() => expect(items[0]).toBeVisible());
+    await expect(new Set(starts.map(Math.round)).size).toBe(1);
+    await expect(canvas.getByRole("menuitem", { name: "Export" })).toHaveAttribute("aria-disabled", "true");
+    await expect(canvas.getByRole("menuitem", { name: "New version" })).toHaveAccessibleDescription(
+      "Keep this one as it is"
+    );
+  },
+};
+
+/**
+ * Without icons, labels start at the item's own padding, with no empty column before them
+ */
+export const NoIconColumn: Story = {
+  render: () => <ToolbarMenu />,
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: "Actions" }));
+
+    const edit = await canvas.findByRole("menuitem", { name: "Edit" });
+    await waitFor(() => expect(edit).toBeVisible());
+    const padding = parseFloat(getComputedStyle(edit).paddingInlineStart);
+
+    await expect(labelStart(edit) - edit.getBoundingClientRect().left).toBeCloseTo(padding, 0);
+  },
+};
+
+/**
+ * On the highlight, every enabled item's label, description and shortcut keep 4.5:1, and a destructive item's on its
+ * danger highlight
+ */
+export const HighlightContrast: Story = {
+  render: () => <DocumentMenu />,
+  play: async ({ canvas }) => {
+    const enabled = (await canvas.findAllByRole("menuitem")).filter(
+      (item) => item.getAttribute("aria-disabled") !== "true"
+    );
+
+    for (const item of enabled) {
+      const textParts = Array.from(item.querySelectorAll("span")).filter(
+        (span) => span.children.length === 0 && span.textContent !== ""
+      );
+      item.focus();
+
+      await expect(textParts.length).toBeGreaterThan(0);
+
+      for (const part of textParts) {
+        await expect(textContrast(part), `${item.textContent}: ${part.textContent}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   },
 };

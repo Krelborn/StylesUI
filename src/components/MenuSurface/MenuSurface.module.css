@@ -95,6 +95,26 @@
   outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
 }
 
+/* The disabled colour is the text mixed to half strength, not opacity, which would dim the focus ring too */
+.item[aria-disabled="true"] {
+  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
+  cursor: not-allowed;
+}
+
+.item[data-tone="danger"] {
+  color: var(--sui-color-danger-text, #b91c1c);
+}
+
+.item[data-tone="danger"]:focus {
+  background-color: var(--sui-menu-danger-highlight, var(--sui-color-danger-subtle, #fef2f2));
+  color: var(--sui-color-danger-text, #b91c1c);
+}
+
+/* Once any item in this menu has a leading slot, the others start their labels after where it would be */
+.menu:has(.leading) .item:not(:has(> .leading)) {
+  padding-inline-start: calc(var(--sui-space-2, 0.5rem) * 2 + 1rem);
+}
+
 .leading {
   display: grid;
   flex: none;
@@ -104,10 +124,40 @@
   color: var(--sui-color-text-muted, #4b5563);
 }
 
-.label {
+.item[data-tone="danger"] .leading {
+  color: inherit;
+}
+
+.text {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 2px;
   min-inline-size: 0;
+}
+
+.label {
   overflow-wrap: anywhere;
+}
+
+.description {
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  overflow-wrap: anywhere;
+}
+
+.trailing {
+  flex: none;
+  margin-inline-start: auto;
+  padding-inline-start: var(--sui-space-6, 1.5rem);
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.item[aria-disabled="true"] :is(.leading, .description, .trailing) {
+  opacity: 0.5;
 }
 
 @media (prefers-reduced-motion: reduce) {

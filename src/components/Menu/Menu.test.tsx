@@ -6,8 +6,9 @@ import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
 import { Button } from "../Button";
-import { MoreHorizontalIcon } from "../Icon";
+import { MoreHorizontalIcon, RefreshIcon } from "../Icon";
 import { IconButton } from "../IconButton";
+import { Text } from "../Text";
 
 import { Menu } from "./Menu";
 import { MenuItem } from "./MenuItem";
@@ -340,6 +341,65 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must leave an item's icon out of its name when the item has one", () => {
+    render(<RichMenu />);
+
+    expect(elements.item("Rename…")).toContainElement(screen.getByTestId("rename-icon"));
+    expect(screen.getByTestId("rename-icon")).toHaveAttribute("aria-hidden", "true");
+  });
+
+  it("must describe an item by its description, listed before the consumer's, when it has one", () => {
+    render(<RichMenu />);
+
+    expect(elements.item("Duplicate")).toHaveAccessibleDescription("Make a copy beside it Keeps its sharing");
+  });
+
+  it("must show a shortcut without adding it to the name or description when an item has one", () => {
+    render(<RichMenu />);
+
+    expect(screen.getByText("⌘D")).toBeInTheDocument();
+    expect(elements.item("Duplicate")).toHaveAttribute("aria-keyshortcuts", "Meta+D");
+  });
+
+  it("must mark a disabled item and keep the menu open when it is clicked", async () => {
+    const user = userEvent.setup();
+    const onExport = vi.fn();
+    render(<RichMenu onExport={onExport} />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.item("Export"));
+
+    expect(elements.item("Export")).toHaveAttribute("aria-disabled", "true");
+    expect(onExport).not.toHaveBeenCalled();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must reach a disabled item with the arrow keys and type-ahead when it is disabled", async () => {
+    const { user } = setUpTest();
+    render(<RichMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Duplicate").focus();
+
+    await user.keyboard("{ArrowDown}");
+    const reachedByArrow = document.activeElement;
+    elements.item("Rename…").focus();
+    await user.keyboard("e");
+
+    expect(reachedByArrow).toBe(elements.item("Export"));
+    expect(elements.item("Export")).toHaveFocus();
+  });
+
+  it("must match an item's label alone when its description or shortcut would match", async () => {
+    const { user } = setUpTest();
+    render(<RichMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Rename…").focus();
+
+    await user.keyboard("m");
+
+    expect(elements.item("Rename…")).toHaveFocus();
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -428,6 +488,41 @@ function DismissibleMenu(): JSX.Element {
         <MenuItem>Edit</MenuItem>
         {!dismissed && <MenuItem onClick={dismiss}>Dismiss</MenuItem>}
       </Menu>
+    </>
+  );
+}
+
+interface RichMenuProps {
+  /**
+   * Runs when the disabled Export is clicked, which it must not be
+   */
+  onExport?: () => void;
+}
+
+function RichMenu({ onExport }: RichMenuProps): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem icon={<RefreshIcon data-testid="rename-icon" />}>Rename…</MenuItem>
+        <MenuItem
+          description="Make a copy beside it"
+          shortcut="⌘D"
+          aria-describedby="duplicate-note"
+          aria-keyshortcuts="Meta+D"
+        >
+          Duplicate
+        </MenuItem>
+        <MenuItem disabled={true} onClick={onExport}>
+          Export
+        </MenuItem>
+        <MenuItem tone="danger">Delete</MenuItem>
+      </Menu>
+      <Text id="duplicate-note">Keeps its sharing</Text>
     </>
   );
 }

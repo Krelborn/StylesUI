@@ -58,6 +58,7 @@ const textPairs: readonly ColourPair[] = [
   { background: "danger", foreground: "on-danger" },
   { background: "info", foreground: "on-info" },
   { background: "secondary-subtle", foreground: "text" },
+  { background: "secondary-subtle", foreground: "text-muted" },
   { background: "tooltip", foreground: "on-tooltip" },
   ...statusTextPairs,
 ];
