@@ -5,9 +5,10 @@ import { createContext } from "react";
  */
 export interface MenuContextValue {
   /**
-   * Closes every open menu
+   * Closes every open menu once an item has been chosen, unless Space chose a checkbox or radio item, which leaves
+   * them open
    */
-  close: () => void;
+  closeAfterChoosing: () => void;
 }
 
 /**

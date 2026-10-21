@@ -16,6 +16,7 @@ import { Text } from "../Text";
 import { Menu } from "./Menu";
 import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
+import { MenuItemCheckbox } from "./MenuItemCheckbox";
 import { MenuSeparator } from "./MenuSeparator";
 import { useMenu } from "./useMenu";
 
@@ -180,10 +181,38 @@ function AccountMenu(): JSX.Element {
   );
 }
 
+/**
+ * Display options that are each on or off
+ */
+function DisplayOptionsMenu(): JSX.Element {
+  const [showArchived, setShowArchived] = useState(true);
+  const menu = useMenu();
+
+  return (
+    <Stack align="start" gap={3}>
+      <Box>
+        <Button {...menu.getTriggerProps()} variant="secondary">
+          Display
+        </Button>
+        <Menu {...menu.getMenuProps()}>
+          <MenuItemCheckbox>Compact rows</MenuItemCheckbox>
+          <MenuItemCheckbox checked={showArchived} onCheckedChange={setShowArchived}>
+            Show archived
+          </MenuItemCheckbox>
+          <MenuItemCheckbox description="Turned off by your admin" disabled={true}>
+            Sync across devices
+          </MenuItemCheckbox>
+        </Menu>
+      </Box>
+      <Text>{`Showing archived: ${showArchived ? "yes" : "no"}`}</Text>
+    </Stack>
+  );
+}
+
 const meta = {
   title: "Overlays/Menu",
   component: Menu,
-  subcomponents: { MenuGroup, MenuItem, MenuSeparator },
+  subcomponents: { MenuGroup, MenuItem, MenuItemCheckbox, MenuSeparator },
   args: {
     anchorName: "--sui-overlay-story",
     close: fn(),
@@ -420,5 +449,39 @@ export const Links: Story = {
     await waitFor(() => expect(profile).toBeVisible());
     await expect(profile.tagName).toBe("A");
     await expect(profile).toHaveAttribute("href", "#profile");
+  },
+};
+
+/**
+ * A checkbox item shows a check before its label when it is on. Space toggles it and leaves the menu open, so several
+ * can be set at once; Enter or a click toggles it and closes the menu. The check takes the place of an icon, so the
+ * labels line up whether an item is checked or not, and a disabled item cannot be toggled.
+ */
+export const CheckboxItems: Story = {
+  render: () => <DisplayOptionsMenu />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Display" });
+    const item = (name: string): HTMLElement => canvas.getByRole("menuitemcheckbox", { hidden: true, name });
+
+    trigger.focus();
+    await input.pressKey("Enter");
+    await waitFor(() => expect(item("Compact rows")).toHaveFocus());
+    await expect(labelStart(item("Compact rows"))).toBeCloseTo(labelStart(item("Show archived")), 0);
+
+    await input.pressKey("Space");
+    await expect(item("Compact rows")).toHaveAttribute("aria-checked", "true");
+    await expect(item("Compact rows")).toBeVisible();
+
+    await input.pressKey("ArrowDown");
+    await input.pressKey("Enter");
+    await waitFor(() => expect(item("Show archived")).not.toBeVisible());
+    await expect(canvas.getByText("Showing archived: no")).toBeInTheDocument();
+    await expect(trigger).toHaveFocus();
   },
 };

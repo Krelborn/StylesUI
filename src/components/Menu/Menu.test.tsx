@@ -14,6 +14,7 @@ import { Text } from "../Text";
 import { Menu } from "./Menu";
 import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
+import { MenuItemCheckbox } from "./MenuItemCheckbox";
 import { MenuSeparator } from "./MenuSeparator";
 import type { UseMenuOptions } from "./useMenu";
 import { useMenu } from "./useMenu";
@@ -530,6 +531,97 @@ describe("Menu", () => {
     expect(elements.item("Settings")).toBeInTheDocument();
   });
 
+  it("must mark a checkbox item checked when defaultChecked is true", () => {
+    render(<CheckboxMenu />);
+
+    expect(elements.checkbox("Show archived")).toHaveAttribute("aria-checked", "true");
+    expect(elements.checkbox("Compact rows")).toHaveAttribute("aria-checked", "false");
+    expect(elements.checkbox("Compact rows")).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("must toggle an uncontrolled checkbox item, report it and close the menu when it is clicked", async () => {
+    const user = userEvent.setup();
+    const onCheckedChange = vi.fn();
+    render(<CheckboxMenu onCompactChange={onCheckedChange} />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.checkbox("Compact rows"));
+
+    expect(elements.checkbox("Compact rows")).toHaveAttribute("aria-checked", "true");
+    expect(onCheckedChange).toHaveBeenLastCalledWith(true);
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must report a toggle but follow checked when a controlled checkbox item is clicked", async () => {
+    const user = userEvent.setup();
+    const onCheckedChange = vi.fn();
+    render(<CheckboxMenu archivedChecked={true} onArchivedChange={onCheckedChange} />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.checkbox("Show archived"));
+
+    expect(onCheckedChange).toHaveBeenLastCalledWith(false);
+    expect(elements.checkbox("Show archived")).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("must toggle a checkbox item and close the menu when Enter is pressed on it", async () => {
+    const user = userEvent.setup();
+    render(<CheckboxMenu />);
+    openAsBrowser(elements.menu);
+    elements.checkbox("Compact rows").focus();
+
+    await user.keyboard("{Enter}");
+
+    expect(elements.checkbox("Compact rows")).toHaveAttribute("aria-checked", "true");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must toggle a checkbox item and keep the menu open when Space is pressed on it", async () => {
+    const { user } = setUpTest();
+    render(<CheckboxMenu />);
+    openAsBrowser(elements.menu);
+    elements.checkbox("Compact rows").focus();
+
+    await user.keyboard(" ");
+
+    expect(elements.checkbox("Compact rows")).toHaveAttribute("aria-checked", "true");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must leave a checkbox item alone when Space joins a query being typed", async () => {
+    const { user } = setUpTest();
+    render(<CheckboxMenu />);
+    openAsBrowser(elements.menu);
+    elements.checkbox("Compact rows").focus();
+
+    await user.keyboard("s ");
+
+    expect(elements.checkbox("Show archived")).toHaveFocus();
+    expect(elements.checkbox("Show archived")).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("must leave a disabled checkbox item unchanged when it is clicked", async () => {
+    const user = userEvent.setup();
+    render(<CheckboxMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.checkbox("Sync"));
+
+    expect(elements.checkbox("Sync")).toHaveAttribute("aria-checked", "false");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must reject an icon when a checkbox item is given one", () => {
+    render(
+      <BareMenu>
+        {/* @ts-expect-error the check takes the icon's place */}
+        <MenuItemCheckbox icon={<RefreshIcon />}>Show archived</MenuItemCheckbox>
+      </BareMenu>
+    );
+
+    expect(elements.checkbox("Show archived")).toBeInTheDocument();
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -721,6 +813,42 @@ function LinkMenu(): JSX.Element {
   );
 }
 
+interface CheckboxMenuProps {
+  /**
+   * Controls whether Show archived is checked
+   */
+  archivedChecked?: boolean;
+
+  /**
+   * Called when Show archived is toggled
+   */
+  onArchivedChange?: (checked: boolean) => void;
+
+  /**
+   * Called when Compact rows is toggled
+   */
+  onCompactChange?: (checked: boolean) => void;
+}
+
+function CheckboxMenu({ archivedChecked, onArchivedChange, onCompactChange }: CheckboxMenuProps): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItemCheckbox onCheckedChange={onCompactChange}>Compact rows</MenuItemCheckbox>
+        <MenuItemCheckbox checked={archivedChecked} defaultChecked={true} onCheckedChange={onArchivedChange}>
+          Show archived
+        </MenuItemCheckbox>
+        <MenuItemCheckbox disabled={true}>Sync</MenuItemCheckbox>
+      </Menu>
+    </>
+  );
+}
+
 function TypeAheadMenu(): JSX.Element {
   const menu = useMenu({ defaultOpen: true });
 
@@ -825,6 +953,9 @@ function closeAsBrowser(menu: HTMLElement): void {
 }
 
 const elements = {
+  checkbox(name: string): HTMLElement {
+    return screen.getByRole("menuitemcheckbox", { hidden: true, name });
+  },
   item(name: string): HTMLElement {
     return screen.getByRole("menuitem", { hidden: true, name });
   },

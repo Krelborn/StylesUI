@@ -136,6 +136,15 @@
   color: inherit;
 }
 
+/* The check of a checkbox item and the dot of a radio item are in the text colour, and keep their place unchecked */
+.item[aria-checked] > .leading {
+  color: inherit;
+}
+
+.item[aria-checked="false"] > .leading {
+  visibility: hidden;
+}
+
 .text {
   display: flex;
   flex: 1;

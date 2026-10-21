@@ -1,14 +1,13 @@
 import { clsx } from "clsx";
 import type { JSX, JSXElementConstructor, MouseEvent, ReactNode } from "react";
-import { useId } from "react";
 
-import { hasContent } from "../../forms";
 import type { LinkOrButtonElement, LinkOrButtonProps } from "../../links";
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 import styles from "../MenuSurface/MenuSurface.module.css";
 
 import { useMenuContext } from "./useMenuContext";
+import { useMenuItemContent } from "./useMenuItemContent";
 
 /**
  * What a `MenuItem` can render: a button for an action, a link, or a component that renders an anchor, such as a
@@ -136,9 +135,6 @@ export function MenuItem<E extends MenuItemElement = "button">({
   ...rest
 }: MenuItemProps<E>): JSX.Element {
   const menu = useMenuContext("MenuItem");
-  const labelId = useId();
-  const descriptionId = useId();
-  const hasDescription = hasContent(description);
   // Widened as in Box: MenuItemProps<E> already guarantees the props match `as`
   const {
     "aria-describedby": describedBy,
@@ -148,9 +144,7 @@ export function MenuItem<E extends MenuItemElement = "button">({
     "aria-describedby"?: string;
     onClick?: (event: MouseEvent<HTMLElement>) => void;
   };
-  const describedByIds = [hasDescription ? descriptionId : undefined, describedBy]
-    .filter((id) => id !== undefined && id !== "")
-    .join(" ");
+  const item = useMenuItemContent({ describedBy, description, label: children, leading: icon, shortcut });
 
   function handleClick(event: MouseEvent<HTMLElement>): void {
     if (disabled) {
@@ -163,39 +157,16 @@ export function MenuItem<E extends MenuItemElement = "button">({
 
     // A router's link prevents the default to navigate by itself, so a link always closes the menus
     if (!event.defaultPrevented || event.currentTarget instanceof HTMLAnchorElement) {
-      menu.close();
+      menu.closeAfterChoosing();
     }
   }
 
   const itemProps: ItemElementProps = {
     ...elementProps,
-    "aria-describedby": describedByIds === "" ? undefined : describedByIds,
+    "aria-describedby": item.describedBy,
     "aria-disabled": disabled ? true : undefined,
-    "aria-labelledby": labelId,
-    children: (
-      <>
-        {hasContent(icon) && (
-          <Box as="span" className={styles.leading} aria-hidden={true}>
-            {icon}
-          </Box>
-        )}
-        <Box as="span" className={styles.text}>
-          <Box as="span" className={styles.label} id={labelId}>
-            {children}
-          </Box>
-          {hasDescription && (
-            <Box as="span" className={styles.description} id={descriptionId}>
-              {description}
-            </Box>
-          )}
-        </Box>
-        {shortcut !== undefined && shortcut !== "" && (
-          <Box as="span" className={styles.trailing} aria-hidden={true}>
-            {shortcut}
-          </Box>
-        )}
-      </>
-    ),
+    "aria-labelledby": item.labelId,
+    children: item.content,
     className: clsx(styles.item, className),
     "data-tone": tone,
     onClick: handleClick,

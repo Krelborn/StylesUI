@@ -32,6 +32,7 @@
         "Menu": "div",
         "MenuGroup": "div",
         "MenuItem": "button",
+        "MenuItemCheckbox": "button",
         "MenuSeparator": "hr",
         "MoreHorizontalIcon": "svg",
         "MoreVerticalIcon": "svg",

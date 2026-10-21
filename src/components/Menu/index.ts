@@ -4,6 +4,8 @@ export { MenuGroup } from "./MenuGroup";
 export type { MenuGroupProps } from "./MenuGroup";
 export { MenuItem } from "./MenuItem";
 export type { MenuItemElement, MenuItemProps } from "./MenuItem";
+export { MenuItemCheckbox } from "./MenuItemCheckbox";
+export type { MenuItemCheckboxProps } from "./MenuItemCheckbox";
 export { MenuSeparator } from "./MenuSeparator";
 export type { MenuSeparatorProps } from "./MenuSeparator";
 export { useMenu } from "./useMenu";

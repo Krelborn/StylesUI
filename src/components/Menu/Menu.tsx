@@ -91,6 +91,13 @@ export interface MenuProps
  */
 export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.Element {
   const typeAheadQueryRef = useRef<TypeAheadQuery | null>(null);
+  const keepsOpenAfterChoosingRef = useRef(false);
+
+  function closeAfterChoosing(): void {
+    if (!keepsOpenAfterChoosingRef.current) {
+      close();
+    }
+  }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
     onKeyDown?.(event);
@@ -102,7 +109,7 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
     const items = renderedItems(event.currentTarget);
     const currentIndex = items.indexOf(event.target as HTMLElement);
 
-    if (moveFocus(event.key, items, currentIndex) || followLink(event.key, items.at(currentIndex))) {
+    if (moveFocus(event.key, items, currentIndex) || chooseOnSpace(event.key, items.at(currentIndex))) {
       event.preventDefault();
     }
   }
@@ -125,6 +132,26 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
   }
 
   /**
+   * Chooses the focused item on Space where the browser would not, or would close the menu: a link ignores Space by
+   * itself, and Space toggles a checkbox or radio item and leaves the menu open
+   *
+   * @returns whether it chose the item
+   */
+  function chooseOnSpace(key: string, item: HTMLElement | undefined): boolean {
+    const checkable = item?.getAttribute("role") !== "menuitem";
+
+    if (key !== " " || item === undefined || (!checkable && item instanceof HTMLButtonElement)) {
+      return false;
+    }
+
+    keepsOpenAfterChoosingRef.current = checkable;
+    item.click();
+    keepsOpenAfterChoosingRef.current = false;
+
+    return true;
+  }
+
+  /**
    * Finds the item a typed character moves to
    *
    * @returns its index; null for a character that matches no item; undefined for a key type-ahead leaves alone, such
@@ -143,7 +170,7 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
   }
 
   return (
-    <MenuContext.Provider value={{ close }}>
+    <MenuContext.Provider value={{ closeAfterChoosing }}>
       <Overlay
         {...rest}
         as="div"
@@ -155,21 +182,4 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
       />
     </MenuContext.Provider>
   );
-}
-
-/**
- * Follows a focused link item on Space, which a link, unlike a button, ignores by itself
- *
- * @param key the pressed key
- * @param item the focused item, if focus is on one
- * @returns whether it clicked the link
- */
-function followLink(key: string, item: HTMLElement | undefined): boolean {
-  if (key !== " " || item === undefined || item instanceof HTMLButtonElement) {
-    return false;
-  }
-
-  item.click();
-
-  return true;
 }
