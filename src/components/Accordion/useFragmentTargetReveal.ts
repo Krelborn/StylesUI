@@ -57,9 +57,10 @@ export function useFragmentTargetReveal({ findable, onMatch, open, panelRef }: F
 }
 
 /**
- * Finds the element the page's URL fragment points at
+ * Finds the element the page's URL fragment points at, as the browser's fragment navigation does
  *
- * @returns the element whose id is the fragment, as written or percent-decoded, or null when there is none
+ * @returns the element whose id, or the `a` element whose name, is the fragment as written or else percent-decoded,
+ *   or null when there is none
  */
 function fragmentTarget(): Element | null {
   const fragment = window.location.hash.slice(1);
@@ -68,7 +69,21 @@ function fragmentTarget(): Element | null {
     return null;
   }
 
-  return document.getElementById(fragment) ?? document.getElementById(decodedFragment(fragment));
+  return potentialIndicatedElement(fragment) ?? potentialIndicatedElement(decodedFragment(fragment));
+}
+
+/**
+ * Finds the element a fragment names
+ *
+ * @param fragment the fragment without its `#`
+ * @returns the first element with the fragment as its id, else the first `a` element with it as its name, or null
+ */
+function potentialIndicatedElement(fragment: string): Element | null {
+  return (
+    document.getElementById(fragment) ??
+    Array.from(document.getElementsByName(fragment)).find((element) => element instanceof HTMLAnchorElement) ??
+    null
+  );
 }
 
 /**

@@ -269,15 +269,22 @@ describe("Accordion", () => {
     expect(elements.panelOf("Stroke")).toHaveAttribute("hidden", "until-found");
   });
 
-  it("must open an item and scroll to the target when the page loads with a fragment inside its closed panel", () => {
-    const { onValueChange, render, scrollIntoView } = setUpFragmentTest("#returns-policy");
+  it.each([
+    { fragment: "#returns-policy", kind: "an id", target: "Returns are free" },
+    { fragment: "#returns-form", kind: "a named anchor", target: "Return form" },
+    { fragment: "#d%C3%A9lai", kind: "a percent-encoded id", target: "Within 30 days" },
+  ])(
+    "must open an item and scroll to the target when the page loads with a fragment matching $kind inside its closed panel",
+    ({ fragment, target }) => {
+      const { onValueChange, render, scrollIntoView } = setUpFragmentTest(fragment);
 
-    render();
+      render();
 
-    expect(elements.toggle("Returns")).toHaveAttribute("aria-expanded", "true");
-    expect(onValueChange).toHaveBeenLastCalledWith(["returns"]);
-    expect(scrollIntoView.mock.contexts).toContain(screen.getByText("Returns are free"));
-  });
+      expect(elements.toggle("Returns")).toHaveAttribute("aria-expanded", "true");
+      expect(onValueChange).toHaveBeenLastCalledWith(["returns"]);
+      expect(scrollIntoView.mock.contexts).toContain(screen.getByText(target));
+    }
+  );
 
   it("must let the user close an item the page's fragment opened when its toggle is clicked", async () => {
     const { render } = setUpFragmentTest("#returns-policy");
@@ -618,6 +625,8 @@ function setUpTest() {
 }
 
 function setUpFragmentTest(fragment: string) {
+  // React's types leave out the obsolete name attribute, which a spread still renders
+  const legacyAnchorName = { name: "returns-form" };
   const onValueChange = vi.fn();
   const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
   const url = window.location.href;
@@ -636,6 +645,9 @@ function setUpFragmentTest(fragment: string) {
           </AccordionItem>
           <AccordionItem disabled={disabled} title="Returns" value="returns">
             <p id="returns-policy">Returns are free</p>
+            {/* oxlint-disable-next-line jsx-a11y/anchor-is-valid -- a legacy named anchor, which a fragment can still target */}
+            <a {...legacyAnchorName}>Return form</a>
+            <p id="délai">Within 30 days</p>
           </AccordionItem>
         </Accordion>
         <p id="elsewhere">Elsewhere</p>
