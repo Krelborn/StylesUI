@@ -218,6 +218,26 @@
   border-block-start: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
 }
 
+/*
+ * Beside its item, on the side the text runs towards, with its first item level with it: the margins take back the
+ * surface's padding and border. Overlay's placement rules match with one class fewer, so these win.
+ */
+.menu.submenuMenu[data-placement] {
+  align-self: normal;
+  margin: 0;
+  margin-block-start: calc((var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px)) * -1);
+  margin-inline-start: calc(var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px));
+  position-area: span-self-block-end self-inline-end;
+  position-try-fallbacks: flip-inline, --sui-submenu-below;
+}
+
+/* With no room on either side, below the item and over the menu it belongs to, so it still fits a narrow viewport */
+@position-try --sui-submenu-below {
+  margin: 0;
+  margin-block-start: var(--sui-space-1, 0.25rem);
+  position-area: self-block-end span-self-inline-end;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .menu {
     transition: opacity 120ms ease-out;

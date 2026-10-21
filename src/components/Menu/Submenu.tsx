@@ -177,6 +177,7 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
       {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- Menu sets the menu role itself */}
       <Menu
         anchorName={anchorName}
+        className={styles.submenuMenu}
         close={parent.closeAll}
         id={menuId}
         onBeforeToggle={handleMenuBeforeToggle}

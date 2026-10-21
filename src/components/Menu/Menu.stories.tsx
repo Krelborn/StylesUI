@@ -4,6 +4,7 @@ import { useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
+import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
@@ -269,6 +270,101 @@ function FileMenu(): JSX.Element {
       <Text>{`Last action: ${lastAction}`}</Text>
     </Stack>
   );
+}
+
+interface PlacedMenuProps {
+  /**
+   * Where the button sits in its row
+   */
+  align: "end" | "start";
+
+  /**
+   * Writing direction around the menu
+   */
+  dir?: "ltr" | "rtl";
+
+  /**
+   * The button's label, which also names the menu
+   */
+  label: string;
+
+  /**
+   * Whether the menu is nearly as wide as the window, which leaves its submenu no room on either side
+   */
+  wide?: boolean;
+}
+
+/**
+ * A menu with a Move to submenu, placed so the submenu has room on one side, the other, or neither
+ */
+function PlacedMenu({ align, dir, label, wide = false }: PlacedMenuProps): JSX.Element {
+  const menu = useMenu();
+
+  return (
+    <Box dir={dir} style={{ display: "flex", justifyContent: align }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        {label}
+      </Button>
+      <Menu
+        {...menu.getMenuProps({
+          style: wide ? { maxInlineSize: "none", minInlineSize: "calc(100vw - 4rem)" } : undefined,
+        })}
+      >
+        <MenuItem>Rename…</MenuItem>
+        <Submenu label="Move to">
+          <MenuItem>Inbox</MenuItem>
+          <MenuItem>Projects</MenuItem>
+        </Submenu>
+      </Menu>
+    </Box>
+  );
+}
+
+/**
+ * Opens a menu and its Move to submenu from the keyboard
+ *
+ * @param input the trusted input
+ * @param trigger the menu's button
+ * @param openingKey the arrow key that opens a submenu in the menu's writing direction
+ * @returns the Move to item and its submenu, once the submenu has settled where it opened
+ */
+async function openMoveTo(
+  input: TrustedInput,
+  trigger: HTMLElement,
+  openingKey: "ArrowLeft" | "ArrowRight"
+): Promise<{ item: HTMLElement; submenu: HTMLElement }> {
+  const page = trigger.ownerDocument;
+
+  trigger.focus();
+  await input.pressKey("Enter");
+  await waitFor(() => expect(page.activeElement?.textContent).toBe("Rename…"));
+  await input.pressKey("ArrowDown");
+  await input.pressKey(openingKey);
+  await waitFor(() => expect(page.activeElement?.textContent).toBe("Inbox"));
+
+  const submenu = page.activeElement?.closest<HTMLElement>('[role="menu"]');
+  const item = page.querySelector<HTMLElement>(`[aria-controls="${submenu?.id}"]`);
+
+  if (submenu == null || item === null) {
+    throw new Error("Move to opened no submenu");
+  }
+
+  await Promise.all(submenu.getAnimations().map((animation) => animation.finished));
+
+  return { item, submenu };
+}
+
+/**
+ * Closes a submenu and then its menu with Escape
+ *
+ * @param input the trusted input
+ * @param trigger the menu's button, which takes focus back
+ */
+async function closeBoth(input: TrustedInput, trigger: HTMLElement): Promise<void> {
+  await input.pressKey("Escape");
+  await waitFor(() => expect(trigger.ownerDocument.activeElement?.textContent).toBe("Move to"));
+  await input.pressKey("Escape");
+  await waitFor(() => expect(trigger).toHaveFocus());
 }
 
 const meta = {
@@ -640,5 +736,61 @@ export const Submenus: Story = {
     await expect(item("2025")).not.toBeVisible();
     await expect(canvas.getByText("Last action: Moved to 2025")).toBeInTheDocument();
     await expect(trigger).toHaveFocus();
+  },
+};
+
+/**
+ * A submenu opens beside its item on the side the text runs towards, with its first item level with the item. Against
+ * the window's edge it opens on the other side, and with no room on either side it opens below its item, over the
+ * menu, so it fits a narrow window.
+ */
+export const SubmenuPlacement: Story = {
+  render: () => (
+    <Stack gap={4}>
+      <PlacedMenu align="start" label="Room after" />
+      <PlacedMenu align="end" label="Room before" />
+      <PlacedMenu align="start" dir="rtl" label="Right to left" />
+      <PlacedMenu align="start" label="No room" wide={true} />
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const open = (
+      label: string,
+      openingKey: "ArrowLeft" | "ArrowRight" = "ArrowRight"
+    ): Promise<{ item: HTMLElement; submenu: HTMLElement }> =>
+      openMoveTo(input, canvas.getByRole("button", { name: label }), openingKey);
+
+    const after = await open("Room after");
+    const afterItem = after.item.getBoundingClientRect();
+    const afterSubmenu = after.submenu.getBoundingClientRect();
+    await expect(afterSubmenu.left).toBeGreaterThanOrEqual(afterItem.right);
+    await expect(after.submenu.querySelector('[role="menuitem"]')?.getBoundingClientRect().top).toBeCloseTo(
+      afterItem.top,
+      0
+    );
+    await closeBoth(input, canvas.getByRole("button", { name: "Room after" }));
+
+    const before = await open("Room before");
+    await expect(before.submenu.getBoundingClientRect().right).toBeLessThanOrEqual(
+      before.item.getBoundingClientRect().left
+    );
+    await closeBoth(input, canvas.getByRole("button", { name: "Room before" }));
+
+    const rightToLeft = await open("Right to left", "ArrowLeft");
+    await expect(rightToLeft.submenu.getBoundingClientRect().right).toBeLessThanOrEqual(
+      rightToLeft.item.getBoundingClientRect().left
+    );
+    await closeBoth(input, canvas.getByRole("button", { name: "Right to left" }));
+
+    const noRoom = await open("No room");
+    const noRoomSubmenu = noRoom.submenu.getBoundingClientRect();
+    await expect(noRoomSubmenu.top).toBeGreaterThanOrEqual(noRoom.item.getBoundingClientRect().bottom);
+    await expect(noRoomSubmenu.right).toBeLessThanOrEqual(window.innerWidth);
   },
 };
