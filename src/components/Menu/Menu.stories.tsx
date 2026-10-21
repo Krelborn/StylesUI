@@ -6,10 +6,11 @@ import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
+import { Avatar } from "../Avatar";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Cluster } from "../Cluster";
-import { AddIcon, DeleteIcon, MoreHorizontalIcon, RefreshIcon, SendIcon } from "../Icon";
+import { AddIcon, ColorModeIcon, DeleteIcon, MoreHorizontalIcon, RefreshIcon, SendIcon } from "../Icon";
 import { IconButton } from "../IconButton";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
@@ -365,6 +366,41 @@ async function closeBoth(input: TrustedInput, trigger: HTMLElement): Promise<voi
   await waitFor(() => expect(trigger.ownerDocument.activeElement?.textContent).toBe("Move to"));
   await input.pressKey("Escape");
   await waitFor(() => expect(trigger).toHaveFocus());
+}
+
+/**
+ * An app's account menu from an avatar at the end of its header: links, an appearance submenu of radio items, and
+ * signing out
+ */
+function UserMenu(): JSX.Element {
+  const [mode, setMode] = useState("system");
+  const menu = useMenu({ placement: "bottom-end" });
+
+  return (
+    <Box style={{ display: "flex", justifyContent: "end", minBlockSize: "16rem" }}>
+      {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label -- label names the IconButton */}
+      <IconButton {...menu.getTriggerProps()} label="Account" data-testid="account-trigger">
+        <Avatar name="Matt Styles" size="sm" aria-hidden={true} />
+      </IconButton>
+      <Menu {...menu.getMenuProps({ "aria-label": "Account" })}>
+        <MenuItem as="a" href="#profile">
+          Your profile
+        </MenuItem>
+        <MenuItem as="a" href="#settings" shortcut="⌘," aria-keyshortcuts="Meta+Comma">
+          Settings
+        </MenuItem>
+        <Submenu icon={<ColorModeIcon />} label="Appearance">
+          <MenuRadioGroup label="Appearance" onValueChange={setMode} value={mode}>
+            <MenuItemRadio value="light">Light</MenuItemRadio>
+            <MenuItemRadio value="dark">Dark</MenuItemRadio>
+            <MenuItemRadio value="system">System</MenuItemRadio>
+          </MenuRadioGroup>
+        </Submenu>
+        <MenuSeparator />
+        <MenuItem>Sign out</MenuItem>
+      </Menu>
+    </Box>
+  );
 }
 
 const meta = {
@@ -832,5 +868,44 @@ export const PointerInteraction: Story = {
     await input.clickPageCorner();
     await waitFor(() => expect(menu).not.toBeVisible());
     await expect(canvas.getByRole("button", { name: "File" })).not.toHaveFocus();
+  },
+};
+
+/**
+ * An account menu from an avatar `IconButton`, named with `getMenuProps({ "aria-label": … })`. Its Appearance
+ * submenu opens towards the start side, because the menu sits against the window's end edge, and Space picks a mode
+ * without closing it.
+ */
+export const UserAccountMenu: Story = {
+  render: () => <UserMenu />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Account" });
+
+    trigger.focus();
+    await input.pressKey("ArrowUp");
+    const signOut = canvas.getByRole("menuitem", { hidden: true, name: "Sign out" });
+    await waitFor(() => expect(signOut).toHaveFocus());
+    await waitFor(() => expect(canvas.getByRole("menu", { name: "Account" })).toBeVisible());
+
+    await input.pressKey("ArrowUp");
+    await input.pressKey("ArrowRight");
+    const dark = canvas.getByRole("menuitemradio", { hidden: true, name: "Dark" });
+    await waitFor(() => expect(canvas.getByRole("menuitemradio", { name: "Light" })).toHaveFocus());
+    await input.pressKey("ArrowDown");
+    await input.pressKey("Space");
+    await expect(dark).toHaveAttribute("aria-checked", "true");
+
+    const appearance = canvas.getByRole("menu", { name: "Appearance" });
+    const appearanceItem = canvas.getByRole("menuitem", { name: "Appearance" });
+    await Promise.all(appearance.getAnimations().map((animation) => animation.finished));
+    await expect(appearance.getBoundingClientRect().right).toBeLessThanOrEqual(
+      appearanceItem.getBoundingClientRect().left
+    );
   },
 };
