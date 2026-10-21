@@ -1,0 +1,296 @@
+.accordion {
+  --sui-accordion-padding-y: var(--sui-space-2, 0.5rem);
+  --sui-accordion-padding-x: var(--sui-space-2, 0.5rem);
+  --sui-accordion-inset: var(--sui-space-1, 0.25rem);
+  --sui-accordion-gap: var(--sui-space-2, 0.5rem);
+  --sui-accordion-font-size: var(--sui-font-size-md, 1rem);
+  --sui-accordion-description-font-size: var(--sui-font-size-sm, 0.875rem);
+  --sui-accordion-divider: var(--sui-color-border, #d1d5db);
+  --sui-accordion-indicator-color: var(--sui-color-text-muted, #4b5563);
+  --sui-accordion-radius: var(--sui-radius-md, 4px);
+  --_sui-accordion-indicator-space: calc(var(--sui-accordion-font-size) + var(--sui-accordion-gap));
+  --_sui-accordion-actions-end: 0px;
+
+  color: var(--sui-color-text, #111827);
+}
+
+/* The toggle fills the row, padded as a Button is, with the indicator after the title */
+.accordion:not([data-variant="flush"]) {
+  --sui-accordion-padding-x: var(--sui-space-4, 1rem);
+  --sui-accordion-inset: 0px;
+  --sui-accordion-radius: 0px;
+  --_sui-accordion-indicator-space: 0px;
+  --_sui-accordion-actions-end: var(--sui-accordion-padding-x);
+}
+
+.accordion:not([data-variant="flush"])[data-size="sm"] {
+  --sui-accordion-padding-x: var(--sui-space-3, 0.75rem);
+}
+
+.accordion:not([data-variant="flush"])[data-size="lg"] {
+  --sui-accordion-padding-x: var(--sui-space-6, 1.5rem);
+}
+
+/* Clipped, so a toggle's tint follows the box's corners */
+.accordion[data-variant="joined"] {
+  overflow: clip;
+  border: var(--sui-border-width, 1px) solid var(--sui-accordion-divider);
+  border-radius: var(--sui-radius-lg, 8px);
+}
+
+.accordion[data-size="sm"] {
+  --sui-accordion-padding-y: var(--sui-space-1, 0.25rem);
+  --sui-accordion-font-size: var(--sui-font-size-sm, 0.875rem);
+  --sui-accordion-description-font-size: var(--sui-font-size-xs, 0.75rem);
+}
+
+.accordion[data-size="lg"] {
+  --sui-accordion-padding-y: var(--sui-space-3, 0.75rem);
+  --sui-accordion-font-size: var(--sui-font-size-lg, 1.125rem);
+  --sui-accordion-description-font-size: var(--sui-font-size-md, 1rem);
+}
+
+.accordion[data-variant="separated"] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sui-space-3, 0.75rem);
+}
+
+/* Each item is drawn as a Card is, and the toggle's corners follow the card's so its focus ring does too */
+.accordion[data-variant="separated"] > .item {
+  --sui-accordion-radius: calc(var(--sui-radius-lg, 8px) - var(--sui-border-width, 1px));
+
+  border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+  border-radius: var(--sui-radius-lg, 8px);
+  background-color: var(--sui-color-surface, #f3f4f6);
+  box-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
+  transition:
+    box-shadow var(--sui-motion-spring, 120ms ease-out),
+    translate var(--sui-motion-spring, 120ms ease-out);
+}
+
+/* Rises by half the theme's control depth onto a shadow grown by as much, so a flat theme's card stays put */
+@media (hover: hover) {
+  .accordion[data-variant="separated"] > .item:has(> .header .toggle:hover:not([aria-disabled="true"])) {
+    box-shadow:
+      var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12)),
+      0 calc(var(--sui-control-depth, 0px) / 2) 0 var(--sui-color-shadow, transparent);
+    translate: 0 calc(var(--sui-control-depth, 0px) / -2);
+  }
+}
+
+.accordion:is([data-variant="flush"], [data-variant="joined"]) > .item + .item {
+  border-block-start: var(--sui-border-width, 1px) solid var(--sui-accordion-divider);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--sui-accordion-inset);
+  padding: var(--sui-accordion-inset);
+}
+
+.heading {
+  flex: 1;
+  min-inline-size: 0;
+  /* Otherwise a container's type selector for raw headings would give it a margin and the heading font */
+  margin: 0;
+  font: inherit;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--sui-accordion-gap);
+  inline-size: 100%;
+  padding: var(--sui-accordion-padding-y) var(--sui-accordion-padding-x);
+  border: 0;
+  border-radius: var(--sui-accordion-radius);
+  background-color: transparent;
+  color: inherit;
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-accordion-font-size);
+  font-weight: var(--sui-font-weight-control, 500);
+  line-height: var(--sui-line-height-tight, 1.25);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+@media (hover: hover) {
+  .toggle:hover:not([aria-disabled="true"]) {
+    background-color: color-mix(in srgb, currentColor 8%, transparent);
+  }
+}
+
+.toggle:active:not([aria-disabled="true"]) {
+  background-color: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+/* Inside the edge, so a scrolling pane, a neighbouring item or a joined box cannot clip or cover it */
+.toggle:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(-1 * var(--sui-focus-ring-width, 2px));
+}
+
+/* Mixed down rather than faded with opacity, so the focus ring keeps its full strength */
+.toggle[aria-disabled="true"] {
+  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
+  cursor: not-allowed;
+}
+
+.toggle:not([data-variant="flush"]) {
+  font-family: var(--sui-font-heading, system-ui, sans-serif);
+}
+
+.indicator {
+  color: var(--sui-accordion-indicator-color);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease,
+    rotate var(--sui-motion-spring, 120ms ease-out);
+}
+
+.toggle:not([data-variant="flush"]) .indicator {
+  order: 1;
+}
+
+.toggle:not([data-variant="flush"])[aria-expanded="true"] .chevron {
+  rotate: 180deg;
+}
+
+/* A chevron in a disc, which fills with the primary colour while the item is open */
+.toggle[data-variant="separated"] .indicator {
+  box-sizing: content-box;
+  padding: calc(0.375em - var(--sui-border-width, 1px));
+  border: var(--sui-border-width, 1px) solid var(--sui-color-control-border, transparent);
+  border-radius: var(--sui-radius-full, 9999px);
+  background-color: var(--sui-color-secondary, #e5e7eb);
+  color: var(--sui-color-on-secondary, #111827);
+}
+
+.toggle[data-variant="separated"][aria-expanded="true"] .indicator {
+  background-color: var(--sui-color-primary, #2563eb);
+  color: var(--sui-color-on-primary, #fff);
+}
+
+.toggle[aria-disabled="true"] :is(.indicator, .description, .trailing) {
+  color: inherit;
+}
+
+.toggle[data-variant="separated"][aria-disabled="true"] .indicator {
+  background-color: color-mix(in srgb, var(--sui-color-secondary, #e5e7eb) 50%, transparent);
+}
+
+/* Turned a quarter from pointing down, so a closed flush item points the way the text runs */
+.toggle[data-variant="flush"][aria-expanded="false"] .chevron {
+  rotate: -90deg;
+}
+
+.toggle[data-variant="flush"][aria-expanded="false"] .chevron:dir(rtl) {
+  rotate: 90deg;
+}
+
+/* AddIcon draws Lucide's plus, whose second stroke is the vertical one: laid flat, it leaves a minus */
+.plusMinus path:nth-child(2) {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: rotate var(--sui-motion-spring, 120ms ease-out);
+}
+
+.toggle[aria-expanded="true"] .plusMinus path:nth-child(2) {
+  rotate: 90deg;
+}
+
+.label {
+  display: grid;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.title {
+  overflow-wrap: anywhere;
+}
+
+.description,
+.trailing {
+  color: var(--sui-color-text-muted, #4b5563);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-accordion-description-font-size);
+  font-weight: var(--sui-font-weight-regular, 400);
+}
+
+.trailing {
+  flex: none;
+}
+
+.actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sui-accordion-inset);
+  padding-inline-end: var(--_sui-accordion-actions-end);
+}
+
+/* Starts where the title does: past the header's inset, the toggle's padding and any indicator before the title */
+.content {
+  padding-block: 0 var(--sui-space-3, 0.75rem);
+  padding-inline: calc(
+      var(--sui-accordion-inset) + var(--sui-accordion-padding-x) + var(--_sui-accordion-indicator-space)
+    )
+    calc(var(--sui-accordion-inset) + var(--sui-accordion-padding-x));
+}
+
+/* A spring would overshoot the content's height, so the height eases; browsers without interpolate-size open at once */
+.panel {
+  overflow: clip;
+  interpolate-size: allow-keywords;
+  transition:
+    block-size 200ms ease-out,
+    content-visibility 200ms ease-out allow-discrete;
+}
+
+.panel[hidden] {
+  block-size: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .indicator {
+    transition:
+      background-color 120ms ease,
+      color 120ms ease;
+  }
+
+  .plusMinus path:nth-child(2),
+  .panel,
+  .accordion[data-variant="separated"] > .item {
+    transition: none;
+  }
+}
+
+/* Forced colours replace the text colours that dim a disabled item and the fills that mark the separated disc */
+@media (forced-colors: active) {
+  .toggle[aria-disabled="true"] {
+    color: GrayText;
+  }
+
+  .toggle[data-variant="separated"] .indicator,
+  .toggle[data-variant="separated"][aria-expanded="true"] .indicator {
+    border-color: ButtonText;
+    background-color: ButtonFace;
+    color: ButtonText;
+  }
+}
+
+/* A printed page reads as a document, so every section that can open shows its content */
+@media print {
+  .panel[hidden="until-found"] {
+    block-size: auto;
+    content-visibility: visible;
+    transition: none;
+  }
+
+  .indicator {
+    display: none;
+  }
+}

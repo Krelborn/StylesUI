@@ -1,3 +1,5 @@
+export { Accordion, AccordionItem } from "./components/Accordion";
+export type { AccordionIndicator, AccordionItemProps, AccordionProps, AccordionVariant } from "./components/Accordion";
 export { Alert } from "./components/Alert";
 export type { AlertProps, AlertTone } from "./components/Alert";
 export { Avatar } from "./components/Avatar";

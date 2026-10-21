@@ -83,6 +83,21 @@ export function textContrast(element: HTMLElement, background?: string): number 
 }
 
 /**
+ * Measures the WCAG contrast ratio between a graphic drawn in `currentColor`, such as an icon, and its own background
+ * over the background behind it. WCAG 1.4.11 requires at least 3:1 for a graphic that conveys state.
+ *
+ * Needs a real browser; throws under jsdom.
+ *
+ * @param graphic the graphic, such as an icon's `svg`
+ * @returns the contrast ratio, from 1 to 21
+ */
+export function graphicContrast(graphic: SVGElement): number {
+  const surface = composite(toRgba(getComputedStyle(graphic).backgroundColor), backgroundBehind(graphic));
+
+  return contrastRatio(composite(toRgba(getComputedStyle(graphic).color), surface), surface);
+}
+
+/**
  * The lowest contrast between two fills that still reads as a change of state, about the step from white to gray-100
  */
 export const distinctFillContrast = 1.1;
@@ -164,7 +179,7 @@ function backgroundsBesideRing(element: HTMLElement, style: CSSStyleDeclaration)
   return [composite(toRgba(style.backgroundColor), behind), behind];
 }
 
-function backgroundBehind(element: HTMLElement): Rgba {
+function backgroundBehind(element: Element): Rgba {
   const layers: Rgba[] = [];
 
   for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
