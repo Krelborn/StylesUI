@@ -331,6 +331,56 @@ describe("usePopover", () => {
     expect(elements.trigger).toHaveFocus();
   });
 
+  it.each([
+    { name: "an uncontrolled", options: { defaultOpen: true } },
+    { name: "a controlled", options: { open: true } },
+  ])("must stay open and report nothing when a popover nested inside $name popover closes", ({ options }) => {
+    const onOpenChange = vi.fn();
+    render(<NestingPopover {...options} onOpenChange={onOpenChange} />);
+    openAsBrowser(elements.nested);
+
+    closeAsBrowser(elements.nested);
+
+    expect(elements.popover).toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { name: "an uncontrolled", options: {} },
+    { name: "a controlled", options: { open: false } },
+  ])("must stay closed and report nothing when a popover nested inside $name popover opens", ({ options }) => {
+    const onOpenChange = vi.fn();
+    render(<NestingPopover {...options} onOpenChange={onOpenChange} />);
+
+    const notCancelled = openAsBrowser(elements.nested);
+
+    expect(notCancelled).toBe(true);
+    expect(elements.popover).not.toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("must leave focus in a popover nested inside when it opens", () => {
+    render(<NestingPopover defaultOpen={true} />);
+    elements.nested.showPopover();
+    elements.fix.focus();
+
+    fireEvent(elements.nested, toggleEvent("toggle", "open"));
+
+    expect(elements.fix).toHaveFocus();
+  });
+
+  it("must keep focus where the browser returns it when a popover nested inside closes with focus inside it", () => {
+    render(<NestingPopover defaultOpen={true} />);
+    openAsBrowser(elements.nested);
+    elements.fix.focus();
+
+    closeAsBrowser(elements.nested, elements.details);
+
+    expect(elements.details).toHaveFocus();
+  });
+
   it("must run the consumer's trigger handler when one is given", async () => {
     const user = userEvent.setup();
     render(<ClickCountingPopover />);
@@ -483,6 +533,27 @@ function ConfirmationPopover({ focusesCancel = true, triggerRef, ...options }: C
 }
 
 /**
+ * A popover holding a button and a popover of its own, as a menu holds a submenu. Details takes focus as the outer
+ * popover opens.
+ */
+function NestingPopover(options: UsePopoverOptions): JSX.Element {
+  const details = useRef<HTMLButtonElement>(null);
+  const popover = usePopover({ ...options, initialFocus: details });
+
+  return (
+    <>
+      <Button {...popover.getTriggerProps()}>2 problems</Button>
+      <Popover {...popover.getOverlayProps()} data-testid="popover">
+        <Button ref={details}>Details</Button>
+        <div popover="auto" data-testid="nested">
+          <Button>Fix</Button>
+        </div>
+      </Popover>
+    </>
+  );
+}
+
+/**
  * A popover rendered before its trigger, holding a button that hides it through `popovertarget` too
  */
 function PopoverBeforeTrigger(): JSX.Element {
@@ -543,6 +614,24 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
 }
 
 /**
+ * Opens a popover as a browser does: `beforetoggle`, the show unless it was cancelled, then `toggle`. jsdom fires
+ * neither event.
+ *
+ * @param popover the popover element
+ * @returns false when a `beforetoggle` handler cancelled the opening
+ */
+function openAsBrowser(popover: HTMLElement): boolean {
+  const notCancelled = fireEvent(popover, toggleEvent("beforetoggle", "open"));
+
+  if (notCancelled) {
+    popover.showPopover();
+    fireEvent(popover, toggleEvent("toggle", "open"));
+  }
+
+  return notCancelled;
+}
+
+/**
  * Closes a popover as a browser does, on Escape or once `close()` has asked it to: `beforetoggle`, the hide, then
  * `toggle`. jsdom fires neither event, and never returns focus as it hides a popover.
  *
@@ -584,8 +673,17 @@ const elements = {
   get cancel(): HTMLElement {
     return screen.getByRole("button", { name: "Cancel" });
   },
+  get details(): HTMLElement {
+    return screen.getByRole("button", { name: "Details" });
+  },
   get elsewhere(): HTMLElement {
     return screen.getByRole("button", { name: "Elsewhere" });
+  },
+  get fix(): HTMLElement {
+    return screen.getByRole("button", { name: "Fix" });
+  },
+  get nested(): HTMLElement {
+    return screen.getByTestId("nested");
   },
   get rename(): HTMLElement {
     return screen.getByRole("button", { name: "Rename" });

@@ -152,6 +152,10 @@ export function usePopover({
   }
 
   function handleBeforeToggle(event: ToggleEvent<HTMLElement>): void {
+    if (isFromNestedPopover(event)) {
+      return;
+    }
+
     // Only now, before the popover hides, can focus be found inside it. WebKit leaves focus on the page, not on a button
     // clicked inside the popover, so a close() made with focus lost returns it too
     if (event.newState === "closed") {
@@ -169,6 +173,10 @@ export function usePopover({
   }
 
   function handleToggle(event: ToggleEvent<HTMLElement>): void {
+    if (isFromNestedPopover(event)) {
+      return;
+    }
+
     const nextOpen = event.newState === "open";
 
     if (nextOpen) {
@@ -225,6 +233,17 @@ export function usePopover({
   }
 
   return { close, getOverlayProps, getTriggerProps, open };
+}
+
+/**
+ * Whether a toggle event belongs to a popover inside this one. Browsers fire toggle events at the popover alone, but
+ * React hands them to the handlers of every ancestor too.
+ *
+ * @param event the event a toggle handler received
+ * @returns true when the event's target is not the element whose handler received it
+ */
+function isFromNestedPopover(event: ToggleEvent<HTMLElement>): boolean {
+  return event.target !== event.currentTarget;
 }
 
 /**
