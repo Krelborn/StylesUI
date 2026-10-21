@@ -161,10 +161,10 @@ export function useMenu({
   const popover = usePopover({ defaultOpen, onOpenChange, open, placement });
   const pressedByPointerRef = useRef(false);
   const openingFocusRef = useRef<OpeningFocus>("first");
-  const removalWatcherRef = useRef<MutationObserver | null>(null);
+  const removalWatcherRef = useRef<(() => void) | null>(null);
   const menuId = popover.getTriggerProps().popoverTarget;
 
-  useEffect(() => () => removalWatcherRef.current?.disconnect(), []);
+  useEffect(() => () => removalWatcherRef.current?.(), []);
 
   function forgetPress(): void {
     pressedByPointerRef.current = false;
@@ -200,7 +200,8 @@ export function useMenu({
   function handleMenuToggle(event: ToggleEvent<HTMLElement>): void {
     const menu = event.currentTarget;
 
-    removalWatcherRef.current?.disconnect();
+    removalWatcherRef.current?.();
+    removalWatcherRef.current = null;
 
     if (event.newState === "open") {
       focusOnOpening(menu, openingFocusRef.current);
@@ -246,8 +247,10 @@ export function useMenu({
   function closeUnlessFocusStays(menu: HTMLElement, focused: Element | null): void {
     const stays = focused !== null && (menu.contains(focused) || focused.id === triggerId);
 
+    // Hidden as a light dismiss would, not through close(), which takes focus lost to the page for a press inside the
+    // menu and returns it to the trigger
     if (!stays && menu.matches(":popover-open")) {
-      popover.close();
+      syncPopover(menu, false);
     }
   }
 
@@ -299,36 +302,44 @@ function focusOnOpening(menu: HTMLElement, openingFocus: OpeningFocus): void {
 
 /**
  * Keeps focus inside a menu when the focused item is removed from it or from one of its submenus, by moving focus to
- * the innermost open menu the item was removed from
+ * the innermost open menu that held the item
  *
  * @param menu the open menu
- * @returns the observer, to disconnect when the menu closes
+ * @returns a function that stops watching, to call when the menu closes
  */
-function watchRemovals(menu: HTMLElement): MutationObserver {
-  const watcher = new MutationObserver((records) => {
+function watchRemovals(menu: HTMLElement): () => void {
+  let focusedMenu: Element | null = null;
+
+  function noteFocusedMenu(event: Event): void {
+    focusedMenu = event.target instanceof Element ? event.target.closest('[role="menu"]') : null;
+  }
+
+  const watcher = new MutationObserver(() => {
     const focused = menu.ownerDocument.activeElement;
 
     if ((focused === null || focused === menu.ownerDocument.body) && menu.matches(":popover-open")) {
-      const removedFrom = records.findLast((record) => record.removedNodes.length > 0)?.target;
-
-      (openMenuAround(removedFrom, menu) ?? menu).focus();
+      (openMenuAround(focusedMenu, menu) ?? menu).focus();
     }
   });
 
+  menu.addEventListener("focusin", noteFocusedMenu);
   watcher.observe(menu, { childList: true, subtree: true });
 
-  return watcher;
+  return () => {
+    menu.removeEventListener("focusin", noteFocusedMenu);
+    watcher.disconnect();
+  };
 }
 
 /**
- * Finds the innermost open menu around a node
+ * Finds the innermost open menu around an element, the element included
  *
- * @param node the node to start from
+ * @param element the element to start from
  * @param root the outermost menu to look in
- * @returns the open menu, or undefined when no menu inside `root` around the node is open
+ * @returns the open menu, or undefined when no menu inside `root` around the element is open
  */
-function openMenuAround(node: Node | undefined, root: HTMLElement): HTMLElement | undefined {
-  let candidate = node instanceof Element ? node.closest<HTMLElement>('[role="menu"]') : null;
+function openMenuAround(element: Element | null, root: HTMLElement): HTMLElement | undefined {
+  let candidate = element?.closest<HTMLElement>('[role="menu"]') ?? null;
 
   while (candidate !== null && root.contains(candidate)) {
     if (candidate.matches(":popover-open")) {

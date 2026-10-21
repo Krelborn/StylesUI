@@ -275,8 +275,11 @@ describe("Menu", () => {
     elements.item("Edit").focus();
 
     await user.click(screen.getByRole("button", { name: "Last" }));
+    reportClosedAsBrowser(elements.menu);
 
+    expect(elements.menu).not.toBeVisible();
     expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "Last" })).toHaveFocus();
   });
 
   it("must leave closing to the trigger when focus moves to it", async () => {
@@ -290,14 +293,17 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("must close the menu once focus lands outside it after leaving for nowhere in particular", async () => {
+  it("must close the menu and leave focus on the page once focus leaves it for nowhere in particular", async () => {
     render(<MenuAmongButtons />);
     openAsBrowser(elements.menu);
     elements.item("Edit").focus();
 
     elements.item("Edit").blur();
+    await waitFor(() => expect(elements.menu).not.toBeVisible());
+    reportClosedAsBrowser(elements.menu);
 
-    await waitFor(() => expect(elements.trigger).toHaveAttribute("aria-expanded", "false"));
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+    expect(document.body).toHaveFocus();
   });
 
   it("must move focus to the menu when the focused item is removed", async () => {
@@ -311,7 +317,7 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("must move focus to the submenu when its focused item is removed", async () => {
+  it("must move focus to the submenu when its focused item is removed along with an item of the menu around it", async () => {
     const user = userEvent.setup();
     render(<DismissibleSubmenuMenu />);
     await openSubmenu(user);
@@ -1069,6 +1075,10 @@ function DismissibleSubmenuMenu(): JSX.Element {
           <MenuItem>Inbox</MenuItem>
           {!dismissed && <MenuItem onClick={dismiss}>Dismiss</MenuItem>}
         </Submenu>
+        <MenuGroup>
+          <MenuItem>Copy</MenuItem>
+          {!dismissed && <MenuItem>Undo</MenuItem>}
+        </MenuGroup>
       </Menu>
     </>
   );
@@ -1394,6 +1404,16 @@ function openAsBrowser(menu: HTMLElement): void {
 function closeAsBrowser(menu: HTMLElement): void {
   fireEvent(menu, toggleEvent("beforetoggle", "closed"));
   menu.hidePopover();
+  fireEvent(menu, toggleEvent("toggle", "closed"));
+}
+
+/**
+ * Fires the events a browser fires as it hides a menu that script has hidden, which jsdom's `hidePopover()` does not
+ *
+ * @param menu the menu element
+ */
+function reportClosedAsBrowser(menu: HTMLElement): void {
+  fireEvent(menu, toggleEvent("beforetoggle", "closed"));
   fireEvent(menu, toggleEvent("toggle", "closed"));
 }
 
