@@ -52,7 +52,7 @@ export interface AccordionItemProps extends Omit<BoxProps<"div">, "as" | "danger
 
   /**
    * Shown at the end of the toggle, such as a value or a `Counter`. A space separates it from the title, so it is read
-   * after it.
+   * after it. Not for interactive content, which cannot sit inside the toggle: put controls in `actions`.
    */
   trailing?: ReactNode;
 

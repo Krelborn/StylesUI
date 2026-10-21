@@ -121,7 +121,7 @@ describe("Accordion", () => {
     { isRegion: true, variant: "joined" },
     { isRegion: true, variant: "separated" },
   ])(
-    "must make a panel a region named by its toggle only by default when the variant is $variant",
+    "must make a panel a region named by its title only by default when the variant is $variant",
     ({ isRegion, variant }) => {
       const { render } = setUpTest();
 
@@ -336,6 +336,25 @@ describe("Accordion", () => {
 
     expect(afterEnd).toBe(elements.toggle("Stroke"));
     expect(elements.toggle("Layout")).toHaveFocus();
+  });
+
+  it.each([
+    { attribute: "hidden", props: { hidden: true } },
+    { attribute: "inert", props: { inert: true } },
+  ])("must skip an item's toggle when Down is pressed and the item is $attribute", async ({ props }) => {
+    const user = userEvent.setup();
+    renderBase(
+      <Accordion headingLevel={3}>
+        <AccordionItem title="Layout" value="layout" />
+        <AccordionItem {...props} title="Fill" value="fill" />
+        <AccordionItem title="Stroke" value="stroke" />
+      </Accordion>
+    );
+    await user.tab();
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(elements.toggle("Stroke")).toHaveFocus();
   });
 
   it("must move only between a nested accordion's toggles when a key is pressed inside it", async () => {

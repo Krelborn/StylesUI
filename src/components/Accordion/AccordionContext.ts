@@ -1,6 +1,5 @@
 import { createContext } from "react";
 
-import type { ControlSize } from "../../forms";
 import type { HeadingLevel } from "../Heading";
 
 import type { AccordionIndicator, AccordionVariant } from "./Accordion";
@@ -30,14 +29,9 @@ export interface AccordionContextValue {
   openValues: readonly string[];
 
   /**
-   * Whether each panel is a region named by its toggle
+   * Whether each panel is a region named by its title
    */
   regions: boolean;
-
-  /**
-   * Size of every item's header
-   */
-  size: ControlSize;
 
   /**
    * Opens the item with the given value if it is closed, or closes it if it is open, reporting the open items to
