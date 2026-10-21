@@ -159,7 +159,7 @@
 }
 
 .item[data-tone="danger"]:focus {
-  background-color: var(--sui-menu-danger-highlight, var(--sui-color-danger-subtle, #fef2f2));
+  background-color: var(--sui-menu-danger-highlight, var(--sui-color-danger-subtle, #fff1f1));
   color: var(--sui-color-danger-text, #b91c1c);
 }
 
