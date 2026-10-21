@@ -1,4 +1,4 @@
-import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX, RefObject } from "react";
 import { createRef, memo, useRef, useState } from "react";
@@ -381,6 +381,58 @@ describe("usePopover", () => {
     expect(elements.details).toHaveFocus();
   });
 
+  it("must return focus to the trigger when an item in a popover nested inside calls close with focus lost to the page", () => {
+    render(<NestingPopover defaultOpen={true} />);
+    openAsBrowser(elements.nested);
+    elements.fix.focus();
+    elements.fix.blur();
+
+    // fireEvent, unlike userEvent, does not focus the button, as WebKit does not. Hiding the outer popover then hides
+    // the nested one first, and each beforetoggle comes before either toggle.
+    fireEvent.click(elements.fix);
+    fireEvent(elements.nested, toggleEvent("beforetoggle", "closed"));
+    fireEvent(elements.popover, toggleEvent("beforetoggle", "closed"));
+    elements.nested.hidePopover();
+    fireEvent(elements.nested, toggleEvent("toggle", "closed"));
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.trigger).toHaveFocus();
+  });
+
+  it("must stay open and report nothing when the tooltip of an icon button inside the popover shows and hides", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<NestingPopover defaultOpen={true} onOpenChange={onOpenChange} />);
+
+    await user.hover(elements.copy);
+    const tooltip = await screen.findByRole("tooltip");
+    fireEvent(tooltip, toggleEvent("toggle", "open"));
+    await user.unhover(elements.copy);
+    await waitFor(() => {
+      expect(tooltip).not.toBeVisible();
+    });
+    fireEvent(tooltip, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("must stay open and report nothing when a disclosure inside the popover opens and closes", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<NestingPopover defaultOpen={true} onOpenChange={onOpenChange} />);
+
+    await user.click(elements.disclosureSummary);
+    fireEvent(elements.disclosure, toggleEvent("toggle", "open"));
+    await user.click(elements.disclosureSummary);
+    fireEvent(elements.disclosure, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it("must run the consumer's trigger handler when one is given", async () => {
     const user = userEvent.setup();
     render(<ClickCountingPopover />);
@@ -533,8 +585,8 @@ function ConfirmationPopover({ focusesCancel = true, triggerRef, ...options }: C
 }
 
 /**
- * A popover holding a button and a popover of its own, as a menu holds a submenu. Details takes focus as the outer
- * popover opens.
+ * A popover holding a button, a popover of its own, as a menu holds a submenu, an icon button with its tooltip and a
+ * disclosure. Details takes focus as the outer popover opens, and Fix, in the nested popover, closes the outer one.
  */
 function NestingPopover(options: UsePopoverOptions): JSX.Element {
   const details = useRef<HTMLButtonElement>(null);
@@ -546,8 +598,13 @@ function NestingPopover(options: UsePopoverOptions): JSX.Element {
       <Popover {...popover.getOverlayProps()} data-testid="popover">
         <Button ref={details}>Details</Button>
         <div popover="auto" data-testid="nested">
-          <Button>Fix</Button>
+          <Button onClick={popover.close}>Fix</Button>
         </div>
+        <IconButton label="Copy">!</IconButton>
+        <details>
+          <summary>More</summary>
+          <Text as="p">Checks run on every push</Text>
+        </details>
       </Popover>
     </>
   );
@@ -673,8 +730,17 @@ const elements = {
   get cancel(): HTMLElement {
     return screen.getByRole("button", { name: "Cancel" });
   },
+  get copy(): HTMLElement {
+    return screen.getByRole("button", { name: "Copy" });
+  },
   get details(): HTMLElement {
     return screen.getByRole("button", { name: "Details" });
+  },
+  get disclosure(): HTMLElement {
+    return screen.getByRole("group");
+  },
+  get disclosureSummary(): HTMLElement {
+    return screen.getByText("More");
   },
   get elsewhere(): HTMLElement {
     return screen.getByRole("button", { name: "Elsewhere" });

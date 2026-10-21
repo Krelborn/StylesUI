@@ -152,7 +152,7 @@ export function usePopover({
   }
 
   function handleBeforeToggle(event: ToggleEvent<HTMLElement>): void {
-    if (isFromNestedPopover(event)) {
+    if (isFromDescendant(event)) {
       return;
     }
 
@@ -173,7 +173,7 @@ export function usePopover({
   }
 
   function handleToggle(event: ToggleEvent<HTMLElement>): void {
-    if (isFromNestedPopover(event)) {
+    if (isFromDescendant(event)) {
       return;
     }
 
@@ -236,13 +236,13 @@ export function usePopover({
 }
 
 /**
- * Whether a toggle event belongs to a popover inside this one. Browsers fire toggle events at the popover alone, but
- * React hands them to the handlers of every ancestor too.
+ * Whether a toggle event comes from an element inside the popover, such as a nested popover, a tooltip or a `details`.
+ * Browsers fire toggle events at that element alone, but React hands them to every ancestor's handlers too.
  *
  * @param event the event a toggle handler received
- * @returns true when the event's target is not the element whose handler received it
+ * @returns true when the event's target is not the popover whose handler received it
  */
-function isFromNestedPopover(event: ToggleEvent<HTMLElement>): boolean {
+function isFromDescendant(event: ToggleEvent<HTMLElement>): boolean {
   return event.target !== event.currentTarget;
 }
 
