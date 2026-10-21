@@ -200,6 +200,22 @@ export function useMenu({
     pressedByPointerRef.current = event.button === 0;
   }
 
+  function handleMenuBeforeToggle(event: ToggleEvent<HTMLElement>): void {
+    const menu = event.currentTarget;
+
+    if (event.newState !== "open" || event.target !== menu) {
+      return;
+    }
+
+    // A controlled parent may refuse the opening, which leaves no toggle to clear its focus; it has answered by the
+    // next task, when an accepted opening has shown the menu
+    setTimeout(() => {
+      if (!menu.matches(":popover-open")) {
+        openingFocusRef.current = "first";
+      }
+    }, 0);
+  }
+
   function handleMenuToggle(event: ToggleEvent<HTMLElement>): void {
     const menu = event.currentTarget;
 
@@ -263,6 +279,7 @@ export function useMenu({
     const menuProps = mergeProps(props, {
       "aria-labelledby": hasOwnName(props) ? undefined : triggerId,
       close: popover.close,
+      onBeforeToggle: handleMenuBeforeToggle,
       onBlur: handleMenuBlur,
       onKeyDown: handleMenuKeyDown,
       onToggle: handleMenuToggle,

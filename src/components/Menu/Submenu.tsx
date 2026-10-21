@@ -105,8 +105,7 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   function handleItemPointerLeave(event: PointerEvent<HTMLButtonElement>): void {
     const submenu = event.currentTarget.ownerDocument.getElementById(menuId);
 
-    clearTimeout(hoverTimerRef.current);
-    hoverTimerRef.current = undefined;
+    cancelHoverOpen();
 
     if (open && submenu !== null) {
       parent.startPointerGrace({ x: event.clientX, y: event.clientY }, submenu);
@@ -158,9 +157,18 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   function handleWrapperBlur(event: FocusEvent<HTMLElement>): void {
     const next = event.relatedTarget;
 
+    if (next === null || !event.currentTarget.contains(next)) {
+      cancelHoverOpen();
+    }
+
     if (next !== null && !event.currentTarget.contains(next)) {
       setOpen(false);
     }
+  }
+
+  function cancelHoverOpen(): void {
+    clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = undefined;
   }
 
   /**

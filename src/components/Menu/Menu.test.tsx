@@ -123,6 +123,31 @@ describe("Menu", () => {
     expect(elements.item("Edit")).toHaveFocus();
   });
 
+  it("must focus the last item when the parent accepts a request from ArrowUp to open a controlled menu", async () => {
+    const user = userEvent.setup();
+    showPopoverAsBrowser();
+    render(<ControlledRowActions />);
+    elements.trigger.focus();
+
+    await user.keyboard("{ArrowUp}");
+    fireEvent(elements.menu, toggleEvent("toggle", "open"));
+
+    expect(elements.item("Archive")).toHaveFocus();
+  });
+
+  it("must focus the first item when the parent opens a controlled menu after ignoring a request from ArrowUp", async () => {
+    const user = userEvent.setup();
+    showPopoverAsBrowser();
+    render(<ControlledRowActions ignoresRequests={true} />);
+    elements.trigger.focus();
+    await user.keyboard("{ArrowUp}");
+
+    await user.click(screen.getByRole("button", { name: "Open from the toolbar" }));
+    fireEvent(elements.menu, toggleEvent("toggle", "open"));
+
+    expect(elements.item("Edit")).toHaveFocus();
+  });
+
   it("must run an item's onClick once and close the menu when the item is clicked", async () => {
     const user = userEvent.setup();
     const onDuplicate = vi.fn();
@@ -975,6 +1000,19 @@ describe("Menu", () => {
     expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must leave a submenu closed when the keyboard moves focus off its item within 100ms of the pointer resting on it", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.hover(elements.item("Move to"));
+    await user.keyboard("{ArrowDown}");
+    act(() => vi.advanceTimersByTime(200));
+
+    expect(elements.item("Share")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must close an open submenu 100ms after the pointer moves onto another item away from it", async () => {
     const { user } = setUpTest();
     render(<SubmenuMenu />);
@@ -1051,6 +1089,27 @@ describe("Menu", () => {
     );
 
     expect(elements.item("Edit")).toBeInTheDocument();
+  });
+
+  it("must reject an item without a label", () => {
+    render(
+      <BareMenu>
+        <>
+          {/* oxlint-disable jsx-a11y/control-has-associated-label -- these items are unlabelled to test that the types reject them */}
+          {/* @ts-expect-error the label names the item */}
+          <MenuItem />
+          {/* @ts-expect-error the label names the item */}
+          <MenuItemCheckbox />
+          <MenuRadioGroup label="Sort by">
+            {/* @ts-expect-error the label names the item */}
+            <MenuItemRadio value="name" />
+          </MenuRadioGroup>
+          {/* oxlint-enable jsx-a11y/control-has-associated-label */}
+        </>
+      </BareMenu>
+    );
+
+    expect(screen.getByRole("menuitemradio", { hidden: true })).toBeInTheDocument();
   });
 
   it("must reject aria-labelledby when an item is given one", () => {
@@ -1446,15 +1505,28 @@ function TypeAheadMenu(): JSX.Element {
   );
 }
 
-function ControlledRowActions(): JSX.Element {
+interface ControlledRowActionsProps {
+  /**
+   * Whether the parent ignores the menu's requests to open, opening it only from the toolbar
+   */
+  ignoresRequests?: boolean;
+}
+
+function ControlledRowActions({ ignoresRequests = false }: ControlledRowActionsProps): JSX.Element {
   const [open, setOpen] = useState(false);
+
+  function handleOpenChange(next: boolean): void {
+    if (!ignoresRequests || !next) {
+      setOpen(next);
+    }
+  }
 
   return (
     <>
       <Button onClick={() => setOpen(true)} variant="ghost">
         Open from the toolbar
       </Button>
-      <RowActions onOpenChange={setOpen} open={open} />
+      <RowActions onOpenChange={handleOpenChange} open={open} />
     </>
   );
 }
@@ -1529,6 +1601,22 @@ function closeAsBrowser(menu: HTMLElement): void {
   fireEvent(menu, toggleEvent("beforetoggle", "closed"));
   menu.hidePopover();
   fireEvent(menu, toggleEvent("toggle", "closed"));
+}
+
+/**
+ * Makes `showPopover()` fire a cancellable `beforetoggle` first and show the popover only when it is not cancelled, as
+ * a browser does, until the test finishes
+ */
+function showPopoverAsBrowser(): void {
+  const spy = vi.spyOn(HTMLElement.prototype, "showPopover").mockImplementation(function show(this: HTMLElement) {
+    if (fireEvent(this, toggleEvent("beforetoggle", "open"))) {
+      this.setAttribute("data-popover-open", "");
+    }
+  });
+
+  onTestFinished(() => {
+    spy.mockRestore();
+  });
 }
 
 /**

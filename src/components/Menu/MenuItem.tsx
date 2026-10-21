@@ -29,7 +29,7 @@ interface MenuItemOwnProps {
   /**
    * The label, which names the item
    */
-  children?: ReactNode;
+  children: ReactNode;
 
   /**
    * A line of muted text below the label, which describes the item

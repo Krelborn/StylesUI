@@ -47,7 +47,7 @@ export interface MenuItemCheckboxProps extends Omit<
   /**
    * The label, which names the item
    */
-  children?: ReactNode;
+  children: ReactNode;
 
   /**
    * Whether an uncontrolled item starts checked. Defaults to `false`.
