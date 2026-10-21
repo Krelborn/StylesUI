@@ -7,3 +7,4 @@ This folder is where StylesUI's specs live, however they were written. Each file
 - [Compact checkbox and radio](2026-10-13-compact-checkbox-and-radio.md): shrink the box onto the space scale and add a hover halo. Released in 0.8.0 ([#50](https://github.com/Krelborn/StylesUI/pull/50)).
 - [Compact switch](2026-10-13-compact-switch.md): bring the Switch's track, text and halo in line with Checkbox and Radio. Released in 0.8.0 ([#51](https://github.com/Krelborn/StylesUI/pull/51)).
 - [Accordion](2026-10-20-accordion.md): an accordion with flush, joined and separated looks, for inspectors and content pages. Not yet released ([#60](https://github.com/Krelborn/StylesUI/pull/60)).
+- [Menus](2026-10-21-menus.md): the capability map for dropdown menus, site navigation, menubars, context menus and comboboxes, with the design decisions they share. Each module gets its own spec before it is built.
