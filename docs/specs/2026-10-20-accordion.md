@@ -57,7 +57,7 @@ Renders a `div`, and every other `div` prop goes to it. It omits `as` and `defau
 
 - `children`: the `AccordionItem`s.
 - `defaultValue?: string[]`: the items open at first, which leaves the accordion uncontrolled. Defaults to none.
-- `exclusive?: boolean`: at most one item open; opening one closes the others. Defaults to `false`.
+- `exclusive?: boolean`: opening an item closes the others, so at most one is open once the user opens one; items that `value` or `defaultValue` opens are shown as given. Defaults to `false`.
 - `headingLevel: HeadingLevel`: required, as in `NavListGroup`, because only the page outline knows the level.
 - `indicator?: AccordionIndicator`: `"chevron" | "plusMinus"`. Defaults to `chevron`.
 - `onValueChange?: (value: string[]) => void`: called with the new open items when the user opens or closes one, or when find-in-page, a fragment link or the page's URL fragment opens one.

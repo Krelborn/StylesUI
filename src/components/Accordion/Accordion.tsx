@@ -30,7 +30,8 @@ interface AccordionOwnProps {
   children?: ReactNode;
 
   /**
-   * Whether at most one item is open, so opening one closes the others. Defaults to `false`.
+   * Whether opening an item closes the others, so at most one is open once the user opens one. Items that `value` or
+   * `defaultValue` opens are shown as given. Defaults to `false`.
    */
   exclusive?: boolean;
 
