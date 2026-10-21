@@ -1,6 +1,8 @@
 import { clsx } from "clsx";
-import type { JSX, ToggleEventHandler } from "react";
+import type { JSX, KeyboardEvent, ToggleEventHandler } from "react";
 
+import { targetIndexForKey } from "../../collections";
+import { focusItem, renderedItems } from "../../menus";
 import type { OverlayPlacement } from "../../overlays";
 import type { BoxProps } from "../Box";
 import styles from "../MenuSurface/MenuSurface.module.css";
@@ -85,10 +87,40 @@ export interface MenuProps
  *   <MenuItem onClick={duplicate}>Duplicate</MenuItem>
  * </Menu>
  */
-export function Menu({ className, close, ...rest }: MenuProps): JSX.Element {
+export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.Element {
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
+    onKeyDown?.(event);
+
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+
+    const items = renderedItems(event.currentTarget);
+    const target = targetIndexForKey({
+      count: items.length,
+      currentIndex: items.indexOf(event.target as HTMLElement),
+      key: event.key,
+      orientation: "vertical",
+      wraps: true,
+    });
+
+    if (target !== null) {
+      event.preventDefault();
+      focusItem(items[target]);
+    }
+  }
+
   return (
     <MenuContext.Provider value={{ close }}>
-      <Overlay {...rest} as="div" className={clsx(styles.menu, className)} popover="auto" role="menu" tabIndex={-1} />
+      <Overlay
+        {...rest}
+        as="div"
+        className={clsx(styles.menu, className)}
+        onKeyDown={handleKeyDown}
+        popover="auto"
+        role="menu"
+        tabIndex={-1}
+      />
     </MenuContext.Provider>
   );
 }

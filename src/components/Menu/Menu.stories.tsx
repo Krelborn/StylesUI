@@ -7,6 +7,7 @@ import { focusRingContrast, textContrast } from "../../test/colorContrast";
 import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
+import { Cluster } from "../Cluster";
 import { MoreHorizontalIcon } from "../Icon";
 import { IconButton } from "../IconButton";
 import { Stack } from "../Stack";
@@ -58,6 +59,28 @@ function IconTriggerMenu(): JSX.Element {
         <MenuItem>Archive</MenuItem>
       </Menu>
     </Box>
+  );
+}
+
+/**
+ * A menu between other buttons, so Tab has somewhere to go on either side of it
+ */
+function ToolbarMenu(): JSX.Element {
+  const menu = useMenu();
+
+  return (
+    <Cluster gap={2}>
+      <Button variant="ghost">Back</Button>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <MenuItem>Duplicate</MenuItem>
+        <MenuItem>Archive</MenuItem>
+      </Menu>
+      <Button variant="ghost">Share</Button>
+    </Cluster>
   );
 }
 
@@ -132,26 +155,40 @@ export const IconButtonTrigger: Story = {
 };
 
 /**
- * Enter opens the menu with focus on its first item, which shows the inset focus ring over the highlight. Escape
- * closes it and returns focus to the button. The rings keep 3:1 and the highlighted label keeps 4.5:1.
+ * Enter or Down opens the menu on its first item, and Up on its last. The arrow keys move through the items, wrapping
+ * at both ends, and Home and End go to the first and last. The focused item shows the inset focus ring over the
+ * highlight. Escape closes the menu and returns focus to the button; Tab closes it and moves on past the button, and
+ * Shift+Tab closes it and returns to the button. The rings keep 3:1 and the highlighted label keeps 4.5:1.
  */
 export const KeyboardInteraction: Story = {
+  render: () => <ToolbarMenu />,
   play: async ({ canvas }) => {
     // After a trusted click in an earlier story, focus from userEvent.tab() only matches :focus-visible once a trusted
     // key has been pressed
     await trustedInput()?.pressKey("Shift");
     const trigger = canvas.getByRole("button", { name: "Actions" });
+    const item = (name: string): HTMLElement => canvas.getByRole("menuitem", { hidden: true, name });
 
     await userEvent.tab();
+    await userEvent.tab();
     await expect(trigger).toHaveFocus();
+    await expect(focusRingContrast(trigger)).toBeGreaterThanOrEqual(3);
 
     await userEvent.keyboard("{Enter}");
 
-    const edit = await canvas.findByRole("menuitem", { name: "Edit" });
-    await waitFor(() => expect(edit).toHaveFocus());
-    await expect(edit.matches(":focus-visible")).toBe(true);
-    await expect(focusRingContrast(edit)).toBeGreaterThanOrEqual(3);
-    await expect(textContrast(edit)).toBeGreaterThanOrEqual(4.5);
+    await waitFor(() => expect(item("Edit")).toHaveFocus());
+    await expect(item("Edit").matches(":focus-visible")).toBe(true);
+    await expect(focusRingContrast(item("Edit"))).toBeGreaterThanOrEqual(3);
+    await expect(textContrast(item("Edit"))).toBeGreaterThanOrEqual(4.5);
+
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(item("Duplicate")).toHaveFocus();
+    await userEvent.keyboard("{ArrowUp}{ArrowUp}");
+    await expect(item("Archive")).toHaveFocus();
+    await userEvent.keyboard("{Home}");
+    await expect(item("Edit")).toHaveFocus();
+    await userEvent.keyboard("{End}");
+    await expect(item("Archive")).toHaveFocus();
 
     const input = trustedInput();
 
@@ -160,9 +197,24 @@ export const KeyboardInteraction: Story = {
     }
 
     await input.pressKey("Escape");
-
-    await waitFor(() => expect(edit).not.toBeVisible());
+    await waitFor(() => expect(item("Archive")).not.toBeVisible());
     await expect(trigger).toHaveFocus();
     await expect(focusRingContrast(trigger)).toBeGreaterThanOrEqual(3);
+
+    await input.pressKey("ArrowUp");
+    await waitFor(() => expect(item("Archive")).toHaveFocus());
+
+    await input.pressKey("Tab");
+    await waitFor(() => expect(item("Archive")).not.toBeVisible());
+    await expect(canvas.getByRole("button", { name: "Share" })).toHaveFocus();
+
+    await input.pressKey("Shift+Tab");
+    await input.pressKey("ArrowDown");
+    await waitFor(() => expect(item("Edit")).toHaveFocus());
+
+    await input.pressKey("Shift+Tab");
+    await waitFor(() => expect(item("Edit")).not.toBeVisible());
+    await expect(trigger).toHaveFocus();
+    await expect(trigger).toHaveAttribute("aria-expanded", "false");
   },
 };

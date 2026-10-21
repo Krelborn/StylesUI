@@ -1,9 +1,9 @@
-import type { CSSProperties, FocusEvent, MouseEvent, PointerEvent, ToggleEvent } from "react";
-import { useId, useRef } from "react";
+import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, ToggleEvent } from "react";
+import { useEffect, useId, useRef } from "react";
 
 import { renderedItems } from "../../menus";
 import type { OverlayPlacement } from "../../overlays";
-import { mergeProps } from "../../overlays";
+import { mergeProps, syncPopover } from "../../overlays";
 // The Popover barrel would also bring Popover's stylesheet into every bundle that uses a menu
 import { usePopover } from "../Popover/usePopover";
 
@@ -72,6 +72,11 @@ interface MenuTriggerProps {
   onClick: (event: MouseEvent<HTMLElement>) => void;
 
   /**
+   * Opens the menu on its first item with Down, or its last with Up
+   */
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+
+  /**
    * Forgets a pointer press the browser cancelled
    */
   onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
@@ -129,6 +134,8 @@ export interface UseMenuResult {
  */
 type OpeningFocus = "first" | "last" | "menu";
 
+const triggerKeyFocus: Partial<Record<string, OpeningFocus>> = { ArrowDown: "first", ArrowUp: "last" };
+
 /**
  * Connects a `Menu` to the button that opens it. Clicking the button toggles the menu, and Escape or a click outside
  * closes it, all handled by the browser. Opened from the keyboard, or by a controlled `open`, focus moves to the first
@@ -154,6 +161,10 @@ export function useMenu({
   const popover = usePopover({ defaultOpen, onOpenChange, open, placement });
   const pressedByPointerRef = useRef(false);
   const openingFocusRef = useRef<OpeningFocus>("first");
+  const removalWatcherRef = useRef<MutationObserver | null>(null);
+  const menuId = popover.getTriggerProps().popoverTarget;
+
+  useEffect(() => () => removalWatcherRef.current?.disconnect(), []);
 
   function forgetPress(): void {
     pressedByPointerRef.current = false;
@@ -164,16 +175,80 @@ export function useMenu({
     pressedByPointerRef.current = false;
   }
 
+  function handleTriggerKeyDown(event: KeyboardEvent<HTMLElement>): void {
+    const openingFocus = triggerKeyFocus[event.key];
+    const menu = event.currentTarget.ownerDocument.getElementById(menuId);
+
+    if (openingFocus === undefined || menu === null || event.defaultPrevented || hasModifier(event)) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (menu.matches(":popover-open")) {
+      focusOnOpening(menu, openingFocus);
+    } else {
+      openingFocusRef.current = openingFocus;
+      syncPopover(menu, true);
+    }
+  }
+
   function handleTriggerPointerDown(): void {
     pressedByPointerRef.current = true;
   }
 
   function handleMenuToggle(event: ToggleEvent<HTMLElement>): void {
+    const menu = event.currentTarget;
+
+    removalWatcherRef.current?.disconnect();
+
     if (event.newState === "open") {
-      focusOnOpening(event.currentTarget, openingFocusRef.current);
+      focusOnOpening(menu, openingFocusRef.current);
+      removalWatcherRef.current = watchRemovals(menu);
     }
 
     openingFocusRef.current = "first";
+  }
+
+  function handleMenuKeyDown(event: KeyboardEvent<HTMLElement>): void {
+    const trigger = event.currentTarget.ownerDocument.getElementById(triggerId);
+
+    if (event.key !== "Tab" || trigger === null || event.defaultPrevented || hasModifier(event)) {
+      return;
+    }
+
+    // Tab then moves on from the trigger, as though the menu were not there; Shift+Tab stops on the trigger itself
+    if (event.shiftKey) {
+      event.preventDefault();
+    }
+
+    trigger.focus();
+    popover.close();
+  }
+
+  function handleMenuBlur(event: FocusEvent<HTMLElement>): void {
+    const menu = event.currentTarget;
+
+    if (!menu.matches(":popover-open")) {
+      return;
+    }
+
+    if (event.relatedTarget === null) {
+      // Focus is between elements, or lost with an item that was removed, so wait to see where it lands
+      setTimeout(() => {
+        closeUnlessFocusStays(menu, menu.ownerDocument.activeElement);
+      }, 0);
+    } else {
+      closeUnlessFocusStays(menu, event.relatedTarget);
+    }
+  }
+
+  function closeUnlessFocusStays(menu: HTMLElement, focused: Element | null): void {
+    const stays = focused !== null && (menu.contains(focused) || focused.id === triggerId);
+
+    if (!stays && menu.matches(":popover-open")) {
+      popover.close();
+    }
   }
 
   function getMenuProps<Props extends object>(
@@ -182,6 +257,8 @@ export function useMenu({
     const menuProps = mergeProps(props, {
       "aria-labelledby": hasOwnName(props) ? undefined : triggerId,
       close: popover.close,
+      onBlur: handleMenuBlur,
+      onKeyDown: handleMenuKeyDown,
       onToggle: handleMenuToggle,
     });
 
@@ -196,6 +273,7 @@ export function useMenu({
       id: triggerId,
       onBlur: forgetPress,
       onClick: handleTriggerClick,
+      onKeyDown: handleTriggerKeyDown,
       onPointerCancel: forgetPress,
       onPointerDown: handleTriggerPointerDown,
     });
@@ -217,6 +295,36 @@ function focusOnOpening(menu: HTMLElement, openingFocus: OpeningFocus): void {
   const targets: Record<OpeningFocus, HTMLElement | undefined> = { first: items.at(0), last: items.at(-1), menu };
 
   (targets[openingFocus] ?? menu).focus();
+}
+
+/**
+ * Keeps focus inside a menu when the focused item is removed from it, by moving focus to the menu itself
+ *
+ * @param menu the open menu
+ * @returns the observer, to disconnect when the menu closes
+ */
+function watchRemovals(menu: HTMLElement): MutationObserver {
+  const watcher = new MutationObserver(() => {
+    const focused = menu.ownerDocument.activeElement;
+
+    if ((focused === null || focused === menu.ownerDocument.body) && menu.matches(":popover-open")) {
+      menu.focus();
+    }
+  });
+
+  watcher.observe(menu, { childList: true, subtree: true });
+
+  return watcher;
+}
+
+/**
+ * Whether a key was pressed with Alt, Ctrl or Meta, which leaves it to the browser and the app
+ *
+ * @param event the key event
+ * @returns true when any of the three was held
+ */
+function hasModifier(event: KeyboardEvent<HTMLElement>): boolean {
+  return event.altKey || event.ctrlKey || event.metaKey;
 }
 
 /**

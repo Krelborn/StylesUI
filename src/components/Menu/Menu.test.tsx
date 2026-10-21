@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX, MouseEvent } from "react";
 import { useState } from "react";
@@ -147,6 +147,157 @@ describe("Menu", () => {
     expect(onClick).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    { from: "Edit", key: "{ArrowDown}", to: "Duplicate" },
+    { from: "Archive", key: "{ArrowDown}", to: "Edit" },
+    { from: "Duplicate", key: "{ArrowUp}", to: "Edit" },
+    { from: "Edit", key: "{ArrowUp}", to: "Archive" },
+    { from: "Duplicate", key: "{Home}", to: "Edit" },
+    { from: "Duplicate", key: "{End}", to: "Archive" },
+  ])("must move focus from $from to $to when $key is pressed", async ({ from, key, to }) => {
+    const user = userEvent.setup();
+    render(<RowActions defaultOpen={true} />);
+    openAsBrowser(elements.menu);
+    elements.item(from).focus();
+
+    await user.keyboard(key);
+
+    expect(elements.item(to)).toHaveFocus();
+  });
+
+  it.each([
+    { key: "{ArrowDown}", to: "Edit" },
+    { key: "{ArrowUp}", to: "Archive" },
+  ])("must move focus from the menu itself to $to when $key is pressed", async ({ key, to }) => {
+    const user = userEvent.setup();
+    render(<RowActions />);
+    await user.click(elements.trigger);
+    openAsBrowser(elements.menu);
+
+    await user.keyboard(key);
+
+    expect(elements.item(to)).toHaveFocus();
+  });
+
+  it("must scroll the item it moves to into view when an arrow key is pressed", async () => {
+    const user = userEvent.setup();
+    const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+    render(<RowActions defaultOpen={true} />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(scrollIntoView).toHaveBeenLastCalledWith(expect.objectContaining({ block: "nearest" }));
+  });
+
+  it.each(["{Alt>}{ArrowDown}{/Alt}", "{Control>}{ArrowDown}{/Control}", "{Meta>}{End}{/Meta}"])(
+    "must leave focus where it is when %s is pressed",
+    async (keys) => {
+      const user = userEvent.setup();
+      render(<RowActions defaultOpen={true} />);
+      openAsBrowser(elements.menu);
+      elements.item("Edit").focus();
+
+      await user.keyboard(keys);
+
+      expect(elements.item("Edit")).toHaveFocus();
+    }
+  );
+
+  it.each([
+    { key: "{ArrowDown}", to: "Edit" },
+    { key: "{ArrowUp}", to: "Archive" },
+  ])("must open the menu on $to when $key is pressed on the trigger", async ({ key, to }) => {
+    const user = userEvent.setup();
+    render(<RowActions />);
+    elements.trigger.focus();
+
+    await user.keyboard(key);
+    openAsBrowser(elements.menu);
+
+    expect(elements.item(to)).toHaveFocus();
+  });
+
+  it("must show the menu when an arrow key is pressed on the trigger", async () => {
+    const user = userEvent.setup();
+    render(<RowActions />);
+    elements.trigger.focus();
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(elements.menu).toBeVisible();
+  });
+
+  it("must close the menu and move focus past the trigger when Tab is pressed", async () => {
+    const user = userEvent.setup();
+    render(<MenuAmongButtons />);
+    await user.click(elements.trigger);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    await user.tab();
+
+    expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close the menu and return focus to the trigger when Shift+Tab is pressed", async () => {
+    const user = userEvent.setup();
+    render(<MenuAmongButtons />);
+    await user.click(elements.trigger);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    await user.tab({ shift: true });
+
+    expect(elements.trigger).toHaveFocus();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close the menu when focus moves to an element outside it", async () => {
+    const user = userEvent.setup();
+    render(<MenuAmongButtons />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    await user.click(screen.getByRole("button", { name: "Last" }));
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must leave closing to the trigger when focus moves to it", async () => {
+    const user = userEvent.setup();
+    render(<MenuAmongButtons />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    await user.click(elements.trigger);
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close the menu once focus lands outside it after leaving for nowhere in particular", async () => {
+    render(<MenuAmongButtons />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    elements.item("Edit").blur();
+
+    await waitFor(() => expect(elements.trigger).toHaveAttribute("aria-expanded", "false"));
+  });
+
+  it("must move focus to the menu when the focused item is removed", async () => {
+    const user = userEvent.setup();
+    render(<DismissibleMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.item("Dismiss"));
+
+    await waitFor(() => expect(elements.menu).toHaveFocus());
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -194,6 +345,46 @@ function RowActions({ onDuplicate, onTriggerClick, ...options }: RowActionsProps
         <MenuItem>Edit</MenuItem>
         <MenuItem onClick={onDuplicate}>Duplicate</MenuItem>
         <MenuItem>Archive</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+function MenuAmongButtons(): JSX.Element {
+  const menu = useMenu();
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Button variant="ghost">After</Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <MenuItem>Duplicate</MenuItem>
+      </Menu>
+      <Button variant="ghost">Last</Button>
+    </>
+  );
+}
+
+function DismissibleMenu(): JSX.Element {
+  const [dismissed, setDismissed] = useState(false);
+  const menu = useMenu({ defaultOpen: true });
+
+  function dismiss(event: MouseEvent<HTMLButtonElement>): void {
+    event.preventDefault();
+    setDismissed(true);
+  }
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        {!dismissed && <MenuItem onClick={dismiss}>Dismiss</MenuItem>}
       </Menu>
     </>
   );
