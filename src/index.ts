@@ -71,6 +71,7 @@ export {
   MenuItemRadio,
   MenuRadioGroup,
   MenuSeparator,
+  Submenu,
   useMenu,
 } from "./components/Menu";
 export type {
@@ -83,6 +84,7 @@ export type {
   MenuProps,
   MenuRadioGroupProps,
   MenuSeparatorProps,
+  SubmenuProps,
   UseMenuOptions,
   UseMenuResult,
 } from "./components/Menu";

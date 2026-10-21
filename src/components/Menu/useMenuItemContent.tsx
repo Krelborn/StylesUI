@@ -30,9 +30,9 @@ interface MenuItemContentOptions {
   leading: ReactNode;
 
   /**
-   * A keyboard shortcut shown after the label
+   * What sits after the label, such as a shortcut or a submenu's chevron
    */
-  shortcut: string | undefined;
+  trailing: ReactNode;
 }
 
 /**
@@ -40,7 +40,7 @@ interface MenuItemContentOptions {
  */
 interface MenuItemContent {
   /**
-   * The leading slot, label, description and shortcut, in that order
+   * The leading slot, label, description and trailing slot, in that order
    */
   content: JSX.Element;
 
@@ -58,7 +58,7 @@ interface MenuItemContent {
 /**
  * Lays out the content every kind of menu item shares
  *
- * @param options the label, description, leading slot, shortcut and the consumer's `aria-describedby`
+ * @param options the label, description, leading and trailing slots and the consumer's `aria-describedby`
  * @returns the content and the ids to name and describe the item by
  */
 export function useMenuItemContent({
@@ -66,7 +66,7 @@ export function useMenuItemContent({
   description,
   label,
   leading,
-  shortcut,
+  trailing,
 }: MenuItemContentOptions): MenuItemContent {
   const labelId = useId();
   const descriptionId = useId();
@@ -92,9 +92,9 @@ export function useMenuItemContent({
           </Box>
         )}
       </Box>
-      {shortcut !== undefined && shortcut !== "" && (
+      {hasContent(trailing) && (
         <Box as="span" className={styles.trailing} aria-hidden={true}>
-          {shortcut}
+          {trailing}
         </Box>
       )}
     </>

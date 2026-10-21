@@ -92,7 +92,7 @@ export function MenuItemRadio({
     description,
     label: children,
     leading: <Box as="span" className={styles.radioDot} />,
-    shortcut,
+    trailing: shortcut,
   });
 
   function handleClick(event: MouseEvent<HTMLButtonElement>): void {

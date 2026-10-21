@@ -9,6 +9,11 @@ export interface MenuContextValue {
    * them open
    */
   closeAfterChoosing: () => void;
+
+  /**
+   * Closes every open menu, from the top menu down
+   */
+  closeAll: () => void;
 }
 
 /**

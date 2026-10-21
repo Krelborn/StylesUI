@@ -108,7 +108,13 @@ export function MenuItemCheckbox({
   const menu = useMenuContext("MenuItemCheckbox");
   const [uncontrolledChecked, setUncontrolledChecked] = useState(defaultChecked);
   const isChecked = checked ?? uncontrolledChecked;
-  const item = useMenuItemContent({ describedBy, description, label: children, leading: <CheckIcon />, shortcut });
+  const item = useMenuItemContent({
+    describedBy,
+    description,
+    label: children,
+    leading: <CheckIcon />,
+    trailing: shortcut,
+  });
 
   function handleClick(event: MouseEvent<HTMLButtonElement>): void {
     if (disabled) {

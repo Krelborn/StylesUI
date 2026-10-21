@@ -18,6 +18,7 @@ import { MenuItemCheckbox } from "./MenuItemCheckbox";
 import { MenuItemRadio } from "./MenuItemRadio";
 import { MenuRadioGroup } from "./MenuRadioGroup";
 import { MenuSeparator } from "./MenuSeparator";
+import { Submenu } from "./Submenu";
 import type { UseMenuOptions } from "./useMenu";
 import { useMenu } from "./useMenu";
 
@@ -718,6 +719,127 @@ describe("Menu", () => {
     expect(elements.radio("Name")).toBeInTheDocument();
   });
 
+  it("must point a submenu's item at the submenu, which it names, when it renders", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Move to").focus();
+
+    await user.keyboard("{ArrowRight}");
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-haspopup", "menu");
+    expect(screen.getByRole("menu", { name: "Move to" })).toBe(elements.submenu("Move to"));
+  });
+
+  it.each(["{ArrowRight}", "{Enter}", " "])(
+    "must open a submenu on its first item when %s is pressed on its item",
+    async (key) => {
+      const user = userEvent.setup();
+      render(<SubmenuMenu />);
+      openAsBrowser(elements.menu);
+      elements.item("Move to").focus();
+
+      await user.keyboard(key);
+      fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+
+      expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+      expect(elements.item("Inbox")).toHaveFocus();
+    }
+  );
+
+  it("must open a submenu with ArrowLeft when the text runs right to left", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu dir="rtl" />);
+    openAsBrowser(elements.menu);
+    elements.item("Move to").focus();
+
+    await user.keyboard("{ArrowLeft}");
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must leave a submenu closed when ArrowRight is pressed on another item", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    await user.keyboard("{ArrowRight}");
+
+    expect(elements.item("Edit")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close a submenu and focus its item when ArrowLeft is pressed in it", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    await openSubmenu(user);
+
+    await user.keyboard("{ArrowLeft}");
+
+    expect(elements.item("Move to")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must focus a submenu's item when the browser closes the submenu on Escape", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    await openSubmenu(user);
+
+    closeAsBrowser(elements.submenu("Move to"));
+
+    expect(elements.item("Move to")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must run an item's onClick and close every menu when an item in a submenu is chosen", async () => {
+    const user = userEvent.setup();
+    const onMove = vi.fn();
+    render(<SubmenuMenu onMove={onMove} />);
+    await openSubmenu(user);
+
+    await user.keyboard("{Enter}");
+
+    expect(onMove).toHaveBeenCalledOnce();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must move through a submenu's own items when keys are pressed in it", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    await openSubmenu(user);
+
+    await user.keyboard("{ArrowDown}");
+    const afterArrow = document.activeElement;
+    await user.keyboard("i");
+
+    expect(afterArrow).toBe(elements.item("Projects"));
+    expect(elements.item("Inbox")).toHaveFocus();
+  });
+
+  it("must close a submenu when focus moves to another item of its parent", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    await user.click(elements.item("Move to"));
+
+    await user.keyboard("{ArrowDown}");
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must leave a disabled submenu closed when its item is clicked", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.item("Share"));
+
+    expect(elements.item("Share")).toHaveAttribute("aria-disabled", "true");
+    expect(elements.item("Share")).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -978,6 +1100,53 @@ function SortMenu({ onValueChange, value }: SortMenuProps): JSX.Element {
   );
 }
 
+interface SubmenuMenuProps {
+  /**
+   * Writing direction around the menu
+   */
+  dir?: "ltr" | "rtl";
+
+  /**
+   * Runs when Inbox is chosen
+   */
+  onMove?: () => void;
+}
+
+function SubmenuMenu({ dir, onMove }: SubmenuMenuProps): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box dir={dir}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <Submenu label="Move to">
+          <MenuItem onClick={onMove}>Inbox</MenuItem>
+          <MenuItem>Projects</MenuItem>
+        </Submenu>
+        <Submenu disabled={true} label="Share">
+          <MenuItem>Link</MenuItem>
+        </Submenu>
+        <MenuItem>Delete</MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
+/**
+ * Opens the root menu and its Move to submenu from the keyboard, leaving focus on the submenu's first item
+ *
+ * @param user the user-event instance
+ */
+async function openSubmenu(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+  openAsBrowser(elements.menu);
+  elements.item("Move to").focus();
+  await user.keyboard("{ArrowRight}");
+  fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+}
+
 function TypeAheadMenu(): JSX.Element {
   const menu = useMenu({ defaultOpen: true });
 
@@ -1089,10 +1258,19 @@ const elements = {
     return screen.getByRole("menuitem", { hidden: true, name });
   },
   get menu(): HTMLElement {
-    return screen.getByRole("menu", { hidden: true });
+    return screen.getAllByRole("menu", { hidden: true })[0];
   },
   radio(name: string): HTMLElement {
     return screen.getByRole("menuitemradio", { hidden: true, name });
+  },
+  submenu(itemName: string): HTMLElement {
+    const submenu = document.getElementById(elements.item(itemName).getAttribute("aria-controls") ?? "");
+
+    if (submenu === null) {
+      throw new Error(`${itemName} controls no element`);
+    }
+
+    return submenu;
   },
   get trigger(): HTMLElement {
     return screen.getByRole("button", { name: "Actions" });

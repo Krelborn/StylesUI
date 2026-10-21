@@ -20,6 +20,7 @@ import { MenuItemCheckbox } from "./MenuItemCheckbox";
 import { MenuItemRadio } from "./MenuItemRadio";
 import { MenuRadioGroup } from "./MenuRadioGroup";
 import { MenuSeparator } from "./MenuSeparator";
+import { Submenu } from "./Submenu";
 import { useMenu } from "./useMenu";
 
 /**
@@ -239,10 +240,41 @@ function SortOrderMenu(): JSX.Element {
   );
 }
 
+/**
+ * File actions whose Move to item opens a submenu of folders, one of which opens a submenu of its own
+ */
+function FileMenu(): JSX.Element {
+  const [lastAction, setLastAction] = useState("none");
+  const menu = useMenu();
+
+  return (
+    <Stack align="start" gap={3}>
+      <Box>
+        <Button {...menu.getTriggerProps()} variant="secondary">
+          File
+        </Button>
+        <Menu {...menu.getMenuProps()}>
+          <MenuItem>Rename…</MenuItem>
+          <Submenu label="Move to">
+            <MenuItem onClick={() => setLastAction("Moved to Inbox")}>Inbox</MenuItem>
+            <MenuItem>Projects</MenuItem>
+            <Submenu label="Archive">
+              <MenuItem onClick={() => setLastAction("Moved to 2025")}>2025</MenuItem>
+              <MenuItem>2024</MenuItem>
+            </Submenu>
+          </Submenu>
+          <MenuItem tone="danger">Delete…</MenuItem>
+        </Menu>
+      </Box>
+      <Text>{`Last action: ${lastAction}`}</Text>
+    </Stack>
+  );
+}
+
 const meta = {
   title: "Overlays/Menu",
   component: Menu,
-  subcomponents: { MenuGroup, MenuItem, MenuItemCheckbox, MenuItemRadio, MenuRadioGroup, MenuSeparator },
+  subcomponents: { MenuGroup, MenuItem, MenuItemCheckbox, MenuItemRadio, MenuRadioGroup, MenuSeparator, Submenu },
   args: {
     anchorName: "--sui-overlay-story",
     close: fn(),
@@ -548,5 +580,65 @@ export const RadioItems: Story = {
     await input.pressKey("Enter");
     await waitFor(() => expect(radio("Size")).not.toBeVisible());
     await expect(canvas.getByText("Sorted by: size")).toBeInTheDocument();
+  },
+};
+
+/**
+ * A `Submenu` opens beside its item. Right Arrow, Enter or Space opens it on its first item, and its item keeps the
+ * highlight while it is open. Left Arrow or Escape closes one level and returns focus to the item that opened it.
+ * Choosing an item in any submenu closes every menu and returns focus to the button.
+ */
+export const Submenus: Story = {
+  render: () => <FileMenu />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "File" });
+    const item = (name: string): HTMLElement => canvas.getByRole("menuitem", { hidden: true, name });
+
+    trigger.focus();
+    await input.pressKey("Enter");
+    await waitFor(() => expect(item("Rename…")).toHaveFocus());
+    await input.pressKey("ArrowDown");
+    await input.pressKey("ArrowRight");
+
+    await waitFor(() => expect(item("Inbox")).toHaveFocus());
+    await expect(item("Move to")).toHaveAttribute("aria-expanded", "true");
+    await expect(focusRingContrast(item("Inbox"))).toBeGreaterThanOrEqual(3);
+    await waitFor(() => expect(canvas.getByRole("menu", { name: "Move to" })).toBeVisible());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(item("Move to")).toHaveFocus());
+    await waitFor(() => expect(item("Inbox")).not.toBeVisible());
+    await expect(item("Rename…")).toBeVisible();
+
+    await input.pressKey("Enter");
+    await waitFor(() => expect(item("Inbox")).toHaveFocus());
+    await input.pressKey("ArrowLeft");
+    await waitFor(() => expect(item("Move to")).toHaveFocus());
+
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(item("Inbox")).toHaveFocus());
+    await input.pressKey("End");
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(item("2025")).toHaveFocus());
+    await waitFor(() => expect(item("Inbox")).toBeVisible());
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(item("Archive")).toHaveFocus());
+    await waitFor(() => expect(item("Inbox")).toBeVisible());
+
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(item("2025")).toHaveFocus());
+    await input.pressKey("Enter");
+
+    await waitFor(() => expect(item("Rename…")).not.toBeVisible());
+    await expect(item("2025")).not.toBeVisible();
+    await expect(canvas.getByText("Last action: Moved to 2025")).toBeInTheDocument();
+    await expect(trigger).toHaveFocus();
   },
 };

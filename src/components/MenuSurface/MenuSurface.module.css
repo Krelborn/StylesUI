@@ -92,6 +92,12 @@
   color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
 }
 
+/* The item whose submenu is open keeps the highlight while focus is in the submenu */
+.item[aria-expanded="true"] {
+  background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
+  color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+}
+
 .item:focus-visible {
   outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
   outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
@@ -114,8 +120,16 @@
   color: var(--sui-color-danger-text, #b91c1c);
 }
 
-/* Once any item in this menu has a leading slot, every label starts after the column the slots sit in */
-.menu:has(.leading) {
+/*
+ * Once any of this menu's own items has a leading slot, every label starts after the column the slots sit in. Its
+ * items sit directly in it, or in a group or a submenu's wrapper; a submenu's own items are a level deeper, and the
+ * submenu declares the column again, so it neither takes nor gives one.
+ */
+.menu {
+  --_sui-menu-leading-column: 0px;
+}
+
+.menu:has(> * > .leading, > * > * > .leading) {
   --_sui-menu-leading-column: calc(1rem + var(--sui-space-2, 0.5rem));
 }
 

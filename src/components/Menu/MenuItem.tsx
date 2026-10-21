@@ -144,7 +144,13 @@ export function MenuItem<E extends MenuItemElement = "button">({
     "aria-describedby"?: string;
     onClick?: (event: MouseEvent<HTMLElement>) => void;
   };
-  const item = useMenuItemContent({ describedBy, description, label: children, leading: icon, shortcut });
+  const item = useMenuItemContent({
+    describedBy,
+    description,
+    label: children,
+    leading: icon,
+    trailing: shortcut,
+  });
 
   function handleClick(event: MouseEvent<HTMLElement>): void {
     if (disabled) {

@@ -170,7 +170,7 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
   }
 
   return (
-    <MenuContext.Provider value={{ closeAfterChoosing }}>
+    <MenuContext.Provider value={{ closeAfterChoosing, closeAll: close }}>
       <Overlay
         {...rest}
         as="div"
