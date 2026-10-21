@@ -302,54 +302,54 @@ function focusOnOpening(menu: HTMLElement, openingFocus: OpeningFocus): void {
 
 /**
  * Keeps focus inside a menu when the focused item is removed from it or from one of its submenus, by moving focus to
- * the innermost open menu that held the item
+ * the innermost menu that held the item and is still open
  *
  * @param menu the open menu
  * @returns a function that stops watching, to call when the menu closes
  */
 function watchRemovals(menu: HTMLElement): () => void {
-  let focusedMenu: Element | null = null;
+  let focusedMenus: HTMLElement[] = [];
 
-  function noteFocusedMenu(event: Event): void {
-    focusedMenu = event.target instanceof Element ? event.target.closest('[role="menu"]') : null;
+  function noteFocusedMenus(event: Event): void {
+    focusedMenus = event.target instanceof Element ? menusAround(event.target, menu) : [];
   }
 
   const watcher = new MutationObserver(() => {
     const focused = menu.ownerDocument.activeElement;
 
     if ((focused === null || focused === menu.ownerDocument.body) && menu.matches(":popover-open")) {
-      (openMenuAround(focusedMenu, menu) ?? menu).focus();
+      const stillOpen = focusedMenus.find((candidate) => candidate.isConnected && candidate.matches(":popover-open"));
+
+      (stillOpen ?? menu).focus();
     }
   });
 
-  menu.addEventListener("focusin", noteFocusedMenu);
+  menu.addEventListener("focusin", noteFocusedMenus);
   watcher.observe(menu, { childList: true, subtree: true });
 
   return () => {
-    menu.removeEventListener("focusin", noteFocusedMenu);
+    menu.removeEventListener("focusin", noteFocusedMenus);
     watcher.disconnect();
   };
 }
 
 /**
- * Finds the innermost open menu around an element, the element included
+ * Lists the menus around an element, innermost first
  *
- * @param element the element to start from
- * @param root the outermost menu to look in
- * @returns the open menu, or undefined when no menu inside `root` around the element is open
+ * @param element the element to start from, which may be a menu itself
+ * @param root the outermost menu, the last listed
+ * @returns the menus from the element's own out to `root`
  */
-function openMenuAround(element: Element | null, root: HTMLElement): HTMLElement | undefined {
-  let candidate = element?.closest<HTMLElement>('[role="menu"]') ?? null;
+function menusAround(element: Element, root: HTMLElement): HTMLElement[] {
+  const menus: HTMLElement[] = [];
+  let candidate = element.closest<HTMLElement>('[role="menu"]');
 
   while (candidate !== null && root.contains(candidate)) {
-    if (candidate.matches(":popover-open")) {
-      return candidate;
-    }
-
+    menus.push(candidate);
     candidate = candidate.parentElement?.closest<HTMLElement>('[role="menu"]') ?? null;
   }
 
-  return undefined;
+  return menus;
 }
 
 /**

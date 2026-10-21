@@ -236,14 +236,16 @@ function keepToSubmenu(event: ToggleEvent<HTMLElement>): void {
 }
 
 /**
- * Moves focus to a submenu's first item
+ * Moves focus to a submenu's first item, or to the submenu itself when it has none
  *
  * @param submenu the submenu element
  */
 function focusFirstItem(submenu: HTMLElement): void {
   const first = renderedItems(submenu).at(0);
 
-  if (first !== undefined) {
+  if (first === undefined) {
+    submenu.focus();
+  } else {
     focusItem(first);
   }
 }

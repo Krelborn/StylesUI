@@ -317,6 +317,20 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("must move focus to the open submenu around a removed submenu that held focus", async () => {
+    const user = userEvent.setup();
+    render(<DismissibleNestedSubmenuMenu />);
+    await openSubmenu(user);
+    elements.item("Archive").focus();
+    await user.keyboard("{ArrowRight}");
+    fireEvent(elements.submenu("Archive"), toggleEvent("toggle", "open"));
+
+    await user.click(elements.item("Dismiss"));
+
+    await waitFor(() => expect(elements.submenu("Move to")).toHaveFocus());
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must move focus to the submenu when its focused item is removed along with an item of the menu around it", async () => {
     const user = userEvent.setup();
     render(<DismissibleSubmenuMenu />);
@@ -765,6 +779,18 @@ describe("Menu", () => {
     }
   );
 
+  it("must focus a submenu itself when it opens from the keyboard with no items", async () => {
+    const user = userEvent.setup();
+    render(<EmptySubmenuMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Recent").focus();
+
+    await user.keyboard("{ArrowRight}");
+    fireEvent(elements.submenu("Recent"), toggleEvent("toggle", "open"));
+
+    expect(elements.submenu("Recent")).toHaveFocus();
+  });
+
   it("must open a submenu with ArrowLeft when the text runs right to left", async () => {
     const user = userEvent.setup();
     render(<SubmenuMenu dir="rtl" />);
@@ -1050,6 +1076,51 @@ function DismissibleMenu(): JSX.Element {
       <Menu {...menu.getMenuProps()}>
         <MenuItem>Edit</MenuItem>
         {!dismissed && <MenuItem onClick={dismiss}>Dismiss</MenuItem>}
+      </Menu>
+    </>
+  );
+}
+
+function DismissibleNestedSubmenuMenu(): JSX.Element {
+  const [dismissed, setDismissed] = useState(false);
+  const menu = useMenu({ defaultOpen: true });
+
+  function dismiss(event: MouseEvent<HTMLButtonElement>): void {
+    event.preventDefault();
+    setDismissed(true);
+  }
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <Submenu label="Move to">
+          <MenuItem>Inbox</MenuItem>
+          {!dismissed && (
+            <Submenu label="Archive">
+              <MenuItem onClick={dismiss}>Dismiss</MenuItem>
+            </Submenu>
+          )}
+        </Submenu>
+      </Menu>
+    </>
+  );
+}
+
+function EmptySubmenuMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <Submenu label="Recent" />
       </Menu>
     </>
   );
