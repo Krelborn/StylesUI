@@ -4,6 +4,8 @@ import { graceTriangle, isInsideTriangle } from "./pointerIntent";
 
 const submenuAfter = new DOMRect(200, 40, 150, 160);
 const submenuBefore = new DOMRect(0, 40, 150, 160);
+const submenuBelow = new DOMRect(20, 100, 150, 160);
+const submenuAbove = new DOMRect(20, 0, 150, 60);
 
 describe("pointerIntent", () => {
   it("must run from just behind the exit point to the submenu's near corners when the submenu is after it", () => {
@@ -20,6 +22,31 @@ describe("pointerIntent", () => {
       { x: 150, y: 40 },
       { x: 150, y: 200 },
     ]);
+  });
+
+  it("must run to the submenu's top corners when the submenu is below the exit point", () => {
+    expect(graceTriangle({ x: 120, y: 90 }, submenuBelow)).toEqual([
+      { x: 120, y: 85 },
+      { x: 20, y: 100 },
+      { x: 170, y: 100 },
+    ]);
+  });
+
+  it("must run to the submenu's bottom corners when the submenu is above the exit point", () => {
+    expect(graceTriangle({ x: 120, y: 70 }, submenuAbove)).toEqual([
+      { x: 120, y: 75 },
+      { x: 20, y: 60 },
+      { x: 170, y: 60 },
+    ]);
+  });
+
+  it.each([
+    { point: { x: 60, y: 98 }, inside: true },
+    { point: { x: 120, y: 92 }, inside: true },
+    { point: { x: 10, y: 98 }, inside: false },
+    { point: { x: 120, y: 80 }, inside: false },
+  ])("must say whether $point is inside the triangle to a submenu below", ({ inside, point }) => {
+    expect(isInsideTriangle(point, graceTriangle({ x: 120, y: 90 }, submenuBelow))).toBe(inside);
   });
 
   it.each([

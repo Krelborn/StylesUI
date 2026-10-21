@@ -96,7 +96,7 @@ The writing direction is read from `:dir(rtl)` on the menu.
 
 - Moving the pointer onto an item focuses it without scrolling, so the arrow keys carry on from it. A disabled item is focused too, but does nothing when clicked.
 - Resting on a submenu item for 100ms opens its submenu, without moving focus into it. A click opens it at once.
-- Moving onto another item of the parent closes an open submenu after 100ms, unless the pointer is moving through the triangle between where it left the submenu item and the submenu's near edge. The submenu then stays open while the pointer keeps moving, and closes 400ms after it stops outside the submenu.
+- Moving onto another item of the parent closes an open submenu after 100ms, unless the pointer is moving through the triangle between where it left the submenu item and the submenu's edge facing it: its near side beside the item, or its top or bottom when it opens below or above. The submenu then stays open while the pointer keeps moving, and closes 400ms after it stops outside the submenu.
 - Leaving the menu leaves the focused item and any open submenu as they are.
 - Items act on `click`, never on `pointerdown` (2.5.2).
 

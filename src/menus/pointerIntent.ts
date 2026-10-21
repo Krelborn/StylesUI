@@ -27,14 +27,39 @@ const exitAllowance = 5;
  *
  * @param exit where the pointer left the submenu's item
  * @param submenu the submenu's bounds
- * @returns the triangle from just behind the exit point to the two corners of the submenu's nearer side
+ * @returns the triangle from just behind the exit point to the two corners of the submenu's side facing it: its
+ *   nearer side when the submenu sits beside the exit point, else its top or bottom
  */
-export function graceTriangle(exit: Point, submenu: DOMRectReadOnly): Triangle {
-  const submenuIsAfter = submenu.left >= exit.x;
-  const nearSide = submenuIsAfter ? submenu.left : submenu.right;
-  const start = { x: exit.x + (submenuIsAfter ? -exitAllowance : exitAllowance), y: exit.y };
+export function graceTriangle(exit: Point, { bottom, left, right, top }: DOMRectReadOnly): Triangle {
+  if (exit.x <= left) {
+    return [
+      { x: exit.x - exitAllowance, y: exit.y },
+      { x: left, y: top },
+      { x: left, y: bottom },
+    ];
+  }
 
-  return [start, { x: nearSide, y: submenu.top }, { x: nearSide, y: submenu.bottom }];
+  if (exit.x >= right) {
+    return [
+      { x: exit.x + exitAllowance, y: exit.y },
+      { x: right, y: top },
+      { x: right, y: bottom },
+    ];
+  }
+
+  if (exit.y <= top) {
+    return [
+      { x: exit.x, y: exit.y - exitAllowance },
+      { x: left, y: top },
+      { x: right, y: top },
+    ];
+  }
+
+  return [
+    { x: exit.x, y: exit.y + exitAllowance },
+    { x: left, y: bottom },
+    { x: right, y: bottom },
+  ];
 }
 
 /**
