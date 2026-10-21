@@ -179,14 +179,14 @@
 
 /*
  * Once any of this menu's own items has a leading slot, every label starts after the column the slots sit in. Its
- * items sit directly in it, or in a group or a submenu's wrapper; a submenu's own items are a level deeper, and the
- * submenu declares the column again, so it neither takes nor gives one.
+ * items sit directly in it, in a group or a submenu's wrapper, or in a submenu's wrapper in a group; a submenu's own
+ * items are a level below its wrapper, and the submenu declares the column again, so it neither takes nor gives one.
  */
 .menu {
   --_sui-menu-leading-column: 0px;
 }
 
-.menu:has(> [data-leading], > * > [data-leading]) {
+.menu:has(> [data-leading], > * > [data-leading], > [role="group"] > [role="none"] > [data-leading]) {
   --_sui-menu-leading-column: calc(1rem + var(--sui-space-2, 0.5rem));
 }
 

@@ -211,6 +211,29 @@ function ViewMenu(): JSX.Element {
 }
 
 /**
+ * A group whose only icon is on a submenu's item
+ */
+function GroupedSubmenuMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "10rem" }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        File
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuGroup label="Send">
+          <MenuItem>Rename…</MenuItem>
+          <Submenu icon={<SendIcon />} label="Share">
+            <MenuItem>Copy link</MenuItem>
+          </Submenu>
+        </MenuGroup>
+      </Menu>
+    </Box>
+  );
+}
+
+/**
  * An account menu whose items are links, with one action at the end
  */
 function AccountMenu(): JSX.Element {
@@ -795,6 +818,23 @@ export const GroupsAndSeparators: Story = {
     canvas.getByRole("menuitem", { name: "Open in new window" }).focus();
     await userEvent.keyboard("{ArrowDown}");
     await expect(name).toHaveFocus();
+  },
+};
+
+/**
+ * A submenu's icon inside a group gives the menu its icon column too, so its label clears the icon and lines up with
+ * the group's other labels
+ */
+export const GroupedSubmenu: Story = {
+  render: () => <GroupedSubmenuMenu />,
+  play: async ({ canvas }) => {
+    const share = await canvas.findByRole("menuitem", { name: "Share" });
+    const rename = canvas.getByRole("menuitem", { name: "Rename…" });
+    const icon = share.firstElementChild as HTMLElement;
+
+    await waitFor(() => expect(share).toBeVisible());
+    await expect(labelStart(share)).toBeCloseTo(labelStart(rename), 0);
+    await expect(labelStart(share)).toBeGreaterThan(icon.getBoundingClientRect().right);
   },
 };
 
