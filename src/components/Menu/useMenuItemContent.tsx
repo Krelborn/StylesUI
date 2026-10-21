@@ -50,6 +50,11 @@ interface MenuItemContent {
   describedBy: string | undefined;
 
   /**
+   * Whether the item has a leading slot, for its `data-leading`, which gives its menu an icon column
+   */
+  hasLeading: boolean;
+
+  /**
    * The id for the item's `aria-labelledby`, which names it by its label alone
    */
   labelId: string;
@@ -71,13 +76,14 @@ export function useMenuItemContent({
   const labelId = useId();
   const descriptionId = useId();
   const hasDescription = hasContent(description);
+  const hasLeading = hasContent(leading);
   const describedByIds = [hasDescription ? descriptionId : undefined, describedBy]
     .filter((id) => id !== undefined && id !== "")
     .join(" ");
 
   const content = (
     <>
-      {hasContent(leading) && (
+      {hasLeading && (
         <Box as="span" className={styles.leading} aria-hidden={true}>
           {leading}
         </Box>
@@ -100,5 +106,5 @@ export function useMenuItemContent({
     </>
   );
 
-  return { content, describedBy: describedByIds === "" ? undefined : describedByIds, labelId };
+  return { content, describedBy: describedByIds === "" ? undefined : describedByIds, hasLeading, labelId };
 }

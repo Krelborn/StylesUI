@@ -121,6 +121,7 @@ export function MenuItemRadio({
       aria-describedby={item.describedBy}
       aria-disabled={disabled ? true : undefined}
       aria-labelledby={item.labelId}
+      data-leading={true}
     >
       {item.content}
     </Box>

@@ -201,6 +201,7 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
         aria-expanded={open}
         aria-haspopup="menu"
         aria-labelledby={item.labelId}
+        data-leading={item.hasLeading ? true : undefined}
       >
         {item.content}
       </Box>

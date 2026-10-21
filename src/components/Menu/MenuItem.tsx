@@ -103,6 +103,7 @@ interface ItemElementProps {
   "aria-labelledby": string;
   children: ReactNode;
   className: string;
+  "data-leading": true | undefined;
   "data-tone": "danger" | undefined;
   onClick: (event: MouseEvent<HTMLElement>) => void;
   role: "menuitem";
@@ -174,6 +175,7 @@ export function MenuItem<E extends MenuItemElement = "button">({
     "aria-labelledby": item.labelId,
     children: item.content,
     className: clsx(styles.item, className),
+    "data-leading": item.hasLeading ? true : undefined,
     "data-tone": tone,
     onClick: handleClick,
     role: "menuitem",

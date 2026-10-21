@@ -172,7 +172,7 @@
   --_sui-menu-leading-column: 0px;
 }
 
-.menu:has(> * > .leading, > * > * > .leading) {
+.menu:has(> [data-leading], > * > [data-leading]) {
   --_sui-menu-leading-column: calc(1rem + var(--sui-space-2, 0.5rem));
 }
 
@@ -290,5 +290,35 @@
 @media (prefers-reduced-motion: reduce) {
   .menu {
     transition: opacity 120ms ease-out;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the highlight */
+@media (forced-colors: active) {
+  /* Left automatic, the browser draws a Canvas backplate behind the text that hides HighlightText */
+  .item:focus,
+  .item[aria-expanded="true"] {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  /* forced-color-adjust: none keeps the ring's and the parts' theme colours, so they take the highlight's text colour */
+  .item:focus-visible {
+    outline-color: HighlightText;
+  }
+
+  .item:is(:focus, [aria-expanded="true"]) * {
+    color: HighlightText;
+  }
+
+  .item[aria-disabled="true"]:not(:focus) {
+    --_sui-menu-part-opacity: 1;
+
+    color: GrayText;
+  }
+
+  .item[aria-disabled="true"]:not(:focus) * {
+    color: GrayText;
   }
 }
