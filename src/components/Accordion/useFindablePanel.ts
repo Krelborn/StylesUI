@@ -1,6 +1,8 @@
 import type { RefObject } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 
+import { useFragmentTargetReveal } from "./useFragmentTargetReveal";
+
 interface FindablePanelOptions {
   /**
    * Whether the item is disabled, so its closed panel is skipped by find-in-page
@@ -8,7 +10,8 @@ interface FindablePanelOptions {
   disabled: boolean;
 
   /**
-   * Called when find-in-page or a fragment link matches inside the closed panel
+   * Called when find-in-page, a fragment link or the page's URL fragment as the panel mounts matches inside the closed
+   * panel
    */
   onMatch: () => void;
 
@@ -54,6 +57,8 @@ export function useFindablePanel({ disabled, onMatch, open }: FindablePanelOptio
 
     return () => panel.removeEventListener("beforematch", handleBeforeMatch);
   }, [findable, onMatch]);
+
+  useFragmentTargetReveal({ findable, onMatch, open, panelRef });
 
   return panelRef;
 }

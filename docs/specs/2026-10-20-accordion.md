@@ -60,7 +60,7 @@ Renders a `div`, and every other `div` prop goes to it. It omits `as` and `defau
 - `exclusive?: boolean`: at most one item open; opening one closes the others. Defaults to `false`.
 - `headingLevel: HeadingLevel`: required, as in `NavListGroup`, because only the page outline knows the level.
 - `indicator?: AccordionIndicator`: `"chevron" | "plusMinus"`. Defaults to `chevron`.
-- `onValueChange?: (value: string[]) => void`: called with the new open items when the user opens or closes one, or when find-in-page or a fragment link opens one.
+- `onValueChange?: (value: string[]) => void`: called with the new open items when the user opens or closes one, or when find-in-page, a fragment link or the page's URL fragment opens one.
 - `regions?: boolean`: whether each open panel is a `region` named by its title, without the description and trailing content the toggle's name also reads. Defaults to `true` for `joined` and `separated` and `false` for `flush`, following WAI-ARIA's warning against more than about six regions that can be open at once.
 - `size?: ControlSize`: defaults to `md`.
 - `value?: string[]`: the open items, which makes the accordion controlled. Not accepted with `defaultValue`, typed as `Tabs`' selection is.
@@ -110,7 +110,7 @@ Renders a `div` holding the header row and the panel, and every other `div` prop
 
 - A click, Enter or Space on the toggle opens a closed item or closes an open one. With `exclusive`, opening one closes the others. Uncontrolled, the accordion updates its own state; controlled, it only calls `onValueChange`.
 - `onValueChange` receives the open values with the opened one appended, or the closed one removed. With `exclusive` it receives `[value]` or `[]`. The accordion shows exactly what `value` or its own state says, so an `exclusive` accordion given two open values shows both until the user opens another.
-- **Find-in-page and fragment links.** A closed, enabled panel has `hidden="until-found"`. The browser removes it and fires `beforematch` when a find or a fragment link matches inside, and the accordion opens the item as if its toggle had been pressed, closing the others when `exclusive`. A controlled parent that keeps the item closed gets its panel hidden again after the render, so the DOM never shows a panel `value` says is closed.
+- **Find-in-page and fragment links.** A closed, enabled panel has `hidden="until-found"`. The browser removes it and fires `beforematch` when a find or a fragment link matches inside, and the accordion opens the item as if its toggle had been pressed, closing the others when `exclusive`. A controlled parent that keeps the item closed gets its panel hidden again after the render, so the DOM never shows a panel `value` says is closed. A page that loads, or hydrates, with a URL fragment inside a closed panel opens that item and scrolls to the target as the item mounts, because the browser's own fragment navigation ran before the panel was hidden until found.
 - **Disabled.** A disabled item's toggle ignores clicks, Enter and Space. Its closed panel has a plain `hidden`, so find-in-page skips it rather than opening an item the user cannot close.
 - **Lazy.** A `lazy` item's panel is empty until the item first opens, and keeps its content after that.
 - **Scrolling.** The accordion moves no scroll position. When `exclusive` closes an item above the one opened, the browser's scroll anchoring keeps the opened header in place where the browser supports it.
@@ -162,6 +162,7 @@ src/components/Accordion/Accordion.tsx            ← root: state, keyboard, con
 src/components/Accordion/AccordionItem.tsx        ← header, toggle, actions, panel, until-found
 src/components/Accordion/AccordionToggleContent.tsx ← indicator, title, description and trailing content
 src/components/Accordion/useFindablePanel.ts      ← hidden until found and beforematch
+src/components/Accordion/useFragmentTargetReveal.ts ← opens an item the page's URL fragment points into
 src/components/Accordion/useHasOpened.ts          ← whether a lazy item has opened
 src/components/Accordion/AccordionContext.ts      ← context alone in its module
 src/components/Accordion/useAccordionContext.ts   ← throws MissingContextError
@@ -254,7 +255,7 @@ export function AccordionItem({
 2. Open panels are `region`s named by their title when `regions` is on, by default in `joined` and `separated` and not in `flush`. Proven by unit tests.
 3. A click, Enter or Space toggles an enabled item; with `exclusive` opening one closes the others; controlled accordions change only through `value`, with `onValueChange` called as the API section says. Proven by unit tests.
 4. A disabled item stays focusable, never opens or closes, and its closed panel is skipped by find-in-page. Proven by unit tests.
-5. A closed enabled panel has `hidden="until-found"`, and `beforematch` opens its item, respecting `exclusive` and a controlled parent. A fragment link into a closed panel opens it in Chromium. Proven by unit tests and `FragmentLink`.
+5. A closed enabled panel has `hidden="until-found"`, and `beforematch` opens its item, respecting `exclusive` and a controlled parent. A fragment link into a closed panel opens it in Chromium, and so does loading the page with that fragment. Proven by unit tests and `FragmentLink`.
 6. A `lazy` item renders nothing in its panel until it first opens and keeps its content afterwards. Proven by unit tests.
 7. Down, Up, Home and End move between the toggles of one accordion without wrapping, including disabled ones, never crossing into or out of a nested accordion. Proven by unit tests and `KeyboardInteraction`.
 

@@ -1,8 +1,8 @@
 import { fireEvent, render as renderBase, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import plusArtwork from "lucide-static/icons/plus.svg?raw";
-import { isValidElement } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { StrictMode, isValidElement } from "react";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
 import { transitionedProperties } from "../../test/transitionedProperties";
@@ -267,6 +267,44 @@ describe("Accordion", () => {
     expect(onValueChange).toHaveBeenLastCalledWith(["stroke"]);
     expect(elements.toggle("Stroke")).toHaveAttribute("aria-expanded", "false");
     expect(elements.panelOf("Stroke")).toHaveAttribute("hidden", "until-found");
+  });
+
+  it("must open an item and scroll to the target when the page loads with a fragment inside its closed panel", () => {
+    const { onValueChange, render, scrollIntoView } = setUpFragmentTest("#returns-policy");
+
+    render();
+
+    expect(elements.toggle("Returns")).toHaveAttribute("aria-expanded", "true");
+    expect(onValueChange).toHaveBeenLastCalledWith(["returns"]);
+    expect(scrollIntoView.mock.contexts).toContain(screen.getByText("Returns are free"));
+  });
+
+  it("must let the user close an item the page's fragment opened when its toggle is clicked", async () => {
+    const { render } = setUpFragmentTest("#returns-policy");
+    const user = userEvent.setup();
+    render();
+
+    await user.click(elements.toggle("Returns"));
+
+    expect(elements.toggle("Returns")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must leave a disabled item closed when the page loads with a fragment inside its panel", () => {
+    const { onValueChange, render } = setUpFragmentTest("#returns-policy");
+
+    render({ disabled: true });
+
+    expect(elements.toggle("Returns")).toHaveAttribute("aria-expanded", "false");
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("must leave every item closed when the page loads with a fragment outside the accordion", () => {
+    const { onValueChange, render } = setUpFragmentTest("#elsewhere");
+
+    render();
+
+    expect(elements.toggle("Returns")).toHaveAttribute("aria-expanded", "false");
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 
   it("must keep a disabled item closed and reachable when its toggle is clicked or pressed", async () => {
@@ -577,6 +615,35 @@ function setUpTest() {
   };
 
   return { onValueChange, render, user };
+}
+
+function setUpFragmentTest(fragment: string) {
+  const onValueChange = vi.fn();
+  const scrollIntoView = vi.spyOn(Element.prototype, "scrollIntoView");
+  const url = window.location.href;
+  window.history.replaceState(null, "", fragment);
+  onTestFinished(() => {
+    window.history.replaceState(null, "", url);
+    scrollIntoView.mockRestore();
+  });
+
+  const render = ({ disabled = false } = {}): void => {
+    renderBase(
+      <StrictMode>
+        <Accordion headingLevel={2} onValueChange={onValueChange}>
+          <AccordionItem title="Delivery" value="delivery">
+            Two days
+          </AccordionItem>
+          <AccordionItem disabled={disabled} title="Returns" value="returns">
+            <p id="returns-policy">Returns are free</p>
+          </AccordionItem>
+        </Accordion>
+        <p id="elsewhere">Elsewhere</p>
+      </StrictMode>
+    );
+  };
+
+  return { onValueChange, render, scrollIntoView };
 }
 
 /**
