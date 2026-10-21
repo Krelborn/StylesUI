@@ -812,6 +812,26 @@ describe("Menu", () => {
     }
   );
 
+  it.each([
+    { description: "a secondary press", releasedOn: "item", keys: "MouseRight" },
+    { description: "a press released off the item", releasedOn: "page", keys: "MouseLeft" },
+  ])("must open a submenu on its first item when Enter follows $description", async ({ keys, releasedOn }) => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Move to").focus();
+    await user.pointer([
+      { keys: `[${keys}>]`, target: elements.item("Move to") },
+      { target: releasedOn === "item" ? elements.item("Move to") : document.body },
+      { keys: `[/${keys}]` },
+    ]);
+
+    await user.keyboard("{Enter}");
+    fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+
+    expect(elements.item("Inbox")).toHaveFocus();
+  });
+
   it("must focus a submenu itself when it opens from the keyboard with no items", async () => {
     const user = userEvent.setup();
     render(<EmptySubmenuMenu />);

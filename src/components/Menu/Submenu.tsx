@@ -114,6 +114,9 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   }
 
   function handleItemKeyDown(event: KeyboardEvent<HTMLButtonElement>): void {
+    // A key pressed on the item makes the next click its own, after a press that never clicked
+    pressedByPointerRef.current = false;
+
     if (event.key === openingKey(event.currentTarget) && !hasModifier(event)) {
       event.preventDefault();
       openSubmenu(event.currentTarget.ownerDocument, true);
@@ -187,8 +190,8 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
         onPointerCancel={() => {
           pressedByPointerRef.current = false;
         }}
-        onPointerDown={() => {
-          pressedByPointerRef.current = true;
+        onPointerDown={(event) => {
+          pressedByPointerRef.current = event.button === 0;
         }}
         onPointerLeave={handleItemPointerLeave}
         onPointerMove={handleItemPointerMove}
