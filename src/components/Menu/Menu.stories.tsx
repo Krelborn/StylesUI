@@ -403,6 +403,99 @@ function UserMenu(): JSX.Element {
   );
 }
 
+const countries = [
+  "Argentina",
+  "Australia",
+  "Austria",
+  "Belgium",
+  "Brazil",
+  "Canada",
+  "Chile",
+  "Denmark",
+  "Egypt",
+  "Finland",
+  "France",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "India",
+  "Ireland",
+  "Italy",
+  "Japan",
+  "Kenya",
+  "Mexico",
+  "Netherlands",
+  "Norway",
+  "Peru",
+  "Portugal",
+  "Spain",
+  "Sweden",
+  "Thailand",
+  "Uruguay",
+];
+
+interface CountryMenuProps {
+  /**
+   * The button's label, which also names the menu
+   */
+  label: string;
+
+  /**
+   * Space above the button, to place it near the bottom of the window
+   */
+  offset?: string;
+}
+
+/**
+ * A menu with more items than fit in the window
+ */
+function CountryMenu({ label, offset }: CountryMenuProps): JSX.Element {
+  const menu = useMenu();
+
+  return (
+    <Box style={{ paddingBlockStart: offset }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        {label}
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        {countries.map((country) => (
+          <MenuItem key={country}>{country}</MenuItem>
+        ))}
+      </Menu>
+    </Box>
+  );
+}
+
+/**
+ * A dense tool's menu
+ */
+function CompactMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "10rem" }}>
+      <Button {...menu.getTriggerProps()} size="sm" variant="secondary">
+        Edit
+      </Button>
+      <Menu {...menu.getMenuProps()} density="compact">
+        <MenuItem shortcut="⌘Z" aria-keyshortcuts="Meta+Z">
+          Undo
+        </MenuItem>
+        <MenuItem shortcut="⇧⌘Z" aria-keyshortcuts="Shift+Meta+Z">
+          Redo
+        </MenuItem>
+        <MenuSeparator />
+        <MenuItem shortcut="⌘X" aria-keyshortcuts="Meta+X">
+          Cut
+        </MenuItem>
+        <MenuItem shortcut="⌘C" aria-keyshortcuts="Meta+C">
+          Copy
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
 const meta = {
   title: "Overlays/Menu",
   component: Menu,
@@ -908,5 +1001,66 @@ export const UserAccountMenu: Story = {
     await expect(appearance.getBoundingClientRect().right).toBeLessThanOrEqual(
       appearanceItem.getBoundingClientRect().left
     );
+  },
+};
+
+/**
+ * `density="compact"` tightens the rows for menubars and dense tools, still above the 24px a target needs. On a touch
+ * screen every row is at least 44px tall, whatever the density.
+ */
+export const CompactDensity: Story = {
+  render: () => <CompactMenu />,
+  play: async ({ canvas }) => {
+    const undo = await canvas.findByRole("menuitem", { name: "Undo" });
+
+    await waitFor(() => expect(undo).toBeVisible());
+    await expect(undo.getBoundingClientRect().height).toBeGreaterThanOrEqual(24);
+    await expect(undo.getBoundingClientRect().height).toBeLessThan(32);
+  },
+};
+
+/**
+ * A menu taller than the room around its button opens on the side with more room, fits the window, and scrolls inside
+ * its own box. Moving with the keyboard scrolls the focused item into view.
+ */
+export const LongMenu: Story = {
+  render: () => (
+    <Stack gap={4}>
+      <CountryMenu label="Country" />
+      <CountryMenu label="Country, near the bottom" offset="calc(100vh - 10rem)" />
+    </Stack>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const country = canvas.getByRole("button", { name: "Country" });
+    country.focus();
+    await input.pressKey("Enter");
+
+    const menu = await canvas.findByRole("menu", { name: "Country" });
+    await waitFor(() => expect(canvas.getAllByRole("menuitem", { name: "Argentina" })[0]).toHaveFocus());
+    await Promise.all(menu.getAnimations().map((animation) => animation.finished));
+    await expect(menu.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
+    await expect(menu.scrollHeight).toBeGreaterThan(menu.clientHeight);
+
+    await input.pressKey("End");
+    const last = canvas.getAllByRole("menuitem", { name: "Uruguay" })[0];
+    await waitFor(() => expect(last).toHaveFocus());
+    await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(menu.getBoundingClientRect().bottom);
+    await input.pressKey("Escape");
+    await waitFor(() => expect(country).toHaveFocus());
+
+    const nearBottom = canvas.getByRole("button", { name: "Country, near the bottom" });
+    nearBottom.focus();
+    await input.pressKey("Enter");
+    const upperMenu = await canvas.findByRole("menu", { name: "Country, near the bottom" });
+    await waitFor(() => expect(upperMenu).toBeVisible());
+    await Promise.all(upperMenu.getAnimations().map((animation) => animation.finished));
+    await expect(upperMenu.getBoundingClientRect().bottom).toBeLessThanOrEqual(nearBottom.getBoundingClientRect().top);
+    await expect(upperMenu.getBoundingClientRect().top).toBeGreaterThanOrEqual(0);
   },
 };

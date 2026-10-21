@@ -1,5 +1,5 @@
 export { Menu } from "./Menu";
-export type { MenuOverlayProps, MenuProps } from "./Menu";
+export type { MenuDensity, MenuOverlayProps, MenuProps } from "./Menu";
 export { MenuGroup } from "./MenuGroup";
 export type { MenuGroupProps } from "./MenuGroup";
 export { MenuItem } from "./MenuItem";

@@ -209,6 +209,7 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
         anchorName={anchorName}
         className={styles.submenuMenu}
         close={parent.closeAll}
+        density={parent.density}
         id={menuId}
         onBeforeToggle={handleMenuBeforeToggle}
         onKeyDown={handleMenuKeyDown}

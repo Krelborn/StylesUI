@@ -75,6 +75,7 @@ export {
   useMenu,
 } from "./components/Menu";
 export type {
+  MenuDensity,
   MenuGroupProps,
   MenuItemCheckboxProps,
   MenuItemElement,

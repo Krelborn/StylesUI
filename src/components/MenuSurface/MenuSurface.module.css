@@ -8,6 +8,10 @@
   gap: 1px;
   min-inline-size: 12rem;
   max-inline-size: min(20rem, 100vw - var(--sui-space-2, 0.5rem) * 2);
+  /* Scrolls past this height, which leaves the placement fallbacks a side it fits on */
+  max-block-size: min(var(--sui-menu-max-block-size, 24rem), 100dvh - var(--sui-space-2, 0.5rem) * 2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--sui-space-1, 0.25rem);
   border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
   border-radius: var(--sui-radius-lg, 8px);
@@ -20,6 +24,31 @@
   transition:
     opacity 120ms ease-out,
     translate var(--sui-motion-spring, 120ms ease-out);
+}
+
+/*
+ * Overlay's fallbacks, then shrinking to the room on the side it opens on when no side has room for it, as in a short
+ * window. Matched with one pseudo-class more than Overlay's placement rules, so these win.
+ */
+.menu:popover-open:is([data-placement="top"], [data-placement="bottom"]) {
+  position-try-fallbacks: flip-block, --sui-menu-shrink;
+}
+
+.menu:popover-open:is([data-placement="start"], [data-placement="end"]) {
+  position-try-fallbacks: flip-inline, --sui-menu-shrink;
+}
+
+.menu:popover-open:is([data-placement$="-start"], [data-placement$="-end"]) {
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline,
+    --sui-menu-shrink;
+}
+
+@position-try --sui-menu-shrink {
+  max-block-size: 100%;
+  max-block-size: stretch;
 }
 
 /* Inside the edge, as Listbox's, so nothing around the menu can cover it */
@@ -102,6 +131,19 @@
 .item:focus-visible {
   outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
   outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+.menu[data-density="compact"] .item {
+  min-block-size: 1.625rem;
+  padding-block: 2px;
+}
+
+/* A finger needs a larger target than the density gives, whatever it is */
+@media (pointer: coarse) {
+  .item,
+  .menu[data-density="compact"] .item {
+    min-block-size: 2.75rem;
+  }
 }
 
 /* The disabled colour is the text mixed to half strength, not opacity, which would dim the focus ring too */
@@ -222,9 +264,9 @@
 /*
  * Beside its item, on the side the text runs towards, with its first item level with it: the margins take back the
  * surface's padding and border. Short of room below, it grows upwards from its item's bottom instead. Overlay's
- * placement rules match with one class fewer, so these win.
+ * placement rules and the menu's fallbacks above match with fewer classes, so these win.
  */
-.menu.submenuMenu[data-placement] {
+.menu.submenuMenu:popover-open[data-placement] {
   align-self: normal;
   margin: 0;
   margin-block-start: calc((var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px)) * -1);
@@ -234,7 +276,8 @@
     flip-inline,
     flip-block,
     flip-block flip-inline,
-    --sui-submenu-below;
+    --sui-submenu-below,
+    --sui-menu-shrink;
 }
 
 /* With no room on either side, below the item and over the menu it belongs to, so it still fits a narrow viewport */

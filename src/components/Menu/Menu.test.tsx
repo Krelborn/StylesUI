@@ -11,6 +11,7 @@ import { MoreHorizontalIcon, RefreshIcon } from "../Icon";
 import { IconButton } from "../IconButton";
 import { Text } from "../Text";
 
+import type { MenuDensity } from "./Menu";
 import { Menu } from "./Menu";
 import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
@@ -927,6 +928,24 @@ describe("Menu", () => {
     expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must mark the menu with its density, and its submenus with the same, when density is compact", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuMenu density="compact" />);
+    openAsBrowser(elements.menu);
+    elements.item("Move to").focus();
+
+    await user.keyboard("{ArrowRight}");
+
+    expect(elements.menu).toHaveAttribute("data-density", "compact");
+    expect(elements.submenu("Move to")).toHaveAttribute("data-density", "compact");
+  });
+
+  it("must use the default density when none is given", () => {
+    render(<SubmenuMenu />);
+
+    expect(elements.menu).toHaveAttribute("data-density", "default");
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -1189,6 +1208,11 @@ function SortMenu({ onValueChange, value }: SortMenuProps): JSX.Element {
 
 interface SubmenuMenuProps {
   /**
+   * How tightly the menu's rows are spaced
+   */
+  density?: MenuDensity;
+
+  /**
    * Writing direction around the menu
    */
   dir?: "ltr" | "rtl";
@@ -1199,7 +1223,7 @@ interface SubmenuMenuProps {
   onMove?: () => void;
 }
 
-function SubmenuMenu({ dir, onMove }: SubmenuMenuProps): JSX.Element {
+function SubmenuMenu({ density, dir, onMove }: SubmenuMenuProps): JSX.Element {
   const menu = useMenu({ defaultOpen: true });
 
   return (
@@ -1207,7 +1231,7 @@ function SubmenuMenu({ dir, onMove }: SubmenuMenuProps): JSX.Element {
       <Button {...menu.getTriggerProps()} variant="secondary">
         Actions
       </Button>
-      <Menu {...menu.getMenuProps()}>
+      <Menu {...menu.getMenuProps()} density={density}>
         <MenuItem>Edit</MenuItem>
         <Submenu label="Move to">
           <MenuItem onClick={onMove}>Inbox</MenuItem>

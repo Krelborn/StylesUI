@@ -14,6 +14,11 @@ import { MenuContext } from "./MenuContext";
 import { useMenuPointer } from "./useMenuPointer";
 
 /**
+ * How tightly a menu's rows are spaced: `default` for menus from buttons, `compact` for menubars and dense tools
+ */
+export type MenuDensity = "compact" | "default";
+
+/**
  * Props `getMenuProps` from `useMenu` returns, which every `Menu` takes
  */
 export interface MenuOverlayProps {
@@ -69,7 +74,13 @@ export interface MenuProps
       | "role"
       | "tabIndex"
       | keyof MenuOverlayProps
-    > {}
+    > {
+  /**
+   * How tightly the rows are spaced, which the menu's submenus share. Rows are at least 44px tall on a touch screen,
+   * whatever the density. Defaults to `default`.
+   */
+  density?: MenuDensity;
+}
 
 /**
  * A menu of commands that opens from a button, such as the actions on a row or the options of a view. `useMenu`
@@ -90,7 +101,14 @@ export interface MenuProps
  *   <MenuItem onClick={duplicate}>Duplicate</MenuItem>
  * </Menu>
  */
-export function Menu({ className, close, onKeyDown, onPointerMove, ...rest }: MenuProps): JSX.Element {
+export function Menu({
+  className,
+  close,
+  density = "default",
+  onKeyDown,
+  onPointerMove,
+  ...rest
+}: MenuProps): JSX.Element {
   const typeAheadQueryRef = useRef<TypeAheadQuery | null>(null);
   const keepsOpenAfterChoosingRef = useRef(false);
   const pointer = useMenuPointer();
@@ -177,7 +195,9 @@ export function Menu({ className, close, onKeyDown, onPointerMove, ...rest }: Me
   }
 
   return (
-    <MenuContext.Provider value={{ closeAfterChoosing, closeAll: close, startPointerGrace: pointer.startPointerGrace }}>
+    <MenuContext.Provider
+      value={{ closeAfterChoosing, closeAll: close, density, startPointerGrace: pointer.startPointerGrace }}
+    >
       <Overlay
         {...rest}
         as="div"
@@ -186,7 +206,10 @@ export function Menu({ className, close, onKeyDown, onPointerMove, ...rest }: Me
         onPointerMove={handlePointerMove}
         popover="auto"
         role="menu"
-        tabIndex={-1}
+        // A long menu scrolls, and a scrolling region must be focusable; focus is already inside an open menu, and Tab
+        // leaves it from there, so this adds no stop to the tab order
+        tabIndex={0}
+        data-density={density}
       />
     </MenuContext.Provider>
   );
