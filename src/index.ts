@@ -40,7 +40,9 @@ export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
 export {
   AddIcon,
+  CheckIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   CloseIcon,
   ColorModeIcon,
   DeleteIcon,

@@ -10,7 +10,9 @@ import { Stack } from "../Stack";
 import { Text } from "../Text";
 
 import { AddIcon } from "./AddIcon";
+import { CheckIcon } from "./CheckIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
+import { ChevronRightIcon } from "./ChevronRightIcon";
 import { CloseIcon } from "./CloseIcon";
 import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
@@ -37,7 +39,9 @@ interface GalleryIcon {
 
 const icons: GalleryIcon[] = [
   { Component: AddIcon, name: "AddIcon" },
+  { Component: CheckIcon, name: "CheckIcon" },
   { Component: ChevronDownIcon, name: "ChevronDownIcon" },
+  { Component: ChevronRightIcon, name: "ChevronRightIcon" },
   { Component: CloseIcon, name: "CloseIcon" },
   { Component: ColorModeIcon, name: "ColorModeIcon" },
   { Component: DeleteIcon, name: "DeleteIcon" },
@@ -64,7 +68,9 @@ const meta = {
   component: CloseIcon,
   subcomponents: {
     AddIcon,
+    CheckIcon,
     ChevronDownIcon,
+    ChevronRightIcon,
     ColorModeIcon,
     DeleteIcon,
     InfoIcon,
@@ -186,7 +192,7 @@ export const InNarrowRow: Story = {
 };
 
 /**
- * An icon that points the way the text runs, such as SendIcon, is mirrored in right-to-left text, within its own box
+ * An icon that points the way the text runs, such as SendIcon or ChevronRightIcon, is mirrored in right-to-left text, within its own box
  * and alongside any transform it is given. Other icons, such as RefreshIcon, keep their artwork.
  */
 export const RightToLeft: Story = {
@@ -199,6 +205,7 @@ export const RightToLeft: Story = {
       <Cluster align="center" dir="rtl">
         <SendIcon style={{ fontSize: 32 }} data-testid="rtl-send" />
         <SendIcon style={{ fontSize: 32, transform: "rotate(90deg)" }} data-testid="rtl-rotated-send" />
+        <ChevronRightIcon style={{ fontSize: 32 }} data-testid="rtl-chevron" />
         <RefreshIcon style={{ fontSize: 32 }} data-testid="rtl-refresh" />
         <Text>Right to left</Text>
       </Cluster>
@@ -217,6 +224,7 @@ export const RightToLeft: Story = {
     await expect(rtlGlyphBox.right).toBeLessThanOrEqual(rtlSendBox.right);
     await expect(getComputedStyle(rotatedSend).transform).toBe("matrix(0, 1, -1, 0, 0, 0)");
     await expect(getComputedStyle(glyphOf(rotatedSend)).transform).toBe(mirror);
+    await expect(getComputedStyle(glyphOf(canvas.getByTestId("rtl-chevron"))).transform).toBe(mirror);
     await expect(getComputedStyle(glyphOf(canvas.getByTestId("rtl-refresh"))).transform).toBe("none");
   },
 };

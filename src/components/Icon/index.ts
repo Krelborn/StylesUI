@@ -1,5 +1,7 @@
 export { AddIcon } from "./AddIcon";
+export { CheckIcon } from "./CheckIcon";
 export { ChevronDownIcon } from "./ChevronDownIcon";
+export { ChevronRightIcon } from "./ChevronRightIcon";
 export { CloseIcon } from "./CloseIcon";
 export { ColorModeIcon } from "./ColorModeIcon";
 export { DeleteIcon } from "./DeleteIcon";
