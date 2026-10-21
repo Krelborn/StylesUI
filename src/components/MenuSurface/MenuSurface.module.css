@@ -146,21 +146,27 @@
   }
 }
 
-/* The disabled colour is the text mixed to half strength, not opacity, which would dim the focus ring too */
-.item[aria-disabled="true"] {
-  --_sui-menu-part-opacity: 0.5;
-
-  color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
-  cursor: not-allowed;
-}
-
 .item[data-tone="danger"] {
-  color: var(--sui-color-danger-text, #b91c1c);
+  --_sui-menu-ink: var(--sui-color-danger-text, #b91c1c);
+
+  color: var(--_sui-menu-ink);
 }
 
 .item[data-tone="danger"]:focus {
   background-color: var(--sui-menu-danger-highlight, var(--sui-color-danger-subtle, #fff1f1));
-  color: var(--sui-color-danger-text, #b91c1c);
+  color: var(--_sui-menu-ink);
+}
+
+/*
+ * The disabled colour is the item's own text colour mixed to half strength, not opacity, which would dim the focus
+ * ring too. It follows the danger rules and matches focus, so a disabled item is dimmed in every state.
+ */
+.item[aria-disabled="true"],
+.item[aria-disabled="true"]:focus {
+  --_sui-menu-part-opacity: 0.5;
+
+  color: color-mix(in srgb, var(--_sui-menu-ink, var(--sui-color-text, #111827)) 50%, transparent);
+  cursor: not-allowed;
 }
 
 /*
@@ -297,6 +303,7 @@
 @media (forced-colors: active) {
   /* Left automatic, the browser draws a Canvas backplate behind the text that hides HighlightText */
   .item:focus,
+  .item[aria-disabled="true"]:focus,
   .item[aria-expanded="true"] {
     background-color: Highlight;
     color: HighlightText;

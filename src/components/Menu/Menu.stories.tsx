@@ -3,7 +3,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
-import { focusRingContrast, textContrast } from "../../test/colorContrast";
+import { focusRingContrast, isSameColor, textContrast } from "../../test/colorContrast";
 import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
 import { Avatar } from "../Avatar";
@@ -120,6 +120,38 @@ function DocumentMenu(): JSX.Element {
       </Menu>
     </Box>
   );
+}
+
+/**
+ * A disabled item beside a disabled destructive one
+ */
+function UnavailableActionsMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "10rem" }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Project
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem disabled={true}>Export</MenuItem>
+        <MenuItem disabled={true} tone="danger">
+          Delete…
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
+/**
+ * Whether an item's label is drawn in a colour mixed to half strength
+ *
+ * @param item the item element
+ * @param color the full-strength colour
+ * @returns true when the item's colour is `color` at half strength
+ */
+function isDimmed(item: HTMLElement, color: string): boolean {
+  return isSameColor(item, getComputedStyle(item).color, `color-mix(in srgb, ${color} 50%, transparent)`);
 }
 
 /**
@@ -655,6 +687,26 @@ export const ItemContent: Story = {
     await expect(canvas.getByRole("menuitem", { name: "New version" })).toHaveAccessibleDescription(
       "Keep this one as it is"
     );
+  },
+};
+
+/**
+ * A disabled item is dimmed at rest and highlighted, and a disabled destructive one keeps the danger hue, dimmed
+ */
+export const DisabledItems: Story = {
+  render: () => <UnavailableActionsMenu />,
+  play: async ({ canvas }) => {
+    const exportItem = await canvas.findByRole("menuitem", { name: "Export" });
+    const deleteItem = canvas.getByRole("menuitem", { name: "Delete…" });
+
+    await waitFor(() => expect(exportItem).toHaveFocus());
+    await expect(isDimmed(exportItem, "var(--sui-color-text)")).toBe(true);
+    await expect(isDimmed(deleteItem, "var(--sui-color-danger-text)")).toBe(true);
+
+    await userEvent.keyboard("{ArrowDown}");
+
+    await expect(deleteItem).toHaveFocus();
+    await expect(isDimmed(deleteItem, "var(--sui-color-danger-text)")).toBe(true);
   },
 };
 
