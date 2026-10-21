@@ -17,6 +17,8 @@ import { Menu } from "./Menu";
 import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
 import { MenuItemCheckbox } from "./MenuItemCheckbox";
+import { MenuItemRadio } from "./MenuItemRadio";
+import { MenuRadioGroup } from "./MenuRadioGroup";
 import { MenuSeparator } from "./MenuSeparator";
 import { useMenu } from "./useMenu";
 
@@ -209,10 +211,38 @@ function DisplayOptionsMenu(): JSX.Element {
   );
 }
 
+/**
+ * A sort order, one of which is checked, beside the display options
+ */
+function SortOrderMenu(): JSX.Element {
+  const [sortOrder, setSortOrder] = useState("name");
+  const menu = useMenu();
+
+  return (
+    <Stack align="start" gap={3}>
+      <Box>
+        <Button {...menu.getTriggerProps()} variant="secondary">
+          Sort
+        </Button>
+        <Menu {...menu.getMenuProps()}>
+          <MenuRadioGroup label="Sort by" onValueChange={setSortOrder} value={sortOrder}>
+            <MenuItemRadio value="name">Name</MenuItemRadio>
+            <MenuItemRadio value="modified">Date modified</MenuItemRadio>
+            <MenuItemRadio value="size">Size</MenuItemRadio>
+          </MenuRadioGroup>
+          <MenuSeparator />
+          <MenuItemCheckbox defaultChecked={true}>Folders first</MenuItemCheckbox>
+        </Menu>
+      </Box>
+      <Text>{`Sorted by: ${sortOrder}`}</Text>
+    </Stack>
+  );
+}
+
 const meta = {
   title: "Overlays/Menu",
   component: Menu,
-  subcomponents: { MenuGroup, MenuItem, MenuItemCheckbox, MenuSeparator },
+  subcomponents: { MenuGroup, MenuItem, MenuItemCheckbox, MenuItemRadio, MenuRadioGroup, MenuSeparator },
   args: {
     anchorName: "--sui-overlay-story",
     close: fn(),
@@ -483,5 +513,40 @@ export const CheckboxItems: Story = {
     await waitFor(() => expect(item("Show archived")).not.toBeVisible());
     await expect(canvas.getByText("Showing archived: no")).toBeInTheDocument();
     await expect(trigger).toHaveFocus();
+  },
+};
+
+/**
+ * `MenuRadioGroup` holds a choice of one, named by its label, and each `MenuItemRadio` shows a dot when it is the one
+ * checked. Space checks an item and leaves the menu open; Enter or a click checks it and closes the menu.
+ */
+export const RadioItems: Story = {
+  render: () => <SortOrderMenu />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const trigger = canvas.getByRole("button", { name: "Sort" });
+    const radio = (name: string): HTMLElement => canvas.getByRole("menuitemradio", { hidden: true, name });
+
+    trigger.focus();
+    await input.pressKey("Enter");
+    await waitFor(() => expect(radio("Name")).toHaveFocus());
+    await expect(radio("Name")).toHaveAttribute("aria-checked", "true");
+    await expect(canvas.getByRole("group", { name: "Sort by" })).toContainElement(radio("Size"));
+
+    await input.pressKey("ArrowDown");
+    await input.pressKey("Space");
+    await expect(radio("Date modified")).toHaveAttribute("aria-checked", "true");
+    await expect(radio("Name")).toHaveAttribute("aria-checked", "false");
+    await expect(radio("Date modified")).toBeVisible();
+
+    await input.pressKey("ArrowDown");
+    await input.pressKey("Enter");
+    await waitFor(() => expect(radio("Size")).not.toBeVisible());
+    await expect(canvas.getByText("Sorted by: size")).toBeInTheDocument();
   },
 };

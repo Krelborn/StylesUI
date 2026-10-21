@@ -33,6 +33,8 @@
         "MenuGroup": "div",
         "MenuItem": "button",
         "MenuItemCheckbox": "button",
+        "MenuItemRadio": "button",
+        "MenuRadioGroup": "div",
         "MenuSeparator": "hr",
         "MoreHorizontalIcon": "svg",
         "MoreVerticalIcon": "svg",

@@ -15,6 +15,8 @@ import { Menu } from "./Menu";
 import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
 import { MenuItemCheckbox } from "./MenuItemCheckbox";
+import { MenuItemRadio } from "./MenuItemRadio";
+import { MenuRadioGroup } from "./MenuRadioGroup";
 import { MenuSeparator } from "./MenuSeparator";
 import type { UseMenuOptions } from "./useMenu";
 import { useMenu } from "./useMenu";
@@ -622,6 +624,100 @@ describe("Menu", () => {
     expect(elements.checkbox("Show archived")).toBeInTheDocument();
   });
 
+  it("must check the radio item whose value is the group's defaultValue", () => {
+    render(<SortMenu />);
+
+    expect(screen.getByRole("group", { name: "Sort by" })).toContainElement(elements.radio("Name"));
+    expect(elements.radio("Name")).toHaveAttribute("aria-checked", "true");
+    expect(elements.radio("Size")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("must check a radio item, report its value and close the menu when it is clicked", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<SortMenu onValueChange={onValueChange} />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.radio("Size"));
+
+    expect(elements.radio("Size")).toHaveAttribute("aria-checked", "true");
+    expect(elements.radio("Name")).toHaveAttribute("aria-checked", "false");
+    expect(onValueChange).toHaveBeenLastCalledWith("size");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must report a choice but follow value when a controlled group's radio item is clicked", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<SortMenu onValueChange={onValueChange} value="name" />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.radio("Size"));
+
+    expect(onValueChange).toHaveBeenLastCalledWith("size");
+    expect(elements.radio("Name")).toHaveAttribute("aria-checked", "true");
+  });
+
+  it("must not report a choice when the checked radio item is clicked", async () => {
+    const user = userEvent.setup();
+    const onValueChange = vi.fn();
+    render(<SortMenu onValueChange={onValueChange} />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.radio("Name"));
+
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must check a radio item and keep the menu open when Space is pressed on it", async () => {
+    const { user } = setUpTest();
+    render(<SortMenu />);
+    openAsBrowser(elements.menu);
+    elements.radio("Size").focus();
+
+    await user.keyboard(" ");
+
+    expect(elements.radio("Size")).toHaveAttribute("aria-checked", "true");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must leave a disabled radio item unchecked when it is clicked", async () => {
+    const user = userEvent.setup();
+    render(<SortMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.radio("Owner"));
+
+    expect(elements.radio("Owner")).toHaveAttribute("aria-checked", "false");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must throw MissingContextError when a radio item renders outside a MenuRadioGroup", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() =>
+      render(
+        <BareMenu>
+          <MenuItemRadio value="name">Name</MenuItemRadio>
+        </BareMenu>
+      )
+    ).toThrow(MissingContextError);
+  });
+
+  it("must require a label when a radio group renders", () => {
+    render(
+      <BareMenu>
+        {/* @ts-expect-error a radio group is named by its label */}
+        <MenuRadioGroup>
+          <MenuItemRadio value="name">Name</MenuItemRadio>
+        </MenuRadioGroup>
+      </BareMenu>
+    );
+
+    expect(elements.radio("Name")).toBeInTheDocument();
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -849,6 +945,39 @@ function CheckboxMenu({ archivedChecked, onArchivedChange, onCompactChange }: Ch
   );
 }
 
+interface SortMenuProps {
+  /**
+   * Called with the chosen sort order
+   */
+  onValueChange?: (value: string) => void;
+
+  /**
+   * Controls the sort order
+   */
+  value?: string;
+}
+
+function SortMenu({ onValueChange, value }: SortMenuProps): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuRadioGroup defaultValue="name" label="Sort by" onValueChange={onValueChange} value={value}>
+          <MenuItemRadio value="name">Name</MenuItemRadio>
+          <MenuItemRadio value="size">Size</MenuItemRadio>
+          <MenuItemRadio disabled={true} value="owner">
+            Owner
+          </MenuItemRadio>
+        </MenuRadioGroup>
+      </Menu>
+    </>
+  );
+}
+
 function TypeAheadMenu(): JSX.Element {
   const menu = useMenu({ defaultOpen: true });
 
@@ -961,6 +1090,9 @@ const elements = {
   },
   get menu(): HTMLElement {
     return screen.getByRole("menu", { hidden: true });
+  },
+  radio(name: string): HTMLElement {
+    return screen.getByRole("menuitemradio", { hidden: true, name });
   },
   get trigger(): HTMLElement {
     return screen.getByRole("button", { name: "Actions" });

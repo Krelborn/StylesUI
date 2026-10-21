@@ -63,14 +63,25 @@ export { Link } from "./components/Link";
 export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
 export { Listbox, ListboxOption } from "./components/Listbox";
 export type { ListboxOptionProps, ListboxProps } from "./components/Listbox";
-export { Menu, MenuGroup, MenuItem, MenuItemCheckbox, MenuSeparator, useMenu } from "./components/Menu";
+export {
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuItemCheckbox,
+  MenuItemRadio,
+  MenuRadioGroup,
+  MenuSeparator,
+  useMenu,
+} from "./components/Menu";
 export type {
   MenuGroupProps,
   MenuItemCheckboxProps,
   MenuItemElement,
   MenuItemProps,
+  MenuItemRadioProps,
   MenuOverlayProps,
   MenuProps,
+  MenuRadioGroupProps,
   MenuSeparatorProps,
   UseMenuOptions,
   UseMenuResult,

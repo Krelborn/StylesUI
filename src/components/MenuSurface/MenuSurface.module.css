@@ -145,6 +145,14 @@
   visibility: hidden;
 }
 
+/* Filled by its border, which forced colours keep where they would drop a background */
+.radioDot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border: 0.25rem solid currentColor;
+  border-radius: var(--sui-radius-full, 9999px);
+}
+
 .text {
   display: flex;
   flex: 1;
