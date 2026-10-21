@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX, MouseEvent } from "react";
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
 import { Button } from "../Button";
@@ -298,6 +298,48 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
   });
 
+  it.each([
+    { from: "Archive", typed: "d", to: "Delete" },
+    { from: "Delete", typed: "a", to: "Archive" },
+    { from: "Archive", typed: "f", to: "Fix the build" },
+    { from: "Fix the build", typed: "f", to: "Fix the tests" },
+    { from: "Archive", typed: "fix the t", to: "Fix the tests" },
+  ])("must move focus from $from to $to when '$typed' is typed", async ({ from, to, typed }) => {
+    const { user } = setUpTest();
+    render(<TypeAheadMenu />);
+    openAsBrowser(elements.menu);
+    elements.item(from).focus();
+
+    await user.keyboard(typed);
+
+    expect(elements.item(to)).toHaveFocus();
+  });
+
+  it("must keep the menu open when Space joins a query being typed", async () => {
+    const { user } = setUpTest();
+    render(<TypeAheadMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Archive").focus();
+
+    await user.keyboard("fix ");
+
+    expect(elements.item("Fix the build")).toHaveFocus();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must choose the focused item when Space is pressed after a query has ended", async () => {
+    const { user } = setUpTest();
+    render(<TypeAheadMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Archive").focus();
+
+    await user.keyboard("d");
+    vi.advanceTimersByTime(600);
+    await user.keyboard(" ");
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -390,6 +432,24 @@ function DismissibleMenu(): JSX.Element {
   );
 }
 
+function TypeAheadMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Archive</MenuItem>
+        <MenuItem>Fix the build</MenuItem>
+        <MenuItem>Fix the tests</MenuItem>
+        <MenuItem>Delete</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
 function ControlledRowActions(): JSX.Element {
   const [open, setOpen] = useState(false);
 
@@ -434,6 +494,15 @@ function BareMenu({ children }: { children: JSX.Element }): JSX.Element {
       {children}
     </Menu>
   );
+}
+
+function setUpTest() {
+  vi.useFakeTimers();
+  onTestFinished(() => {
+    vi.useRealTimers();
+  });
+
+  return { user: userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) }) };
 }
 
 function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open"): Event {

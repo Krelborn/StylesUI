@@ -1,8 +1,10 @@
 import { clsx } from "clsx";
 import type { JSX, KeyboardEvent, ToggleEventHandler } from "react";
+import { useRef } from "react";
 
-import { targetIndexForKey } from "../../collections";
-import { focusItem, renderedItems } from "../../menus";
+import type { TypeAheadQuery } from "../../collections";
+import { extendTypeAheadQuery, isTypeAheadQueryLive, targetIndexForKey, typeAheadTarget } from "../../collections";
+import { focusItem, itemText, renderedItems } from "../../menus";
 import type { OverlayPlacement } from "../../overlays";
 import type { BoxProps } from "../Box";
 import styles from "../MenuSurface/MenuSurface.module.css";
@@ -88,6 +90,8 @@ export interface MenuProps
  * </Menu>
  */
 export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.Element {
+  const typeAheadQueryRef = useRef<TypeAheadQuery | null>(null);
+
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
     onKeyDown?.(event);
 
@@ -96,18 +100,38 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
     }
 
     const items = renderedItems(event.currentTarget);
-    const target = targetIndexForKey({
-      count: items.length,
-      currentIndex: items.indexOf(event.target as HTMLElement),
-      key: event.key,
-      orientation: "vertical",
-      wraps: true,
-    });
+    const currentIndex = items.indexOf(event.target as HTMLElement);
+    const target =
+      targetIndexForKey({ count: items.length, currentIndex, key: event.key, orientation: "vertical", wraps: true }) ??
+      typeAheadIndex(event.key, items, currentIndex);
+
+    if (target === undefined) {
+      return;
+    }
+
+    event.preventDefault();
 
     if (target !== null) {
-      event.preventDefault();
       focusItem(items[target]);
     }
+  }
+
+  /**
+   * Finds the item a typed character moves to
+   *
+   * @returns its index; null for a character that matches no item; undefined for a key type-ahead leaves alone, such
+   *   as Space when no query is being typed, which chooses the focused item
+   */
+  function typeAheadIndex(key: string, items: HTMLElement[], currentIndex: number): number | null | undefined {
+    const time = Date.now();
+
+    if (Array.from(key).length !== 1 || (key === " " && !isTypeAheadQueryLive(typeAheadQueryRef.current, time))) {
+      return undefined;
+    }
+
+    typeAheadQueryRef.current = extendTypeAheadQuery(typeAheadQueryRef.current, key, time);
+
+    return typeAheadTarget(items.map(itemText), currentIndex, typeAheadQueryRef.current.text);
   }
 
   return (

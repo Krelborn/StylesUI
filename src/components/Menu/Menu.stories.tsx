@@ -156,9 +156,10 @@ export const IconButtonTrigger: Story = {
 
 /**
  * Enter or Down opens the menu on its first item, and Up on its last. The arrow keys move through the items, wrapping
- * at both ends, and Home and End go to the first and last. The focused item shows the inset focus ring over the
- * highlight. Escape closes the menu and returns focus to the button; Tab closes it and moves on past the button, and
- * Shift+Tab closes it and returns to the button. The rings keep 3:1 and the highlighted label keeps 4.5:1.
+ * at both ends, Home and End go to the first and last, and typing moves to the item whose label starts with the typed
+ * text. The focused item shows the inset focus ring over the highlight. Escape closes the menu and returns focus to
+ * the button; Tab closes it and moves on past the button, and Shift+Tab closes it and returns to the button. The rings
+ * keep 3:1 and the highlighted label keeps 4.5:1.
  */
 export const KeyboardInteraction: Story = {
   render: () => <ToolbarMenu />,
@@ -189,6 +190,9 @@ export const KeyboardInteraction: Story = {
     await expect(item("Edit")).toHaveFocus();
     await userEvent.keyboard("{End}");
     await expect(item("Archive")).toHaveFocus();
+    await userEvent.keyboard("d");
+    await expect(item("Duplicate")).toHaveFocus();
+    await userEvent.keyboard("{End}");
 
     const input = trustedInput();
 
