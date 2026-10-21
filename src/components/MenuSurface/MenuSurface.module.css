@@ -90,6 +90,8 @@
 }
 
 .item {
+  --_sui-menu-ink: var(--sui-color-text, #111827);
+
   /* A component given in `as` is not rendered through Box, which sets this */
   box-sizing: border-box;
   position: relative;
@@ -103,7 +105,7 @@
   border: 0;
   border-radius: var(--sui-radius-md, 4px);
   background-color: transparent;
-  color: var(--sui-color-text, #111827);
+  color: var(--_sui-menu-ink);
   font: inherit;
   text-align: start;
   text-decoration: none;
@@ -119,15 +121,19 @@
  * pointer moves too; the ring shows only for keyboard focus.
  */
 .item:focus {
+  --_sui-menu-ink: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+
   outline: none;
   background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
-  color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+  color: var(--_sui-menu-ink);
 }
 
 /* The item whose submenu is open keeps the highlight while focus is in the submenu */
 .item[aria-expanded="true"] {
+  --_sui-menu-ink: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+
   background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
-  color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+  color: var(--_sui-menu-ink);
 }
 
 .item:focus-visible {
@@ -167,7 +173,7 @@
 .item[aria-disabled="true"]:focus {
   --_sui-menu-part-opacity: 0.5;
 
-  color: color-mix(in srgb, var(--_sui-menu-ink, var(--sui-color-text, #111827)) 50%, transparent);
+  color: color-mix(in srgb, var(--_sui-menu-ink) 50%, transparent);
   cursor: not-allowed;
 }
 
@@ -197,13 +203,14 @@
   opacity: var(--_sui-menu-part-opacity, 1);
 }
 
+/* Undimmed, since the slot's own opacity dims a disabled item's */
 .item[data-tone="danger"] .leading {
-  color: inherit;
+  color: var(--_sui-menu-ink);
 }
 
 /* The check of a checkbox item and the dot of a radio item are in the text colour, and keep their place unchecked */
 .item[aria-checked] > .leading {
-  color: inherit;
+  color: var(--_sui-menu-ink);
 }
 
 .item[aria-checked="false"] > .leading {

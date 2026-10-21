@@ -123,7 +123,7 @@ function DocumentMenu(): JSX.Element {
 }
 
 /**
- * A disabled item beside a disabled destructive one
+ * A disabled item, a disabled destructive one with an icon and a disabled checked checkbox item
  */
 function UnavailableActionsMenu(): JSX.Element {
   const menu = useMenu({ defaultOpen: true });
@@ -135,9 +135,12 @@ function UnavailableActionsMenu(): JSX.Element {
       </Button>
       <Menu {...menu.getMenuProps()}>
         <MenuItem disabled={true}>Export</MenuItem>
-        <MenuItem disabled={true} tone="danger">
+        <MenuItem disabled={true} icon={<DeleteIcon />} tone="danger">
           Delete…
         </MenuItem>
+        <MenuItemCheckbox defaultChecked={true} disabled={true}>
+          Show archived
+        </MenuItemCheckbox>
       </Menu>
     </Box>
   );
@@ -152,6 +155,20 @@ function UnavailableActionsMenu(): JSX.Element {
  */
 function isDimmed(item: HTMLElement, color: string): boolean {
   return isSameColor(item, getComputedStyle(item).color, `color-mix(in srgb, ${color} 50%, transparent)`);
+}
+
+/**
+ * Whether an item's icon, check or dot is drawn in a colour at half opacity, so dimmed once
+ *
+ * @param item the item element
+ * @param color the full-strength colour
+ * @returns true when the slot's colour is `color` and its opacity one half
+ */
+function isLeadingDimmedOnce(item: HTMLElement, color: string): boolean {
+  const leading = item.firstElementChild as HTMLElement;
+  const style = getComputedStyle(leading);
+
+  return isSameColor(leading, style.color, color) && style.opacity === "0.5";
 }
 
 /**
@@ -691,7 +708,8 @@ export const ItemContent: Story = {
 };
 
 /**
- * A disabled item is dimmed at rest and highlighted, and a disabled destructive one keeps the danger hue, dimmed
+ * A disabled item is dimmed at rest and highlighted, and a disabled destructive one keeps the danger hue, dimmed. An
+ * icon, check or dot is dimmed once, like the label.
  */
 export const DisabledItems: Story = {
   render: () => <UnavailableActionsMenu />,
@@ -702,6 +720,10 @@ export const DisabledItems: Story = {
     await waitFor(() => expect(exportItem).toHaveFocus());
     await expect(isDimmed(exportItem, "var(--sui-color-text)")).toBe(true);
     await expect(isDimmed(deleteItem, "var(--sui-color-danger-text)")).toBe(true);
+    await expect(isLeadingDimmedOnce(deleteItem, "var(--sui-color-danger-text)")).toBe(true);
+    await expect(
+      isLeadingDimmedOnce(canvas.getByRole("menuitemcheckbox", { name: "Show archived" }), "var(--sui-color-text)")
+    ).toBe(true);
 
     await userEvent.keyboard("{ArrowDown}");
 
