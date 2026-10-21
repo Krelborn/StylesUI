@@ -48,7 +48,12 @@ export function useFindablePanel({ disabled, onMatch, open }: FindablePanelOptio
       return undefined;
     }
 
-    function handleBeforeMatch(): void {
+    function handleBeforeMatch(event: Event): void {
+      // A nested panel's event bubbles here too, and the browser fires this panel's own as well
+      if (event.target !== panel) {
+        return;
+      }
+
       setRevealCount((count) => count + 1);
       onMatch();
     }

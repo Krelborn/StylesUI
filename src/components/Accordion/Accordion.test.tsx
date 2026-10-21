@@ -1,4 +1,4 @@
-import { fireEvent, render as renderBase, screen, within } from "@testing-library/react";
+import { act, fireEvent, render as renderBase, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import plusArtwork from "lucide-static/icons/plus.svg?raw";
 import { StrictMode, isValidElement } from "react";
@@ -267,6 +267,33 @@ describe("Accordion", () => {
     expect(onValueChange).toHaveBeenLastCalledWith(["stroke"]);
     expect(elements.toggle("Stroke")).toHaveAttribute("aria-expanded", "false");
     expect(elements.panelOf("Stroke")).toHaveAttribute("hidden", "until-found");
+  });
+
+  it("must report a match once when the browser finds it inside a closed panel nested in another", () => {
+    const onValueChange = vi.fn();
+    renderBase(
+      <Accordion headingLevel={3} onValueChange={onValueChange}>
+        <AccordionItem title="Layout" value="layout">
+          <Accordion headingLevel={4}>
+            <AccordionItem title="Constraints" value="constraints">
+              Left, Top
+            </AccordionItem>
+          </Accordion>
+        </AccordionItem>
+      </Accordion>
+    );
+    const panels = [screen.getByText("Left, Top").closest("[hidden]"), elements.panelOf("Layout")];
+
+    // The browser reveals every hidden ancestor of a match in one task, before React renders
+    act(() => {
+      for (const panel of panels) {
+        panel?.removeAttribute("hidden");
+        panel?.dispatchEvent(new Event("beforematch", { bubbles: true }));
+      }
+    });
+
+    expect(onValueChange.mock.calls).toEqual([[["layout"]]]);
+    expect(elements.toggle("Constraints")).toHaveAttribute("aria-expanded", "true");
   });
 
   it.each([
