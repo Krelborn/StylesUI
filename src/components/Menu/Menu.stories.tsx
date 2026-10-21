@@ -155,6 +155,31 @@ function ViewMenu(): JSX.Element {
   );
 }
 
+/**
+ * An account menu whose items are links, with one action at the end
+ */
+function AccountMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "12rem" }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Account
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem as="a" href="#profile">
+          Your profile
+        </MenuItem>
+        <MenuItem as="a" href="#settings">
+          Settings
+        </MenuItem>
+        <MenuSeparator />
+        <MenuItem>Sign out</MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
 const meta = {
   title: "Overlays/Menu",
   component: Menu,
@@ -380,5 +405,20 @@ export const GroupsAndSeparators: Story = {
     canvas.getByRole("menuitem", { name: "Open in new window" }).focus();
     await userEvent.keyboard("{ArrowDown}");
     await expect(name).toHaveFocus();
+  },
+};
+
+/**
+ * With `as="a"`, or a router's link component, an item is a link with the `menuitem` role, followed with a click,
+ * Enter or Space
+ */
+export const Links: Story = {
+  render: () => <AccountMenu />,
+  play: async ({ canvas }) => {
+    const profile = await canvas.findByRole("menuitem", { name: "Your profile" });
+
+    await waitFor(() => expect(profile).toBeVisible());
+    await expect(profile.tagName).toBe("A");
+    await expect(profile).toHaveAttribute("href", "#profile");
   },
 };

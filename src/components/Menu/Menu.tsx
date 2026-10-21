@@ -101,19 +101,27 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
 
     const items = renderedItems(event.currentTarget);
     const currentIndex = items.indexOf(event.target as HTMLElement);
-    const target =
-      targetIndexForKey({ count: items.length, currentIndex, key: event.key, orientation: "vertical", wraps: true }) ??
-      typeAheadIndex(event.key, items, currentIndex);
 
-    if (target === undefined) {
-      return;
+    if (moveFocus(event.key, items, currentIndex) || followLink(event.key, items.at(currentIndex))) {
+      event.preventDefault();
     }
+  }
 
-    event.preventDefault();
+  /**
+   * Moves focus for an arrow key, Home, End or a typed character
+   *
+   * @returns whether the menu handled the key, even when a typed character matched no item
+   */
+  function moveFocus(key: string, items: HTMLElement[], currentIndex: number): boolean {
+    const target =
+      targetIndexForKey({ count: items.length, currentIndex, key, orientation: "vertical", wraps: true }) ??
+      typeAheadIndex(key, items, currentIndex);
 
-    if (target !== null) {
+    if (target !== null && target !== undefined) {
       focusItem(items[target]);
     }
+
+    return target !== undefined;
   }
 
   /**
@@ -147,4 +155,21 @@ export function Menu({ className, close, onKeyDown, ...rest }: MenuProps): JSX.E
       />
     </MenuContext.Provider>
   );
+}
+
+/**
+ * Follows a focused link item on Space, which a link, unlike a button, ignores by itself
+ *
+ * @param key the pressed key
+ * @param item the focused item, if focus is on one
+ * @returns whether it clicked the link
+ */
+function followLink(key: string, item: HTMLElement | undefined): boolean {
+  if (key !== " " || item === undefined || item instanceof HTMLButtonElement) {
+    return false;
+  }
+
+  item.click();
+
+  return true;
 }

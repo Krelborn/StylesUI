@@ -1,7 +1,8 @@
 import { clsx } from "clsx";
-import type { ComponentPropsWithRef, JSX, JSXElementConstructor, ReactNode } from "react";
+import type { JSX, JSXElementConstructor, ReactNode } from "react";
 
 import { hasContent } from "../../forms";
+import type { LinkOrButtonElement, LinkOrButtonProps } from "../../links";
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 
@@ -11,8 +12,7 @@ import styles from "./NavList.module.css";
  * What a `NavListItem` can render: a link, a button for switching views, or a component that renders an anchor, such
  * as a router's link
  */
-// `never` props accept a component whatever props it requires
-export type NavListItemElement = "a" | "button" | JSXElementConstructor<never>;
+export type NavListItemElement = LinkOrButtonElement;
 
 interface NavListItemOwnProps {
   /**
@@ -39,22 +39,6 @@ interface NavListItemElementOwnProps<E extends NavListItemElement> {
   className?: string;
 }
 
-// The props one native element has and the other lacks, typed never so an `as` that may be either rejects them
-type PropsOnlyOn<Element extends "a" | "button", Other extends "a" | "button"> = {
-  [Name in Exclude<keyof ComponentPropsWithRef<Element>, keyof ComponentPropsWithRef<Other>>]?: never;
-};
-
-// ComponentPropsWithRef<E> cannot be used: it requires an ElementType, which a component with `never` props is not
-type NavListItemElementProps<E extends NavListItemElement> =
-  E extends JSXElementConstructor<infer Props>
-    ? Props
-    : E extends "button"
-      ? ComponentPropsWithRef<"button"> & PropsOnlyOn<"a", "button">
-      : ComponentPropsWithRef<"a"> & PropsOnlyOn<"button", "a">;
-
-// Omit on its own keeps only the props every member of a union has, which loses a component's union props
-type OmitFromEach<Props, Name extends PropertyKey> = Props extends unknown ? Omit<Props, Name> : never;
-
 /**
  * Props for `NavListItem`: `children` and `trailing` plus every other prop of the link, button or component given in
  * `as`, except `dangerouslySetInnerHTML`. When `as` may be either a link or a button, only props both accept are
@@ -66,10 +50,7 @@ export type NavListItemProps<E extends NavListItemElement = "a"> =
 
 type NavListItemPropsFor<E extends NavListItemElement> = NavListItemOwnProps &
   NavListItemElementOwnProps<E> &
-  OmitFromEach<
-    NavListItemElementProps<E>,
-    "dangerouslySetInnerHTML" | keyof NavListItemOwnProps | keyof NavListItemElementOwnProps<E>
-  >;
+  LinkOrButtonProps<E, "dangerouslySetInnerHTML" | keyof NavListItemOwnProps | keyof NavListItemElementOwnProps<E>>;
 
 /**
  * One item in a `NavList`. Every prop but `children` and `trailing` goes to the link, button or component given in

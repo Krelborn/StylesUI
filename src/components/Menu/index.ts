@@ -3,7 +3,7 @@ export type { MenuOverlayProps, MenuProps } from "./Menu";
 export { MenuGroup } from "./MenuGroup";
 export type { MenuGroupProps } from "./MenuGroup";
 export { MenuItem } from "./MenuItem";
-export type { MenuItemProps } from "./MenuItem";
+export type { MenuItemElement, MenuItemProps } from "./MenuItem";
 export { MenuSeparator } from "./MenuSeparator";
 export type { MenuSeparatorProps } from "./MenuSeparator";
 export { useMenu } from "./useMenu";

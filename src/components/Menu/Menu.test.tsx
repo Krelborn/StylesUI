@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { JSX, MouseEvent } from "react";
+import type { ComponentPropsWithRef, JSX, MouseEvent } from "react";
 import { useState } from "react";
-import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
+import { Box } from "../Box";
 import { Button } from "../Button";
 import { MoreHorizontalIcon, RefreshIcon } from "../Icon";
 import { IconButton } from "../IconButton";
@@ -18,6 +19,10 @@ import type { UseMenuOptions } from "./useMenu";
 import { useMenu } from "./useMenu";
 
 describe("Menu", () => {
+  afterEach(() => {
+    window.location.hash = "";
+  });
+
   it("must point the trigger at the menu when it renders", () => {
     render(<RowActions />);
 
@@ -441,6 +446,90 @@ describe("Menu", () => {
     expect(() => render(<MenuGroup>Orphan</MenuGroup>)).toThrow(MissingContextError);
   });
 
+  it("must render a link with the menuitem role when an item's as is a", () => {
+    render(<LinkMenu />);
+
+    expect(elements.item("Help").tagName).toBe("A");
+    expect(elements.item("Help")).toHaveAttribute("href", "#help");
+    expect(elements.item("Help")).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("must pass the item's role and props to a component given in as", () => {
+    render(<LinkMenu />);
+
+    expect(elements.item("Settings").tagName).toBe("A");
+    expect(elements.item("Settings")).toHaveAttribute("href", "#/settings");
+    expect(elements.item("Settings")).toHaveAttribute("tabindex", "-1");
+  });
+
+  it("must follow a link item and close the menu when it is clicked", async () => {
+    const user = userEvent.setup();
+    render(<LinkMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.item("Help"));
+
+    expect(window.location.hash).toBe("#help");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must follow a link item when Space is pressed on it", async () => {
+    const user = userEvent.setup();
+    render(<LinkMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Settings").focus();
+
+    await user.keyboard(" ");
+
+    expect(window.location.hash).toBe("#/settings");
+  });
+
+  it("must not follow a disabled link item when it is clicked", async () => {
+    const user = userEvent.setup();
+    render(<LinkMenu />);
+    openAsBrowser(elements.menu);
+
+    await user.click(elements.item("Billing"));
+
+    expect(window.location.hash).not.toBe("#billing");
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must reject a link's props when an item's as is button", () => {
+    render(
+      <BareMenu>
+        {/* @ts-expect-error a button has no href */}
+        <MenuItem as="button" href="#help">
+          Help
+        </MenuItem>
+      </BareMenu>
+    );
+
+    expect(elements.item("Help")).toBeInTheDocument();
+  });
+
+  it("must reject an element other than a link or button when one is given in as", () => {
+    render(
+      <BareMenu>
+        {/* @ts-expect-error a menu item renders a link, a button or a component, never another element */}
+        <MenuItem as="div">Help</MenuItem>
+      </BareMenu>
+    );
+
+    expect(elements.item("Help")).toBeInTheDocument();
+  });
+
+  it("must require a component's own props when one is given in as", () => {
+    render(
+      <BareMenu>
+        {/* @ts-expect-error RouterLink requires to */}
+        <MenuItem as={RouterLink}>Settings</MenuItem>
+      </BareMenu>
+    );
+
+    expect(elements.item("Settings")).toBeInTheDocument();
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -586,6 +675,47 @@ function GroupedMenu(): JSX.Element {
           <MenuItem>Name</MenuItem>
           <MenuItem>Size</MenuItem>
         </MenuGroup>
+      </Menu>
+    </>
+  );
+}
+
+interface RouterLinkProps extends Omit<ComponentPropsWithRef<"a">, "href"> {
+  /**
+   * Route to navigate to, in place of `href`
+   */
+  to: string;
+}
+
+/**
+ * Stand-in for a hash router's link
+ */
+function RouterLink({ children, to, ...rest }: RouterLinkProps): JSX.Element {
+  return (
+    <Box {...rest} as="a" href={`#${to}`}>
+      {children}
+    </Box>
+  );
+}
+
+function LinkMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem as="a" href="#help">
+          Help
+        </MenuItem>
+        <MenuItem as={RouterLink} to="/settings">
+          Settings
+        </MenuItem>
+        <MenuItem as="a" disabled={true} href="#billing">
+          Billing
+        </MenuItem>
       </Menu>
     </>
   );

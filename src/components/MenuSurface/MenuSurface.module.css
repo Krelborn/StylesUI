@@ -61,12 +61,14 @@
 }
 
 .item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--sui-space-2, 0.5rem);
   inline-size: 100%;
   min-block-size: 2rem;
   padding: var(--sui-space-1, 0.25rem) var(--sui-space-2, 0.5rem);
+  padding-inline-start: calc(var(--sui-space-2, 0.5rem) + var(--_sui-menu-leading-column, 0px));
   border: 0;
   border-radius: var(--sui-radius-md, 4px);
   background-color: transparent;
@@ -97,6 +99,8 @@
 
 /* The disabled colour is the text mixed to half strength, not opacity, which would dim the focus ring too */
 .item[aria-disabled="true"] {
+  --_sui-menu-part-opacity: 0.5;
+
   color: color-mix(in srgb, var(--sui-color-text, #111827) 50%, transparent);
   cursor: not-allowed;
 }
@@ -110,18 +114,22 @@
   color: var(--sui-color-danger-text, #b91c1c);
 }
 
-/* Once any item in this menu has a leading slot, the other items and the group labels start after where it would be */
-.menu:has(.leading) :is(.item:not(:has(> .leading)), .groupLabel) {
-  padding-inline-start: calc(var(--sui-space-2, 0.5rem) * 2 + 1rem);
+/* Once any item in this menu has a leading slot, every label starts after the column the slots sit in */
+.menu:has(.leading) {
+  --_sui-menu-leading-column: calc(1rem + var(--sui-space-2, 0.5rem));
 }
 
 .leading {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--sui-space-2, 0.5rem);
   display: grid;
-  flex: none;
   place-items: center;
   inline-size: 1rem;
   block-size: 1rem;
+  margin-block: auto;
   color: var(--sui-color-text-muted, #4b5563);
+  opacity: var(--_sui-menu-part-opacity, 1);
 }
 
 .item[data-tone="danger"] .leading {
@@ -142,6 +150,7 @@
 
 .description {
   color: var(--sui-color-text-muted, #4b5563);
+  opacity: var(--_sui-menu-part-opacity, 1);
   font-size: var(--sui-font-size-xs, 0.75rem);
   overflow-wrap: anywhere;
 }
@@ -154,10 +163,7 @@
   font-size: var(--sui-font-size-xs, 0.75rem);
   letter-spacing: 0.04em;
   white-space: nowrap;
-}
-
-.item[aria-disabled="true"] :is(.leading, .description, .trailing) {
-  opacity: 0.5;
+  opacity: var(--_sui-menu-part-opacity, 1);
 }
 
 .group {
@@ -168,6 +174,7 @@
 
 .groupLabel {
   padding: var(--sui-space-2, 0.5rem) var(--sui-space-2, 0.5rem) var(--sui-space-1, 0.25rem);
+  padding-inline-start: calc(var(--sui-space-2, 0.5rem) + var(--_sui-menu-leading-column, 0px));
   color: var(--sui-color-text-muted, #4b5563);
   font-size: var(--sui-font-size-xs, 0.75rem);
   font-weight: var(--sui-font-weight-bold, 700);

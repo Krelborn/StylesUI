@@ -66,6 +66,7 @@ export type { ListboxOptionProps, ListboxProps } from "./components/Listbox";
 export { Menu, MenuGroup, MenuItem, MenuSeparator, useMenu } from "./components/Menu";
 export type {
   MenuGroupProps,
+  MenuItemElement,
   MenuItemProps,
   MenuOverlayProps,
   MenuProps,
