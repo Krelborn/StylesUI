@@ -311,6 +311,17 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("must move focus to the submenu when its focused item is removed", async () => {
+    const user = userEvent.setup();
+    render(<DismissibleSubmenuMenu />);
+    await openSubmenu(user);
+
+    await user.click(elements.item("Dismiss"));
+
+    await waitFor(() => expect(elements.submenu("Move to")).toHaveFocus());
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+  });
+
   it.each([
     { from: "Archive", typed: "d", to: "Delete" },
     { from: "Delete", typed: "a", to: "Archive" },
@@ -1033,6 +1044,31 @@ function DismissibleMenu(): JSX.Element {
       <Menu {...menu.getMenuProps()}>
         <MenuItem>Edit</MenuItem>
         {!dismissed && <MenuItem onClick={dismiss}>Dismiss</MenuItem>}
+      </Menu>
+    </>
+  );
+}
+
+function DismissibleSubmenuMenu(): JSX.Element {
+  const [dismissed, setDismissed] = useState(false);
+  const menu = useMenu({ defaultOpen: true });
+
+  function dismiss(event: MouseEvent<HTMLButtonElement>): void {
+    event.preventDefault();
+    setDismissed(true);
+  }
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <Submenu label="Move to">
+          <MenuItem>Inbox</MenuItem>
+          {!dismissed && <MenuItem onClick={dismiss}>Dismiss</MenuItem>}
+        </Submenu>
       </Menu>
     </>
   );

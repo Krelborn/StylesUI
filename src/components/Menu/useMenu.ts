@@ -298,23 +298,47 @@ function focusOnOpening(menu: HTMLElement, openingFocus: OpeningFocus): void {
 }
 
 /**
- * Keeps focus inside a menu when the focused item is removed from it, by moving focus to the menu itself
+ * Keeps focus inside a menu when the focused item is removed from it or from one of its submenus, by moving focus to
+ * the innermost open menu the item was removed from
  *
  * @param menu the open menu
  * @returns the observer, to disconnect when the menu closes
  */
 function watchRemovals(menu: HTMLElement): MutationObserver {
-  const watcher = new MutationObserver(() => {
+  const watcher = new MutationObserver((records) => {
     const focused = menu.ownerDocument.activeElement;
 
     if ((focused === null || focused === menu.ownerDocument.body) && menu.matches(":popover-open")) {
-      menu.focus();
+      const removedFrom = records.findLast((record) => record.removedNodes.length > 0)?.target;
+
+      (openMenuAround(removedFrom, menu) ?? menu).focus();
     }
   });
 
   watcher.observe(menu, { childList: true, subtree: true });
 
   return watcher;
+}
+
+/**
+ * Finds the innermost open menu around a node
+ *
+ * @param node the node to start from
+ * @param root the outermost menu to look in
+ * @returns the open menu, or undefined when no menu inside `root` around the node is open
+ */
+function openMenuAround(node: Node | undefined, root: HTMLElement): HTMLElement | undefined {
+  let candidate = node instanceof Element ? node.closest<HTMLElement>('[role="menu"]') : null;
+
+  while (candidate !== null && root.contains(candidate)) {
+    if (candidate.matches(":popover-open")) {
+      return candidate;
+    }
+
+    candidate = candidate.parentElement?.closest<HTMLElement>('[role="menu"]') ?? null;
+  }
+
+  return undefined;
 }
 
 /**
