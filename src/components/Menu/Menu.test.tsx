@@ -94,6 +94,25 @@ describe("Menu", () => {
     expect(elements.item("Edit")).toHaveFocus();
   });
 
+  it.each([
+    { description: "a secondary press", releasedOn: "trigger", keys: "MouseRight" },
+    { description: "a press released off the trigger", releasedOn: "page", keys: "MouseLeft" },
+  ])("must focus the first item when the keyboard opens the menu after $description", async ({ keys, releasedOn }) => {
+    const user = userEvent.setup();
+    render(<RowActions />);
+    elements.trigger.focus();
+    await user.pointer([
+      { keys: `[${keys}>]`, target: elements.trigger },
+      { target: releasedOn === "trigger" ? elements.trigger : document.body },
+      { keys: `[/${keys}]` },
+    ]);
+
+    await user.keyboard("{Enter}");
+    openAsBrowser(elements.menu);
+
+    expect(elements.item("Edit")).toHaveFocus();
+  });
+
   it("must focus the first item when the parent opens a controlled menu", async () => {
     const user = userEvent.setup();
     render(<ControlledRowActions />);
@@ -369,6 +388,20 @@ describe("Menu", () => {
 
     expect(elements.item("Fix the build")).toHaveFocus();
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must choose the focused item when Space is pressed in a menu reopened straight after a query", async () => {
+    const { user } = setUpTest();
+    render(<TypeAheadMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Archive").focus();
+    await user.keyboard("d");
+    closeAsBrowser(elements.menu);
+    openAsBrowser(elements.menu);
+
+    await user.keyboard(" ");
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
   });
 
   it("must choose the focused item when Space is pressed after a query has ended", async () => {

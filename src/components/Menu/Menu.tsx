@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { JSX, KeyboardEvent, PointerEvent, ToggleEventHandler } from "react";
+import type { JSX, KeyboardEvent, PointerEvent, ToggleEvent, ToggleEventHandler } from "react";
 import { useRef } from "react";
 
 import type { TypeAheadQuery } from "../../collections";
@@ -107,6 +107,7 @@ export function Menu({
   density = "default",
   onKeyDown,
   onPointerMove,
+  onToggle,
   ...rest
 }: MenuProps): JSX.Element {
   const typeAheadQueryRef = useRef<TypeAheadQuery | null>(null);
@@ -122,6 +123,15 @@ export function Menu({
   function handlePointerMove(event: PointerEvent<HTMLDivElement>): void {
     onPointerMove?.(event);
     pointer.handlePointerMove(event);
+  }
+
+  function handleToggle(event: ToggleEvent<HTMLDivElement>): void {
+    onToggle(event);
+
+    // The menu stays mounted while closed, so a query typed before it closed would otherwise carry into its next opening
+    if (event.newState === "closed" && event.target === event.currentTarget) {
+      typeAheadQueryRef.current = null;
+    }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
@@ -204,6 +214,7 @@ export function Menu({
         className={clsx(styles.menu, className)}
         onKeyDown={handleKeyDown}
         onPointerMove={handlePointerMove}
+        onToggle={handleToggle}
         popover="auto"
         role="menu"
         // A long menu scrolls, and a scrolling region must be focusable; focus is already inside an open menu, and Tab

@@ -176,6 +176,9 @@ export function useMenu({
   }
 
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLElement>): void {
+    // A key pressed on the trigger makes the next click its own, after a press that never clicked
+    pressedByPointerRef.current = false;
+
     const openingFocus = triggerKeyFocus[event.key];
     const menu = event.currentTarget.ownerDocument.getElementById(menuId);
 
@@ -193,8 +196,8 @@ export function useMenu({
     }
   }
 
-  function handleTriggerPointerDown(): void {
-    pressedByPointerRef.current = true;
+  function handleTriggerPointerDown(event: PointerEvent<HTMLElement>): void {
+    pressedByPointerRef.current = event.button === 0;
   }
 
   function handleMenuToggle(event: ToggleEvent<HTMLElement>): void {
