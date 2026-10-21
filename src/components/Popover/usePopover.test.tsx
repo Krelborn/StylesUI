@@ -1,4 +1,4 @@
-import { act, fireEvent, render, renderHook, screen } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX, RefObject } from "react";
 import { createRef, memo, useRef, useState } from "react";
@@ -331,6 +331,108 @@ describe("usePopover", () => {
     expect(elements.trigger).toHaveFocus();
   });
 
+  it.each([
+    { name: "an uncontrolled", options: { defaultOpen: true } },
+    { name: "a controlled", options: { open: true } },
+  ])("must stay open and report nothing when a popover nested inside $name popover closes", ({ options }) => {
+    const onOpenChange = vi.fn();
+    render(<NestingPopover {...options} onOpenChange={onOpenChange} />);
+    openAsBrowser(elements.nested);
+
+    closeAsBrowser(elements.nested);
+
+    expect(elements.popover).toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    { name: "an uncontrolled", options: {} },
+    { name: "a controlled", options: { open: false } },
+  ])("must stay closed and report nothing when a popover nested inside $name popover opens", ({ options }) => {
+    const onOpenChange = vi.fn();
+    render(<NestingPopover {...options} onOpenChange={onOpenChange} />);
+
+    const notCancelled = openAsBrowser(elements.nested);
+
+    expect(notCancelled).toBe(true);
+    expect(elements.popover).not.toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("must leave focus in a popover nested inside when it opens", () => {
+    render(<NestingPopover defaultOpen={true} />);
+    elements.nested.showPopover();
+    elements.fix.focus();
+
+    fireEvent(elements.nested, toggleEvent("toggle", "open"));
+
+    expect(elements.fix).toHaveFocus();
+  });
+
+  it("must keep focus where the browser returns it when a popover nested inside closes with focus inside it", () => {
+    render(<NestingPopover defaultOpen={true} />);
+    openAsBrowser(elements.nested);
+    elements.fix.focus();
+
+    closeAsBrowser(elements.nested, elements.details);
+
+    expect(elements.details).toHaveFocus();
+  });
+
+  it("must return focus to the trigger when an item in a popover nested inside calls close with focus lost to the page", () => {
+    render(<NestingPopover defaultOpen={true} />);
+    openAsBrowser(elements.nested);
+    elements.fix.focus();
+    elements.fix.blur();
+
+    // fireEvent, unlike userEvent, does not focus the button, as WebKit does not. Hiding the outer popover then hides
+    // the nested one first, and each beforetoggle comes before either toggle.
+    fireEvent.click(elements.fix);
+    fireEvent(elements.nested, toggleEvent("beforetoggle", "closed"));
+    fireEvent(elements.popover, toggleEvent("beforetoggle", "closed"));
+    elements.nested.hidePopover();
+    fireEvent(elements.nested, toggleEvent("toggle", "closed"));
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+
+    expect(elements.trigger).toHaveFocus();
+  });
+
+  it("must stay open and report nothing when the tooltip of an icon button inside the popover shows and hides", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<NestingPopover defaultOpen={true} onOpenChange={onOpenChange} />);
+
+    await user.hover(elements.copy);
+    const tooltip = await screen.findByRole("tooltip");
+    fireEvent(tooltip, toggleEvent("toggle", "open"));
+    await user.unhover(elements.copy);
+    await waitFor(() => {
+      expect(tooltip).not.toBeVisible();
+    });
+    fireEvent(tooltip, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  it("must stay open and report nothing when a disclosure inside the popover opens and closes", async () => {
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+    render(<NestingPopover defaultOpen={true} onOpenChange={onOpenChange} />);
+
+    await user.click(elements.disclosureSummary);
+    fireEvent(elements.disclosure, toggleEvent("toggle", "open"));
+    await user.click(elements.disclosureSummary);
+    fireEvent(elements.disclosure, toggleEvent("toggle", "closed"));
+
+    expect(elements.popover).toBeVisible();
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it("must run the consumer's trigger handler when one is given", async () => {
     const user = userEvent.setup();
     render(<ClickCountingPopover />);
@@ -483,6 +585,32 @@ function ConfirmationPopover({ focusesCancel = true, triggerRef, ...options }: C
 }
 
 /**
+ * A popover holding a button, a popover of its own, as a menu holds a submenu, an icon button with its tooltip and a
+ * disclosure. Details takes focus as the outer popover opens, and Fix, in the nested popover, closes the outer one.
+ */
+function NestingPopover(options: UsePopoverOptions): JSX.Element {
+  const details = useRef<HTMLButtonElement>(null);
+  const popover = usePopover({ ...options, initialFocus: details });
+
+  return (
+    <>
+      <Button {...popover.getTriggerProps()}>2 problems</Button>
+      <Popover {...popover.getOverlayProps()} data-testid="popover">
+        <Button ref={details}>Details</Button>
+        <div popover="auto" data-testid="nested">
+          <Button onClick={popover.close}>Fix</Button>
+        </div>
+        <IconButton label="Copy">!</IconButton>
+        <details>
+          <summary>More</summary>
+          <Text as="p">Checks run on every push</Text>
+        </details>
+      </Popover>
+    </>
+  );
+}
+
+/**
  * A popover rendered before its trigger, holding a button that hides it through `popovertarget` too
  */
 function PopoverBeforeTrigger(): JSX.Element {
@@ -543,6 +671,24 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
 }
 
 /**
+ * Opens a popover as a browser does: `beforetoggle`, the show unless it was cancelled, then `toggle`. jsdom fires
+ * neither event.
+ *
+ * @param popover the popover element
+ * @returns false when a `beforetoggle` handler cancelled the opening
+ */
+function openAsBrowser(popover: HTMLElement): boolean {
+  const notCancelled = fireEvent(popover, toggleEvent("beforetoggle", "open"));
+
+  if (notCancelled) {
+    popover.showPopover();
+    fireEvent(popover, toggleEvent("toggle", "open"));
+  }
+
+  return notCancelled;
+}
+
+/**
  * Closes a popover as a browser does, on Escape or once `close()` has asked it to: `beforetoggle`, the hide, then
  * `toggle`. jsdom fires neither event, and never returns focus as it hides a popover.
  *
@@ -584,8 +730,26 @@ const elements = {
   get cancel(): HTMLElement {
     return screen.getByRole("button", { name: "Cancel" });
   },
+  get copy(): HTMLElement {
+    return screen.getByRole("button", { name: "Copy" });
+  },
+  get details(): HTMLElement {
+    return screen.getByRole("button", { name: "Details" });
+  },
+  get disclosure(): HTMLElement {
+    return screen.getByRole("group");
+  },
+  get disclosureSummary(): HTMLElement {
+    return screen.getByText("More");
+  },
   get elsewhere(): HTMLElement {
     return screen.getByRole("button", { name: "Elsewhere" });
+  },
+  get fix(): HTMLElement {
+    return screen.getByRole("button", { name: "Fix" });
+  },
+  get nested(): HTMLElement {
+    return screen.getByTestId("nested");
   },
   get rename(): HTMLElement {
     return screen.getByRole("button", { name: "Rename" });
