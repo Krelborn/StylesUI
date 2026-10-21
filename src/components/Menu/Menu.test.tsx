@@ -11,7 +11,9 @@ import { IconButton } from "../IconButton";
 import { Text } from "../Text";
 
 import { Menu } from "./Menu";
+import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
+import { MenuSeparator } from "./MenuSeparator";
 import type { UseMenuOptions } from "./useMenu";
 import { useMenu } from "./useMenu";
 
@@ -400,6 +402,45 @@ describe("Menu", () => {
     expect(elements.item("Rename…")).toHaveFocus();
   });
 
+  it("must name a group by its label when it has one", () => {
+    render(<GroupedMenu />);
+
+    expect(screen.getByRole("group", { name: "Sort by" })).toContainElement(elements.item("Name"));
+  });
+
+  it("must render a group without a name when it has no label", () => {
+    render(<GroupedMenu />);
+
+    expect(screen.getByRole("group", { name: "" })).toContainElement(elements.item("Edit"));
+  });
+
+  it("must separate items with a separator when one is given", () => {
+    render(<GroupedMenu />);
+
+    expect(screen.getByRole("separator")).toBeInTheDocument();
+  });
+
+  it.each([
+    { from: "Duplicate", key: "{ArrowDown}", to: "Name" },
+    { from: "Name", key: "{ArrowUp}", to: "Duplicate" },
+    { from: "Edit", key: "s", to: "Size" },
+  ])("must move focus from $from to $to across groups when $key is pressed", async ({ from, key, to }) => {
+    const { user } = setUpTest();
+    render(<GroupedMenu />);
+    openAsBrowser(elements.menu);
+    elements.item(from).focus();
+
+    await user.keyboard(key);
+
+    expect(elements.item(to)).toHaveFocus();
+  });
+
+  it("must throw MissingContextError when a group renders outside a Menu", () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => render(<MenuGroup>Orphan</MenuGroup>)).toThrow(MissingContextError);
+  });
+
   it("must reject role when an item is given one", () => {
     render(
       <BareMenu>
@@ -523,6 +564,29 @@ function RichMenu({ onExport }: RichMenuProps): JSX.Element {
         <MenuItem tone="danger">Delete</MenuItem>
       </Menu>
       <Text id="duplicate-note">Keeps its sharing</Text>
+    </>
+  );
+}
+
+function GroupedMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuGroup>
+          <MenuItem>Edit</MenuItem>
+          <MenuItem>Duplicate</MenuItem>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuGroup label="Sort by">
+          <MenuItem>Name</MenuItem>
+          <MenuItem>Size</MenuItem>
+        </MenuGroup>
+      </Menu>
     </>
   );
 }

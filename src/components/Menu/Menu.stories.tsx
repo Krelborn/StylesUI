@@ -8,13 +8,15 @@ import { trustedInput } from "../../test/trustedInput";
 import { Box } from "../Box";
 import { Button } from "../Button";
 import { Cluster } from "../Cluster";
-import { AddIcon, DeleteIcon, MoreHorizontalIcon, SendIcon } from "../Icon";
+import { AddIcon, DeleteIcon, MoreHorizontalIcon, RefreshIcon, SendIcon } from "../Icon";
 import { IconButton } from "../IconButton";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
 
 import { Menu } from "./Menu";
+import { MenuGroup } from "./MenuGroup";
 import { MenuItem } from "./MenuItem";
+import { MenuSeparator } from "./MenuSeparator";
 import { useMenu } from "./useMenu";
 
 /**
@@ -126,10 +128,37 @@ function labelStart(item: HTMLElement): number {
   return label?.getBoundingClientRect().left ?? Number.NaN;
 }
 
+/**
+ * View options in two groups, the second named by its label, with a rule between them
+ */
+function ViewMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "16rem" }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        View
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuGroup>
+          <MenuItem icon={<RefreshIcon />}>Refresh</MenuItem>
+          <MenuItem>Open in new window</MenuItem>
+        </MenuGroup>
+        <MenuSeparator />
+        <MenuGroup label="Sort by">
+          <MenuItem>Name</MenuItem>
+          <MenuItem>Date modified</MenuItem>
+          <MenuItem>Size</MenuItem>
+        </MenuGroup>
+      </Menu>
+    </Box>
+  );
+}
+
 const meta = {
   title: "Overlays/Menu",
   component: Menu,
-  subcomponents: { MenuItem },
+  subcomponents: { MenuGroup, MenuItem, MenuSeparator },
   args: {
     anchorName: "--sui-overlay-story",
     close: fn(),
@@ -327,5 +356,29 @@ export const HighlightContrast: Story = {
         await expect(textContrast(part), `${item.textContent}: ${part.textContent}`).toBeGreaterThanOrEqual(4.5);
       }
     }
+  },
+};
+
+/**
+ * `MenuGroup` gathers related items, named by its label when it has one, and `MenuSeparator` rules groups apart. The
+ * group label lines up with the item labels, and the arrow keys move across groups as through one list.
+ */
+export const GroupsAndSeparators: Story = {
+  render: () => <ViewMenu />,
+  play: async ({ canvas }) => {
+    const sortBy = await canvas.findByRole("group", { name: "Sort by" });
+    const name = canvas.getByRole("menuitem", { name: "Name" });
+    const label = canvas.getByText("Sort by");
+
+    await waitFor(() => expect(sortBy).toBeVisible());
+    await expect(sortBy).toContainElement(name);
+    await expect(canvas.getByRole("separator")).toBeVisible();
+    await expect(
+      label.getBoundingClientRect().left + parseFloat(getComputedStyle(label).paddingInlineStart)
+    ).toBeCloseTo(labelStart(name), 0);
+
+    canvas.getByRole("menuitem", { name: "Open in new window" }).focus();
+    await userEvent.keyboard("{ArrowDown}");
+    await expect(name).toHaveFocus();
   },
 };

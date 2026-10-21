@@ -1,6 +1,10 @@
 export { Menu } from "./Menu";
 export type { MenuOverlayProps, MenuProps } from "./Menu";
+export { MenuGroup } from "./MenuGroup";
+export type { MenuGroupProps } from "./MenuGroup";
 export { MenuItem } from "./MenuItem";
 export type { MenuItemProps } from "./MenuItem";
+export { MenuSeparator } from "./MenuSeparator";
+export type { MenuSeparatorProps } from "./MenuSeparator";
 export { useMenu } from "./useMenu";
 export type { UseMenuOptions, UseMenuResult } from "./useMenu";

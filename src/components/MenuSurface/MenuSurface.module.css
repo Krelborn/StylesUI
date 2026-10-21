@@ -110,8 +110,8 @@
   color: var(--sui-color-danger-text, #b91c1c);
 }
 
-/* Once any item in this menu has a leading slot, the others start their labels after where it would be */
-.menu:has(.leading) .item:not(:has(> .leading)) {
+/* Once any item in this menu has a leading slot, the other items and the group labels start after where it would be */
+.menu:has(.leading) :is(.item:not(:has(> .leading)), .groupLabel) {
   padding-inline-start: calc(var(--sui-space-2, 0.5rem) * 2 + 1rem);
 }
 
@@ -158,6 +158,26 @@
 
 .item[aria-disabled="true"] :is(.leading, .description, .trailing) {
   opacity: 0.5;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.groupLabel {
+  padding: var(--sui-space-2, 0.5rem) var(--sui-space-2, 0.5rem) var(--sui-space-1, 0.25rem);
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  font-weight: var(--sui-font-weight-bold, 700);
+}
+
+/* Across the menu's padding as well, so it rules the whole surface */
+.separator {
+  margin: var(--sui-space-1, 0.25rem) calc(var(--sui-space-1, 0.25rem) * -1);
+  border: 0;
+  border-block-start: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
 }
 
 @media (prefers-reduced-motion: reduce) {
