@@ -61,7 +61,7 @@ Renders a `div`, and every other `div` prop goes to it. It omits `as` and `defau
 - `headingLevel: HeadingLevel`: required, as in `NavListGroup`, because only the page outline knows the level.
 - `indicator?: AccordionIndicator`: `"chevron" | "plusMinus"`. Defaults to `chevron`.
 - `onValueChange?: (value: string[]) => void`: called with the new open items when the user opens or closes one, or when find-in-page or a fragment link opens one.
-- `regions?: boolean`: whether each panel is a `region` named by its title, without the description and trailing content the toggle's name also reads. Defaults to `true` for `joined` and `separated` and `false` for `flush`, following WAI-ARIA's warning against more than about six regions that can be open at once.
+- `regions?: boolean`: whether each open panel is a `region` named by its title, without the description and trailing content the toggle's name also reads. Defaults to `true` for `joined` and `separated` and `false` for `flush`, following WAI-ARIA's warning against more than about six regions that can be open at once.
 - `size?: ControlSize`: defaults to `md`.
 - `value?: string[]`: the open items, which makes the accordion controlled. Not accepted with `defaultValue`, typed as `Tabs`' selection is.
 - `variant?: AccordionVariant`: `"flush" | "joined" | "separated"`. Defaults to `flush`.
@@ -98,10 +98,10 @@ Renders a `div` holding the header row and the panel, and every other `div` prop
       </h3>
       <div class="actions">…</div>
     </div>
-    <div aria-labelledby="…-title" class="panel" hidden="until-found" id="…-panel" role="region">…</div>
+    <div class="panel" hidden="until-found" id="…-panel">…</div>
   </div>
   ```
-  The heading is the `h1` to `h6` element `headingLevel` gives, rendered through `Box` rather than `Heading`, whose sizes and weight the toggle would have to undo. The indicator always comes first and the stylesheet moves it after the title in `joined` and `separated`. It is `aria-hidden`, because `aria-expanded` carries the state. `role` and `aria-labelledby` are on the panel only when `regions` is on. The actions wrapper renders only when `actions` has content.
+  The heading is the `h1` to `h6` element `headingLevel` gives, rendered through `Box` rather than `Heading`, whose sizes and weight the toggle would have to undo. The indicator always comes first and the stylesheet moves it after the title in `joined` and `separated`. It is `aria-hidden`, because `aria-expanded` carries the state. `role="region"` and `aria-labelledby` are on the panel only when `regions` is on and the item is open, because a panel hidden until found stays in the accessibility tree, where a closed one would be an empty landmark. The actions wrapper renders only when `actions` has content.
 - **Why not `details` and `summary`.** A heading inside `summary` is exposed inconsistently by screen readers, interactive content inside `summary` is invalid, so actions would have no place, and a `details` element cannot be controlled from React without fighting its own toggling.
 - **Context.** `AccordionContext.ts` sits alone in the `Accordion` folder and is read through `useAccordionContext`. An `AccordionItem` outside an `Accordion` throws `MissingContextError`. A nested `Accordion` provides its own context, so its items read only it.
 - **Ids.** Both ids are built from a `useId` base and `idSegment(value)`, in `accordionIds.ts`, as `tabIds.ts` does for `Tabs`.
@@ -220,7 +220,7 @@ export function AccordionItem({
 ## Testing Strategy
 
 - **Unit (jsdom), `Accordion.test.tsx`.**
-  - Markup: a heading at `headingLevel` holds a `button` with `type="button"`, `aria-expanded` and `aria-controls` pointing at its panel; actions sit outside the heading; the panel is a region named by its title only when `regions` is on, including the per-variant default.
+  - Markup: a heading at `headingLevel` holds a `button` with `type="button"`, `aria-expanded` and `aria-controls` pointing at its panel; actions sit outside the heading; the panel is a region named by its title only when `regions` is on, including the per-variant default, and only while its item is open.
   - Ids: values with spaces, quotes and unpaired surrogates give unique, valid ids.
   - Uncontrolled and controlled opening and closing, `onValueChange`'s argument in each case, and `exclusive`.
   - `beforematch`: dispatching it on a closed panel, after removing `hidden` as the browser does, opens the item; a controlled parent that ignores it gets `hidden="until-found"` back.
@@ -251,7 +251,7 @@ export function AccordionItem({
 ### Semantics and behaviour
 
 1. Each item's toggle is a native `button` inside a heading at `headingLevel`, with `aria-expanded` matching its state and `aria-controls` naming its panel. Actions are outside the heading. Proven by unit tests.
-2. Panels are `region`s named by their toggle when `regions` is on, by default in `joined` and `separated` and not in `flush`. Proven by unit tests.
+2. Open panels are `region`s named by their title when `regions` is on, by default in `joined` and `separated` and not in `flush`. Proven by unit tests.
 3. A click, Enter or Space toggles an enabled item; with `exclusive` opening one closes the others; controlled accordions change only through `value`, with `onValueChange` called as the API section says. Proven by unit tests.
 4. A disabled item stays focusable, never opens or closes, and its closed panel is skipped by find-in-page. Proven by unit tests.
 5. A closed enabled panel has `hidden="until-found"`, and `beforematch` opens its item, respecting `exclusive` and a controlled parent. A fragment link into a closed panel opens it in Chromium. Proven by unit tests and `FragmentLink`.

@@ -50,7 +50,7 @@ interface AccordionOwnProps {
   onValueChange?: (value: string[]) => void;
 
   /**
-   * Whether each panel is a landmark region named by its title. Defaults to `true` for `joined` and `separated` and
+   * Whether each open panel is a landmark region named by its title. Defaults to `true` for `joined` and `separated` and
    * `false` for `flush`, whose many open sections would crowd the page's landmarks.
    */
   regions?: boolean;

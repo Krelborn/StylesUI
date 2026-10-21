@@ -506,7 +506,7 @@ export const Sizes: Story = {
 
 /**
  * Joined items for a settings page: one bordered box, a heading-font title with a description, and a chevron after the
- * title that turns up as the item opens. Each panel is a region named by its title, and opening one item closes the
+ * title that turns up as the item opens. Each open panel is a region named by its title, and opening one item closes the
  * other. A panel grows to its content's height as it opens and shrinks away as it closes.
  */
 export const SettingsPage: Story = {
@@ -537,7 +537,7 @@ export const SettingsPage: Story = {
 
 /**
  * Separated cards for rich content on a website. Each card is drawn as a Card is, with a plus in a disc after the
- * title that turns into a minus and fills with the primary colour as the card opens. Each panel is a region named by
+ * title that turns into a minus and fills with the primary colour as the card opens. Each open panel is a region named by
  * its title.
  */
 export const FaqPage: Story = {

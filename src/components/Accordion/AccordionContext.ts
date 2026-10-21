@@ -29,7 +29,7 @@ export interface AccordionContextValue {
   openValues: readonly string[];
 
   /**
-   * Whether each panel is a region named by its title
+   * Whether each open panel is a region named by its title
    */
   regions: boolean;
 

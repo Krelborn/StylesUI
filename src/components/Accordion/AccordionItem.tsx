@@ -87,7 +87,8 @@ export function AccordionItem({
   const itemTitleId = titleId(accordion.baseId, value);
   const hasOpened = useHasOpened(open);
   const panelRef = useFindablePanel({ disabled, onMatch: () => accordion.toggle(value), open });
-  const regionProps = accordion.regions ? { role: "region", "aria-labelledby": itemTitleId } : {};
+  // A panel hidden until found stays in the accessibility tree, so a closed one would be an empty landmark
+  const regionProps = accordion.regions && open ? { role: "region", "aria-labelledby": itemTitleId } : {};
 
   function handleClick(): void {
     if (!disabled) {

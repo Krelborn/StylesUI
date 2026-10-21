@@ -143,6 +143,17 @@ describe("Accordion", () => {
     expect(screen.getByRole("region", { name: "Fill" })).toHaveTextContent("Fill content");
   });
 
+  it("must make a panel a region only while its item is open when it has regions", async () => {
+    const { render, user } = setUpTest();
+    render({ selection: { defaultValue: ["layout"] }, variant: "joined" });
+
+    const beforeOpening = screen.queryAllByRole("region", { hidden: true }).length;
+    await user.click(elements.toggle("Fill"));
+
+    expect(beforeOpening).toBe(1);
+    expect(screen.getAllByRole("region", { hidden: true })).toHaveLength(2);
+  });
+
   it.each<{ regions: boolean; variant: AccordionVariant }>([
     { regions: true, variant: "flush" },
     { regions: false, variant: "joined" },
