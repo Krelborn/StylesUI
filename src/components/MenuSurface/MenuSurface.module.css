@@ -75,6 +75,7 @@
   color: var(--sui-color-text, #111827);
   font: inherit;
   text-align: start;
+  text-decoration: none;
   cursor: default;
   scroll-margin-block: var(--sui-space-1, 0.25rem);
   transition:
@@ -220,7 +221,8 @@
 
 /*
  * Beside its item, on the side the text runs towards, with its first item level with it: the margins take back the
- * surface's padding and border. Overlay's placement rules match with one class fewer, so these win.
+ * surface's padding and border. Short of room below, it grows upwards from its item's bottom instead. Overlay's
+ * placement rules match with one class fewer, so these win.
  */
 .menu.submenuMenu[data-placement] {
   align-self: normal;
@@ -228,7 +230,11 @@
   margin-block-start: calc((var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px)) * -1);
   margin-inline-start: calc(var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px));
   position-area: span-self-block-end self-inline-end;
-  position-try-fallbacks: flip-inline, --sui-submenu-below;
+  position-try-fallbacks:
+    flip-inline,
+    flip-block,
+    flip-block flip-inline,
+    --sui-submenu-below;
 }
 
 /* With no room on either side, below the item and over the menu it belongs to, so it still fits a narrow viewport */

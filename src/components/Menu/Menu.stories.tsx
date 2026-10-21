@@ -642,6 +642,7 @@ export const Links: Story = {
 
     await waitFor(() => expect(profile).toBeVisible());
     await expect(profile.tagName).toBe("A");
+    await expect(getComputedStyle(profile).textDecorationLine).toBe("none");
     await expect(profile).toHaveAttribute("href", "#profile");
   },
 };

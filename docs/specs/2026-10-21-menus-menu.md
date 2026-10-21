@@ -109,7 +109,7 @@ The writing direction is read from `:dir(rtl)` on the menu.
 ### Placement and size
 
 - The menu opens on `placement` (default `bottom-start`) and flips as any overlay does.
-- A submenu opens on the inline-end side of its item, with its first item level with its item, by offsetting the surface's padding and border. It flips to the inline-start side when there is no room, and with no room on either side, opens below its item over the parent menu (`@position-try`), so it fits a 320px viewport.
+- A submenu opens on the inline-end side of its item, with its first item level with its item, by offsetting the surface's padding and border. It flips to the inline-start side when there is no room, and short of room below its item it grows upwards from the item's bottom edge, as desktop menus do (agreed at Checkpoint C). With no room on either side, it opens below its item over the parent menu (`@position-try`), so it fits a 320px viewport.
 - A menu is at least 12rem wide and at most `min(20rem, 100vw - 2 × --sui-space-2)`. A label longer than that wraps rather than clipping. A menu taller than the room on its side scrolls inside its own box, and a keyboard move scrolls the focused item into view (`block: "nearest"`).
 
 ## Styling
