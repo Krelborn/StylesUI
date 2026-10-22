@@ -1417,7 +1417,7 @@ interface RouterLinkProps extends Omit<ComponentPropsWithRef<"a">, "href"> {
  */
 function RouterLink({ children, to, ...rest }: RouterLinkProps): JSX.Element {
   return (
-    <Box {...rest} as="a" href={`#${to}`}>
+    <Box as="a" href={`#${to}`} {...rest}>
       {children}
     </Box>
   );

@@ -106,7 +106,6 @@ interface ItemElementProps {
   className: string;
   "data-leading": true | undefined;
   "data-tone": "danger" | undefined;
-  href: string | undefined;
   onAuxClick: (event: MouseEvent<HTMLElement>) => void;
   onClick: (event: MouseEvent<HTMLElement>) => void;
   role: "menuitem";
@@ -184,8 +183,12 @@ export function MenuItem<E extends MenuItemElement = "button">({
     }
   }
 
+  // A disabled link has no address, so its context menu cannot open it. A component gets no `href` it was not given,
+  // which would replace the one it builds
+  const linkProps = href === undefined || (disabled && as === "a") ? {} : { href };
   const itemProps: ItemElementProps = {
     ...elementProps,
+    ...linkProps,
     "aria-describedby": item.describedBy,
     "aria-disabled": disabled ? true : undefined,
     "aria-labelledby": item.labelId,
@@ -193,7 +196,6 @@ export function MenuItem<E extends MenuItemElement = "button">({
     className: clsx(styles.item, className),
     "data-leading": item.hasLeading ? true : undefined,
     "data-tone": tone,
-    href: disabled && as === "a" ? undefined : href,
     onAuxClick: handleAuxClick,
     onClick: handleClick,
     role: "menuitem",
