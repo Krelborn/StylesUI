@@ -387,6 +387,15 @@ describe("Menu", () => {
     expect(document.body).toHaveFocus();
   });
 
+  it("must move focus to the menu when the item focused as it opened is removed", async () => {
+    const { rerender } = render(<RemovableFirstItemMenu />);
+    openAsBrowser(elements.menu);
+
+    rerender(<RemovableFirstItemMenu showsEdit={false} />);
+
+    await waitFor(() => expect(elements.menu).toHaveFocus());
+  });
+
   it("must move focus to the menu when the focused item is removed", async () => {
     const user = userEvent.setup();
     render(<DismissibleMenu />);
@@ -1234,6 +1243,21 @@ describe("Menu", () => {
     expect(elements.item("Share")).toHaveFocus();
   });
 
+  it("must keep a submenu open when the pointer leaves the menu within 100ms of reaching another item", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    await user.hover(elements.item("Move to"));
+    act(() => vi.advanceTimersByTime(100));
+    await user.hover(elements.item("Edit"));
+
+    fireEvent.pointerOut(elements.item("Edit"), { relatedTarget: document.body });
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(elements.item("Move to")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must keep a submenu open while the pointer crosses other items towards it", async () => {
     const { user } = setUpTest();
     render(<SubmenuMenu />);
@@ -1697,6 +1721,29 @@ async function openSubmenu(user: ReturnType<typeof userEvent.setup>): Promise<vo
   elements.item("Move to").focus();
   await user.keyboard("{ArrowRight}");
   fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+}
+
+interface RemovableFirstItemMenuProps {
+  /**
+   * Whether Edit, the first item, is rendered
+   */
+  showsEdit?: boolean;
+}
+
+function RemovableFirstItemMenu({ showsEdit = true }: RemovableFirstItemMenuProps): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        {showsEdit && <MenuItem>Edit</MenuItem>}
+        <MenuItem>Duplicate</MenuItem>
+      </Menu>
+    </>
+  );
 }
 
 function NestedPopoverMenu(): JSX.Element {

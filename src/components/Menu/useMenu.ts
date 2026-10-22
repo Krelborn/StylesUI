@@ -212,8 +212,9 @@ export function useMenu({
     removalWatcherRef.current = null;
 
     if (event.newState === "open") {
-      focusOnOpening(menu, openingFocusRef.current);
+      // Watching first, so the watcher sees the focus the opening moves in
       removalWatcherRef.current = watchRemovals(menu);
+      focusOnOpening(menu, openingFocusRef.current);
     }
 
     openingFocusRef.current = "first";

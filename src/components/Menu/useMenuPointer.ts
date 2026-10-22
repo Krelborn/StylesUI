@@ -21,6 +21,11 @@ interface MenuPointer {
   handlePointerMove: (event: PointerEvent<HTMLDivElement>) => void;
 
   /**
+   * Cancels a focus the pointer was waiting to move once it moves onto the page outside the menu and its submenus
+   */
+  handlePointerOut: (event: PointerEvent<HTMLDivElement>) => void;
+
+  /**
    * Lets the pointer cross the menu's other items on its way into a submenu that is open, without closing it
    */
   startPointerGrace: (exit: Point, submenu: HTMLElement) => void;
@@ -29,7 +34,7 @@ interface MenuPointer {
 /**
  * Moves focus in a menu with the pointer, so the pointer and the keyboard share one active item
  *
- * @returns the menu's pointer move handler, and a way for a submenu to start the pointer's grace
+ * @returns the menu's pointer move and out handlers, and a way for a submenu to start the pointer's grace
  */
 export function useMenuPointer(): MenuPointer {
   const graceRef = useRef<Triangle | null>(null);
@@ -91,6 +96,15 @@ export function useMenuPointer(): MenuPointer {
     }
   }
 
+  function handlePointerOut(event: PointerEvent<HTMLDivElement>): void {
+    const next = event.relatedTarget;
+
+    if (next instanceof Node && !event.currentTarget.contains(next)) {
+      graceRef.current = null;
+      cancelFocus();
+    }
+  }
+
   function isHeadingIntoSubmenu(point: Point): boolean {
     return graceRef.current !== null && isInsideTriangle(point, graceRef.current);
   }
@@ -115,7 +129,7 @@ export function useMenuPointer(): MenuPointer {
     }
   }
 
-  return { handlePointerMove, startPointerGrace };
+  return { handlePointerMove, handlePointerOut, startPointerGrace };
 }
 
 /**

@@ -107,6 +107,7 @@ export function Menu({
   density = "default",
   onKeyDown,
   onPointerMove,
+  onPointerOut,
   onToggle,
   ...rest
 }: MenuProps): JSX.Element {
@@ -123,6 +124,11 @@ export function Menu({
   function handlePointerMove(event: PointerEvent<HTMLDivElement>): void {
     onPointerMove?.(event);
     pointer.handlePointerMove(event);
+  }
+
+  function handlePointerOut(event: PointerEvent<HTMLDivElement>): void {
+    onPointerOut?.(event);
+    pointer.handlePointerOut(event);
   }
 
   function handleToggle(event: ToggleEvent<HTMLDivElement>): void {
@@ -222,6 +228,7 @@ export function Menu({
         className={clsx(styles.menu, className)}
         onKeyDown={handleKeyDown}
         onPointerMove={handlePointerMove}
+        onPointerOut={handlePointerOut}
         onToggle={handleToggle}
         popover="auto"
         role="menu"
