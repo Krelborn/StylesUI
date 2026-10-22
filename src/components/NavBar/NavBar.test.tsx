@@ -339,6 +339,63 @@ describe("NavBar", () => {
     expect(screen.getByRole("button", { name: "Reference" })).toHaveAttribute("aria-expanded", "true");
   });
 
+  it.each([
+    { description: "a focusable wrapper around the bar", wrapperTabIndex: -1 },
+    { description: "the page", wrapperTabIndex: undefined },
+  ])(
+    "must close a section when focus moves outside it after a press on its panel's text focused $description",
+    async ({ wrapperTabIndex }) => {
+      const user = userEvent.setup();
+      render(
+        <>
+          <Box tabIndex={wrapperTabIndex}>
+            <NavBar aria-label="Docs">
+              <NavBarMenu label="Reference">
+                <NavBarMenuGroup headingLevel={2} title="Components">
+                  <NavBarMenuItem href="/button">Button</NavBarMenuItem>
+                </NavBarMenuGroup>
+              </NavBarMenu>
+            </NavBar>
+          </Box>
+          <Box as="button" type="button">
+            Search
+          </Box>
+        </>
+      );
+
+      await user.click(screen.getByRole("button", { name: "Reference" }));
+      await user.click(screen.getByRole("heading", { name: "Components" }));
+      await waitATask();
+      act(() => screen.getByRole("button", { name: "Search" }).focus());
+
+      expect(screen.getByRole("button", { name: "Reference" })).toHaveAttribute("aria-expanded", "false");
+    }
+  );
+
+  it("must close a section when a key moves focus on from a wrapper a press on its panel's text focused", async () => {
+    const user = userEvent.setup();
+    render(
+      <Box tabIndex={-1} aria-label="Page">
+        <Box tabIndex={-1} aria-label="Header">
+          <NavBar aria-label="Docs">
+            <NavBarMenu label="Reference">
+              <NavBarMenuGroup headingLevel={2} title="Components">
+                <NavBarMenuItem href="/button">Button</NavBarMenuItem>
+              </NavBarMenuGroup>
+            </NavBarMenu>
+          </NavBar>
+        </Box>
+      </Box>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Reference" }));
+    await user.click(screen.getByRole("heading", { name: "Components" }));
+    await user.keyboard("{Shift}");
+    act(() => screen.getByLabelText("Page").focus());
+
+    expect(screen.getByRole("button", { name: "Reference" })).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must close a section when focus in its panel is lost to the page without a press on a wide bar", async () => {
     const user = userEvent.setup();
     render(<BlogNavBar />);

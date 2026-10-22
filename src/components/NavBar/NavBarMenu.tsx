@@ -77,11 +77,28 @@ export function NavBarMenu({
       }
     };
 
+    // Focus a press sent outside the section moves on from there, out of the section's own events' reach
+    const handleDocumentFocusIn = (event: globalThis.FocusEvent): void => {
+      if (focusLeaves(section, event.target as Element, pressedRef.current) && !isNavBarCollapsed(section)) {
+        closeSection(panelId);
+      }
+    };
+
+    const handleDocumentKeyDown = (): void => {
+      pressedRef.current = false;
+    };
+
     const page = section.ownerDocument;
 
+    page.addEventListener("focusin", handleDocumentFocusIn, true);
+    page.addEventListener("keydown", handleDocumentKeyDown, true);
     page.addEventListener("pointerdown", handleDocumentPointerDown, true);
 
-    return () => page.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+    return () => {
+      page.removeEventListener("focusin", handleDocumentFocusIn, true);
+      page.removeEventListener("keydown", handleDocumentKeyDown, true);
+      page.removeEventListener("pointerdown", handleDocumentPointerDown, true);
+    };
   }, [closeSection, open, panelId]);
 
   function handleButtonClick(event: MouseEvent<HTMLButtonElement>): void {
@@ -93,26 +110,22 @@ export function NavBarMenu({
 
     const section = event.currentTarget;
 
-    if (event.relatedTarget === null) {
-      // Focus is between elements, lost to the page or left with the window, so wait to see where it lands
-      setTimeout(() => {
-        closeUnlessFocusStays(section, section.ownerDocument.activeElement);
-      }, 0);
-    } else {
-      closeUnlessFocusStays(section, event.relatedTarget);
+    // A move to another element is left to the document's focusin; focus lost to the page or left with the window is
+    // found where it lands on the next task
+    if (event.relatedTarget !== null) {
+      return;
     }
-  }
 
-  function closeUnlessFocusStays(section: HTMLElement, focused: Element | null): void {
-    // A press on the panel's text focuses the nearest focusable element around the bar, such as a page's wrapper, or
-    // the page itself
-    const pressedOnText = pressedRef.current && focused?.contains(section) === true;
-    const leaves = focused !== null && !section.contains(focused) && !pressedOnText;
-
-    // Nothing can cover the focused element on a collapsed bar, where the panel pushes the page down
-    if (open && leaves && !isNavBarCollapsed(section)) {
-      closeSection(panelId);
-    }
+    setTimeout(() => {
+      // Nothing can cover the focused element on a collapsed bar, where the panel pushes the page down
+      if (
+        open &&
+        focusLeaves(section, section.ownerDocument.activeElement, pressedRef.current) &&
+        !isNavBarCollapsed(section)
+      ) {
+        closeSection(panelId);
+      }
+    }, 0);
   }
 
   function handlePointerDown(event: PointerEvent<HTMLLIElement>): void {
@@ -175,4 +188,19 @@ export function NavBarMenu({
       </Box>
     </Box>
   );
+}
+
+/**
+ * Tells whether focus has left a section, apart from a press on its panel's text, which focuses the nearest focusable
+ * element around the bar, such as a page's wrapper, or the page itself
+ *
+ * @param section the section
+ * @param focused the element focus moved to
+ * @param pressed whether a press in the section came after the last key
+ * @returns true when focus is outside the section and no press on its text sent it there
+ */
+function focusLeaves(section: Element, focused: Element | null, pressed: boolean): boolean {
+  const pressedOnText = pressed && focused?.contains(section) === true;
+
+  return focused !== null && !section.contains(focused) && !pressedOnText;
 }
