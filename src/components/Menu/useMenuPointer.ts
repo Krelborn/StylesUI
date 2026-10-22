@@ -21,7 +21,7 @@ interface MenuPointer {
   handlePointerMove: (event: PointerEvent<HTMLDivElement>) => void;
 
   /**
-   * Cancels a focus the pointer was waiting to move once it moves onto the page outside the menu and its submenus
+   * Cancels a focus the pointer was waiting to move once it leaves the menu and its submenus, for the page or the window
    */
   handlePointerOut: (event: PointerEvent<HTMLDivElement>) => void;
 
@@ -99,8 +99,9 @@ export function useMenuPointer(): MenuPointer {
   function handlePointerOut(event: PointerEvent<HTMLDivElement>): void {
     const next = event.relatedTarget;
 
-    if (next instanceof Node && !event.currentTarget.contains(next)) {
-      graceRef.current = null;
+    // Null when the pointer leaves the window. The grace stays, since a pointer that comes back decides afresh as it
+    // moves.
+    if (!(next instanceof Node && event.currentTarget.contains(next))) {
       cancelFocus();
     }
   }

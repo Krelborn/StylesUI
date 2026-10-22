@@ -1243,20 +1243,26 @@ describe("Menu", () => {
     expect(elements.item("Share")).toHaveFocus();
   });
 
-  it("must keep a submenu open when the pointer leaves the menu within 100ms of reaching another item", async () => {
-    const { user } = setUpTest();
-    render(<SubmenuMenu />);
-    openAsBrowser(elements.menu);
-    await user.hover(elements.item("Move to"));
-    act(() => vi.advanceTimersByTime(100));
-    await user.hover(elements.item("Edit"));
+  it.each([
+    { description: "the page", relatedTarget: document.body },
+    { description: "the window", relatedTarget: null },
+  ])(
+    "must keep a submenu open when the pointer leaves the menu for $description within 100ms of reaching another item",
+    async ({ relatedTarget }) => {
+      const { user } = setUpTest();
+      render(<SubmenuMenu />);
+      openAsBrowser(elements.menu);
+      await user.hover(elements.item("Move to"));
+      act(() => vi.advanceTimersByTime(100));
+      await user.hover(elements.item("Edit"));
 
-    fireEvent.pointerOut(elements.item("Edit"), { relatedTarget: document.body });
-    act(() => vi.advanceTimersByTime(100));
+      fireEvent.pointerOut(elements.item("Edit"), { relatedTarget });
+      act(() => vi.advanceTimersByTime(100));
 
-    expect(elements.item("Move to")).toHaveFocus();
-    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
-  });
+      expect(elements.item("Move to")).toHaveFocus();
+      expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+    }
+  );
 
   it("must keep a submenu open while the pointer crosses other items towards it", async () => {
     const { user } = setUpTest();
