@@ -249,6 +249,27 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must close a section when a key moves focus from it to a focusable element around the bar", async () => {
+    const user = userEvent.setup();
+    render(
+      <Box tabIndex={0} aria-label="Page">
+        <NavBar aria-label="Main">
+          <NavBarMenu label="Topics">
+            <NavBarMenuItem href="/design">Design</NavBarMenuItem>
+          </NavBarMenu>
+        </NavBar>
+      </Box>
+    );
+
+    await user.click(elements.topics);
+    // jsdom shows the toggle, which Shift+Tab would reach first, so focus moves straight to the wrapper after a key
+    await user.keyboard("{Shift}");
+    act(() => screen.getByLabelText("Page").focus());
+
+    expect(screen.getByLabelText("Page")).toHaveFocus();
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must keep a section open when focus moves from its button into its panel", async () => {
     const user = userEvent.setup();
     render(<BlogNavBar />);
@@ -346,6 +367,51 @@ describe("NavBar", () => {
       expect(elements.topics).toHaveAttribute("aria-expanded", "false");
     }
   );
+
+  it.each(["shell", "frame-locked"])(
+    "must close a section when a link in its panel targets a frame around the page, %s",
+    async (target) => {
+      setUpTestWithFrames();
+      const user = userEvent.setup();
+      render(<SectionWithLink href="/design" target={target} />);
+
+      await user.click(elements.topics);
+      await user.click(screen.getByRole("link", { name: "Design" }));
+
+      expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    }
+  );
+
+  it("must keep a section open when a link in its panel targets a window that is not a frame around the page", async () => {
+    setUpTestWithFrames({ crossOrigin: false });
+    const user = userEvent.setup();
+    render(<SectionWithLink href="/design" target="docs" />);
+
+    await user.click(elements.topics);
+    await user.click(screen.getByRole("link", { name: "Design" }));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must keep a section open when a download link in its panel holds its file in a data URL", async () => {
+    const user = userEvent.setup();
+    render(<SectionWithLink download="notes.txt" href="data:text/plain,Notes" />);
+
+    await user.click(elements.topics);
+    await user.click(screen.getByRole("link", { name: "Design" }));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close a section when a download link in its panel points at another origin, which the browser navigates to", async () => {
+    const user = userEvent.setup();
+    render(<SectionWithLink download="guide.pdf" href="https://example.com/guide.pdf" />);
+
+    await user.click(elements.topics);
+    await user.click(screen.getByRole("link", { name: "Design" }));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
 
   it("must close a section when a link in its panel with no target is clicked", async () => {
     const user = userEvent.setup();
@@ -730,6 +796,64 @@ function BlogNavBar({ collapse }: { collapse?: NavBarCollapse }): JSX.Element {
       <p>After</p>
     </>
   );
+}
+
+interface SectionWithLinkProps {
+  /**
+   * The link's download attribute
+   */
+  download?: string;
+
+  /**
+   * The link's address
+   */
+  href: string;
+
+  /**
+   * The browsing context the link opens in
+   */
+  target?: string;
+}
+
+/**
+ * A bar with one section holding one link, "Design", that stays on the page when clicked
+ */
+function SectionWithLink({ download, href, target }: SectionWithLinkProps): JSX.Element {
+  return (
+    <NavBar aria-label="Main">
+      <NavBarMenu label="Topics">
+        <NavBarMenuItem download={download} href={href} onClick={stayOnPage} target={target}>
+          Design
+        </NavBarMenuItem>
+      </NavBarMenu>
+    </NavBar>
+  );
+}
+
+/**
+ * Places the page in a frame named "frame" inside one named "shell", inside a cross-origin one whose name can't be
+ * read, as the topmost window
+ *
+ * @param options crossOrigin false to make the topmost window "shell" itself, with no cross-origin frame
+ */
+function setUpTestWithFrames({ crossOrigin = true } = {}): void {
+  const top = { name: "top" } as Window & { parent: Window };
+  const shell = { name: "shell", parent: top } as Window & { parent: Window };
+
+  top.parent = top;
+
+  if (crossOrigin) {
+    Object.defineProperty(top, "name", {
+      get(): string {
+        throw new DOMException("Blocked a frame from accessing a cross-origin frame", "SecurityError");
+      },
+    });
+  } else {
+    shell.parent = shell;
+  }
+
+  vi.spyOn(window, "name", "get").mockReturnValue("frame");
+  vi.spyOn(window, "parent", "get").mockReturnValue(shell);
 }
 
 /**

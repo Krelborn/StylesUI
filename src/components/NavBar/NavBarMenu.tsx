@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { FocusEvent, JSX, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { FocusEvent, JSX, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
 
 import { anchorNameFor } from "../../overlays";
@@ -50,12 +50,15 @@ export function NavBarMenu({
   label,
   onBlur,
   onKeyDown,
+  onPointerDown,
   ...rest
 }: NavBarMenuProps): JSX.Element {
   const { closeSection, openSections, toggleSection } = useNavBarContext("NavBarMenu");
   const panelId = useId();
   const anchorName = anchorNameFor(panelId);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  // Set by a press in the section until the next key, so focus it sends to a wrapper around the bar is told apart
+  const pressedRef = useRef(false);
   const open = openSections.includes(panelId);
 
   useEffect(() => {
@@ -65,7 +68,7 @@ export function NavBarMenu({
       return;
     }
 
-    const handlePointerDown = (event: PointerEvent): void => {
+    const handleDocumentPointerDown = (event: globalThis.PointerEvent): void => {
       const pressed = event.target;
 
       if (!(pressed instanceof Node && section.contains(pressed)) && !isNavBarCollapsed(section)) {
@@ -75,9 +78,9 @@ export function NavBarMenu({
 
     const page = section.ownerDocument;
 
-    page.addEventListener("pointerdown", handlePointerDown, true);
+    page.addEventListener("pointerdown", handleDocumentPointerDown, true);
 
-    return () => page.removeEventListener("pointerdown", handlePointerDown, true);
+    return () => page.removeEventListener("pointerdown", handleDocumentPointerDown, true);
   }, [closeSection, open, panelId]);
 
   function handleButtonClick(event: MouseEvent<HTMLButtonElement>): void {
@@ -90,7 +93,8 @@ export function NavBarMenu({
     const section = event.currentTarget;
     const next = event.relatedTarget;
     // A press on the panel's text focuses the nearest focusable element around the bar, such as a page's wrapper
-    const leaves = next !== null && !section.contains(next) && !next.contains(section);
+    const pressedOnText = pressedRef.current && next?.contains(section) === true;
+    const leaves = next !== null && !section.contains(next) && !pressedOnText;
 
     // Nothing can cover the focused element on a collapsed bar, where the panel pushes the page down
     if (open && leaves && !isNavBarCollapsed(section)) {
@@ -98,8 +102,14 @@ export function NavBarMenu({
     }
   }
 
+  function handlePointerDown(event: PointerEvent<HTMLLIElement>): void {
+    onPointerDown?.(event);
+    pressedRef.current = true;
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLLIElement>): void {
     onKeyDown?.(event);
+    pressedRef.current = false;
 
     if (event.key !== "Escape" || !open || event.defaultPrevented) {
       return;
@@ -113,7 +123,14 @@ export function NavBarMenu({
 
   return (
     // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- only notices Escape and focus leaving the section
-    <Box {...rest} as="li" className={clsx(styles.section, className)} onBlur={handleBlur} onKeyDown={handleKeyDown}>
+    <Box
+      {...rest}
+      as="li"
+      className={clsx(styles.section, className)}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      onPointerDown={handlePointerDown}
+    >
       <Box
         as="button"
         className={styles.control}
