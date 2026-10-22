@@ -1,0 +1,614 @@
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { ComponentPropsWithRef, JSX, MouseEvent, ReactNode } from "react";
+import { isValidElement } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { MissingContextError } from "../../errors";
+import { Box } from "../Box";
+
+import { isNavBarCollapsed } from "./isNavBarCollapsed";
+import { NavBar } from "./NavBar";
+import { NavBarItem } from "./NavBarItem";
+import { NavBarMenu } from "./NavBarMenu";
+import { NavBarMenuGroup } from "./NavBarMenuGroup";
+import { NavBarMenuItem } from "./NavBarMenuItem";
+
+// jsdom applies no container queries, so each test says which layout the bar shows
+vi.mock("./isNavBarCollapsed", () => ({ isNavBarCollapsed: vi.fn(() => false) }));
+
+interface RouterLinkProps extends Omit<ComponentPropsWithRef<"a">, "href"> {
+  /**
+   * Route to navigate to, in place of `href`
+   */
+  to: string;
+}
+
+/**
+ * Stand-in for a router's link, which navigates by itself and so prevents the browser's navigation
+ */
+function RouterLink({ children, onClick, to, ...rest }: RouterLinkProps): JSX.Element {
+  function handleClick(event: MouseEvent<HTMLAnchorElement>): void {
+    onClick?.(event);
+    event.preventDefault();
+  }
+
+  return (
+    <Box {...rest} as="a" href={`#${to}`} onClick={handleClick}>
+      {children}
+    </Box>
+  );
+}
+
+/**
+ * Keeps a test on its page when a link is clicked
+ *
+ * @param event the click
+ */
+function stayOnPage(event: MouseEvent): void {
+  event.preventDefault();
+}
+
+describe("NavBar", () => {
+  beforeEach(() => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(false);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("must render a navigation landmark named by aria-label holding a list of links when it renders", () => {
+    render(
+      <NavBar aria-label="Main">
+        <NavBarItem href="/articles">Articles</NavBarItem>
+      </NavBar>
+    );
+
+    const navigation = screen.getByRole("navigation", { name: "Main" });
+
+    expect(navigation.firstElementChild).toBe(screen.getByRole("list"));
+    expect(screen.getByRole("link", { name: "Articles" })).toHaveAttribute("href", "/articles");
+  });
+
+  it("must give its own props to the bar and its name to the navigation when it renders", () => {
+    render(
+      <NavBar aria-labelledby="site-name" className="custom" data-testid="bar" start={<span id="site-name">Site</span>}>
+        <NavBarItem href="/articles">Articles</NavBarItem>
+      </NavBar>
+    );
+
+    expect(screen.getByTestId("bar")).toHaveClass("custom");
+    expect(screen.getByTestId("bar")).not.toHaveAttribute("aria-labelledby");
+    expect(screen.getByRole("navigation", { name: "Site" })).toBeInTheDocument();
+  });
+
+  it("must render start and end around the navigation when they are given", () => {
+    render(
+      <NavBar aria-label="Main" end={<button type="button">Search</button>} start={<a href="/">Home</a>}>
+        <NavBarItem href="/articles">Articles</NavBarItem>
+      </NavBar>
+    );
+
+    const order = screen.getAllByRole("link").concat(screen.getAllByRole("button", { name: "Search" }));
+
+    expect(order.map((element) => element.textContent)).toEqual(["Home", "Articles", "Search"]);
+  });
+
+  it.each(["menu", "menubar", "menuitem", "menuitemcheckbox", "menuitemradio"] as const)(
+    "must render no %s role when it has sections and links",
+    async (role) => {
+      const user = userEvent.setup();
+      render(<BlogNavBar />);
+
+      await user.click(elements.topics);
+
+      expect(screen.queryAllByRole(role, { hidden: true })).toHaveLength(0);
+    }
+  );
+
+  it("must point the toggle at the navigation with aria-controls when it renders", () => {
+    render(<BlogNavBar />);
+
+    expect(elements.toggle).toHaveAttribute("aria-controls", screen.getByRole("navigation").id);
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must label the toggle with menuLabel when it is given", () => {
+    render(
+      <NavBar aria-label="Main" menuLabel="Navigation">
+        <NavBarItem href="/articles">Articles</NavBarItem>
+      </NavBar>
+    );
+
+    expect(screen.getByRole("button", { name: "Navigation" })).toBeInTheDocument();
+  });
+
+  it("must render a section's button pointing at its hidden panel when it is closed", () => {
+    render(<BlogNavBar />);
+
+    const panel = document.getElementById(elements.topics.getAttribute("aria-controls") ?? "");
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    expect(panel).not.toBeVisible();
+    expect(panel?.firstElementChild).toHaveAttribute("role", "list");
+  });
+
+  it("must open a section's panel when its button is clicked", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("link", { name: "Design" })).toBeVisible();
+  });
+
+  it("must close a section's panel when its button is clicked again", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.click(elements.topics);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it.each(["{Enter}", " "])("must toggle a section when %s is pressed on its button", async (key) => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    elements.topics.focus();
+    await user.keyboard(key);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close the open section when another opens on a wide bar", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.click(elements.series);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    expect(elements.series).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close the open section when assistive technology clicks another without a press or focus moving", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    fireEvent.click(elements.series);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    expect(elements.series).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close a section and focus its button when Escape is pressed in its panel", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    screen.getByRole("link", { name: "Design" }).focus();
+    await user.keyboard("{Escape}");
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    expect(elements.topics).toHaveFocus();
+  });
+
+  it("must prevent Escape's default when it closes a section", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+
+    expect(fireEvent.keyDown(elements.topics, { key: "Escape" })).toBe(false);
+  });
+
+  it("must leave Escape alone when no section is open", () => {
+    render(<BlogNavBar />);
+
+    expect(fireEvent.keyDown(elements.topics, { key: "Escape" })).toBe(true);
+  });
+
+  it("must close a section when a click lands outside it on a wide bar", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.click(screen.getByText("After"));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep a section open when a click lands in its panel on a wide bar", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.click(document.getElementById(elements.topics.getAttribute("aria-controls") ?? "") as HTMLElement);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close a section and leave focus where it went when focus leaves it on a wide bar", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+
+    expect(elements.series).toHaveFocus();
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep a section open when focus moves from its button into its panel", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.tab();
+
+    expect(screen.getByRole("link", { name: "Design" })).toHaveFocus();
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close a section when a link in its panel is clicked", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.click(screen.getByRole("link", { name: "Design" }));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close a section when a router link in its panel navigates by itself", async () => {
+    const user = userEvent.setup();
+    render(
+      <NavBar aria-label="Main">
+        <NavBarMenu label="Topics">
+          {/* oxlint-disable-next-line jsx-a11y/anchor-is-valid -- to is the destination, in place of href */}
+          <NavBarMenuItem as={RouterLink} to="/design">
+            Design
+          </NavBarMenuItem>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    await user.click(elements.topics);
+    await user.click(screen.getByRole("link", { name: "Design" }));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must open the navigation when the toggle is clicked on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("navigation")).toHaveAttribute("data-open", "true");
+  });
+
+  it("must close the navigation and its sections when the toggle is clicked again", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(elements.topics);
+    await user.click(elements.toggle);
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep every section it opens open on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(elements.topics);
+    await user.click(elements.series);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+    expect(elements.series).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must keep a section open when a click lands outside it or focus leaves it on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(elements.topics);
+    await user.click(screen.getByText("After"));
+    elements.series.focus();
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close the innermost section and then the navigation when Escape is pressed on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(elements.topics);
+    screen.getByRole("link", { name: "Design" }).focus();
+    await user.keyboard("{Escape}");
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    expect(elements.topics).toHaveFocus();
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "true");
+
+    await user.keyboard("{Escape}");
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+    expect(elements.toggle).toHaveFocus();
+  });
+
+  it("must close the navigation when Escape is pressed on its toggle on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.keyboard("{Escape}");
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must leave Escape alone when it is pressed outside the navigation on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+
+    expect(fireEvent.keyDown(screen.getByRole("button", { name: "Subscribe" }), { key: "Escape" })).toBe(true);
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close the navigation when a link in it is clicked on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(screen.getByRole("link", { name: "Articles" }));
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close every section and the navigation when the bar switches layout", async () => {
+    const { resize } = setUpTestWithResizeObserver();
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(elements.topics);
+    vi.mocked(isNavBarCollapsed).mockReturnValue(false);
+    resize();
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep its sections open when the bar resizes without switching layout", async () => {
+    const { resize } = setUpTestWithResizeObserver();
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    resize();
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must name a panel link by its title and describe it by its description when it has one", () => {
+    render(<BlogNavBar />);
+
+    const design = screen.getByRole("link", { hidden: true, name: "Design" });
+
+    expect(design).toHaveAccessibleDescription("Typography, colour, systems");
+  });
+
+  it("must keep a panel link's own description after its description when it is given", () => {
+    render(
+      <NavBar aria-label="Main">
+        <NavBarMenu label="Topics">
+          <NavBarMenuItem description="Typography" href="/design" aria-describedby="note">
+            Design
+          </NavBarMenuItem>
+        </NavBarMenu>
+        <li id="note">New</li>
+      </NavBar>
+    );
+
+    expect(screen.getByRole("link", { hidden: true, name: "Design" })).toHaveAccessibleDescription("Typography New");
+  });
+
+  it("must name a group's list by its heading at the given level when a group renders", () => {
+    render(
+      <NavBar aria-label="Docs">
+        <NavBarMenu label="Reference">
+          <NavBarMenuGroup headingLevel={2} title="Components">
+            <NavBarMenuItem href="/button">Button</NavBarMenuItem>
+          </NavBarMenuGroup>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    expect(screen.getByRole("heading", { hidden: true, level: 2, name: "Components" })).toBeInTheDocument();
+    expect(screen.getByRole("list", { hidden: true, name: "Components" })).toBeInTheDocument();
+  });
+
+  it("must pass its props and className to a component given in as when an item renders", () => {
+    render(
+      <NavBar aria-label="Main">
+        {/* oxlint-disable-next-line jsx-a11y/anchor-is-valid -- to is the destination, in place of href */}
+        <NavBarItem as={RouterLink} className="custom" to="/articles" aria-current="page">
+          Articles
+        </NavBarItem>
+      </NavBar>
+    );
+
+    const articles = screen.getByRole("link", { name: "Articles" });
+
+    expect(articles).toHaveAttribute("href", "#/articles");
+    expect(articles).toHaveAttribute("aria-current", "page");
+    expect(articles).toHaveClass("custom");
+  });
+
+  it("must give a section its li props when it renders", () => {
+    render(
+      <NavBar aria-label="Main">
+        <NavBarMenu className="custom" label="Topics" data-testid="section">
+          <NavBarMenuItem href="/design">Design</NavBarMenuItem>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    expect(screen.getByTestId("section").tagName).toBe("LI");
+    expect(screen.getByTestId("section")).toHaveClass("custom");
+  });
+
+  it.each([
+    [
+      "NavBarItem",
+      <NavBarItem href="/articles" key="item">
+        Articles
+      </NavBarItem>,
+    ],
+    [
+      "NavBarMenu",
+      <NavBarMenu key="menu" label="Topics">
+        <li>Design</li>
+      </NavBarMenu>,
+    ],
+    [
+      "NavBarMenuItem",
+      <NavBarMenuItem href="/design" key="menu-item">
+        Design
+      </NavBarMenuItem>,
+    ],
+    ["NavBarMenuGroup", <NavBarMenuGroup headingLevel={2} key="group" title="Components" />],
+  ])("must throw MissingContextError when %s renders outside a NavBar", (_part, ui: ReactNode) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(() => render(ui)).toThrow(MissingContextError);
+  });
+
+  it("must reject a bar without a name and a group without a heading level", () => {
+    render(
+      // @ts-expect-error the navigation needs a name
+      <NavBar>
+        <NavBarMenu label="Reference">
+          {/* @ts-expect-error only the page's outline knows the heading level */}
+          <NavBarMenuGroup title="Components">
+            <NavBarMenuItem href="/button">Button</NavBarMenuItem>
+          </NavBarMenuGroup>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    expect(screen.getByRole("navigation")).toBeInTheDocument();
+  });
+
+  it("must reject dangerouslySetInnerHTML on a panel link and a button given in as", () => {
+    // Built without rendering, since React throws when an element is given inner HTML and children
+    const elements = [
+      // @ts-expect-error the item renders its own title and description inside the link
+      <NavBarMenuItem dangerouslySetInnerHTML={{ __html: "Button" }} href="/button" key="markup" aria-label="Button" />,
+      // @ts-expect-error a NavBarItem renders a link, never a button
+      <NavBarItem as="button" key="button">
+        Articles
+      </NavBarItem>,
+    ];
+
+    expect(elements.every(isValidElement)).toBe(true);
+  });
+});
+
+/**
+ * The blog header from the design mockups, with a paragraph after it to click outside the bar
+ */
+function BlogNavBar(): JSX.Element {
+  return (
+    <>
+      <NavBar aria-label="Main" end={<button type="button">Subscribe</button>} start={<a href="/">The Long Read</a>}>
+        <NavBarItem href="/articles" onClick={stayOnPage} aria-current="page">
+          Articles
+        </NavBarItem>
+        <NavBarMenu columns={2} label="Topics">
+          <NavBarMenuItem description="Typography, colour, systems" href="/design" onClick={stayOnPage}>
+            Design
+          </NavBarMenuItem>
+          <NavBarMenuItem href="/engineering">Engineering</NavBarMenuItem>
+          <NavBarMenuItem href="/culture">Culture</NavBarMenuItem>
+        </NavBarMenu>
+        <NavBarMenu label="Series">
+          <NavBarMenuItem href="/first-principles">First principles</NavBarMenuItem>
+        </NavBarMenu>
+      </NavBar>
+      <p>After</p>
+    </>
+  );
+}
+
+/**
+ * Stands in a ResizeObserver, which jsdom lacks, so a test can report the bar resizing
+ *
+ * @returns `resize`, which reports a resize to every observer
+ */
+function setUpTestWithResizeObserver(): { resize: () => void } {
+  const callbacks: ResizeObserverCallback[] = [];
+
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      public constructor(callback: ResizeObserverCallback) {
+        callbacks.push(callback);
+      }
+
+      public disconnect(): void {}
+
+      public observe(): void {}
+    }
+  );
+
+  const resize = (): void => {
+    act(() => {
+      for (const callback of callbacks) {
+        callback([], {} as ResizeObserver);
+      }
+    });
+  };
+
+  return { resize };
+}
+
+const elements = {
+  get series() {
+    return screen.getByRole("button", { name: "Series" });
+  },
+
+  get toggle() {
+    return screen.getByRole("button", { name: "Menu" });
+  },
+
+  get topics() {
+    return screen.getByRole("button", { name: "Topics" });
+  },
+};

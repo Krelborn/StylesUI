@@ -90,6 +90,15 @@ export type {
   UseMenuOptions,
   UseMenuResult,
 } from "./components/Menu";
+export { NavBar, NavBarItem, NavBarMenu, NavBarMenuGroup, NavBarMenuItem } from "./components/NavBar";
+export type {
+  NavBarCollapse,
+  NavBarItemProps,
+  NavBarMenuGroupProps,
+  NavBarMenuItemProps,
+  NavBarMenuProps,
+  NavBarProps,
+} from "./components/NavBar";
 export { NavList, NavListGroup, NavListItem } from "./components/NavList";
 export type { NavListGroupProps, NavListItemElement, NavListItemProps, NavListProps } from "./components/NavList";
 export { PageLayout } from "./components/PageLayout";
