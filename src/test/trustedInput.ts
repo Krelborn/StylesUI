@@ -1,5 +1,6 @@
 /**
- * Real keyboard and pointer input, which the browser trusts for its own behaviour, such as a popover's light dismiss
+ * Real keyboard and pointer input, which the browser trusts for its own behaviour, such as a popover's light dismiss,
+ * and the browser's emulation of forced colours
  */
 export interface TrustedInput {
   /**
@@ -12,6 +13,12 @@ export interface TrustedInput {
    * outside it.
    */
   clickPageCorner: () => Promise<void>;
+
+  /**
+   * Turns the browser's emulation of forced colours, as Windows High Contrast applies them, on or off. Each story starts
+   * with it off.
+   */
+  emulateForcedColors: (active: boolean) => Promise<void>;
 
   /**
    * Holds the primary pointer button down over the element with the given `data-testid` in the story's frame, so it
@@ -34,6 +41,12 @@ export interface TrustedInput {
    * Releases the primary pointer button that `holdPointerByTestId` holds down
    */
   releasePointer: () => Promise<void>;
+
+  /**
+   * Slides the pointer slowly from the middle of one element to the near edge of another, both with the given role
+   * and found by their accessible names, over 800ms, crossing whatever lies between
+   */
+  slidePointerByRole: (role: string, fromName: string, toName: string) => Promise<void>;
 }
 
 let registeredInput: TrustedInput | null = null;

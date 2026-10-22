@@ -1,5 +1,7 @@
 import { render, screen } from "@testing-library/react";
+import checkArtwork from "lucide-static/icons/check.svg?raw";
 import chevronDownArtwork from "lucide-static/icons/chevron-down.svg?raw";
+import chevronRightArtwork from "lucide-static/icons/chevron-right.svg?raw";
 import ellipsisArtwork from "lucide-static/icons/ellipsis.svg?raw";
 import ellipsisVerticalArtwork from "lucide-static/icons/ellipsis-vertical.svg?raw";
 import infoArtwork from "lucide-static/icons/info.svg?raw";
@@ -15,7 +17,9 @@ import { createRef } from "react";
 import { describe, expect, it } from "vitest";
 
 import { AddIcon } from "./AddIcon";
+import { CheckIcon } from "./CheckIcon";
 import { ChevronDownIcon } from "./ChevronDownIcon";
+import { ChevronRightIcon } from "./ChevronRightIcon";
 import { CloseIcon } from "./CloseIcon";
 import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
@@ -30,7 +34,9 @@ import { SendIcon } from "./SendIcon";
 
 const icons = [
   { Component: AddIcon, artwork: plusArtwork, name: "AddIcon" },
+  { Component: CheckIcon, artwork: checkArtwork, name: "CheckIcon" },
   { Component: ChevronDownIcon, artwork: chevronDownArtwork, name: "ChevronDownIcon" },
+  { Component: ChevronRightIcon, artwork: chevronRightArtwork, name: "ChevronRightIcon" },
   { Component: CloseIcon, artwork: xArtwork, name: "CloseIcon" },
   { Component: ColorModeIcon, artwork: sunMoonArtwork, name: "ColorModeIcon" },
   { Component: DeleteIcon, artwork: trashArtwork, name: "DeleteIcon" },

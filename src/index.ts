@@ -40,7 +40,9 @@ export { Heading } from "./components/Heading";
 export type { HeadingLevel, HeadingProps, HeadingSize } from "./components/Heading";
 export {
   AddIcon,
+  CheckIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   CloseIcon,
   ColorModeIcon,
   DeleteIcon,
@@ -61,6 +63,32 @@ export { Link } from "./components/Link";
 export type { LinkElement, LinkProps, LinkTone, LinkUnderline } from "./components/Link";
 export { Listbox, ListboxOption } from "./components/Listbox";
 export type { ListboxOptionProps, ListboxProps } from "./components/Listbox";
+export {
+  Menu,
+  MenuGroup,
+  MenuItem,
+  MenuItemCheckbox,
+  MenuItemRadio,
+  MenuRadioGroup,
+  MenuSeparator,
+  Submenu,
+  useMenu,
+} from "./components/Menu";
+export type {
+  MenuDensity,
+  MenuGroupProps,
+  MenuItemCheckboxProps,
+  MenuItemElement,
+  MenuItemProps,
+  MenuItemRadioProps,
+  MenuOverlayProps,
+  MenuProps,
+  MenuRadioGroupProps,
+  MenuSeparatorProps,
+  SubmenuProps,
+  UseMenuOptions,
+  UseMenuResult,
+} from "./components/Menu";
 export { NavList, NavListGroup, NavListItem } from "./components/NavList";
 export type { NavListGroupProps, NavListItemElement, NavListItemProps, NavListProps } from "./components/NavList";
 export { PageLayout } from "./components/PageLayout";

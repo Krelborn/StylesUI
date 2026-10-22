@@ -1,0 +1,344 @@
+/* Only while open: a display set on the closed popover would beat the browser's rule that hides it */
+.menu:popover-open {
+  display: flex;
+}
+
+.menu {
+  flex-direction: column;
+  gap: 1px;
+  min-inline-size: 12rem;
+  max-inline-size: min(20rem, 100vw - var(--sui-space-2, 0.5rem) * 2);
+  /* Scrolls past this height, which leaves the placement fallbacks a side it fits on */
+  max-block-size: min(var(--sui-menu-max-block-size, 24rem), 100dvh - var(--sui-space-2, 0.5rem) * 2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sui-space-1, 0.25rem);
+  border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+  border-radius: var(--sui-radius-lg, 8px);
+  background-color: var(--sui-color-overlay, #fff);
+  box-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+  line-height: var(--sui-line-height-tight, 1.25);
+  transition:
+    opacity 120ms ease-out,
+    translate var(--sui-motion-spring, 120ms ease-out);
+}
+
+/*
+ * Overlay's fallbacks, then shrinking to the room on the side it opens on when no side has room for it, as in a short
+ * window. Matched with one pseudo-class more than Overlay's placement rules, so these win.
+ */
+.menu:popover-open:is([data-placement="top"], [data-placement="bottom"]) {
+  position-try-fallbacks: flip-block, --sui-menu-shrink;
+}
+
+.menu:popover-open:is([data-placement="start"], [data-placement="end"]) {
+  position-try-fallbacks: flip-inline, --sui-menu-shrink;
+}
+
+.menu:popover-open:is([data-placement$="-start"], [data-placement$="-end"]) {
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline,
+    --sui-menu-shrink;
+}
+
+@position-try --sui-menu-shrink {
+  max-block-size: 100%;
+  max-block-size: stretch;
+}
+
+/* Inside the edge, as Listbox's, so nothing around the menu can cover it */
+.menu:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+/* Starts nearer the trigger and moves out, so it reads as coming from it */
+@starting-style {
+  .menu {
+    opacity: 0;
+  }
+
+  .menu[data-placement^="top"] {
+    translate: 0 var(--sui-popover-offset, 4px);
+  }
+
+  .menu[data-placement^="bottom"] {
+    translate: 0 calc(var(--sui-popover-offset, 4px) * -1);
+  }
+
+  .menu[data-placement="start"] {
+    translate: var(--sui-popover-offset, 4px) 0;
+  }
+
+  .menu[data-placement="end"] {
+    translate: calc(var(--sui-popover-offset, 4px) * -1) 0;
+  }
+
+  /* translate has no logical direction, so start and end swap by hand */
+  .menu[data-placement="start"]:dir(rtl) {
+    translate: calc(var(--sui-popover-offset, 4px) * -1) 0;
+  }
+
+  .menu[data-placement="end"]:dir(rtl) {
+    translate: var(--sui-popover-offset, 4px) 0;
+  }
+}
+
+.item {
+  --_sui-menu-ink: var(--sui-color-text, #111827);
+
+  /* A component given in `as` is not rendered through Box, which sets this */
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--sui-space-2, 0.5rem);
+  inline-size: 100%;
+  min-block-size: 2rem;
+  padding: var(--sui-space-1, 0.25rem) var(--sui-space-2, 0.5rem);
+  padding-inline-start: calc(var(--sui-space-2, 0.5rem) + var(--_sui-menu-leading-column, 0px));
+  border: 0;
+  border-radius: var(--sui-radius-md, 4px);
+  background-color: transparent;
+  color: var(--_sui-menu-ink);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  cursor: default;
+  scroll-margin-block: var(--sui-space-1, 0.25rem);
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+/*
+ * The highlight tokens are never declared here, so an ancestor can set them. The tint follows focus, which the
+ * pointer moves too; the ring shows only for keyboard focus.
+ */
+.item:focus {
+  --_sui-menu-ink: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+
+  outline: none;
+  background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
+  color: var(--_sui-menu-ink);
+}
+
+/* The item whose submenu is open keeps the highlight while focus is in the submenu */
+.item[aria-expanded="true"] {
+  --_sui-menu-ink: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+
+  background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
+  color: var(--_sui-menu-ink);
+}
+
+.item:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+.menu[data-density="compact"] .item {
+  min-block-size: 1.625rem;
+  padding-block: 2px;
+}
+
+/* A finger needs a larger target than the density gives, whatever it is */
+@media (pointer: coarse) {
+  .item,
+  .menu[data-density="compact"] .item {
+    min-block-size: 2.75rem;
+  }
+}
+
+.item[data-tone="danger"] {
+  --_sui-menu-ink: var(--sui-color-danger-text, #b91c1c);
+
+  color: var(--_sui-menu-ink);
+}
+
+.item[data-tone="danger"]:focus {
+  background-color: var(--sui-menu-danger-highlight, var(--sui-color-danger-subtle, #fff1f1));
+  color: var(--_sui-menu-ink);
+}
+
+/*
+ * The disabled colour is the item's own text colour mixed to half strength, not opacity, which would dim the focus
+ * ring too. It follows the danger rules and matches focus, so a disabled item is dimmed in every state.
+ */
+.item[aria-disabled="true"],
+.item[aria-disabled="true"]:focus {
+  --_sui-menu-part-opacity: 0.5;
+
+  color: color-mix(in srgb, var(--_sui-menu-ink) 50%, transparent);
+  cursor: not-allowed;
+}
+
+/*
+ * Once any of this menu's own items has a leading slot, every label starts after the column the slots sit in. Its
+ * items sit directly in it, in a group or a submenu's wrapper, or in a submenu's wrapper in a group; a submenu's own
+ * items are a level below its wrapper, and the submenu declares the column again, so it neither takes nor gives one.
+ */
+.menu {
+  --_sui-menu-leading-column: 0px;
+}
+
+.menu:has(> [data-leading], > * > [data-leading], > [role="group"] > [role="none"] > [data-leading]) {
+  --_sui-menu-leading-column: calc(1rem + var(--sui-space-2, 0.5rem));
+}
+
+.leading {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: var(--sui-space-2, 0.5rem);
+  display: grid;
+  place-items: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin-block: auto;
+  color: var(--sui-color-text-muted, #4b5563);
+  opacity: var(--_sui-menu-part-opacity, 1);
+}
+
+/* Undimmed, since the slot's own opacity dims a disabled item's */
+.item[data-tone="danger"] .leading {
+  color: var(--_sui-menu-ink);
+}
+
+/* The check of a checkbox item and the dot of a radio item are in the text colour, and keep their place unchecked */
+.item[aria-checked] > .leading {
+  color: var(--_sui-menu-ink);
+}
+
+.item[aria-checked="false"] > .leading {
+  visibility: hidden;
+}
+
+/* Filled by its border, which forced colours keep where they would drop a background */
+.radioDot {
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  border: 0.25rem solid currentColor;
+  border-radius: var(--sui-radius-full, 9999px);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.label {
+  overflow-wrap: anywhere;
+}
+
+.description {
+  color: var(--sui-color-text-muted, #4b5563);
+  opacity: var(--_sui-menu-part-opacity, 1);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  overflow-wrap: anywhere;
+}
+
+.trailing {
+  flex: none;
+  margin-inline-start: auto;
+  padding-inline-start: var(--sui-space-6, 1.5rem);
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  opacity: var(--_sui-menu-part-opacity, 1);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.groupLabel {
+  padding: var(--sui-space-2, 0.5rem) var(--sui-space-2, 0.5rem) var(--sui-space-1, 0.25rem);
+  padding-inline-start: calc(var(--sui-space-2, 0.5rem) + var(--_sui-menu-leading-column, 0px));
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  font-weight: var(--sui-font-weight-bold, 700);
+}
+
+/* Across the menu's padding as well, so it rules the whole surface */
+.separator {
+  margin: var(--sui-space-1, 0.25rem) calc(var(--sui-space-1, 0.25rem) * -1);
+  border: 0;
+  border-block-start: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+}
+
+/*
+ * Beside its item, on the side the text runs towards, with its first item level with it: the margins take back the
+ * surface's padding and border. Short of room below, it grows upwards from its item's bottom instead. Overlay's
+ * placement rules and the menu's fallbacks above match with fewer classes, so these win.
+ */
+.menu.submenuMenu:popover-open[data-placement] {
+  align-self: normal;
+  margin: 0;
+  margin-block-start: calc((var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px)) * -1);
+  margin-inline-start: calc(var(--sui-space-1, 0.25rem) + var(--sui-border-width, 1px));
+  position-area: span-self-block-end self-inline-end;
+  position-try-fallbacks:
+    flip-inline,
+    flip-block,
+    flip-block flip-inline,
+    --sui-submenu-below,
+    --sui-menu-shrink;
+}
+
+/* With no room on either side, below the item and over the menu it belongs to, so it still fits a narrow viewport */
+@position-try --sui-submenu-below {
+  margin: 0;
+  margin-block-start: var(--sui-space-1, 0.25rem);
+  position-area: self-block-end span-self-inline-end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    transition: opacity 120ms ease-out;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the highlight */
+@media (forced-colors: active) {
+  /* Left automatic, the browser draws a Canvas backplate behind the text that hides HighlightText */
+  .item:focus,
+  .item[data-tone="danger"]:focus,
+  .item[aria-disabled="true"]:focus,
+  .item[aria-expanded="true"] {
+    /* Read by a check, a radio dot and a destructive item's icon, whose own rules outrank the one for every part */
+    --_sui-menu-ink: HighlightText;
+
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  /* forced-color-adjust: none keeps the ring's and the parts' theme colours, so they take the highlight's text colour */
+  .item:focus-visible {
+    outline-color: HighlightText;
+  }
+
+  .item:is(:focus, [aria-expanded="true"]) * {
+    color: HighlightText;
+  }
+
+  .item[aria-disabled="true"]:not(:focus) {
+    --_sui-menu-part-opacity: 1;
+
+    color: GrayText;
+  }
+
+  .item[aria-disabled="true"]:not(:focus) * {
+    color: GrayText;
+  }
+}
