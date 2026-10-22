@@ -303,6 +303,45 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "false");
   });
 
+  it.each([{ target: "_blank" }, { target: "docs" }, { download: "guide.pdf" }])(
+    "must keep a section open when a link in its panel with %o is clicked",
+    async (linkProps) => {
+      const user = userEvent.setup();
+      render(
+        <NavBar aria-label="Main">
+          <NavBarMenu label="Topics">
+            <NavBarMenuItem {...linkProps} href="/design" onClick={stayOnPage}>
+              Design
+            </NavBarMenuItem>
+          </NavBarMenu>
+        </NavBar>
+      );
+
+      await user.click(elements.topics);
+      await user.click(screen.getByRole("link", { name: "Design" }));
+
+      expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+    }
+  );
+
+  it("must close a section when a link in its panel targeting this page is clicked", async () => {
+    const user = userEvent.setup();
+    render(
+      <NavBar aria-label="Main">
+        <NavBarMenu label="Topics">
+          <NavBarMenuItem href="/design" onClick={stayOnPage} target="_self">
+            Design
+          </NavBarMenuItem>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    await user.click(elements.topics);
+    await user.click(screen.getByRole("link", { name: "Design" }));
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must close a section when a router link in its panel navigates by itself", async () => {
     const user = userEvent.setup();
     render(

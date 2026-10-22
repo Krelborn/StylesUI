@@ -120,12 +120,11 @@ export function NavBar({
   }
 
   function handleLayoutClick(event: MouseEvent<HTMLDivElement>): void {
-    // Opening a link in a new tab or window leaves this page where it was
-    const opensElsewhere = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+    const link = (event.target as Element).closest("a");
 
     // A router's link prevents the default to navigate by itself, so any other click on a link in the bar, the site's
     // name in start included, closes everything
-    if (!opensElsewhere && (event.target as Element).closest("a") !== null) {
+    if (link !== null && !leavesPageInPlace(event, link)) {
       closeAll();
     }
   }
@@ -192,5 +191,22 @@ export function NavBar({
         </Box>
       </Box>
     </NavBarContext.Provider>
+  );
+}
+
+/**
+ * Tells whether a click on a link leaves this page where it was, opening the link in another tab or window or
+ * downloading it
+ *
+ * @param event the click
+ * @param link the link clicked
+ * @returns true for a click with Alt, Ctrl, Meta or Shift held, or on a link with a target other than `_self` or a
+ *   `download` attribute
+ */
+function leavesPageInPlace(event: MouseEvent, link: HTMLAnchorElement): boolean {
+  const opensElsewhere = link.target !== "" && link.target !== "_self";
+
+  return (
+    event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || opensElsewhere || link.hasAttribute("download")
   );
 }
