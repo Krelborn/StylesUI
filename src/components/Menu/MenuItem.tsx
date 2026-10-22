@@ -166,6 +166,11 @@ export function MenuItem<E extends MenuItemElement = "button">({
     }
 
     onAuxClick?.(event);
+
+    // A middle click opens a link in a new tab, as a click with Ctrl or Meta does, which closes the menus too
+    if (event.button === 1 && !event.defaultPrevented && event.currentTarget instanceof HTMLAnchorElement) {
+      menu.closeAfterChoosing();
+    }
   }
 
   function handleClick(event: MouseEvent<HTMLElement>): void {

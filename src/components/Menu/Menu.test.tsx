@@ -669,6 +669,33 @@ describe("Menu", () => {
     expect(elements.item("Billing")).not.toHaveAttribute("href");
   });
 
+  it("must close the menu when a link item is middle-clicked", () => {
+    render(<LinkMenu />);
+    openAsBrowser(elements.menu);
+
+    fireEvent(elements.item("Help"), new MouseEvent("auxclick", { bubbles: true, button: 1, cancelable: true }));
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep the menu open when a link item is clicked with the secondary button", () => {
+    render(<LinkMenu />);
+    openAsBrowser(elements.menu);
+
+    fireEvent(elements.item("Help"), new MouseEvent("auxclick", { bubbles: true, button: 2, cancelable: true }));
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must keep the menu open when a button item is middle-clicked", () => {
+    render(<RowActions defaultOpen={true} />);
+    openAsBrowser(elements.menu);
+
+    fireEvent(elements.item("Duplicate"), new MouseEvent("auxclick", { bubbles: true, button: 1, cancelable: true }));
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must keep a middle click from opening a disabled item given as a component", () => {
     render(<LinkMenu />);
 
