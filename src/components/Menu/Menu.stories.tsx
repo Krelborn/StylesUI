@@ -1041,8 +1041,9 @@ export const SubmenuPlacement: Story = {
 
 /**
  * The pointer and the keyboard share one active item: moving the pointer onto an item focuses it. Resting on a
- * submenu's item for 100ms opens the submenu, with focus left on the item. Moving diagonally into the submenu crosses
- * the items below without closing it, and a click outside closes every menu, leaving focus where the click put it.
+ * submenu's item for 100ms opens the submenu, with focus left on the item, and clicking the item then keeps it open.
+ * Moving diagonally into the submenu crosses the items below without closing it, and a click outside closes every
+ * menu, leaving focus where the click put it.
  */
 export const PointerInteraction: Story = {
   render: () => <FileMenu />,
@@ -1067,6 +1068,11 @@ export const PointerInteraction: Story = {
     await waitFor(() => expect(item("Move to")).toHaveAttribute("aria-expanded", "true"));
     await expect(item("Move to")).toHaveFocus();
     await waitFor(() => expect(item("Archive")).toBeVisible());
+
+    item("Move to").dataset.testid = "move-to-item";
+    await input.clickByTestId("move-to-item");
+    await expect(item("Archive")).toBeVisible();
+    await expect(item("Move to")).toHaveAttribute("aria-expanded", "true");
 
     await input.slidePointerByRole("menuitem", "Move to", "Archive");
     await waitFor(() => expect(item("Archive")).toHaveFocus());

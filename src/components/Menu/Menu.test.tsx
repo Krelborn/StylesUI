@@ -97,20 +97,34 @@ describe("Menu", () => {
   it.each([
     { description: "a secondary press", releasedOn: "trigger", keys: "MouseRight" },
     { description: "a press released off the trigger", releasedOn: "page", keys: "MouseLeft" },
-  ])("must focus the first item when the keyboard opens the menu after $description", async ({ keys, releasedOn }) => {
-    const user = userEvent.setup();
-    render(<RowActions />);
-    elements.trigger.focus();
-    await user.pointer([
-      { keys: `[${keys}>]`, target: elements.trigger },
-      { target: releasedOn === "trigger" ? elements.trigger : document.body },
-      { keys: `[/${keys}]` },
-    ]);
+  ])(
+    "must focus the first item when assistive technology opens the menu after $description",
+    async ({ keys, releasedOn }) => {
+      const user = userEvent.setup();
+      render(<RowActions />);
+      elements.trigger.focus();
+      await user.pointer([
+        { keys: `[${keys}>]`, target: elements.trigger },
+        { target: releasedOn === "trigger" ? elements.trigger : document.body },
+        { keys: `[/${keys}]` },
+      ]);
 
-    await user.keyboard("{Enter}");
+      fireEvent.click(elements.trigger);
+      openAsBrowser(elements.menu);
+
+      expect(elements.item("Edit")).toHaveFocus();
+    }
+  );
+
+  it("must leave focus where it is when a popover of the consumer's inside the menu opens", async () => {
+    const user = userEvent.setup();
+    render(<NestedPopoverMenu />);
+    await user.click(elements.trigger);
     openAsBrowser(elements.menu);
 
-    expect(elements.item("Edit")).toHaveFocus();
+    fireEvent(screen.getByText("Saved to Inbox"), toggleEvent("toggle", "open"));
+
+    expect(elements.menu).toHaveFocus();
   });
 
   it("must focus the first item when the parent opens a controlled menu", async () => {
@@ -442,6 +456,40 @@ describe("Menu", () => {
     expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must leave the menu's items alone when Space is pressed on the menu itself", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuBeforeCheckboxMenu />);
+    openAsBrowser(elements.menu);
+    elements.menu.focus();
+
+    await user.keyboard(" ");
+
+    expect(elements.checkbox("Pinned")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("must leave the menu around a submenu alone when Space chooses an item in the submenu", async () => {
+    const user = userEvent.setup();
+    render(<SubmenuBeforeCheckboxMenu />);
+    await openSubmenu(user);
+
+    await user.keyboard(" ");
+
+    expect(elements.checkbox("Pinned")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("must choose a submenu's item when Space is pressed in it straight after a query in the menu around it", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+    await user.keyboard("m{ArrowRight}");
+    fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+
+    await user.keyboard(" ");
+
+    expect(elements.trigger).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must leave an item's icon out of its name when the item has one", () => {
     render(<RichMenu />);
 
@@ -587,6 +635,23 @@ describe("Menu", () => {
 
     expect(window.location.hash).not.toBe("#billing");
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must leave a link item without its href when it is disabled", () => {
+    render(<LinkMenu />);
+
+    expect(elements.item("Billing")).not.toHaveAttribute("href");
+  });
+
+  it("must keep a middle click from opening a disabled item given as a component", () => {
+    render(<LinkMenu />);
+
+    const opened = fireEvent(
+      elements.item("Plans"),
+      new MouseEvent("auxclick", { bubbles: true, button: 1, cancelable: true })
+    );
+
+    expect(opened).toBe(false);
   });
 
   it("must reject a link's props when an item's as is button", () => {
@@ -840,21 +905,36 @@ describe("Menu", () => {
   it.each([
     { description: "a secondary press", releasedOn: "item", keys: "MouseRight" },
     { description: "a press released off the item", releasedOn: "page", keys: "MouseLeft" },
-  ])("must open a submenu on its first item when Enter follows $description", async ({ keys, releasedOn }) => {
+  ])(
+    "must open a submenu on its first item when assistive technology clicks its item after $description",
+    async ({ keys, releasedOn }) => {
+      const user = userEvent.setup();
+      render(<SubmenuMenu />);
+      openAsBrowser(elements.menu);
+      elements.item("Move to").focus();
+      await user.pointer([
+        { keys: `[${keys}>]`, target: elements.item("Move to") },
+        { target: releasedOn === "item" ? elements.item("Move to") : document.body },
+        { keys: `[/${keys}]` },
+      ]);
+
+      fireEvent.click(elements.item("Move to"));
+      fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+
+      expect(elements.item("Inbox")).toHaveFocus();
+    }
+  );
+
+  it("must leave focus on a submenu's item when a click on the item opens the submenu", async () => {
     const user = userEvent.setup();
     render(<SubmenuMenu />);
     openAsBrowser(elements.menu);
-    elements.item("Move to").focus();
-    await user.pointer([
-      { keys: `[${keys}>]`, target: elements.item("Move to") },
-      { target: releasedOn === "item" ? elements.item("Move to") : document.body },
-      { keys: `[/${keys}]` },
-    ]);
 
-    await user.keyboard("{Enter}");
+    await user.click(elements.item("Move to"));
     fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
 
-    expect(elements.item("Inbox")).toHaveFocus();
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+    expect(elements.item("Move to")).toHaveFocus();
   });
 
   it("must focus a submenu itself when it opens from the keyboard with no items", async () => {
@@ -1361,6 +1441,9 @@ function LinkMenu(): JSX.Element {
         <MenuItem as="a" disabled={true} href="#billing">
           Billing
         </MenuItem>
+        <MenuItem as={RouterLink} disabled={true} to="/plans">
+          Plans
+        </MenuItem>
       </Menu>
     </>
   );
@@ -1485,6 +1568,42 @@ async function openSubmenu(user: ReturnType<typeof userEvent.setup>): Promise<vo
   elements.item("Move to").focus();
   await user.keyboard("{ArrowRight}");
   fireEvent(elements.submenu("Move to"), toggleEvent("toggle", "open"));
+}
+
+function NestedPopoverMenu(): JSX.Element {
+  const menu = useMenu();
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+        <Box onToggle={() => {}} popover="manual">
+          Saved to Inbox
+        </Box>
+      </Menu>
+    </>
+  );
+}
+
+function SubmenuBeforeCheckboxMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <Submenu label="Move to">
+          <MenuItem>Inbox</MenuItem>
+        </Submenu>
+        <MenuItemCheckbox>Pinned</MenuItemCheckbox>
+      </Menu>
+    </>
+  );
 }
 
 function TypeAheadMenu(): JSX.Element {

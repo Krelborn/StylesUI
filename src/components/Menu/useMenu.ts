@@ -1,7 +1,7 @@
-import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, ToggleEvent } from "react";
+import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, ToggleEvent } from "react";
 import { useEffect, useId, useRef } from "react";
 
-import { renderedItems } from "../../menus";
+import { hasModifier, renderedItems } from "../../menus";
 import type { OverlayPlacement } from "../../overlays";
 import { mergeProps, syncPopover } from "../../overlays";
 // The Popover barrel would also bring Popover's stylesheet into every bundle that uses a menu
@@ -62,11 +62,6 @@ interface MenuTriggerProps {
   id: string;
 
   /**
-   * Forgets a pointer press that never became a click
-   */
-  onBlur: (event: FocusEvent<HTMLElement>) => void;
-
-  /**
    * Notes whether a pointer or the keyboard is opening the menu
    */
   onClick: (event: MouseEvent<HTMLElement>) => void;
@@ -75,16 +70,6 @@ interface MenuTriggerProps {
    * Opens the menu on its first item with Down, or its last with Up
    */
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
-
-  /**
-   * Forgets a pointer press the browser cancelled
-   */
-  onPointerCancel: (event: PointerEvent<HTMLElement>) => void;
-
-  /**
-   * Notes a pointer press, so the click that follows opens the menu without highlighting an item
-   */
-  onPointerDown: (event: PointerEvent<HTMLElement>) => void;
 
   /**
    * The menu's id, which makes the button open and close it without script
@@ -159,26 +144,18 @@ export function useMenu({
 }: UseMenuOptions = {}): UseMenuResult {
   const triggerId = useId();
   const popover = usePopover({ defaultOpen, onOpenChange, open, placement });
-  const pressedByPointerRef = useRef(false);
   const openingFocusRef = useRef<OpeningFocus>("first");
   const removalWatcherRef = useRef<(() => void) | null>(null);
   const menuId = popover.getTriggerProps().popoverTarget;
 
   useEffect(() => () => removalWatcherRef.current?.(), []);
 
-  function forgetPress(): void {
-    pressedByPointerRef.current = false;
-  }
-
-  function handleTriggerClick(): void {
-    openingFocusRef.current = pressedByPointerRef.current ? "menu" : "first";
-    pressedByPointerRef.current = false;
+  function handleTriggerClick(event: MouseEvent<HTMLElement>): void {
+    // A pointer's click counts its presses; one from the keyboard or assistive technology has none
+    openingFocusRef.current = event.detail === 0 ? "first" : "menu";
   }
 
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLElement>): void {
-    // A key pressed on the trigger makes the next click its own, after a press that never clicked
-    pressedByPointerRef.current = false;
-
     const openingFocus = triggerKeyFocus[event.key];
     const menu = event.currentTarget.ownerDocument.getElementById(menuId);
 
@@ -194,10 +171,6 @@ export function useMenu({
       openingFocusRef.current = openingFocus;
       syncPopover(menu, true);
     }
-  }
-
-  function handleTriggerPointerDown(event: PointerEvent<HTMLElement>): void {
-    pressedByPointerRef.current = event.button === 0;
   }
 
   function handleMenuBeforeToggle(event: ToggleEvent<HTMLElement>): void {
@@ -218,6 +191,10 @@ export function useMenu({
 
   function handleMenuToggle(event: ToggleEvent<HTMLElement>): void {
     const menu = event.currentTarget;
+
+    if (event.target !== menu) {
+      return;
+    }
 
     removalWatcherRef.current?.();
     removalWatcherRef.current = null;
@@ -294,11 +271,8 @@ export function useMenu({
     const triggerProps = mergeProps(props, {
       "aria-haspopup": "menu" as const,
       id: triggerId,
-      onBlur: forgetPress,
       onClick: handleTriggerClick,
       onKeyDown: handleTriggerKeyDown,
-      onPointerCancel: forgetPress,
-      onPointerDown: handleTriggerPointerDown,
     });
 
     return popover.getTriggerProps(triggerProps) as Omit<Props, keyof MenuTriggerProps> & MenuTriggerProps;
@@ -370,16 +344,6 @@ function menusAround(element: Element, root: HTMLElement): HTMLElement[] {
   }
 
   return menus;
-}
-
-/**
- * Whether a key was pressed with Alt, Ctrl or Meta, which leaves it to the browser and the app
- *
- * @param event the key event
- * @returns true when any of the three was held
- */
-function hasModifier(event: KeyboardEvent<HTMLElement>): boolean {
-  return event.altKey || event.ctrlKey || event.metaKey;
 }
 
 /**

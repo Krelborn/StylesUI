@@ -38,7 +38,8 @@ interface MenuItemOwnProps {
 
   /**
    * Whether the item cannot be chosen. It stays reachable with the arrow keys, so its label is read, but clicks, Enter
-   * and Space do nothing: your `onClick` does not run and a link is not followed. Defaults to `false`.
+   * and Space do nothing: your `onClick` does not run and a link is not followed, nor opened by a middle click. A link
+   * given as `a` also loses its `href`, so its context menu cannot open it. Defaults to `false`.
    */
   disabled?: boolean;
 
@@ -105,6 +106,8 @@ interface ItemElementProps {
   className: string;
   "data-leading": true | undefined;
   "data-tone": "danger" | undefined;
+  href: string | undefined;
+  onAuxClick: (event: MouseEvent<HTMLElement>) => void;
   onClick: (event: MouseEvent<HTMLElement>) => void;
   role: "menuitem";
   tabIndex: -1;
@@ -139,10 +142,14 @@ export function MenuItem<E extends MenuItemElement = "button">({
   // Widened as in Box: MenuItemProps<E> already guarantees the props match `as`
   const {
     "aria-describedby": describedBy,
+    href,
+    onAuxClick,
     onClick,
     ...elementProps
   } = rest as {
     "aria-describedby"?: string;
+    href?: string;
+    onAuxClick?: (event: MouseEvent<HTMLElement>) => void;
     onClick?: (event: MouseEvent<HTMLElement>) => void;
   };
   const item = useMenuItemContent({
@@ -152,6 +159,15 @@ export function MenuItem<E extends MenuItemElement = "button">({
     leading: icon,
     trailing: shortcut,
   });
+
+  function handleAuxClick(event: MouseEvent<HTMLElement>): void {
+    if (disabled) {
+      event.preventDefault();
+      return;
+    }
+
+    onAuxClick?.(event);
+  }
 
   function handleClick(event: MouseEvent<HTMLElement>): void {
     if (disabled) {
@@ -177,6 +193,8 @@ export function MenuItem<E extends MenuItemElement = "button">({
     className: clsx(styles.item, className),
     "data-leading": item.hasLeading ? true : undefined,
     "data-tone": tone,
+    href: disabled && as === "a" ? undefined : href,
+    onAuxClick: handleAuxClick,
     onClick: handleClick,
     role: "menuitem",
     tabIndex: -1,

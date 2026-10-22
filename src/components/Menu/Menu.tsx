@@ -4,7 +4,7 @@ import { useRef } from "react";
 
 import type { TypeAheadQuery } from "../../collections";
 import { extendTypeAheadQuery, isTypeAheadQueryLive, targetIndexForKey, typeAheadTarget } from "../../collections";
-import { focusItem, itemText, renderedItems } from "../../menus";
+import { focusItem, hasModifier, itemText, renderedItems } from "../../menus";
 import type { OverlayPlacement } from "../../overlays";
 import type { BoxProps } from "../Box";
 import styles from "../MenuSurface/MenuSurface.module.css";
@@ -137,14 +137,19 @@ export function Menu({
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
     onKeyDown?.(event);
 
-    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) {
+    const menu = event.currentTarget;
+    // Keys pressed in a submenu bubble here too, and are the submenu's
+    const isInSubmenu = (event.target as Element).closest('[role="menu"]') !== menu;
+
+    if (event.defaultPrevented || hasModifier(event) || isInSubmenu) {
       return;
     }
 
-    const items = renderedItems(event.currentTarget);
+    const items = renderedItems(menu);
     const currentIndex = items.indexOf(event.target as HTMLElement);
+    const current = currentIndex === -1 ? undefined : items[currentIndex];
 
-    if (moveFocus(event.key, items, currentIndex) || chooseOnSpace(event.key, items.at(currentIndex))) {
+    if (moveFocus(event.key, items, currentIndex) || chooseOnSpace(event.key, current)) {
       event.preventDefault();
     }
   }

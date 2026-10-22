@@ -1,7 +1,7 @@
-import type { FocusEvent, JSX, KeyboardEvent, PointerEvent, ReactNode, ToggleEvent } from "react";
+import type { FocusEvent, JSX, KeyboardEvent, MouseEvent, PointerEvent, ReactNode, ToggleEvent } from "react";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { focusItem, renderedItems } from "../../menus";
+import { focusItem, hasModifier, renderedItems } from "../../menus";
 import { anchorNameFor } from "../../overlays";
 import { Box } from "../Box";
 import { ChevronRightIcon } from "../Icon";
@@ -58,7 +58,6 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   const menuId = useId();
   const anchorName = anchorNameFor(menuId);
   const [open, setOpen] = useState(false);
-  const pressedByPointerRef = useRef(false);
   const focusesFirstItemRef = useRef(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const item = useMenuItemContent({
@@ -86,9 +85,9 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
     setOpen(true);
   }
 
-  function handleItemClick(event: { currentTarget: HTMLElement }): void {
-    openSubmenu(event.currentTarget.ownerDocument, !pressedByPointerRef.current);
-    pressedByPointerRef.current = false;
+  function handleItemClick(event: MouseEvent<HTMLButtonElement>): void {
+    // A pointer's click counts its presses; one from the keyboard or assistive technology has none
+    openSubmenu(event.currentTarget.ownerDocument, event.detail === 0);
   }
 
   function handleItemPointerMove(event: PointerEvent<HTMLButtonElement>): void {
@@ -113,9 +112,6 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
   }
 
   function handleItemKeyDown(event: KeyboardEvent<HTMLButtonElement>): void {
-    // A key pressed on the item makes the next click its own, after a press that never clicked
-    pressedByPointerRef.current = false;
-
     if (event.key === openingKey(event.currentTarget) && !hasModifier(event)) {
       event.preventDefault();
       openSubmenu(event.currentTarget.ownerDocument, true);
@@ -143,6 +139,8 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
     keepToSubmenu(event);
 
     if (event.newState === "open") {
+      setOpen(true);
+
       if (focusesFirstItemRef.current) {
         focusFirstItem(submenu);
       }
@@ -195,14 +193,11 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
         id={itemId}
         onClick={handleItemClick}
         onKeyDown={handleItemKeyDown}
-        onPointerCancel={() => {
-          pressedByPointerRef.current = false;
-        }}
-        onPointerDown={(event) => {
-          pressedByPointerRef.current = event.button === 0;
-        }}
         onPointerLeave={handleItemPointerLeave}
         onPointerMove={handleItemPointerMove}
+        // Makes a click on the item a click inside the submenu, which the browser would otherwise close
+        popoverTarget={disabled ? undefined : menuId}
+        popoverTargetAction="show"
         role="menuitem"
         style={{ anchorName }}
         tabIndex={-1}
@@ -279,14 +274,4 @@ function openingKey(element: HTMLElement): string {
  */
 function closingKey(element: HTMLElement): string {
   return element.matches(":dir(rtl)") ? "ArrowRight" : "ArrowLeft";
-}
-
-/**
- * Whether a key was pressed with Alt, Ctrl or Meta, which leaves it to the browser and the app
- *
- * @param event the key event
- * @returns true when any of the three was held
- */
-function hasModifier(event: KeyboardEvent<HTMLElement>): boolean {
-  return event.altKey || event.ctrlKey || event.metaKey;
 }
