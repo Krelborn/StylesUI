@@ -56,6 +56,7 @@ describe("NavBar", () => {
   });
 
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -303,7 +304,7 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "false");
   });
 
-  it.each([{ target: "_blank" }, { target: "docs" }, { download: "guide.pdf" }])(
+  it.each([{ target: "_blank" }, { target: "_BLANK" }, { target: "docs" }, { download: "guide.pdf" }])(
     "must keep a section open when a link in its panel with %o is clicked",
     async (linkProps) => {
       const user = userEvent.setup();
@@ -324,12 +325,34 @@ describe("NavBar", () => {
     }
   );
 
-  it("must close a section when a link in its panel targeting this page is clicked", async () => {
+  it.each(["_self", "_top", "_parent", "_SELF", "main-window"])(
+    "must close a section when a link in its panel targeting %s, which replaces this page, is clicked",
+    async (target) => {
+      vi.spyOn(window, "name", "get").mockReturnValue("main-window");
+      const user = userEvent.setup();
+      render(
+        <NavBar aria-label="Main">
+          <NavBarMenu label="Topics">
+            <NavBarMenuItem href="/design" onClick={stayOnPage} target={target}>
+              Design
+            </NavBarMenuItem>
+          </NavBarMenu>
+        </NavBar>
+      );
+
+      await user.click(elements.topics);
+      await user.click(screen.getByRole("link", { name: "Design" }));
+
+      expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+    }
+  );
+
+  it("must close a section when a link in its panel with no target is clicked", async () => {
     const user = userEvent.setup();
     render(
       <NavBar aria-label="Main">
         <NavBarMenu label="Topics">
-          <NavBarMenuItem href="/design" onClick={stayOnPage} target="_self">
+          <NavBarMenuItem href="/design" onClick={stayOnPage}>
             Design
           </NavBarMenuItem>
         </NavBarMenu>

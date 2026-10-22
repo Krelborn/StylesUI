@@ -200,13 +200,34 @@ export function NavBar({
  *
  * @param event the click
  * @param link the link clicked
- * @returns true for a click with Alt, Ctrl, Meta or Shift held, or on a link with a target other than `_self` or a
- *   `download` attribute
+ * @returns true for a click with Alt, Ctrl, Meta or Shift held, or on a link that opens in another browsing context or
+ *   has a `download` attribute
  */
 function leavesPageInPlace(event: MouseEvent, link: HTMLAnchorElement): boolean {
-  const opensElsewhere = link.target !== "" && link.target !== "_self";
-
   return (
-    event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || opensElsewhere || link.hasAttribute("download")
+    event.altKey ||
+    event.ctrlKey ||
+    event.metaKey ||
+    event.shiftKey ||
+    opensInAnotherContext(link) ||
+    link.hasAttribute("download")
   );
+}
+
+/**
+ * Tells whether a link opens in a browsing context other than this page's
+ *
+ * @param link the link
+ * @returns true for `_blank` and for a named target other than this window's name; false for no target, `_self`, and
+ *   `_top` and `_parent`, which replace this page or a frame around it
+ */
+function opensInAnotherContext(link: HTMLAnchorElement): boolean {
+  // Keywords match without regard to case, and names exactly
+  const keyword = link.target.toLowerCase();
+
+  if (["", "_parent", "_self", "_top"].includes(keyword)) {
+    return false;
+  }
+
+  return link.target !== link.ownerDocument.defaultView?.name;
 }
