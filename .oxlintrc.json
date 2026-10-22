@@ -30,6 +30,7 @@
         "Link": "a",
         "Listbox": "div",
         "Menu": "div",
+        "MenuIcon": "svg",
         "MenuGroup": "div",
         "MenuItem": "button",
         "MenuItemCheckbox": "button",

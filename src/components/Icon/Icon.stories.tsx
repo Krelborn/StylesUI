@@ -18,6 +18,7 @@ import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
 import type { IconProps } from "./Icon";
 import { InfoIcon } from "./InfoIcon";
+import { MenuIcon } from "./MenuIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { PaletteIcon } from "./PaletteIcon";
@@ -46,6 +47,7 @@ const icons: GalleryIcon[] = [
   { Component: ColorModeIcon, name: "ColorModeIcon" },
   { Component: DeleteIcon, name: "DeleteIcon" },
   { Component: InfoIcon, name: "InfoIcon" },
+  { Component: MenuIcon, name: "MenuIcon" },
   { Component: MoreHorizontalIcon, name: "MoreHorizontalIcon" },
   { Component: MoreVerticalIcon, name: "MoreVerticalIcon" },
   { Component: PaletteIcon, name: "PaletteIcon" },
@@ -74,6 +76,7 @@ const meta = {
     ColorModeIcon,
     DeleteIcon,
     InfoIcon,
+    MenuIcon,
     MoreHorizontalIcon,
     MoreVerticalIcon,
     PaletteIcon,

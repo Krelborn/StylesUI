@@ -7,6 +7,7 @@ export { ColorModeIcon } from "./ColorModeIcon";
 export { DeleteIcon } from "./DeleteIcon";
 export type { IconProps } from "./Icon";
 export { InfoIcon } from "./InfoIcon";
+export { MenuIcon } from "./MenuIcon";
 export { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 export { MoreVerticalIcon } from "./MoreVerticalIcon";
 export { PaletteIcon } from "./PaletteIcon";

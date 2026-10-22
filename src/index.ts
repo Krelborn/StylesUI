@@ -47,6 +47,7 @@ export {
   ColorModeIcon,
   DeleteIcon,
   InfoIcon,
+  MenuIcon,
   MoreHorizontalIcon,
   MoreVerticalIcon,
   PaletteIcon,
