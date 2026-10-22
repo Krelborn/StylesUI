@@ -162,6 +162,17 @@ describe("Menu", () => {
     expect(elements.item("Edit")).toHaveFocus();
   });
 
+  it("must focus the first item when the parent opens a controlled menu after the trigger's click was cancelled", async () => {
+    const user = userEvent.setup();
+    render(<ControlledRowActions onTriggerClick={(event) => event.preventDefault()} />);
+    await user.click(elements.trigger);
+
+    await user.click(screen.getByRole("button", { name: "Open from the toolbar" }));
+    openAsBrowser(elements.menu);
+
+    expect(elements.item("Edit")).toHaveFocus();
+  });
+
   it("must run an item's onClick once and close the menu when the item is clicked", async () => {
     const user = userEvent.setup();
     const onDuplicate = vi.fn();
@@ -559,6 +570,21 @@ describe("Menu", () => {
     render(<GroupedMenu />);
 
     expect(screen.getByRole("group", { name: "" })).toContainElement(elements.item("Edit"));
+  });
+
+  it("must name a group by the consumer's aria-labelledby when it has no label", () => {
+    render(
+      <>
+        <Text id="filters-heading">Filters</Text>
+        <BareMenu>
+          <MenuGroup aria-labelledby="filters-heading">
+            <MenuItem>Starred</MenuItem>
+          </MenuGroup>
+        </BareMenu>
+      </>
+    );
+
+    expect(screen.getByRole("group", { hidden: true, name: "Filters" })).toContainElement(elements.item("Starred"));
   });
 
   it("must separate items with a separator when one is given", () => {
@@ -1213,7 +1239,7 @@ interface RowActionsProps extends UseMenuOptions {
   /**
    * Runs when the trigger is clicked
    */
-  onTriggerClick?: () => void;
+  onTriggerClick?: (event: MouseEvent<HTMLElement>) => void;
 }
 
 function RowActions({ onDuplicate, onTriggerClick, ...options }: RowActionsProps): JSX.Element {
@@ -1629,9 +1655,14 @@ interface ControlledRowActionsProps {
    * Whether the parent ignores the menu's requests to open, opening it only from the toolbar
    */
   ignoresRequests?: boolean;
+
+  /**
+   * Runs when the trigger is clicked
+   */
+  onTriggerClick?: (event: MouseEvent<HTMLElement>) => void;
 }
 
-function ControlledRowActions({ ignoresRequests = false }: ControlledRowActionsProps): JSX.Element {
+function ControlledRowActions({ ignoresRequests = false, onTriggerClick }: ControlledRowActionsProps): JSX.Element {
   const [open, setOpen] = useState(false);
 
   function handleOpenChange(next: boolean): void {
@@ -1645,7 +1676,7 @@ function ControlledRowActions({ ignoresRequests = false }: ControlledRowActionsP
       <Button onClick={() => setOpen(true)} variant="ghost">
         Open from the toolbar
       </Button>
-      <RowActions onOpenChange={handleOpenChange} open={open} />
+      <RowActions onOpenChange={handleOpenChange} onTriggerClick={onTriggerClick} open={open} />
     </>
   );
 }

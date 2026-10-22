@@ -29,7 +29,13 @@ export interface MenuGroupProps extends Omit<BoxProps<"div">, "as" | "role"> {
  *   <MenuItem onClick={sortBySize}>Size</MenuItem>
  * </MenuGroup>
  */
-export function MenuGroup({ children, className, label, ...rest }: MenuGroupProps): JSX.Element {
+export function MenuGroup({
+  children,
+  className,
+  label,
+  "aria-labelledby": labelledBy,
+  ...rest
+}: MenuGroupProps): JSX.Element {
   useMenuContext("MenuGroup");
   const labelId = useId();
   const hasLabel = hasContent(label);
@@ -40,7 +46,7 @@ export function MenuGroup({ children, className, label, ...rest }: MenuGroupProp
       className={clsx(styles.group, className)}
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- fieldset and the other elements with this role do not belong in a menu
       role="group"
-      aria-labelledby={hasLabel ? labelId : undefined}
+      aria-labelledby={hasLabel ? labelId : labelledBy}
     >
       {hasLabel && (
         <Box className={styles.groupLabel} id={labelId}>

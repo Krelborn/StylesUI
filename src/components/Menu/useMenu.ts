@@ -153,6 +153,13 @@ export function useMenu({
   function handleTriggerClick(event: MouseEvent<HTMLElement>): void {
     // A pointer's click counts its presses; one from the keyboard or assistive technology has none
     openingFocusRef.current = event.detail === 0 ? "first" : "menu";
+
+    const menu = event.currentTarget.ownerDocument.getElementById(menuId);
+
+    // A cancelled click opens nothing itself, but its handler may have opened a controlled menu
+    if (event.defaultPrevented && menu !== null) {
+      forgetOpeningFocusUnlessShown(menu);
+    }
   }
 
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLElement>): void {
@@ -176,12 +183,17 @@ export function useMenu({
   function handleMenuBeforeToggle(event: ToggleEvent<HTMLElement>): void {
     const menu = event.currentTarget;
 
-    if (event.newState !== "open" || event.target !== menu) {
-      return;
+    // A controlled parent may refuse the opening, which leaves no toggle to clear its focus
+    if (event.newState === "open" && event.target === menu) {
+      forgetOpeningFocusUnlessShown(menu);
     }
+  }
 
-    // A controlled parent may refuse the opening, which leaves no toggle to clear its focus; it has answered by the
-    // next task, when an accepted opening has shown the menu
+  /**
+   * Resets where focus goes on the next opening unless the menu is shown by the next task, by when an accepted opening
+   * has shown it
+   */
+  function forgetOpeningFocusUnlessShown(menu: HTMLElement): void {
     setTimeout(() => {
       if (!menu.matches(":popover-open")) {
         openingFocusRef.current = "first";
