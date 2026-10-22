@@ -83,10 +83,13 @@ export function NavBarMenu({
   function handleBlur(event: FocusEvent<HTMLLIElement>): void {
     onBlur?.(event);
 
+    const section = event.currentTarget;
     const next = event.relatedTarget;
+    // A press on the panel's text focuses the nearest focusable element around the bar, such as a page's wrapper
+    const leaves = next !== null && !section.contains(next) && !next.contains(section);
 
     // Nothing can cover the focused element on a collapsed bar, where the panel pushes the page down
-    if (open && next !== null && !event.currentTarget.contains(next) && !isNavBarCollapsed(event.currentTarget)) {
+    if (open && leaves && !isNavBarCollapsed(section)) {
       closeSection(panelId);
     }
   }

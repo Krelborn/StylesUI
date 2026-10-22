@@ -1,4 +1,6 @@
+/* A size container has no width of its own, so in a flex row it takes the room left over */
 .bar {
+  flex: 1;
   container: sui-nav-bar / inline-size;
   color: var(--sui-color-text, #111827);
   font-family: var(--sui-font-body, system-ui, sans-serif);
@@ -10,7 +12,7 @@
  * collapsed rule below reads the flag. It is reset here so a bar inside a collapsed one doesn't inherit it.
  */
 .layout {
-  --_sui-nav-bar-collapsed: 0;
+  --_sui-nav-bar-below-collapse-width: 0;
 
   display: flex;
   flex-wrap: wrap;
@@ -19,24 +21,24 @@
 }
 
 .bar[data-collapse="always"] > .layout {
-  --_sui-nav-bar-collapsed: 1;
+  --_sui-nav-bar-below-collapse-width: 1;
 }
 
 @container sui-nav-bar (width < 30rem) {
   .bar[data-collapse="sm"] > .layout {
-    --_sui-nav-bar-collapsed: 1;
+    --_sui-nav-bar-below-collapse-width: 1;
   }
 }
 
 @container sui-nav-bar (width < 48rem) {
   .bar[data-collapse="md"] > .layout {
-    --_sui-nav-bar-collapsed: 1;
+    --_sui-nav-bar-below-collapse-width: 1;
   }
 }
 
 @container sui-nav-bar (width < 64rem) {
   .bar[data-collapse="lg"] > .layout {
-    --_sui-nav-bar-collapsed: 1;
+    --_sui-nav-bar-below-collapse-width: 1;
   }
 }
 
@@ -48,7 +50,10 @@
   gap: var(--sui-space-2, 0.5rem);
 }
 
+/* Read by the script, which follows the layout shown: a browser without style queries shows the wide one */
 .navigation {
+  --_sui-nav-bar-collapsed: 0;
+
   flex: 1;
   min-inline-size: 0;
 }
@@ -151,6 +156,7 @@
 /* With room on neither side, start-aligned and narrowed to the room after its button */
 @position-try --sui-nav-bar-panel-shrink {
   inline-size: auto;
+  margin-inline-end: var(--sui-space-2, 0.5rem);
 }
 
 /* Starts nearer its button and moves out, so it reads as coming from it */
@@ -197,6 +203,7 @@
 
 .panelLink {
   box-sizing: border-box;
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -251,7 +258,22 @@
   content: "";
 }
 
-@container style(--_sui-nav-bar-collapsed: 1) {
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: opacity 120ms ease-out;
+  }
+
+  .chevron {
+    transition: none;
+  }
+}
+
+/* After the reduced motion rules, so a collapsed panel opens without animating under them too */
+@container style(--_sui-nav-bar-below-collapse-width: 1) {
+  .navigation {
+    --_sui-nav-bar-collapsed: 1;
+  }
+
   .toggle {
     display: inline-flex;
     gap: var(--sui-space-2, 0.5rem);
@@ -268,10 +290,12 @@
     display: none;
   }
 
-  .list {
+  /* Room between full-width rows for the focus ring outside each */
+  .list,
+  .panelList {
     flex-direction: column;
     align-items: stretch;
-    gap: 1px;
+    gap: var(--sui-space-1, 0.25rem);
   }
 
   .control,
@@ -332,16 +356,6 @@
   .control[aria-current]:not([aria-current="false"])::before,
   .panelLink[aria-current]:not([aria-current="false"])::before {
     display: block;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .panel {
-    transition: opacity 120ms ease-out;
-  }
-
-  .chevron {
-    transition: none;
   }
 }
 

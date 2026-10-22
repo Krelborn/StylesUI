@@ -490,6 +490,25 @@ export const InStickyHeader: Story = {
 };
 
 /**
+ * In a flex row beside the site's name, the bar takes the room left over
+ */
+export const InFlexRow: Story = {
+  render: () => (
+    <Box as="header" style={{ alignItems: "center", display: "flex", gap: "1rem" }}>
+      <Text weight="bold">The Long Read</Text>
+      <NavBar aria-label="Main" collapse="never" data-testid="bar">
+        <NavBarItem href="#articles">Articles</NavBarItem>
+        <NavBarItem href="#about">About</NavBarItem>
+      </NavBar>
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    await expect(canvas.getByTestId("bar").getBoundingClientRect().width).toBeGreaterThan(100);
+    await expect(canvas.getByRole("link", { name: "About" })).toBeVisible();
+  },
+};
+
+/**
  * Switching between the wide and collapsed layouts closes every section and the navigation
  */
 export const SwitchingLayout: Story = {
@@ -535,12 +554,19 @@ export const CurrentPage: Story = {
 
 /**
  * On a collapsed bar the current page takes NavList's current look: primary text on the primary tint, bold, with a bar
- * at its start
+ * at its start, in a section's links too
  */
 export const CollapsedCurrentPage: Story = {
-  render: () => <BlogHeader style={narrow} />,
+  render: () => (
+    <>
+      <BlogHeader style={narrow} />
+      <BlogHeader currentPage="#design" style={narrow} />
+    </>
+  ),
   play: async ({ canvas }) => {
-    await userEvent.click(canvas.getByRole("button", { name: "Menu" }));
+    const [first, second] = canvas.getAllByRole("button", { name: "Menu" });
+
+    await userEvent.click(first);
 
     const articles = canvas.getByRole("link", { name: "Articles" });
     const style = getComputedStyle(articles);
@@ -551,6 +577,15 @@ export const CollapsedCurrentPage: Story = {
     await expect(getComputedStyle(articles, "::after").display).toBe("none");
     await expect(textContrast(articles)).toBeGreaterThanOrEqual(4.5);
     await expect(articles.getBoundingClientRect().height).toBeGreaterThanOrEqual(44);
+
+    await userEvent.click(second);
+    await userEvent.click(canvas.getAllByRole("button", { name: "Topics" })[1]);
+
+    const design = canvas.getByRole("link", { name: "Design" });
+    const bar = getComputedStyle(design, "::before");
+
+    await expect(bar.display).toBe("block");
+    await expect(parseFloat(bar.height)).toBeLessThan(design.getBoundingClientRect().height);
   },
 };
 

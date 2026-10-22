@@ -83,20 +83,22 @@ export function NavBar({
   const navigationId = useId();
   const toggleId = useId();
   const layoutRef = useRef<HTMLDivElement>(null);
+  const navigationRef = useRef<HTMLElement>(null);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [openSections, setOpenSections] = useState<readonly string[]>([]);
 
   useEffect(() => {
     const layout = layoutRef.current;
+    const navigation = navigationRef.current;
 
     // Missing where nothing is laid out, such as jsdom, where the layout never changes
-    if (layout === null || typeof ResizeObserver === "undefined") {
+    if (layout === null || navigation === null || typeof ResizeObserver === "undefined") {
       return;
     }
 
-    let collapsed = isNavBarCollapsed(layout);
+    let collapsed = isNavBarCollapsed(navigation);
     const observer = new ResizeObserver(() => {
-      if (isNavBarCollapsed(layout) !== collapsed) {
+      if (isNavBarCollapsed(navigation) !== collapsed) {
         collapsed = !collapsed;
         setNavigationOpen(false);
         setOpenSections([]);
@@ -106,7 +108,7 @@ export function NavBar({
     observer.observe(layout);
 
     return () => observer.disconnect();
-  }, []);
+  }, [collapse]);
 
   function closeAll(): void {
     setNavigationOpen(false);
@@ -138,8 +140,11 @@ export function NavBar({
   }
 
   function handleNavigationClick(event: MouseEvent<HTMLElement>): void {
-    // A router's link prevents the default to navigate by itself, so any click on a link closes everything
-    if ((event.target as Element).closest("a") !== null) {
+    // Opening a link in a new tab or window leaves this page where it was
+    const opensElsewhere = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+
+    // A router's link prevents the default to navigate by itself, so any other click on a link closes everything
+    if (!opensElsewhere && (event.target as Element).closest("a") !== null) {
       closeAll();
     }
   }
@@ -147,7 +152,7 @@ export function NavBar({
   function handleLayoutKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
     const page = event.currentTarget.ownerDocument;
     const toggle = page.getElementById(toggleId);
-    const navigation = page.getElementById(navigationId);
+    const navigation = navigationRef.current;
     const target = event.target as Node;
     const inNavigation = target === toggle || navigation?.contains(target) === true;
 
@@ -155,8 +160,9 @@ export function NavBar({
       event.key !== "Escape" ||
       event.defaultPrevented ||
       !navigationOpen ||
+      navigation === null ||
       !inNavigation ||
-      !isNavBarCollapsed(event.currentTarget)
+      !isNavBarCollapsed(navigation)
     ) {
       return;
     }
@@ -190,6 +196,7 @@ export function NavBar({
             className={styles.navigation}
             id={navigationId}
             onClick={handleNavigationClick}
+            ref={navigationRef}
             aria-label={label}
             aria-labelledby={labelledBy}
             data-open={navigationOpen ? true : undefined}

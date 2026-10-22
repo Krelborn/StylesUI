@@ -8,6 +8,7 @@ import { MissingContextError } from "../../errors";
 import { Box } from "../Box";
 
 import { isNavBarCollapsed } from "./isNavBarCollapsed";
+import type { NavBarCollapse } from "./NavBar";
 import { NavBar } from "./NavBar";
 import { NavBarItem } from "./NavBarItem";
 import { NavBarMenu } from "./NavBarMenu";
@@ -258,6 +259,40 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("must keep a section open when a press on its panel focuses a focusable element around the bar", async () => {
+    const user = userEvent.setup();
+    render(
+      <Box tabIndex={-1}>
+        <NavBar aria-label="Docs">
+          <NavBarMenu label="Reference">
+            <NavBarMenuGroup headingLevel={2} title="Components">
+              <NavBarMenuItem href="/button">Button</NavBarMenuItem>
+            </NavBarMenuGroup>
+          </NavBarMenu>
+        </NavBar>
+      </Box>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Reference" }));
+    await user.click(screen.getByRole("heading", { name: "Components" }));
+
+    expect(screen.getByRole("button", { name: "Reference" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it.each(["{Control>}", "{Meta>}", "{Shift>}"])(
+    "must keep a section open when a link in its panel is clicked with %s held",
+    async (modifier) => {
+      const user = userEvent.setup();
+      render(<BlogNavBar />);
+
+      await user.click(elements.topics);
+      await user.keyboard(modifier);
+      await user.click(screen.getByRole("link", { name: "Design" }));
+
+      expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+    }
+  );
+
   it("must close a section when a link in its panel is clicked", async () => {
     const user = userEvent.setup();
     render(<BlogNavBar />);
@@ -405,6 +440,19 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must keep the navigation open when the bar resizes after its collapse width changed", async () => {
+    const { resize } = setUpTestWithResizeObserver();
+    const user = userEvent.setup();
+    const { rerender } = render(<BlogNavBar />);
+
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    rerender(<BlogNavBar collapse="always" />);
+    await user.click(elements.toggle);
+    resize();
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must keep its sections open when the bar resizes without switching layout", async () => {
     const { resize } = setUpTestWithResizeObserver();
     const user = userEvent.setup();
@@ -422,6 +470,20 @@ describe("NavBar", () => {
     const design = screen.getByRole("link", { hidden: true, name: "Design" });
 
     expect(design).toHaveAccessibleDescription("Typography, colour, systems");
+  });
+
+  it("must name a panel link by its own aria-label when it is given one with a description", () => {
+    render(
+      <NavBar aria-label="Main">
+        <NavBarMenu label="Topics">
+          <NavBarMenuItem description="Typography" href="/design" aria-label="Design topics">
+            Design
+          </NavBarMenuItem>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    expect(screen.getByRole("link", { hidden: true, name: "Design topics" })).toHaveAccessibleDescription("Typography");
   });
 
   it("must keep a panel link's own description after its description when it is given", () => {
@@ -544,10 +606,15 @@ describe("NavBar", () => {
 /**
  * The blog header from the design mockups, with a paragraph after it to click outside the bar
  */
-function BlogNavBar(): JSX.Element {
+function BlogNavBar({ collapse }: { collapse?: NavBarCollapse }): JSX.Element {
   return (
     <>
-      <NavBar aria-label="Main" end={<button type="button">Subscribe</button>} start={<a href="/">The Long Read</a>}>
+      <NavBar
+        aria-label="Main"
+        collapse={collapse}
+        end={<button type="button">Subscribe</button>}
+        start={<a href="/">The Long Read</a>}
+      >
         <NavBarItem href="/articles" onClick={stayOnPage} aria-current="page">
           Articles
         </NavBarItem>
@@ -573,18 +640,24 @@ function BlogNavBar(): JSX.Element {
  * @returns `resize`, which reports a resize to every observer
  */
 function setUpTestWithResizeObserver(): { resize: () => void } {
-  const callbacks: ResizeObserverCallback[] = [];
+  const callbacks = new Set<ResizeObserverCallback>();
 
   vi.stubGlobal(
     "ResizeObserver",
     class {
+      private readonly callback: ResizeObserverCallback;
+
       public constructor(callback: ResizeObserverCallback) {
-        callbacks.push(callback);
+        this.callback = callback;
       }
 
-      public disconnect(): void {}
+      public disconnect(): void {
+        callbacks.delete(this.callback);
+      }
 
-      public observe(): void {}
+      public observe(): void {
+        callbacks.add(this.callback);
+      }
     }
   );
 

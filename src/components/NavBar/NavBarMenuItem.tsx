@@ -65,10 +65,12 @@ export function NavBarMenuItem<E extends LinkElement = "a">({
   // Widened as in Box: NavBarMenuItemProps<E> already guarantees the props match `as`
   const {
     "aria-describedby": describedBy,
+    "aria-label": ownLabel,
     "aria-labelledby": labelledBy,
     ...linkProps
   } = rest as {
     "aria-describedby"?: string;
+    "aria-label"?: string;
     "aria-labelledby"?: string;
   };
   const hasDescription = hasContent(description);
@@ -88,9 +90,10 @@ export function NavBarMenuItem<E extends LinkElement = "a">({
   const describingProps = hasDescription
     ? {
         "aria-describedby": describedBy === undefined ? descriptionId : `${descriptionId} ${describedBy}`,
-        "aria-labelledby": labelledBy ?? titleId,
+        "aria-label": ownLabel,
+        "aria-labelledby": labelledBy ?? (ownLabel === undefined ? titleId : undefined),
       }
-    : { "aria-describedby": describedBy, "aria-labelledby": labelledBy };
+    : { "aria-describedby": describedBy, "aria-label": ownLabel, "aria-labelledby": labelledBy };
 
   return (
     <Box as="li">
