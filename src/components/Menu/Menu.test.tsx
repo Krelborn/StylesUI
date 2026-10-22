@@ -1119,6 +1119,29 @@ describe("Menu", () => {
     expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must leave a submenu closed when it is disabled while the pointer rests on its item", async () => {
+    const { user } = setUpTest();
+    const { rerender } = render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    await user.hover(elements.item("Move to"));
+    act(() => vi.advanceTimersByTime(50));
+
+    rerender(<SubmenuMenu moveToDisabled={true} />);
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must close an open submenu when it is disabled", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<SubmenuMenu />);
+    await openSubmenu(user);
+
+    rerender(<SubmenuMenu moveToDisabled={true} />);
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must close an open submenu 100ms after the pointer moves onto another item away from it", async () => {
     const { user } = setUpTest();
     render(<SubmenuMenu />);
@@ -1570,12 +1593,17 @@ interface SubmenuMenuProps {
   dir?: "ltr" | "rtl";
 
   /**
+   * Whether Move to is disabled
+   */
+  moveToDisabled?: boolean;
+
+  /**
    * Runs when Inbox is chosen
    */
   onMove?: () => void;
 }
 
-function SubmenuMenu({ density, dir, onMove }: SubmenuMenuProps): JSX.Element {
+function SubmenuMenu({ density, dir, moveToDisabled, onMove }: SubmenuMenuProps): JSX.Element {
   const menu = useMenu({ defaultOpen: true });
 
   return (
@@ -1585,7 +1613,7 @@ function SubmenuMenu({ density, dir, onMove }: SubmenuMenuProps): JSX.Element {
       </Button>
       <Menu {...menu.getMenuProps()} density={density}>
         <MenuItem>Edit</MenuItem>
-        <Submenu label="Move to">
+        <Submenu disabled={moveToDisabled} label="Move to">
           <MenuItem onClick={onMove}>Inbox</MenuItem>
           <MenuItem>Projects</MenuItem>
         </Submenu>

@@ -70,6 +70,11 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
 
   useEffect(() => () => clearTimeout(hoverTimerRef.current), []);
 
+  // Closes a submenu disabled while open, or opened by a hover timer that started before it was disabled
+  if (disabled && open) {
+    setOpen(false);
+  }
+
   function openSubmenu(page: Document, focusesFirstItem: boolean): void {
     const submenu = page.getElementById(menuId);
 
