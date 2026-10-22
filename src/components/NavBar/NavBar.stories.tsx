@@ -160,6 +160,23 @@ function MidBarHeader(): JSX.Element {
 }
 
 /**
+ * A wide bar whose section holds more links than a short window has room for
+ */
+function LongSectionHeader(): JSX.Element {
+  return (
+    <NavBar aria-label="Archive" collapse="never">
+      <NavBarMenu label="Years">
+        {Array.from({ length: 40 }, (_, i) => 2026 - i).map((year) => (
+          <NavBarMenuItem href={`#${year}`} key={year}>
+            {year}
+          </NavBarMenuItem>
+        ))}
+      </NavBarMenu>
+    </NavBar>
+  );
+}
+
+/**
  * A sticky header above a long page, whose open panel hangs over the page below it
  */
 function StickyHeader(): JSX.Element {
@@ -510,6 +527,28 @@ export const InFlexRow: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByTestId("bar").getBoundingClientRect().width).toBeGreaterThan(100);
     await expect(canvas.getByRole("link", { name: "About" })).toBeVisible();
+  },
+};
+
+/**
+ * A panel is no taller than the room below its button and scrolls past it, so its last link can be reached
+ */
+export const LongPanel: Story = {
+  render: () => <LongSectionHeader />,
+  play: async ({ canvas }) => {
+    const years = canvas.getByRole("button", { name: "Years" });
+
+    await userEvent.click(years);
+
+    const panel = panelOf(years);
+    await waitForTransitions(panel);
+    await expect(panel.getBoundingClientRect().bottom).toBeLessThanOrEqual(window.innerHeight);
+    await expect(panel.scrollHeight).toBeGreaterThan(panel.clientHeight);
+
+    const last = canvas.getByRole("link", { name: "1987" });
+    last.focus();
+
+    await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(panel.getBoundingClientRect().bottom);
   },
 };
 

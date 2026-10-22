@@ -451,6 +451,27 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must close every section when a new collapse width switches the layout", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    rerender(<BlogNavBar collapse="always" />);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep its sections open when a new collapse width leaves the layout as it was", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    rerender(<BlogNavBar collapse="lg" />);
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must keep the navigation open when the bar resizes after its collapse width changed", async () => {
     const { resize } = setUpTestWithResizeObserver();
     const user = userEvent.setup();

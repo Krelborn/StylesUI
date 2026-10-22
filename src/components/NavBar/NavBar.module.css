@@ -142,7 +142,12 @@
   /* Its full width, or it would narrow to the room after its button rather than flip */
   inline-size: max-content;
   max-inline-size: calc(100vw - var(--sui-space-2, 0.5rem) * 2);
+  /* No taller than the room below its button, scrolling past it, since scrolling the page never moves it */
+  max-block-size: 100%;
+  max-block-size: stretch;
   margin-block-start: var(--sui-space-1, 0.25rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--sui-space-2, 0.5rem);
   border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
   border-radius: var(--sui-radius-lg, 8px);
@@ -317,7 +322,9 @@
     position: static;
     inline-size: auto;
     max-inline-size: none;
+    max-block-size: none;
     margin: 0;
+    overflow: visible;
     padding: 0;
     padding-inline-start: var(--sui-space-4, 1rem);
     border: 0;

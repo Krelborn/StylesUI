@@ -1,6 +1,6 @@
 import { clsx } from "clsx";
 import type { JSX, KeyboardEvent, MouseEvent, ReactNode } from "react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
 import type { RequiredAccessibleName } from "../../accessibility";
 import { hasContent } from "../../forms";
@@ -11,6 +11,7 @@ import { CloseIcon, MenuIcon } from "../Icon";
 import { isNavBarCollapsed } from "./isNavBarCollapsed";
 import styles from "./NavBar.module.css";
 import { NavBarContext } from "./NavBarContext";
+import { useLayoutSwitch } from "./useLayoutSwitch";
 
 /**
  * Below which width of the bar its navigation collapses behind its "Menu" toggle: `sm` 30rem, `md` 48rem and `lg`
@@ -87,33 +88,12 @@ export function NavBar({
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [openSections, setOpenSections] = useState<readonly string[]>([]);
 
-  useEffect(() => {
-    const layout = layoutRef.current;
-    const navigation = navigationRef.current;
-
-    // Missing where nothing is laid out, such as jsdom, where the layout never changes
-    if (layout === null || navigation === null || typeof ResizeObserver === "undefined") {
-      return;
-    }
-
-    let collapsed = isNavBarCollapsed(navigation);
-    const observer = new ResizeObserver(() => {
-      if (isNavBarCollapsed(navigation) !== collapsed) {
-        collapsed = !collapsed;
-        setNavigationOpen(false);
-        setOpenSections([]);
-      }
-    });
-
-    observer.observe(layout);
-
-    return () => observer.disconnect();
-  }, [collapse]);
-
   function closeAll(): void {
     setNavigationOpen(false);
     setOpenSections([]);
   }
+
+  useLayoutSwitch({ collapse, layoutRef, navigationRef, onSwitch: closeAll });
 
   function closeSection(id: string): void {
     setOpenSections((open) => open.filter((openId) => openId !== id));
