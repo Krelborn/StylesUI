@@ -49,6 +49,7 @@ const textPairs: readonly ColourPair[] = [
   { background: "surface", foreground: "primary" },
   { background: "overlay", foreground: "primary" },
   { background: "primary-subtle", foreground: "primary" },
+  { background: "primary-subtle", foreground: "text-muted" },
   { background: "primary", foreground: "on-primary" },
   { background: "primary-hover", foreground: "on-primary" },
   { background: "secondary", foreground: "on-secondary" },

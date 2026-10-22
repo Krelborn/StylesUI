@@ -5,11 +5,6 @@ import { createContext } from "react";
  */
 export interface NavBarContextValue {
   /**
-   * Closes every section, and the navigation when it is collapsed
-   */
-  closeAll: () => void;
-
-  /**
    * Closes the section with the given id
    */
   closeSection: (id: string) => void;

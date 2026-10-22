@@ -425,6 +425,17 @@ describe("NavBar", () => {
     expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must close the navigation when the site's name in start is clicked on a collapsed bar", async () => {
+    vi.mocked(isNavBarCollapsed).mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.toggle);
+    await user.click(screen.getByRole("link", { name: "The Long Read" }));
+
+    expect(elements.toggle).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("must close every section and the navigation when the bar switches layout", async () => {
     const { resize } = setUpTestWithResizeObserver();
     vi.mocked(isNavBarCollapsed).mockReturnValue(true);
@@ -613,7 +624,11 @@ function BlogNavBar({ collapse }: { collapse?: NavBarCollapse }): JSX.Element {
         aria-label="Main"
         collapse={collapse}
         end={<button type="button">Subscribe</button>}
-        start={<a href="/">The Long Read</a>}
+        start={
+          <a href="/" onClick={stayOnPage}>
+            The Long Read
+          </a>
+        }
       >
         <NavBarItem href="/articles" onClick={stayOnPage} aria-current="page">
           Articles

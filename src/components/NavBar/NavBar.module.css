@@ -291,8 +291,7 @@
   }
 
   /* Room between full-width rows for the focus ring outside each */
-  .list,
-  .panelList {
+  .list {
     flex-direction: column;
     align-items: stretch;
     gap: var(--sui-space-1, 0.25rem);
@@ -330,6 +329,12 @@
 
   .panelList {
     grid-template-columns: minmax(0, 1fr);
+    gap: var(--sui-space-1, 0.25rem);
+  }
+
+  /* Outside the edge, as an entry's, since nothing covers a full-width row and a current link's tint would be under it */
+  .panelLink:focus-visible {
+    outline-offset: 2px;
   }
 
   .description {

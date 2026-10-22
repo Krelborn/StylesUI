@@ -81,9 +81,9 @@ export function NavBar({
   ...rest
 }: NavBarProps): JSX.Element {
   const navigationId = useId();
-  const toggleId = useId();
   const layoutRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [openSections, setOpenSections] = useState<readonly string[]>([]);
 
@@ -139,19 +139,19 @@ export function NavBar({
     }
   }
 
-  function handleNavigationClick(event: MouseEvent<HTMLElement>): void {
+  function handleLayoutClick(event: MouseEvent<HTMLDivElement>): void {
     // Opening a link in a new tab or window leaves this page where it was
     const opensElsewhere = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
 
-    // A router's link prevents the default to navigate by itself, so any other click on a link closes everything
+    // A router's link prevents the default to navigate by itself, so any other click on a link in the bar, the site's
+    // name in start included, closes everything
     if (!opensElsewhere && (event.target as Element).closest("a") !== null) {
       closeAll();
     }
   }
 
   function handleLayoutKeyDown(event: KeyboardEvent<HTMLDivElement>): void {
-    const page = event.currentTarget.ownerDocument;
-    const toggle = page.getElementById(toggleId);
+    const toggle = toggleRef.current;
     const navigation = navigationRef.current;
     const target = event.target as Node;
     const inNavigation = target === toggle || navigation?.contains(target) === true;
@@ -173,16 +173,16 @@ export function NavBar({
   }
 
   return (
-    <NavBarContext.Provider value={{ closeAll, closeSection, openSections, toggleSection }}>
+    <NavBarContext.Provider value={{ closeSection, openSections, toggleSection }}>
       <Box {...rest} className={clsx(styles.bar, className)} data-collapse={collapse}>
-        {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- only notices Escape in the navigation */}
-        <Box className={styles.layout} onKeyDown={handleLayoutKeyDown} ref={layoutRef}>
+        {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- only notices Escape in the navigation and clicks on links, which Enter also makes */}
+        <Box className={styles.layout} onClick={handleLayoutClick} onKeyDown={handleLayoutKeyDown} ref={layoutRef}>
           {hasContent(start) && <Box className={styles.start}>{start}</Box>}
           <Box
             as="button"
             className={clsx(styles.control, styles.toggle)}
-            id={toggleId}
             onClick={handleToggleClick}
+            ref={toggleRef}
             type="button"
             aria-controls={navigationId}
             aria-expanded={navigationOpen}
@@ -190,12 +190,10 @@ export function NavBar({
             {navigationOpen ? <CloseIcon /> : <MenuIcon />}
             {menuLabel}
           </Box>
-          {/* oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions -- only notices clicks on its links, which Enter also makes */}
           <Box
             as="nav"
             className={styles.navigation}
             id={navigationId}
-            onClick={handleNavigationClick}
             ref={navigationRef}
             aria-label={label}
             aria-labelledby={labelledBy}

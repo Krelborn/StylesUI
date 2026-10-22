@@ -310,10 +310,11 @@ export const KeyboardInteraction: Story = {
 /**
  * Below its collapse width, the navigation hides behind a "Menu" toggle. Opening it shows the entries in a column
  * below the bar's first row. Sections expand in place, Escape closes the innermost open section and then the
- * navigation, returning focus to the button that opened it, and Tab leaving a section leaves it open.
+ * navigation, returning focus to the button that opened it, and Tab leaving a section leaves it open. Every ring keeps
+ * 3:1, the current panel link's on its tint too.
  */
 export const CollapsedKeyboardInteraction: Story = {
-  render: () => <BlogHeader style={narrow} />,
+  render: () => <BlogHeader currentPage="#design" style={narrow} />,
   play: async ({ canvas }) => {
     await trustedInput()?.pressKey("Shift");
     const toggle = canvas.getByRole("button", { name: "Menu" });
@@ -331,7 +332,10 @@ export const CollapsedKeyboardInteraction: Story = {
     await expect(canvas.getByRole("navigation", { name: "Main" })).toBeVisible();
 
     await userEvent.tab();
-    await expect(canvas.getByRole("link", { name: "Articles" })).toHaveFocus();
+
+    const articles = canvas.getByRole("link", { name: "Articles" });
+    await expect(articles).toHaveFocus();
+    await expect(focusRingContrast(articles)).toBeGreaterThanOrEqual(3);
     await userEvent.tab();
     await expect(topics).toHaveFocus();
     await expect(focusRingContrast(topics)).toBeGreaterThanOrEqual(3);
@@ -340,6 +344,7 @@ export const CollapsedKeyboardInteraction: Story = {
 
     const design = canvas.getByRole("link", { name: "Design" });
     await expect(design).toHaveFocus();
+    await expect(design).toHaveAttribute("aria-current", "page");
     await expect(focusRingContrast(design)).toBeGreaterThanOrEqual(3);
 
     for (let i = 0; i < 4; i++) {

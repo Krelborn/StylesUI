@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { FocusEvent, JSX, KeyboardEvent, ReactNode } from "react";
+import type { FocusEvent, JSX, KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useId, useRef } from "react";
 
 import { anchorNameFor } from "../../overlays";
@@ -80,6 +80,10 @@ export function NavBarMenu({
     return () => page.removeEventListener("pointerdown", handlePointerDown, true);
   }, [closeSection, open, panelId]);
 
+  function handleButtonClick(event: MouseEvent<HTMLButtonElement>): void {
+    toggleSection(panelId, event.currentTarget);
+  }
+
   function handleBlur(event: FocusEvent<HTMLLIElement>): void {
     onBlur?.(event);
 
@@ -113,7 +117,7 @@ export function NavBarMenu({
       <Box
         as="button"
         className={styles.control}
-        onClick={(event) => toggleSection(panelId, event.currentTarget)}
+        onClick={handleButtonClick}
         ref={buttonRef}
         style={{ anchorName }}
         type="button"
