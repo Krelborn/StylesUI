@@ -143,6 +143,11 @@ export function Submenu({ children, disabled = false, icon, label }: SubmenuProp
 
     keepToSubmenu(event);
 
+    // A popover or `details` inside the submenu hands its toggles here too
+    if (event.target !== submenu) {
+      return;
+    }
+
     if (event.newState === "open") {
       setOpen(true);
 

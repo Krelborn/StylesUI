@@ -1021,6 +1021,17 @@ describe("Menu", () => {
     expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must keep a submenu open when a popover of the consumer's inside it closes", async () => {
+    const user = userEvent.setup();
+    render(<NestedPopoverSubmenuMenu />);
+    await openSubmenu(user);
+
+    fireEvent(screen.getByText("Moves are undoable"), toggleEvent("toggle", "closed"));
+
+    expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "true");
+    expect(elements.item("Inbox")).toHaveFocus();
+  });
+
   it("must run an item's onClick and close every menu when an item in a submenu is chosen", async () => {
     const user = userEvent.setup();
     const onMove = vi.fn();
@@ -1651,6 +1662,26 @@ function NestedPopoverMenu(): JSX.Element {
         <Box onToggle={() => {}} popover="manual">
           Saved to Inbox
         </Box>
+      </Menu>
+    </>
+  );
+}
+
+function NestedPopoverSubmenuMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        Actions
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <Submenu label="Move to">
+          <MenuItem>Inbox</MenuItem>
+          <Box onToggle={() => {}} popover="manual">
+            Moves are undoable
+          </Box>
+        </Submenu>
       </Menu>
     </>
   );
