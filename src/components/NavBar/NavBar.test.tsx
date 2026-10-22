@@ -50,6 +50,13 @@ function stayOnPage(event: MouseEvent): void {
   event.preventDefault();
 }
 
+/**
+ * Waits for the next task, where a section decides whether focus lost to the page has left it
+ */
+async function waitATask(): Promise<void> {
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
+}
+
 describe("NavBar", () => {
   beforeEach(() => {
     vi.mocked(isNavBarCollapsed).mockReturnValue(false);
@@ -299,6 +306,51 @@ describe("NavBar", () => {
     await user.click(screen.getByRole("heading", { name: "Components" }));
 
     expect(screen.getByRole("button", { name: "Reference" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must keep a section open when a press on its panel's text loses focus to the page", async () => {
+    const user = userEvent.setup();
+    render(
+      <NavBar aria-label="Docs">
+        <NavBarMenu label="Reference">
+          <NavBarMenuGroup headingLevel={2} title="Components">
+            <NavBarMenuItem href="/button">Button</NavBarMenuItem>
+          </NavBarMenuGroup>
+        </NavBarMenu>
+      </NavBar>
+    );
+
+    await user.click(screen.getByRole("button", { name: "Reference" }));
+    await user.click(screen.getByRole("heading", { name: "Components" }));
+    await waitATask();
+
+    expect(document.body).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Reference" })).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must close a section when focus in its panel is lost to the page without a press on a wide bar", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.tab();
+    act(() => screen.getByRole("link", { name: "Design" }).blur());
+    await waitATask();
+
+    expect(elements.topics).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep a section open when focus leaves with the window", async () => {
+    const user = userEvent.setup();
+    render(<BlogNavBar />);
+
+    await user.click(elements.topics);
+    await user.tab();
+    fireEvent.focusOut(screen.getByRole("link", { name: "Design" }));
+    await waitATask();
+
+    expect(screen.getByRole("link", { name: "Design" })).toHaveFocus();
+    expect(elements.topics).toHaveAttribute("aria-expanded", "true");
   });
 
   it.each(["{Control>}", "{Meta>}", "{Shift>}"])(

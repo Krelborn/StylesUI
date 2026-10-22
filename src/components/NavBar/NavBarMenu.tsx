@@ -91,10 +91,22 @@ export function NavBarMenu({
     onBlur?.(event);
 
     const section = event.currentTarget;
-    const next = event.relatedTarget;
-    // A press on the panel's text focuses the nearest focusable element around the bar, such as a page's wrapper
-    const pressedOnText = pressedRef.current && next?.contains(section) === true;
-    const leaves = next !== null && !section.contains(next) && !pressedOnText;
+
+    if (event.relatedTarget === null) {
+      // Focus is between elements, lost to the page or left with the window, so wait to see where it lands
+      setTimeout(() => {
+        closeUnlessFocusStays(section, section.ownerDocument.activeElement);
+      }, 0);
+    } else {
+      closeUnlessFocusStays(section, event.relatedTarget);
+    }
+  }
+
+  function closeUnlessFocusStays(section: HTMLElement, focused: Element | null): void {
+    // A press on the panel's text focuses the nearest focusable element around the bar, such as a page's wrapper, or
+    // the page itself
+    const pressedOnText = pressedRef.current && focused?.contains(section) === true;
+    const leaves = focused !== null && !section.contains(focused) && !pressedOnText;
 
     // Nothing can cover the focused element on a collapsed bar, where the panel pushes the page down
     if (open && leaves && !isNavBarCollapsed(section)) {
