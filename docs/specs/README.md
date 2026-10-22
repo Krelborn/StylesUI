@@ -10,3 +10,4 @@ This folder is where StylesUI's specs live, however they were written. Each file
 - [Menus](2026-10-21-menus.md): the capability map for dropdown menus, site navigation, menubars, context menus and comboboxes, with the design decisions they share. Each module gets its own spec before it is built.
   - [`menu`](2026-10-21-menus-menu.md): the menu button pattern, `useMenu` and the menu parts with submenus, and the surface every popup list shares.
   - [`site-nav`](2026-10-21-menus-site-nav.md): `NavBar` and its parts, disclosure navigation for content sites that collapses to a push-down "Menu".
+  - [`context-menu`](2026-10-22-menus-context-menu.md): `useContextMenu`, which opens a `Menu` at the pointer, at the focused element from the keyboard, or on a long-press.
