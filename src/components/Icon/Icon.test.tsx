@@ -5,6 +5,7 @@ import chevronRightArtwork from "lucide-static/icons/chevron-right.svg?raw";
 import ellipsisArtwork from "lucide-static/icons/ellipsis.svg?raw";
 import ellipsisVerticalArtwork from "lucide-static/icons/ellipsis-vertical.svg?raw";
 import infoArtwork from "lucide-static/icons/info.svg?raw";
+import menuArtwork from "lucide-static/icons/menu.svg?raw";
 import minusArtwork from "lucide-static/icons/minus.svg?raw";
 import paletteArtwork from "lucide-static/icons/palette.svg?raw";
 import plusArtwork from "lucide-static/icons/plus.svg?raw";
@@ -25,6 +26,7 @@ import { ColorModeIcon } from "./ColorModeIcon";
 import { DeleteIcon } from "./DeleteIcon";
 import * as iconBarrel from "./index";
 import { InfoIcon } from "./InfoIcon";
+import { MenuIcon } from "./MenuIcon";
 import { MoreHorizontalIcon } from "./MoreHorizontalIcon";
 import { MoreVerticalIcon } from "./MoreVerticalIcon";
 import { PaletteIcon } from "./PaletteIcon";
@@ -41,6 +43,7 @@ const icons = [
   { Component: ColorModeIcon, artwork: sunMoonArtwork, name: "ColorModeIcon" },
   { Component: DeleteIcon, artwork: trashArtwork, name: "DeleteIcon" },
   { Component: InfoIcon, artwork: infoArtwork, name: "InfoIcon" },
+  { Component: MenuIcon, artwork: menuArtwork, name: "MenuIcon" },
   { Component: MoreHorizontalIcon, artwork: ellipsisArtwork, name: "MoreHorizontalIcon" },
   { Component: MoreVerticalIcon, artwork: ellipsisVerticalArtwork, name: "MoreVerticalIcon" },
   { Component: PaletteIcon, artwork: paletteArtwork, name: "PaletteIcon" },

@@ -1,0 +1,386 @@
+/* A size container has no width of its own, so in a flex row it takes the room left over */
+.bar {
+  flex: 1;
+  container: sui-nav-bar / inline-size;
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  line-height: var(--sui-line-height-tight, 1.25);
+}
+
+/*
+ * A container query can't read a property, so each collapse width sets this flag from its own query, and every
+ * collapsed rule below reads the flag. It is reset here so a bar inside a collapsed one doesn't inherit it.
+ */
+.layout {
+  --_sui-nav-bar-below-collapse-width: 0;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sui-space-2, 0.5rem);
+}
+
+.bar[data-collapse="always"] > .layout {
+  --_sui-nav-bar-below-collapse-width: 1;
+}
+
+@container sui-nav-bar (width < 30rem) {
+  .bar[data-collapse="sm"] > .layout {
+    --_sui-nav-bar-below-collapse-width: 1;
+  }
+}
+
+@container sui-nav-bar (width < 48rem) {
+  .bar[data-collapse="md"] > .layout {
+    --_sui-nav-bar-below-collapse-width: 1;
+  }
+}
+
+@container sui-nav-bar (width < 64rem) {
+  .bar[data-collapse="lg"] > .layout {
+    --_sui-nav-bar-below-collapse-width: 1;
+  }
+}
+
+.start,
+.end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--sui-space-2, 0.5rem);
+}
+
+/* Read by the script, which follows the layout shown: a browser without style queries shows the wide one */
+.navigation {
+  --_sui-nav-bar-collapsed: 0;
+
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sui-space-1, 0.25rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.control {
+  /* A component given in `as` is not rendered through Box, which sets this for an anchor */
+  box-sizing: border-box;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sui-space-1, 0.25rem);
+  min-block-size: 2rem;
+  padding: var(--sui-space-1, 0.25rem) var(--sui-space-2, 0.5rem);
+  border: 0;
+  border-radius: var(--sui-radius-md, 4px);
+  background-color: transparent;
+  color: var(--sui-color-text, #111827);
+  font: inherit;
+  font-size: var(--sui-font-size-sm, 0.875rem);
+  font-weight: var(--sui-font-weight-medium, 500);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+.control:hover,
+.control[aria-expanded="true"] {
+  background-color: var(--sui-color-secondary-subtle, #f3f4f6);
+}
+
+.control:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: 2px;
+}
+
+/* Underlines the current page and the section holding it, drawn so forced colours can leave it Highlight */
+.control::after {
+  display: none;
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: var(--sui-space-2, 0.5rem);
+  block-size: calc(var(--sui-border-width, 1px) * 2);
+  border-radius: var(--sui-radius-full, 9999px);
+  background-color: var(--sui-color-primary, #2563eb);
+  content: "";
+}
+
+.control[aria-current]:not([aria-current="false"])::after,
+.section:has(.panel [aria-current]:not([aria-current="false"])) > .control::after {
+  display: block;
+}
+
+.toggle {
+  display: none;
+}
+
+.chevron {
+  transition: rotate 120ms ease-out;
+}
+
+.control[aria-expanded="true"] > .chevron {
+  rotate: 180deg;
+}
+
+/*
+ * Below its button, start edges aligned, flipping to end-aligned where the window has no room. Fixed, so a sticky
+ * header or a box that clips overflow neither shifts nor clips it; only a transformed ancestor would.
+ */
+.panel {
+  position: fixed;
+  z-index: 1;
+  position-area: self-block-end span-self-inline-end;
+  position-try-fallbacks: flip-inline, --sui-nav-bar-panel-shrink;
+  box-sizing: border-box;
+  /* Its full width, or it would narrow to the room after its button rather than flip */
+  inline-size: max-content;
+  max-inline-size: calc(100vw - var(--sui-space-2, 0.5rem) * 2);
+  /* No taller than the room below its button, scrolling past it, since scrolling the page never moves it */
+  max-block-size: 100%;
+  max-block-size: stretch;
+  margin-block-start: var(--sui-space-1, 0.25rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sui-space-2, 0.5rem);
+  border: var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db);
+  border-radius: var(--sui-radius-lg, 8px);
+  background-color: var(--sui-color-overlay, #fff);
+  box-shadow: var(--sui-shadow-sm, 0 1px 3px rgb(0 0 0 / 0.12));
+  transition:
+    opacity 120ms ease-out,
+    translate var(--sui-motion-spring, 120ms ease-out);
+}
+
+/* With room on neither side, start-aligned and narrowed to the room after its button */
+@position-try --sui-nav-bar-panel-shrink {
+  inline-size: auto;
+  margin-inline-end: var(--sui-space-2, 0.5rem);
+}
+
+/* Starts nearer its button and moves out, so it reads as coming from it */
+@starting-style {
+  .panel {
+    opacity: 0;
+    translate: 0 calc(var(--sui-popover-offset, 4px) * -1);
+  }
+}
+
+.panelList,
+.groupList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panelList {
+  --_sui-nav-bar-columns: 1;
+
+  display: grid;
+  grid-template-columns: repeat(var(--_sui-nav-bar-columns), minmax(0, 18rem));
+  gap: 1px var(--sui-space-2, 0.5rem);
+}
+
+.panel[data-columns="2"] > .panelList {
+  --_sui-nav-bar-columns: 2;
+}
+
+.panel[data-columns="3"] > .panelList {
+  --_sui-nav-bar-columns: 3;
+}
+
+.group,
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.groupTitle {
+  padding: var(--sui-space-2, 0.5rem) var(--sui-space-2, 0.5rem) var(--sui-space-1, 0.25rem);
+}
+
+.panelLink {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-block-size: 2rem;
+  padding: var(--sui-space-1, 0.25rem) var(--sui-space-2, 0.5rem);
+  border-radius: var(--sui-radius-md, 4px);
+  color: var(--sui-color-text, #111827);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+.panelLink:hover {
+  background-color: var(--sui-color-secondary-subtle, #f3f4f6);
+}
+
+/* Inside the edge, as a menu item's, so the panel's edge and the next link can't cover it */
+.panelLink:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+.title {
+  font-weight: var(--sui-font-weight-medium, 500);
+  overflow-wrap: anywhere;
+}
+
+.panelLink[aria-current]:not([aria-current="false"]) > .title {
+  text-decoration-line: underline;
+  text-decoration-color: var(--sui-color-primary, #2563eb);
+  text-decoration-thickness: calc(var(--sui-border-width, 1px) * 2);
+  text-underline-offset: 4px;
+}
+
+.description {
+  color: var(--sui-color-text-muted, #4b5563);
+  font-size: var(--sui-font-size-xs, 0.75rem);
+  overflow-wrap: anywhere;
+}
+
+/* NavList's current item: the primary tint, bold, and a bar at the start */
+.control::before,
+.panelLink::before {
+  display: none;
+  position: absolute;
+  inset-block: var(--sui-space-1, 0.25rem);
+  inset-inline-start: 0;
+  inline-size: calc(var(--sui-border-width, 1px) * 2);
+  border-radius: var(--sui-radius-full, 9999px);
+  background-color: var(--sui-color-primary, #2563eb);
+  content: "";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: opacity 120ms ease-out;
+  }
+
+  .chevron {
+    transition: none;
+  }
+}
+
+/* After the reduced motion rules, so a collapsed panel opens without animating under them too */
+@container style(--_sui-nav-bar-below-collapse-width: 1) {
+  .navigation {
+    --_sui-nav-bar-collapsed: 1;
+  }
+
+  .toggle {
+    display: inline-flex;
+    gap: var(--sui-space-2, 0.5rem);
+    margin-inline-start: auto;
+  }
+
+  /* On a row of its own below the bar's first row, which the toggle shares with start and end */
+  .navigation {
+    flex-basis: 100%;
+    order: 1;
+  }
+
+  .navigation:not([data-open]) {
+    display: none;
+  }
+
+  /* Room between full-width rows for the focus ring outside each */
+  .list {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--sui-space-1, 0.25rem);
+  }
+
+  .control,
+  .panelLink {
+    display: flex;
+    inline-size: 100%;
+    min-block-size: 2.75rem;
+    font-size: var(--sui-font-size-md, 1rem);
+  }
+
+  .chevron {
+    margin-inline-start: auto;
+  }
+
+  .toggle.control {
+    inline-size: auto;
+  }
+
+  .panel {
+    position: static;
+    inline-size: auto;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    overflow: visible;
+    padding: 0;
+    padding-inline-start: var(--sui-space-4, 1rem);
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    transition: none;
+  }
+
+  .panelList {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sui-space-1, 0.25rem);
+  }
+
+  /* Outside the edge, as an entry's, since nothing covers a full-width row and a current link's tint would be under it */
+  .panelLink:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .description {
+    font-size: var(--sui-font-size-sm, 0.875rem);
+  }
+
+  .control[aria-current]:not([aria-current="false"]),
+  .panelLink[aria-current]:not([aria-current="false"]) {
+    background-color: var(--sui-color-primary-subtle, #edf5ff);
+    color: var(--sui-color-primary, #2563eb);
+    font-weight: var(--sui-font-weight-bold, 700);
+  }
+
+  .panelLink[aria-current]:not([aria-current="false"]) > .title {
+    font-weight: inherit;
+    text-decoration-line: none;
+  }
+
+  .control[aria-current]:not([aria-current="false"])::after,
+  .section:has(.panel [aria-current]:not([aria-current="false"])) > .control::after {
+    display: none;
+  }
+
+  .control[aria-current]:not([aria-current="false"])::before,
+  .panelLink[aria-current]:not([aria-current="false"])::before {
+    display: block;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the underline and the bar */
+@media (forced-colors: active) {
+  .control::before,
+  .control::after,
+  .panelLink::before {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .panel {
+    border-color: CanvasText;
+  }
+}
