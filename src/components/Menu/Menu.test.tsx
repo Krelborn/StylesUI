@@ -1136,6 +1136,20 @@ describe("Menu", () => {
     expect(elements.item("Move to")).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("must leave focus where the keyboard moved it while the pointer waited to take it from an open submenu", async () => {
+    const { user } = setUpTest();
+    render(<SubmenuMenu />);
+    openAsBrowser(elements.menu);
+    await user.hover(elements.item("Move to"));
+    act(() => vi.advanceTimersByTime(100));
+    await user.hover(elements.item("Edit"));
+
+    await user.keyboard("{ArrowDown}");
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(elements.item("Share")).toHaveFocus();
+  });
+
   it("must keep a submenu open while the pointer crosses other items towards it", async () => {
     const { user } = setUpTest();
     render(<SubmenuMenu />);

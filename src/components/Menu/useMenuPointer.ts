@@ -39,12 +39,18 @@ export function useMenuPointer(): MenuPointer {
 
   useEffect(() => () => clearTimeout(timerRef.current), []);
 
-  function focusLater(item: HTMLElement | null, delay: number): void {
+  function focusLater(item: HTMLElement | null, delay: number, page: Document): void {
+    const focused = page.activeElement;
+
     cancelFocus();
     timerRef.current = setTimeout(() => {
       graceRef.current = null;
       switchingToRef.current = null;
-      focusHovered(item);
+
+      // Focus the keyboard moved while the pointer waited stays where the keyboard put it
+      if (page.activeElement === focused) {
+        focusHovered(item);
+      }
     }, delay);
   }
 
@@ -55,7 +61,7 @@ export function useMenuPointer(): MenuPointer {
 
   function startPointerGrace(exit: Point, submenu: HTMLElement): void {
     graceRef.current = graceTriangle(exit, submenu.getBoundingClientRect());
-    focusLater(hoveredItemRef.current, graceDelay);
+    focusLater(hoveredItemRef.current, graceDelay, submenu.ownerDocument);
   }
 
   function handlePointerMove(event: PointerEvent<HTMLDivElement>): void {
@@ -78,7 +84,7 @@ export function useMenuPointer(): MenuPointer {
     hoveredItemRef.current = item;
 
     if (isHeadingIntoSubmenu({ x: event.clientX, y: event.clientY })) {
-      focusLater(item, graceDelay);
+      focusLater(item, graceDelay, menu.ownerDocument);
     } else {
       graceRef.current = null;
       moveFocusTowards(menu, item);
@@ -102,7 +108,7 @@ export function useMenuPointer(): MenuPointer {
     }
 
     if (hasOpenSubmenu(menu) && item.getAttribute("aria-expanded") !== "true") {
-      focusLater(item, switchDelay);
+      focusLater(item, switchDelay, menu.ownerDocument);
       switchingToRef.current = item;
     } else {
       focusHovered(item);
