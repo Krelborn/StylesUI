@@ -149,7 +149,7 @@ export function Menu({
     const currentIndex = items.indexOf(event.target as HTMLElement);
     const current = currentIndex === -1 ? undefined : items[currentIndex];
 
-    if (moveFocus(event.key, items, currentIndex) || chooseOnSpace(event.key, current)) {
+    if (moveFocus(event.key, items, currentIndex) || chooseOnSpace(event, current)) {
       event.preventDefault();
     }
   }
@@ -173,20 +173,23 @@ export function Menu({
 
   /**
    * Chooses the focused item on Space where the browser would not, or would close the menu: a link ignores Space by
-   * itself, and Space toggles a checkbox or radio item and leaves the menu open
+   * itself, and Space toggles a checkbox or radio item and leaves the menu open. A held Space chooses once, as it
+   * does a button.
    *
-   * @returns whether it chose the item
+   * @returns whether it handled the key
    */
-  function chooseOnSpace(key: string, item: HTMLElement | undefined): boolean {
+  function chooseOnSpace(event: KeyboardEvent<HTMLDivElement>, item: HTMLElement | undefined): boolean {
     const checkable = item?.getAttribute("role") !== "menuitem";
 
-    if (key !== " " || item === undefined || (!checkable && item instanceof HTMLButtonElement)) {
+    if (event.key !== " " || item === undefined || (!checkable && item instanceof HTMLButtonElement)) {
       return false;
     }
 
-    keepsOpenAfterChoosingRef.current = checkable;
-    item.click();
-    keepsOpenAfterChoosingRef.current = false;
+    if (!event.repeat) {
+      keepsOpenAfterChoosingRef.current = checkable;
+      item.click();
+      keepsOpenAfterChoosingRef.current = false;
+    }
 
     return true;
   }

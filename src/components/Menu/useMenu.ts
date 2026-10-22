@@ -314,16 +314,21 @@ function focusOnOpening(menu: HTMLElement, openingFocus: OpeningFocus): void {
  * @returns a function that stops watching, to call when the menu closes
  */
 function watchRemovals(menu: HTMLElement): () => void {
+  let focusedElement: Element | null = null;
   let focusedMenus: HTMLElement[] = [];
 
   function noteFocusedMenus(event: Event): void {
-    focusedMenus = event.target instanceof Element ? menusAround(event.target, menu) : [];
+    focusedElement = event.target instanceof Element ? event.target : null;
+    focusedMenus = focusedElement === null ? [] : menusAround(focusedElement, menu);
   }
 
   const watcher = new MutationObserver(() => {
     const focused = menu.ownerDocument.activeElement;
+    const focusLost = focused === null || focused === menu.ownerDocument.body;
+    // Focus taken away on purpose, as by blur(), leaves the element in the menu
+    const focusedWasRemoved = focusedElement !== null && !menu.contains(focusedElement);
 
-    if ((focused === null || focused === menu.ownerDocument.body) && menu.matches(":popover-open")) {
+    if (focusLost && focusedWasRemoved && menu.matches(":popover-open")) {
       const stillOpen = focusedMenus.find((candidate) => candidate.isConnected && candidate.matches(":popover-open"));
 
       (stillOpen ?? menu).focus();

@@ -375,6 +375,18 @@ describe("Menu", () => {
     expect(document.body).toHaveFocus();
   });
 
+  it("must close the menu when focus leaves it for nowhere in particular as other content in it changes", async () => {
+    render(<MenuAmongButtons />);
+    openAsBrowser(elements.menu);
+    elements.item("Edit").focus();
+
+    elements.item("Edit").blur();
+    elements.menu.append(document.createElement("span"));
+
+    await waitFor(() => expect(elements.menu).not.toBeVisible());
+    expect(document.body).toHaveFocus();
+  });
+
   it("must move focus to the menu when the focused item is removed", async () => {
     const user = userEvent.setup();
     render(<DismissibleMenu />);
@@ -797,6 +809,17 @@ describe("Menu", () => {
 
     expect(elements.checkbox("Compact rows")).toHaveAttribute("aria-checked", "true");
     expect(elements.trigger).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("must toggle a checkbox item once when Space is held on it", async () => {
+    const { user } = setUpTest();
+    render(<CheckboxMenu />);
+    openAsBrowser(elements.menu);
+    elements.checkbox("Compact rows").focus();
+
+    await user.keyboard("[Space>2/]");
+
+    expect(elements.checkbox("Compact rows")).toHaveAttribute("aria-checked", "true");
   });
 
   it("must leave a checkbox item alone when Space joins a query being typed", async () => {
