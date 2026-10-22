@@ -20,6 +20,16 @@ class StoryFrameError extends Error {
 }
 
 /**
+ * Turns the browser's emulation of forced colours, as Windows High Contrast applies them, on or off
+ *
+ * @param context the command context, holding the page the story runs in
+ * @param active whether forced colours are active
+ */
+const emulateForcedColors: BrowserCommand<[active: boolean]> = async ({ page }, active) => {
+  await page.emulateMedia({ forcedColors: active ? "active" : "none" });
+};
+
+/**
  * Moves the real pointer off the page, so the story about to render is not under it
  *
  * @param context the command context, holding the page the story runs in
@@ -226,6 +236,7 @@ export default defineConfig({
                 commands: {
                   clickByTestId,
                   clickPageCorner,
+                  emulateForcedColors,
                   holdPointerByTestId,
                   hoverByTestId,
                   movePointerOffPage,

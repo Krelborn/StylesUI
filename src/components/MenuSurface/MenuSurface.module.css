@@ -312,8 +312,12 @@
 @media (forced-colors: active) {
   /* Left automatic, the browser draws a Canvas backplate behind the text that hides HighlightText */
   .item:focus,
+  .item[data-tone="danger"]:focus,
   .item[aria-disabled="true"]:focus,
   .item[aria-expanded="true"] {
+    /* Read by a check, a radio dot and a destructive item's icon, whose own rules outrank the one for every part */
+    --_sui-menu-ink: HighlightText;
+
     background-color: Highlight;
     color: HighlightText;
     forced-color-adjust: none;

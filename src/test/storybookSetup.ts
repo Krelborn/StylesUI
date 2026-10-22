@@ -16,6 +16,11 @@ declare module "vitest/browser" {
     clickPageCorner: () => Promise<void>;
 
     /**
+     * Turns the browser's emulation of forced colours on or off
+     */
+    emulateForcedColors: (active: boolean) => Promise<void>;
+
+    /**
      * Holds the real primary pointer button down over the element with the given `data-testid` in the story's frame
      */
     holdPointerByTestId: (testId: string) => Promise<void>;
@@ -50,6 +55,7 @@ declare module "vitest/browser" {
 registerTrustedInput({
   clickByTestId: (testId) => commands.clickByTestId(testId),
   clickPageCorner: () => commands.clickPageCorner(),
+  emulateForcedColors: (active) => commands.emulateForcedColors(active),
   holdPointerByTestId: (testId) => commands.holdPointerByTestId(testId),
   hoverByTestId: (testId) => commands.hoverByTestId(testId),
   pressKey: (key) => commands.pressKey(key),
@@ -60,4 +66,6 @@ registerTrustedInput({
 // Chromium on Linux can apply :hover to whatever a story renders under the pointer, without the pointer moving
 beforeEach(async () => {
   await commands.movePointerOffPage();
+  // A story that emulates forced colours and fails before turning them off leaves them on for the next
+  await commands.emulateForcedColors(false);
 });

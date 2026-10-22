@@ -123,6 +123,30 @@ function DocumentMenu(): JSX.Element {
 }
 
 /**
+ * A checked checkbox item, a checked radio item and a destructive item with an icon, each with a mark before its label
+ */
+function MarkedItemsMenu(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <Box style={{ minBlockSize: "12rem" }}>
+      <Button {...menu.getTriggerProps()} variant="secondary">
+        View
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItemCheckbox defaultChecked={true}>Show archived</MenuItemCheckbox>
+        <MenuRadioGroup defaultValue="name" label="Sort by">
+          <MenuItemRadio value="name">Name</MenuItemRadio>
+        </MenuRadioGroup>
+        <MenuItem icon={<DeleteIcon />} tone="danger">
+          Delete…
+        </MenuItem>
+      </Menu>
+    </Box>
+  );
+}
+
+/**
  * A disabled item, a disabled destructive one with an icon and a disabled checked checkbox item
  */
 function UnavailableActionsMenu(): JSX.Element {
@@ -793,6 +817,46 @@ export const HighlightContrast: Story = {
       for (const part of textParts) {
         await expect(textContrast(part), `${item.textContent}: ${part.textContent}`).toBeGreaterThanOrEqual(4.5);
       }
+    }
+  },
+};
+
+/**
+ * Under forced colours, as Windows High Contrast applies them, the highlighted item is `Highlight` with `HighlightText`,
+ * and so is everything in it: a check, a radio dot and a destructive item's icon.
+ */
+export const ForcedColors: Story = {
+  render: () => <MarkedItemsMenu />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const items = [
+      await canvas.findByRole("menuitemcheckbox", { name: "Show archived" }),
+      canvas.getByRole("menuitemradio", { name: "Name" }),
+      canvas.getByRole("menuitem", { name: "Delete…" }),
+    ];
+
+    await input.emulateForcedColors(true);
+
+    try {
+      for (const item of items) {
+        const leading = item.firstElementChild as HTMLElement;
+        item.focus();
+
+        await Promise.all(item.getAnimations().map((transition) => transition.finished));
+
+        await expect(isSameColor(item, getComputedStyle(item).backgroundColor, "Highlight")).toBe(true);
+        await expect(
+          isSameColor(leading, getComputedStyle(leading).color, "HighlightText"),
+          `${item.textContent}'s mark`
+        ).toBe(true);
+      }
+    } finally {
+      await input.emulateForcedColors(false);
     }
   },
 };
