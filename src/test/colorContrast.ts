@@ -199,6 +199,8 @@ function backgroundBehind(element: Element): Rgba {
 function computedInProbe(element: HTMLElement, property: "backgroundColor" | "color", color: string): string {
   const probe = document.createElement("span");
   probe.style[property] = color;
+  // Forced colours would replace the colour being resolved with one of their own
+  probe.style.forcedColorAdjust = "none";
   element.append(probe);
   const resolved = getComputedStyle(probe)[property];
   probe.remove();
