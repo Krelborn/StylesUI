@@ -69,9 +69,10 @@ export function NavBarMenu({
     }
 
     const handleDocumentPointerDown = (event: globalThis.PointerEvent): void => {
-      const pressed = event.target;
+      // Not instanceof Node: a bar rendered into a frame gets the frame's nodes, which aren't this window's
+      const pressed = event.target as Node;
 
-      if (!(pressed instanceof Node && section.contains(pressed)) && !isNavBarCollapsed(section)) {
+      if (!section.contains(pressed) && !isNavBarCollapsed(section)) {
         closeSection(panelId);
       }
     };

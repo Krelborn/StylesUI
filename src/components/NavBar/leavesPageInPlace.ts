@@ -20,11 +20,15 @@ export function leavesPageInPlace(event: ModifierKeys, link: HTMLAnchorElement):
  *
  * @param link the link
  * @returns true for `_blank` and for a named target that names neither this window nor a frame around it; false for no
- *   target, `_self`, `_top` and `_parent`, and for a name a cross-origin frame around this page hides
+ *   target, `_self`, `_top` and `_parent`, and for a name a cross-origin frame around this page hides. A link without a
+ *   `target` of its own takes the page's `base` element's.
  */
 function opensInAnotherContext(link: HTMLAnchorElement): boolean {
+  const target = link.hasAttribute("target")
+    ? link.target
+    : (link.ownerDocument.querySelector("base[target]")?.getAttribute("target") ?? "");
   // Keywords match without regard to case, and names exactly
-  const keyword = link.target.toLowerCase();
+  const keyword = target.toLowerCase();
   const view = link.ownerDocument.defaultView;
 
   if (view === null || ["", "_parent", "_self", "_top"].includes(keyword)) {
@@ -35,7 +39,7 @@ function opensInAnotherContext(link: HTMLAnchorElement): boolean {
 
   for (;;) {
     try {
-      if (context.name === link.target) {
+      if (context.name === target) {
         return false;
       }
     } catch {

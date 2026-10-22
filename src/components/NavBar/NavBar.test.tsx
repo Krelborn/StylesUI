@@ -1,8 +1,8 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentPropsWithRef, JSX, MouseEvent, ReactNode } from "react";
 import { isValidElement } from "react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
 import { Box } from "../Box";
@@ -242,6 +242,17 @@ describe("NavBar", () => {
     expect(elements.topics).toHaveAttribute("aria-expanded", "true");
   });
 
+  it("must keep a section open when a press lands in its panel on a bar rendered into a frame", () => {
+    const frame = setUpTestWithFrame();
+    render(<SectionWithLink href="/design" />, { container: frame.body });
+    const topics = within(frame.body).getByRole("button", { name: "Topics" });
+
+    fireEvent.click(topics);
+    fireEvent.pointerDown(within(frame.body).getByRole("link", { name: "Design" }));
+
+    expect(topics).toHaveAttribute("aria-expanded", "true");
+  });
+
   it("must close a section and leave focus where it went when focus leaves it on a wide bar", async () => {
     const user = userEvent.setup();
     render(<BlogNavBar />);
@@ -444,6 +455,24 @@ describe("NavBar", () => {
 
     expect(elements.topics).toHaveAttribute("aria-expanded", "true");
   });
+
+  it.each([
+    { expanded: "true", linkProps: {} },
+    { expanded: "false", linkProps: { target: "_self" } },
+    { expanded: "false", linkProps: { target: "" } },
+  ])(
+    "must leave a section expanded $expanded when a link in its panel with $linkProps is clicked on a page whose base opens links in a new tab",
+    async ({ expanded, linkProps }) => {
+      setUpTestWithBaseTarget("_blank");
+      const user = userEvent.setup();
+      render(<SectionWithLink {...linkProps} href="/design" />);
+
+      await user.click(elements.topics);
+      await user.click(screen.getByRole("link", { name: "Design" }));
+
+      expect(elements.topics).toHaveAttribute("aria-expanded", expanded);
+    }
+  );
 
   it("must keep a section open when a download link in its panel holds its file in a data URL", async () => {
     const user = userEvent.setup();
@@ -880,6 +909,33 @@ function SectionWithLink({ download, href, target }: SectionWithLinkProps): JSX.
       </NavBarMenu>
     </NavBar>
   );
+}
+
+/**
+ * Adds a `base` element giving the page's links a default target, removed when the test finishes
+ *
+ * @param target the default target
+ */
+function setUpTestWithBaseTarget(target: string): void {
+  const base = document.createElement("base");
+
+  base.target = target;
+  document.head.append(base);
+  onTestFinished(() => base.remove());
+}
+
+/**
+ * Adds an iframe, whose document has its own window and DOM classes, removed when the test finishes
+ *
+ * @returns the frame's document
+ */
+function setUpTestWithFrame(): Document {
+  const frame = document.createElement("iframe");
+
+  document.body.append(frame);
+  onTestFinished(() => frame.remove());
+
+  return frame.contentDocument as Document;
 }
 
 /**
