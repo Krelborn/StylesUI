@@ -299,6 +299,22 @@ describe("usePopover", () => {
     expect(elements.elsewhere).toHaveFocus();
   });
 
+  it("must leave focus on the page at the next closing when close was called after the popover had hidden", () => {
+    render(<ConfirmationPopover defaultOpen={true} />);
+    fireEvent(elements.popover, toggleEvent("toggle", "open"));
+    const cancel = elements.cancel;
+    fireEvent(elements.popover, toggleEvent("beforetoggle", "closed"));
+    elements.popover.hidePopover();
+    fireEvent.click(cancel);
+    fireEvent(elements.popover, toggleEvent("toggle", "closed"));
+    openAsBrowser(elements.popover);
+    cancel.blur();
+
+    closeAsBrowser(elements.popover);
+
+    expect(document.body).toHaveFocus();
+  });
+
   it("must leave focus where it is when close is called with focus outside the popover", () => {
     render(<ConfirmationPopover defaultOpen={true} />);
     fireEvent(elements.popover, toggleEvent("toggle", "open"));
