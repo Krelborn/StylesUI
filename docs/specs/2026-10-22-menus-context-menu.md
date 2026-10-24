@@ -16,13 +16,13 @@ Success: a file list whose rows open a menu of row actions, and a canvas whose m
 - **Opening.**
   - **Pointer:** a `contextmenu` from a mouse or pen opens at the pointer, and focus goes to the menu itself, as `useMenu` does for a pointer, so the next ↓ or ↑ goes to the first or last item.
   - **Keyboard:** Shift+F10 or the ContextMenu key on an element in the region opens at that element's start edge, just below it, as a `bottom-start` menu from a button would, with the point moved into the window when that edge is off it. Focus goes to the first item. A `contextmenu` that the browser or assistive technology sends with no pointer (`pointerType` empty), as Windows browsers do for these keys and as screen readers do for their own command, opens the same way.
-  - **Touch:** a press held 500ms without moving more than 10px opens at the press, focus on the menu. On a platform that sends its own `contextmenu` for a long-press, as Android does, whichever comes first opens it and the other is ignored. The click that ends the press does nothing, so releasing over a row doesn't also activate it. A scroll, a second finger or lifting the finger first cancels it.
+  - **Touch:** a press held 500ms without moving more than 10px, Android's and iOS's own long-press, opens at the press, focus on the menu. On a platform that sends its own `contextmenu` for a long-press, as Android does, whichever comes first opens it and the other is ignored. The click that ends the press does nothing, so releasing over a row doesn't also activate it. A scroll, a second finger or lifting the finger first cancels it.
   - A gesture while the menu is open reopens it at the new point, for the new target.
-- **Left to the browser.** A `contextmenu`, Shift+F10 or ContextMenu key from an editable element (a text input, `textarea`, `select` or `contenteditable`) is left alone, so its native menu, with cut, copy, paste and spelling, still opens. The same goes for one from inside the open menu, and for one another region inside this one has already handled (`defaultPrevented`), so the innermost region wins.
+- **Left to the browser.** A `contextmenu`, Shift+F10 or ContextMenu key from an editable element (a text input, `textarea`, `select` or `contenteditable`) is left alone, so its native menu, with cut, copy, paste and spelling, still opens. The same goes for one from inside the open menu, and for one another region inside this one has already handled (`defaultPrevented`), so the innermost region wins. A right-click with Shift held is left alone too, in every browser, as Firefox already does, as a way back to copy and inspect; a `contextmenu` with no pointer (`pointerType` empty) is never one, so Shift+F10 still opens the menu wherever a browser marks its event with `shiftKey`. Agreed in review.
 - **Naming.** A context menu has no trigger to name it, so `getMenuProps()` requires `aria-label` or `aria-labelledby` through `RequiredAccessibleName`, for example "Actions for report.pdf". The region gets no `aria-haspopup`, because it is not a button and the attribute would announce every row as one.
 - **Closing and focus.** The menu closes as a `useMenu` menu does: on choosing an item, Escape, a click outside, focus leaving it, another popover opening and `close()`. Focus then returns to the element that had it when the menu opened, which a right-click sets to the focusable element it landed in, unless the closing code moved focus elsewhere or a click outside put it somewhere. Tab and Shift+Tab return focus to that element and then move on from it, as though the menu were not there.
 - **Built on what `useMenu` has.** The hook uses `usePopover`'s open state and focus return, and shares `useMenu`'s focus on opening, removal watching, Tab and focus-leaving handling, moved where both can use them without changing how `useMenu` behaves. `Submenu`, checkbox and radio items, groups and type-ahead work unchanged, because they belong to `Menu`.
-- **Long-press on iOS.** iOS Safari shows its callout on a held link or image, and starts a text selection on held text. The region sets `-webkit-touch-callout: none`, and the hook cancels `selectstart` while a touch press is held. Whether that stops the selection on a device is checked by hand (Open Questions).
+- **Long-press on iOS.** iOS Safari shows its callout on a held link or image, and starts a text selection on held text. The region sets `-webkit-touch-callout: none`, and the hook cancels `selectstart` while a touch press is held. If that doesn't stop the selection on a device, which is checked by hand, the region also takes `-webkit-user-select: none` under `(pointer: coarse)`, so touch users can't select its text; that suits rows and canvases. Agreed in review.
 
 ## API
 
@@ -132,7 +132,7 @@ const file = files.find(({ id }) => id === contextMenu.target?.closest("[data-id
 - **Unit (jsdom), `src/components/ContextMenu/useContextMenu.test.tsx`:**
   - Opening from each source in the table: a `contextmenu` with a mouse, pen and empty pointer type, Shift+F10, the ContextMenu key, and a long-press with fake timers, including the 10px tolerance, cancelling by moving, lifting, `pointercancel` and a second finger, Android's `contextmenu` arriving after or before the timer, and the click that ends a long-press doing nothing.
   - The offsets the hook sets for a point, against a mocked region rectangle, in both writing directions, and the keyboard point moved into the window.
-  - Events left alone: from a text input, `textarea`, `select` and `contenteditable`, from inside the open menu, and already prevented by an inner region; Shift+F10 and the ContextMenu key with Alt, Ctrl or Meta.
+  - Events left alone: from a text input, `textarea`, `select` and `contenteditable`, from inside the open menu, already prevented by an inner region, and a right-click with Shift held, while a no-pointer `contextmenu` with `shiftKey` still opens; Shift+F10 and the ContextMenu key with Alt, Ctrl or Meta.
   - Focus on opening from each source, focus return on each way of closing, Tab and Shift+Tab, and `target` for each source.
   - Reopening at a new point while open.
   - Type-level rules through `// @ts-expect-error`: `getMenuProps()` without `aria-label` or `aria-labelledby`.
@@ -162,7 +162,7 @@ const file = files.find(({ id }) => id === contextMenu.target?.closest("[data-id
 4. Each source in the Opening table opens the menu where and with the focus the table says, proven by unit tests and, for the pointer and keys, by stories with real input.
 5. A long-press cancels on moving more than 10px, lifting, `pointercancel` or a second finger, opens once when the platform also sends `contextmenu`, and its ending click does nothing.
 6. The menu's start corner sits on the point and flips on each axis without room, in both writing directions, in Chromium in the `Placement` story; the spike's WebKit result is rechecked by hand.
-7. Events from editable elements, from inside the open menu and already prevented are left alone.
+7. Events from editable elements, from inside the open menu, already prevented, or from a right-click with Shift held are left alone.
 
 ### Closing and focus
 
@@ -178,6 +178,8 @@ const file = files.find(({ id }) => id === contextMenu.target?.closest("[data-id
 
 ## Open Questions
 
-- **Text selection on iOS.** If cancelling `selectstart` doesn't stop a long-press selecting text on a device, the fallback is `-webkit-user-select: none` on the region under `(pointer: coarse)`, which stops touch users selecting its text at all. Acceptable for rows and canvases; agree before using it.
-- **Shift and a right-click.** Firefox already shows its own menu for Shift with a right-click, whatever the page does. Should the hook do the same in every browser, as a way back to copy and inspect, given that some Windows browsers may mark the `contextmenu` from Shift+F10 with `shiftKey` too, which the hook must then tell apart by its empty pointer type?
-- **Long-press timing.** 500ms and 10px match Android's and iOS's own long-press. Adjust after trying it on devices.
+Resolved in review on 2026-10-24:
+
+- **Text selection on iOS:** fall back to `-webkit-user-select: none` under `(pointer: coarse)` if cancelling `selectstart` is not enough (see Decisions).
+- **Shift and a right-click:** left to the browser in every browser (see Decisions).
+- **Long-press timing:** 500ms and 10px, to be adjusted only if trying it on devices calls for it.
