@@ -28,7 +28,9 @@
 }
 
 /* The menu items' highlight, whose tokens are never declared here, so an ancestor can set them */
-.item:is(:hover, :focus-visible, [aria-expanded="true"]) {
+.item:hover,
+.item:focus-visible,
+.item[aria-expanded="true"] {
   background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
   color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
 }
@@ -47,7 +49,9 @@
 
 /* Forced colours replace every colour that is not a system colour, which would hide the highlight */
 @media (forced-colors: active) {
-  .item:is(:hover, :focus-visible, [aria-expanded="true"]) {
+  .item:hover,
+  .item:focus-visible,
+  .item[aria-expanded="true"] {
     background-color: Highlight;
     color: HighlightText;
     forced-color-adjust: none;
