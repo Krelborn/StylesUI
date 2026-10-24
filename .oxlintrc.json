@@ -37,6 +37,8 @@
         "MenuItemRadio": "button",
         "MenuRadioGroup": "div",
         "MenuSeparator": "hr",
+        "Menubar": "div",
+        "MenubarMenu": "div",
         "Submenu": "div",
         "MoreHorizontalIcon": "svg",
         "MoreVerticalIcon": "svg",

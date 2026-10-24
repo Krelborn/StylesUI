@@ -92,6 +92,8 @@ export type {
   UseMenuOptions,
   UseMenuResult,
 } from "./components/Menu";
+export { Menubar, MenubarMenu } from "./components/Menubar";
+export type { MenubarMenuProps, MenubarProps } from "./components/Menubar";
 export { NavBar, NavBarItem, NavBarMenu, NavBarMenuGroup, NavBarMenuItem } from "./components/NavBar";
 export type {
   NavBarCollapse,
