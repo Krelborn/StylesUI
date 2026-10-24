@@ -28,6 +28,17 @@ describe("useContextMenu", () => {
     expect(setPointerCapture.mock.contexts).toEqual([elements.menu]);
   });
 
+  it("must hold the press on the menu when a right-click moves it before the button is released", async () => {
+    const { rightClick, setPointerCapture } = setUpTest();
+    render(<FileList />);
+    await rightClick(elements.row("notes.txt"));
+
+    // On content that takes no focus, so the menu is still open as the button goes down
+    fireEvent.contextMenu(screen.getByRole("list", { name: "Files" }), { buttons: 2 });
+
+    expect(setPointerCapture.mock.contexts).toEqual([elements.menu, elements.menu]);
+  });
+
   it("must keep the browser's own menu from opening when the region is right-clicked", () => {
     setUpTest();
     render(<FileList />);
@@ -204,6 +215,7 @@ describe("useContextMenu", () => {
       expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toBe(elements.menu);
       expect(elements.menu.style.getPropertyValue("--_sui-context-menu-left")).toBe("10px");
       expect(elements.menu.style.getPropertyValue("--_sui-context-menu-top")).toBe("50px");
+      expect(elements.menu.style.getPropertyValue("--_sui-context-menu-bottom")).toBe("270px");
     }
   );
 
@@ -559,6 +571,82 @@ describe("useContextMenu", () => {
     expect(notCancelled).toBe(true);
   });
 
+  it("must open only the innermost region's menu when a touch is held in a region inside another", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<NestedRegions />);
+
+    touchDown(screen.getByText("Inner row"));
+    hold(500);
+
+    expect(screen.getByRole("menu", { name: "Inner" })).toBeVisible();
+    expect(screen.getByLabelText("Outer")).not.toBeVisible();
+  });
+
+  it("must keep the outer region's menu closed when the platform's own contextmenu opens an inner region's", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<NestedRegions />);
+    touchDown(screen.getByText("Inner row"));
+    hold(400);
+
+    fireEvent(screen.getByText("Inner row"), touchContextMenu());
+    hold(200);
+
+    expect(screen.getByRole("menu", { name: "Inner" })).toBeVisible();
+    expect(screen.getByLabelText("Outer")).not.toBeVisible();
+  });
+
+  it("must keep the menu closed when a handler in the region takes the platform's own contextmenu during a long-press", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(
+      <FileList>
+        <button onContextMenu={(event) => event.preventDefault()} type="button">
+          Custom
+        </button>
+      </FileList>
+    );
+    touchDown(screen.getByText("Custom"));
+    hold(400);
+
+    fireEvent(screen.getByText("Custom"), touchContextMenu());
+    hold(200);
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must not start a long-press from a touch in the menu when the menu is rendered inside the region", async () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList menuInRegion={true} />);
+    fireEvent.contextMenu(elements.row("notes.txt"));
+
+    touchDown(screen.getByRole("menuitem", { name: "Rename" }));
+    hold(500);
+
+    expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toBe(elements.menu);
+  });
+
+  it("must not return focus to a field outside the region when a long-press opened the menu", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+    focus(screen.getByRole("button", { name: "Before" }));
+    touchDown(elements.row("notes.txt"));
+    hold(500);
+
+    closeAsBrowser(elements.menu);
+
+    expect(screen.getByRole("button", { name: "Before" })).not.toHaveFocus();
+  });
+
+  it("must stop watching a held touch when the region unmounts", () => {
+    const { touchDown } = setUpTestWithTouch();
+    const { unmount } = render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+
+    unmount();
+    const notCancelled = fireEvent(document.body, new Event("selectstart", { bubbles: true, cancelable: true }));
+
+    expect(notCancelled).toBe(true);
+  });
+
   it("must stop text selection starting while a touch is held", () => {
     const { touchDown } = setUpTestWithTouch();
     render(<FileList />);
@@ -598,6 +686,124 @@ describe("useContextMenu", () => {
     hold(500);
 
     expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must open at the window's start edge when the focused element starts before it", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    setRegionBounds({ height: 300, width: 400, x: -100, y: 50 });
+    setBounds(elements.row("notes.txt"), { height: 20, width: 200, x: -50, y: 80 });
+    focus(elements.row("notes.txt"));
+
+    await user.keyboard("{ContextMenu}");
+
+    expect(elements.menu.style.getPropertyValue("--_sui-context-menu-left")).toBe("100px");
+  });
+
+  it("must open a key's menu again when a contextmenu with no pointer comes after the menu has closed", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+    closeAsBrowser(elements.menu);
+
+    fireEvent(elements.row("report.pdf"), noPointerContextMenu());
+
+    expect(screen.getByRole("menu", { name: "Actions for report.pdf" })).toBe(elements.menu);
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+  });
+
+  it("must focus the first item when a contextmenu with no pointer moves a menu a right-click opened", async () => {
+    const { rightClick } = setUpTest();
+    render(<FileList />);
+    await rightClick(elements.row("notes.txt"));
+
+    fireEvent(elements.row("report.pdf"), noPointerContextMenu());
+
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+  });
+
+  it("must return focus to the element the menu first opened from when it moved while focus was in it", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+    fireEvent.contextMenu(elements.row("report.pdf"));
+
+    closeAsBrowser(elements.menu);
+
+    expect(elements.row("notes.txt")).toHaveFocus();
+  });
+
+  it("must return focus when close() is called after focus was lost to the page, as WebKit loses it", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+
+    act(() => {
+      screen.getByRole("menuitem", { name: "Rename" }).blur();
+    });
+    fireEvent.click(screen.getByRole("menuitem", { name: "Close" }));
+
+    expect(elements.row("notes.txt")).toHaveFocus();
+  });
+
+  it("must leave focus on the page when focus leaves a menu that opened after one Tab closed", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "Rename" }), { key: "Tab" });
+    focus(elements.row("report.pdf"));
+    await user.keyboard("{ContextMenu}");
+
+    act(() => {
+      screen.getByRole("menuitem", { name: "Rename" }).blur();
+    });
+    await waitATask();
+
+    expect(elements.menu).not.toBeVisible();
+    expect(document.body).toHaveFocus();
+  });
+
+  it("must leave keys in the menu to the menu when the menu is rendered inside the region", async () => {
+    const { user } = setUpTest();
+    render(<FileList menuInRegion={true} />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+
+    await user.keyboard("{ArrowDown}{ContextMenu}");
+
+    expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toBe(elements.menu);
+    expect(screen.getByRole("menuitem", { name: "Close" })).toHaveFocus();
+  });
+
+  it("must open only the innermost region's menu when a key is pressed in a region inside another", () => {
+    setUpTest();
+    render(<NestedRegions />);
+    focus(screen.getByText("Inner row"));
+
+    fireEvent.keyDown(screen.getByText("Inner row"), { key: "ContextMenu" });
+
+    expect(screen.getByRole("menu", { name: "Inner" })).toBeVisible();
+    expect(screen.getByLabelText("Outer")).not.toBeVisible();
+  });
+
+  it("must open the region's menu when an editor's part marked contenteditable false is right-clicked", () => {
+    setUpTest();
+    render(
+      <FileList>
+        <div contentEditable={true}>
+          <span contentEditable={false}>Island</span>
+        </div>
+      </FileList>
+    );
+
+    const notCancelled = fireEvent.contextMenu(screen.getByText("Island"));
+
+    expect(notCancelled).toBe(false);
+    expect(elements.menu).toBeVisible();
   });
 
   it("must require a name for the menu when its props are got", () => {
@@ -647,6 +853,42 @@ function FileList({ children, dir, menuInRegion = false, onRename, ...options }:
       {!menuInRegion && menu}
     </div>
   );
+}
+
+/**
+ * A region holding another, each with its own menu
+ */
+function NestedRegions(): JSX.Element {
+  const outer = useContextMenu();
+  const inner = useContextMenu();
+
+  return (
+    <>
+      <div {...outer.getTargetProps()}>
+        <p>Outer row</p>
+        <div {...inner.getTargetProps()}>
+          <p tabIndex={-1}>Inner row</p>
+        </div>
+      </div>
+      <Menu {...outer.getMenuProps({ "aria-label": "Outer" })}>
+        <MenuItem>Outer action</MenuItem>
+      </Menu>
+      <Menu {...inner.getMenuProps({ "aria-label": "Inner" })}>
+        <MenuItem>Inner action</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+/**
+ * Lets the timers already due run, as the browser does on its next task
+ */
+async function waitATask(): Promise<void> {
+  await act(async () => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+  });
 }
 
 /**

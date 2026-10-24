@@ -493,6 +493,55 @@ export const PlacementRightToLeft: Story = {
 };
 
 /**
+ * A right-click or a long-press while the menu is open moves it to the new point, and it stays open once the button or
+ * finger comes up
+ */
+export const MovingWhileOpen: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <FullFrameRegion />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const region = canvas.getByTestId("frame-region");
+    const menu = canvas.getByRole("menu", { hidden: true });
+    const expectMenuAt = async (x: number, y: number): Promise<void> => {
+      const bounds = region.getBoundingClientRect();
+
+      await waitFor(() =>
+        expect(Math.abs(menu.getBoundingClientRect().left - (bounds.left + x))).toBeLessThanOrEqual(1)
+      );
+      await expect(Math.abs(menu.getBoundingClientRect().top - (bounds.top + y))).toBeLessThanOrEqual(1);
+    };
+
+    await input.contextClickByTestId("frame-region", { x: 20, y: 20 });
+    await waitFor(() => expect(menu).toHaveFocus());
+
+    await input.contextClickByTestId("frame-region", { x: 60, y: 240 });
+    await expectMenuAt(60, 240);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300);
+    });
+    await expect(menu).toBeVisible();
+
+    await input.longPressByTestId("frame-region");
+    const bounds = region.getBoundingClientRect();
+    await expectMenuAt(bounds.width / 2, bounds.height / 2);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 300);
+    });
+    await expect(menu).toBeVisible();
+    await expect(menu).toHaveFocus();
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(menu).not.toBeVisible());
+  },
+};
+
+/**
  * In right-to-left text Shift+F10 opens the menu below the focused row's start edge, its right
  */
 export const RightToLeft: Story = {

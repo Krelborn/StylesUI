@@ -1,4 +1,12 @@
-import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, PointerEvent, ToggleEvent } from "react";
+import type {
+  CSSProperties,
+  FocusEvent,
+  KeyboardEvent,
+  MouseEvent,
+  PointerEvent,
+  SyntheticEvent,
+  ToggleEvent,
+} from "react";
 import { useEffect, useRef, useState } from "react";
 
 import type { RequiredAccessibleName } from "../../accessibility";
@@ -25,6 +33,11 @@ export interface UseContextMenuOptions {
  * Props `getTargetProps` sets on the region
  */
 interface ContextMenuTargetProps {
+  /**
+   * Marks the region, so a region inside it handles its own events
+   */
+  "data-context-menu-region": "";
+
   /**
    * Opens the menu at the pointer, or at the focused element when no pointer sent the event
    */
@@ -57,14 +70,14 @@ interface ContextMenuOverlayProps extends MenuOverlayProps {
   "data-context-menu": "";
 
   /**
-   * Keeps the browser's menu, and the region's, from opening over the menu
-   */
-  onContextMenu: (event: MouseEvent<HTMLElement>) => void;
-
-  /**
    * Closes the menu when focus leaves it
    */
   onBlur: (event: FocusEvent<HTMLElement>) => void;
+
+  /**
+   * Keeps the browser's menu from opening over the menu
+   */
+  onContextMenu: (event: MouseEvent<HTMLElement>) => void;
 
   /**
    * Closes the menu on Tab, returning focus to where it opened from
@@ -127,6 +140,17 @@ interface PointOffsets {
 }
 
 /**
+ * Where a menu opens, in window coordinates: its start edge, the top it takes when it opens downwards and the bottom it
+ * takes when it flips upwards. A pointer's point is one spot; a focused element's spans the element, so a flipped menu
+ * doesn't cover it.
+ */
+interface OpeningPoint {
+  bottom: number;
+  top: number;
+  x: number;
+}
+
+/**
  * One opening of the menu: where, for what and where focus goes
  */
 interface Opening {
@@ -141,10 +165,9 @@ interface Opening {
  * Connects a `Menu` to a region, such as a list of files or a canvas, so a right-click in the region opens the menu at
  * the pointer, with focus on the menu itself, and the next Down or Up moves to the first or last item. Shift+F10 or the
  * ContextMenu key opens it below the focused element, with focus on its first item, and a touch held for half a second
- * opens it at the touch, as a right-click does. Choosing an
- * item, Escape, Tab or a click outside closes it, and focus goes back to the element that had it when it opened,
- * unless a click outside put it elsewhere. `target` tells which element the menu opened for, so one menu can serve
- * every row.
+ * opens it at the touch, as a right-click does. Choosing an item, Escape, Tab or a click outside closes it, and focus
+ * goes back to the element in the region that had it when it opened, unless a click outside put it elsewhere. `target`
+ * tells which element the menu opened for, so one menu can serve every row.
  *
  * @param options the change callback
  * @returns prop getters for the region and the `Menu`, whether it is open, what it opened for, and `close`
@@ -185,16 +208,16 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
       return;
     }
 
+    let stopSyncing: (() => void) | undefined;
+
     if (menu.matches(":popover-open")) {
       focusOnOpening(menu, opening.focus);
-
-      return;
+    } else {
+      openingFocusRef.current = opening.focus;
+      stopSyncing = syncPopover(menu, true);
     }
 
-    openingFocusRef.current = opening.focus;
-
-    const stopSyncing = syncPopover(menu, true);
-
+    // Reopening needs it as much as opening: the press's release would light dismiss the menu either way
     if (opening.pressingPointer !== null) {
       holdPress(menu, opening.pressingPointer);
     }
@@ -203,6 +226,13 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   }, [menuId, opening]);
 
   function handleContextMenu(event: MouseEvent<HTMLElement>): void {
+    if (!isForRegion(event)) {
+      return;
+    }
+
+    // Whichever opens the menu, or a consumer's handler that has taken the event, the press's timer has no more to do
+    endLongPress();
+
     if (isLeftToBrowser(event)) {
       return;
     }
@@ -213,8 +243,6 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
       return;
     }
 
-    endLongPress();
-
     if (isFromNoPointer(event.nativeEvent)) {
       openAtElement(event.currentTarget, event.target as Element);
 
@@ -224,7 +252,20 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     // Where the menu opens while the button is still down, as on macOS and Linux, its release would light dismiss it
     const pressingPointer = event.buttons === 0 ? null : lastPointerRef.current;
 
-    openAt(event.currentTarget, event.target as Element, event.clientX, event.clientY, "menu", pressingPointer);
+    const point = { bottom: event.clientY, top: event.clientY, x: event.clientX };
+
+    openAt(event.currentTarget, event.target as Element, point, "menu", pressingPointer);
+  }
+
+  /**
+   * Whether an event in the region is the region's own: not from its menu, when the menu is rendered inside it, nor
+   * from a region inside it, which handles its own
+   */
+  function isForRegion(event: SyntheticEvent<HTMLElement>): boolean {
+    const target = event.target as Element;
+    const menu = event.currentTarget.ownerDocument.getElementById(menuId);
+
+    return menu?.contains(target) !== true && target.closest("[data-context-menu-region]") === event.currentTarget;
   }
 
   /**
@@ -240,7 +281,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   function handleKeyDown(event: KeyboardEvent<HTMLElement>): void {
     const opensMenu = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
 
-    if (!opensMenu || event.defaultPrevented || hasModifier(event) || isEditable(event.target)) {
+    if (!opensMenu || !isForRegion(event) || event.defaultPrevented || hasModifier(event) || isEditable(event.target)) {
       return;
     }
 
@@ -254,13 +295,20 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
    * that edge is off it
    */
   function openAtElement(region: HTMLElement, element: Element): void {
-    const view = region.ownerDocument.defaultView;
+    const page = region.ownerDocument;
+    const view = page.defaultView;
     const bounds = element.getBoundingClientRect();
-    const rightToLeft = view?.getComputedStyle(element).direction === "rtl";
-    const x = clamp(rightToLeft ? bounds.right : bounds.left, view?.innerWidth ?? bounds.right);
-    const y = clamp(bounds.bottom, view?.innerHeight ?? bounds.bottom);
+    // The menu's own direction decides which of its corners is its start
+    const rightToLeft = view?.getComputedStyle(page.getElementById(menuId) ?? element).direction === "rtl";
+    const width = view?.innerWidth ?? bounds.right;
+    const height = view?.innerHeight ?? bounds.bottom;
+    const point = {
+      bottom: clamp(bounds.top, height),
+      top: clamp(bounds.bottom, height),
+      x: clamp(rightToLeft ? bounds.right : bounds.left, width),
+    };
 
-    openAt(region, element, x, y, "first", null);
+    openAt(region, element, point, "first", null);
   }
 
   function endLongPress(): void {
@@ -272,7 +320,12 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     lastPointerRef.current = event.pointerId;
 
     // A second finger is the first press's to cancel
-    if (event.pointerType !== "touch" || stopLongPressRef.current !== null || isEditable(event.target)) {
+    if (
+      event.pointerType !== "touch" ||
+      stopLongPressRef.current !== null ||
+      !isForRegion(event) ||
+      isEditable(event.target)
+    ) {
       return;
     }
 
@@ -287,7 +340,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
       },
       onLongPress: () => {
         longPressOpenedRef.current = true;
-        openAt(region, target, clientX, clientY, "menu", pointerId);
+        openAt(region, target, { bottom: clientY, top: clientY, x: clientX }, "menu", pointerId);
       },
     });
   }
@@ -295,8 +348,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   function openAt(
     region: HTMLElement,
     target: Element,
-    x: number,
-    y: number,
+    point: OpeningPoint,
     focus: OpeningFocus,
     pressingPointer: number | null
   ): void {
@@ -306,17 +358,25 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     const bounds = region.getBoundingClientRect();
 
     openedByKeyRef.current = false;
+    // Tab hides the menu before closing it, which leaves this set after the menu has gone
+    closeRequestedRef.current = false;
 
-    // Reopening with focus in the menu keeps the element it first opened from
-    if (focused instanceof HTMLElement && focused !== page.body && menu?.contains(focused) !== true) {
-      returnFocusRef.current = focused;
+    // Only focus in the region returns, so a touch, which moves no focus, doesn't send it back to a field elsewhere.
+    // Reopening with focus in the menu keeps the element it first opened from.
+    if (focused !== null && region.contains(focused) && menu?.contains(focused) !== true) {
+      returnFocusRef.current = focused as HTMLElement;
     } else if (menu?.matches(":popover-open") !== true) {
       returnFocusRef.current = null;
     }
 
     setOpening({
       focus,
-      offsets: { bottom: bounds.bottom - y, left: x - bounds.left, right: bounds.right - x, top: y - bounds.top },
+      offsets: {
+        bottom: bounds.bottom - point.bottom,
+        left: point.x - bounds.left,
+        right: bounds.right - point.x,
+        top: point.top - bounds.top,
+      },
       page,
       pressingPointer,
       target,
@@ -362,7 +422,6 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
 
   function handleMenuContextMenu(event: MouseEvent<HTMLElement>): void {
     event.preventDefault();
-    event.stopPropagation();
   }
 
   function handleMenuKeyDown(event: KeyboardEvent<HTMLElement>): void {
@@ -404,6 +463,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     props?: Props & Partial<ContextMenuTargetProps>
   ): Omit<Props, keyof ContextMenuTargetProps> & ContextMenuTargetProps {
     return mergeProps(props, {
+      "data-context-menu-region": "" as const,
       onContextMenu: handleContextMenu,
       onKeyDown: handleKeyDown,
       onPointerDown: handlePointerDown,
@@ -466,8 +526,12 @@ function isEditable(target: EventTarget | null): boolean {
     case "SELECT":
     case "TEXTAREA":
       return true;
-    default:
-      return (element?.closest('[contenteditable]:not([contenteditable="false"])') ?? null) !== null;
+    default: {
+      // The nearest, so a part an editor marks contenteditable="false" isn't editable
+      const host = element?.closest("[contenteditable]") ?? null;
+
+      return host !== null && host.getAttribute("contenteditable") !== "false";
+    }
   }
 }
 
@@ -512,8 +576,9 @@ function holdPress(menu: HTMLElement, pointerId: number): void {
   try {
     menu.setPointerCapture(pointerId);
   } catch (error) {
-    // A press already released has already had its release, so there is nothing to hold
-    if (!(error instanceof DOMException && error.name === "NotFoundError")) {
+    // A press already released has already had its release, so there is nothing to hold. Not instanceof, as a frame's
+    // errors aren't this window's.
+    if ((error as { name?: unknown } | null)?.name !== "NotFoundError") {
       throw error;
     }
   }
