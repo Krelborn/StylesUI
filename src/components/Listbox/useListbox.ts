@@ -1,12 +1,16 @@
 import type { FocusEvent, KeyboardEvent } from "react";
 import { useId, useRef, useState } from "react";
 
-import type { TypeAheadQuery } from "../../collections";
-import { extendTypeAheadQuery, isTypeAheadQueryLive, targetIndexForKey, typeAheadTarget } from "../../collections";
+import type { RenderedOption, TypeAheadQuery } from "../../collections";
+import {
+  extendTypeAheadQuery,
+  isTypeAheadQueryLive,
+  renderedOptions,
+  targetIndexForKey,
+  typeAheadTarget,
+} from "../../collections";
 
 import type { ListboxContextValue } from "./ListboxContext";
-import type { RenderedOption } from "./renderedOptions";
-import { renderedOptions } from "./renderedOptions";
 
 interface UseListboxOptions {
   /**

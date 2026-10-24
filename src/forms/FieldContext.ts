@@ -25,6 +25,12 @@ export interface FieldContextValue {
   invalid: boolean;
 
   /**
+   * The label's `id`, for a part of the control that the label names but cannot point at, such as a combobox's list;
+   * undefined when the field has no label
+   */
+  labelId: string | undefined;
+
+  /**
    * Whether the control must be filled in
    */
   required: boolean;

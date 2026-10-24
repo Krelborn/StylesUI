@@ -39,9 +39,19 @@ export function renderedOptions(listbox: HTMLElement): RenderedOption[] {
   return options.map((element) => ({
     disabled: element.getAttribute("aria-disabled") === "true",
     element,
-    textValue: element.dataset.textValue ?? labelledByText(element) ?? element.textContent ?? "",
+    textValue: optionTextValue(element),
     value: element.dataset.value ?? "",
   }));
+}
+
+/**
+ * Reads the text an option is matched by, whether or not it is hidden
+ *
+ * @param option the option element
+ * @returns its `data-text-value`, else the text of the elements its `aria-labelledby` names, else its own text
+ */
+export function optionTextValue(option: HTMLElement): string {
+  return option.dataset.textValue ?? labelledByText(option) ?? option.textContent ?? "";
 }
 
 /**

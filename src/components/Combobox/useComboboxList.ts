@@ -1,0 +1,394 @@
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
+
+import type { RenderedOption, TypeAheadQuery } from "../../collections";
+import {
+  extendTypeAheadQuery,
+  isTypeAheadQueryLive,
+  optionId,
+  renderedOptions,
+  targetIndexForKey,
+  typeAheadTarget,
+} from "../../collections";
+
+import type {
+  ActiveOption,
+  ActiveSource,
+  ComboboxContextValue,
+  ComboboxFilter,
+  SelectedContent,
+} from "./ComboboxContext";
+import type { ComboboxSelection } from "./useComboboxSelection";
+
+/**
+ * Which option is active as the list opens: the selected one (else the first), the first, the last, or none
+ */
+export type OpeningActive = "first" | "last" | "none" | "selected";
+
+interface UseComboboxListOptions {
+  /**
+   * The control's own id, or a surrounding field's; without one, the list generates it
+   */
+  controlId: string | undefined;
+
+  /**
+   * Whether an option shows for the typed text, or null to show every option
+   */
+  filter: ComboboxFilter | null;
+
+  /**
+   * Called with an option's text when the user commits it
+   */
+  onCommit?: (text: string) => void;
+
+  /**
+   * The text the options are filtered by; empty shows every option
+   */
+  query: string;
+
+  /**
+   * The combobox's selection, from `useComboboxSelection`
+   */
+  selection: ComboboxSelection;
+}
+
+/**
+ * A combobox's list: its open state, active option and selection, and the actions its control's keys and pointer take
+ */
+export interface ComboboxList {
+  /**
+   * The id of the active option while the list is open, for the control's `aria-activedescendant`
+   */
+  activeDescendant: string | undefined;
+
+  /**
+   * The generated id the list's ids start with
+   */
+  baseId: string;
+
+  /**
+   * Closes the list without committing
+   */
+  close: () => void;
+
+  /**
+   * Commits the active option and closes the list, unless the option is disabled; with no active option, closes it
+   */
+  commitActive: () => void;
+
+  /**
+   * The state the list's options read
+   */
+  context: ComboboxContextValue;
+
+  /**
+   * The control's id
+   */
+  controlId: string;
+
+  /**
+   * Counts the options the filter shows
+   */
+  countShown: () => number;
+
+  /**
+   * Whether Space would join a type-ahead query now rather than act
+   */
+  isTypingAhead: () => boolean;
+
+  /**
+   * The list's id, for the control's `aria-controls`
+   */
+  listId: string;
+
+  /**
+   * Takes the `listbox` element, as its `ref`
+   */
+  attachList: (listbox: HTMLDivElement | null) => void;
+
+  /**
+   * Makes the first option the filter shows, and that is not disabled, active once the next render has filtered the
+   * options by the query it brings, which a parent controlling the text may have changed; with no filter or no query,
+   * makes none active
+   */
+  matchFirst: () => void;
+
+  /**
+   * Moves the active option for an arrow key, Home or End, without wrapping
+   *
+   * @returns whether the key was one of those
+   */
+  moveByKey: (key: string) => boolean;
+
+  /**
+   * Whether the list is open
+   */
+  open: boolean;
+
+  /**
+   * Opens the list
+   *
+   * @param opening which option becomes active
+   * @param source what opened it, which decides whether the active option shows the focus ring
+   */
+  openList: (opening: OpeningActive, source: ActiveSource) => void;
+
+  /**
+   * Selects a value, or none, reporting it unless it is already selected
+   */
+  select: (value: string | null) => void;
+
+  /**
+   * What the selected option shows in the field, or null when it is not rendered
+   */
+  selectedContent: SelectedContent | null;
+
+  /**
+   * The selected value, or null for none
+   */
+  selectedValue: string | null;
+
+  /**
+   * Closes the list if it was open, or opens it on the selected option
+   *
+   * @param wasOpen whether the list was open when the user asked to toggle it
+   * @param source what toggled it, which decides whether the active option shows the focus ring
+   */
+  toggleList: (wasOpen: boolean, source: ActiveSource) => void;
+
+  /**
+   * Moves the active option by type-ahead for a printable character, from the active option or else the selected one
+   *
+   * @returns whether the key was a character type-ahead took
+   */
+  typeAhead: (key: string) => boolean;
+}
+
+// `container` is missing from lib.dom's ScrollIntoViewOptions; browsers without it ignore it
+interface NearestContainerScrollOptions extends ScrollIntoViewOptions {
+  container?: "all" | "nearest";
+}
+
+const scrollOptions: NearestContainerScrollOptions = { block: "nearest", container: "nearest" };
+
+/**
+ * Holds the state of a combobox's list, which `Combobox` and `Autocomplete` share
+ *
+ * @param options the control's id, the selection, the filter and its query, and the commit callback
+ * @returns the list's state and actions
+ */
+export function useComboboxList({
+  controlId,
+  filter,
+  onCommit,
+  query,
+  selection,
+}: UseComboboxListOptions): ComboboxList {
+  const baseId = useId();
+  const listId = `${baseId}-list`;
+  const listRef = useRef<HTMLDivElement>(null);
+  const typeAheadQuery = useRef<TypeAheadQuery | null>(null);
+  const scrollPending = useRef(false);
+  const firstMatchPending = useRef(false);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState<ActiveOption | null>(null);
+  const { select, selectedContent, selectedValue, setSelectedContent } = selection;
+
+  // Without a filter, the options for the query are still to come from the consumer
+  const activateFirstMatch = useEffectEvent((options: RenderedOption[]) => {
+    const first = filter === null || query === "" ? undefined : options.find((option) => !option.disabled);
+
+    setActive(first === undefined ? null : { source: "keyboard", value: first.value });
+  });
+
+  // A change to the filter or the query that the parent makes on its own can hide the active option
+  const releaseHiddenActive = useEffectEvent((options: RenderedOption[]) => {
+    if (active !== null && !options.some((option) => option.value === active.value)) {
+      setActive(null);
+    }
+  });
+
+  // After every render, once each option has shown or hidden itself for the filter
+  useLayoutEffect(() => {
+    const options = shownOptions();
+
+    listRef.current?.toggleAttribute("data-empty", options.length === 0);
+
+    if (firstMatchPending.current) {
+      firstMatchPending.current = false;
+      activateFirstMatch(options);
+    } else {
+      releaseHiddenActive(options);
+    }
+  });
+
+  // After the list has shown, which an effect of its own does
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    // The pointer moves the active option only under itself, so only an opening scrolls to an option it made active
+    const scrolls = active !== null && (active.source === "keyboard" || scrollPending.current);
+
+    scrollPending.current = false;
+
+    if (scrolls) {
+      shownOptions()
+        .find((option) => option.value === active.value)
+        ?.element.scrollIntoView(scrollOptions);
+    }
+  }, [active, open]);
+
+  function shownOptions(): RenderedOption[] {
+    return listRef.current === null ? [] : renderedOptions(listRef.current);
+  }
+
+  function activate(options: RenderedOption[], index: number, source: ActiveSource): void {
+    const option = options.at(index);
+
+    setActive(option === undefined || index < 0 ? null : { source, value: option.value });
+  }
+
+  function startIndex(options: RenderedOption[]): number {
+    const activeIndex = options.findIndex((option) => option.value === active?.value);
+
+    return activeIndex === -1 ? options.findIndex((option) => option.value === selectedValue) : activeIndex;
+  }
+
+  function openList(opening: OpeningActive, source: ActiveSource): void {
+    const options = shownOptions();
+    const selectedIndex = Math.max(
+      options.findIndex((option) => option.value === selectedValue),
+      0
+    );
+    const indexes: Record<OpeningActive, number> = {
+      first: 0,
+      last: options.length - 1,
+      none: -1,
+      selected: selectedIndex,
+    };
+
+    scrollPending.current = true;
+    setOpen(true);
+    activate(options, indexes[opening], source);
+  }
+
+  function toggleList(wasOpen: boolean, source: ActiveSource): void {
+    if (wasOpen) {
+      close();
+    } else {
+      openList("selected", source);
+    }
+  }
+
+  function close(): void {
+    setOpen(false);
+    setActive(null);
+  }
+
+  function commit(optionValue: string): void {
+    const option = shownOptions().find((shown) => shown.value === optionValue);
+
+    select(optionValue);
+    onCommit?.(option?.textValue ?? "");
+    close();
+  }
+
+  function commitActive(): void {
+    const option = shownOptions().find((shown) => shown.value === active?.value);
+
+    if (option === undefined) {
+      close();
+    } else if (!option.disabled) {
+      commit(option.value);
+    }
+  }
+
+  function moveByKey(key: string): boolean {
+    const options = shownOptions();
+    const currentIndex = options.findIndex((option) => option.value === active?.value);
+    const target =
+      currentIndex === -1 && key === "ArrowUp"
+        ? options.length - 1
+        : targetIndexForKey({ count: options.length, currentIndex, key, orientation: "vertical", wraps: false });
+
+    if (target === null || target === -1) {
+      return ["ArrowDown", "ArrowUp", "End", "Home"].includes(key);
+    }
+
+    activate(options, target, "keyboard");
+
+    return true;
+  }
+
+  function isTypingAhead(): boolean {
+    return isTypeAheadQueryLive(typeAheadQuery.current, Date.now());
+  }
+
+  function typeAhead(key: string): boolean {
+    const time = Date.now();
+
+    if (Array.from(key).length !== 1 || (key === " " && !isTypeAheadQueryLive(typeAheadQuery.current, time))) {
+      return false;
+    }
+
+    typeAheadQuery.current = extendTypeAheadQuery(typeAheadQuery.current, key, time);
+    const options = shownOptions();
+    const labels = options.map((option) => option.textValue);
+    const target = typeAheadTarget(labels, startIndex(options), typeAheadQuery.current.text);
+
+    if (target !== null) {
+      activate(options, target, "keyboard");
+    }
+
+    return true;
+  }
+
+  function countShown(): number {
+    return shownOptions().length;
+  }
+
+  function matchFirst(): void {
+    firstMatchPending.current = true;
+  }
+
+  function attachList(listbox: HTMLDivElement | null): void {
+    listRef.current = listbox;
+  }
+
+  function activateFromPointer(optionValue: string): void {
+    setActive({ source: "pointer", value: optionValue });
+  }
+
+  return {
+    activeDescendant: open && active !== null ? optionId(baseId, active.value) : undefined,
+    attachList,
+    baseId,
+    close,
+    commitActive,
+    context: {
+      activateFromPointer,
+      active,
+      baseId,
+      commit,
+      filter,
+      query,
+      selectedValue,
+      setActive,
+      setSelectedContent,
+    },
+    controlId: controlId ?? `${baseId}-control`,
+    countShown,
+    isTypingAhead,
+    listId,
+    matchFirst,
+    moveByKey,
+    open,
+    openList,
+    select,
+    selectedContent,
+    selectedValue,
+    toggleList,
+    typeAhead,
+  };
+}

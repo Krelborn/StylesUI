@@ -22,6 +22,8 @@ export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
 export { Code } from "./components/Code";
 export type { CodeProps } from "./components/Code";
+export { Autocomplete, Combobox, ComboboxOption } from "./components/Combobox";
+export type { AutocompleteProps, ComboboxOptionProps, ComboboxProps } from "./components/Combobox";
 export { useContextMenu } from "./components/ContextMenu";
 export type { UseContextMenuOptions, UseContextMenuResult } from "./components/ContextMenu";
 export { Counter } from "./components/Counter";
