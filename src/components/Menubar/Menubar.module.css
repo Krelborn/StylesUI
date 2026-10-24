@@ -1,0 +1,63 @@
+.menubar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sui-space-1, 0.25rem);
+}
+
+.entry {
+  display: flex;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 1.625rem;
+  padding: 2px var(--sui-space-2, 0.5rem);
+  border: 0;
+  border-radius: var(--sui-radius-md, 4px);
+  background-color: transparent;
+  color: var(--sui-color-text, #111827);
+  font-family: var(--sui-font-body, system-ui, sans-serif);
+  font-size: var(--sui-font-size-sm, 0.875rem);
+  line-height: var(--sui-line-height-tight, 1.25);
+  cursor: default;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+/* The menu items' highlight, whose tokens are never declared here, so an ancestor can set them */
+.item:hover,
+.item:focus-visible,
+.item[aria-expanded="true"] {
+  background-color: var(--sui-menu-highlight, var(--sui-color-secondary-subtle, #f3f4f6));
+  color: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
+}
+
+.item:focus-visible {
+  outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
+  outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
+}
+
+/* A finger needs a larger target than the compact rows give */
+@media (pointer: coarse) {
+  .item {
+    min-block-size: 2.75rem;
+  }
+}
+
+/* Forced colours replace every colour that is not a system colour, which would hide the highlight */
+@media (forced-colors: active) {
+  .item:hover,
+  .item:focus-visible,
+  .item[aria-expanded="true"] {
+    background-color: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .item:focus-visible {
+    outline-color: HighlightText;
+  }
+}

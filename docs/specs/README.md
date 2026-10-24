@@ -11,3 +11,4 @@ This folder is where StylesUI's specs live, however they were written. Each file
   - [`menu`](2026-10-21-menus-menu.md): the menu button pattern, `useMenu` and the menu parts with submenus, and the surface every popup list shares.
   - [`site-nav`](2026-10-21-menus-site-nav.md): `NavBar` and its parts, disclosure navigation for content sites that collapses to a push-down "Menu".
   - [`context-menu`](2026-10-22-menus-context-menu.md): `useContextMenu`, which opens a `Menu` at the pointer, at the focused element from the keyboard, or on a long-press.
+  - [`menubar`](2026-10-24-menus-menubar.md): `Menubar` and `MenubarMenu`, a single-tab-stop row of menus for app-like tools, whose open menu follows focus across the bar.
