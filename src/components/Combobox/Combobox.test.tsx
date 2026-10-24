@@ -560,6 +560,37 @@ describe("Combobox", () => {
     expect(() => renderBase(<ComboboxOption value="ada">Ada</ComboboxOption>)).toThrow(MissingContextError);
   });
 
+  it("must keep the option a key makes active when the pointer made it active first", async () => {
+    const { user } = setUpTest();
+    renderBase(<AssigneePicker />);
+    await user.click(elements.combobox);
+
+    await user.keyboard("{Home}");
+
+    expect(elements.activeOption).toBe(elements.option("Ada Lovelace"));
+    expect(elements.activeOption).toHaveAttribute("data-active", "keyboard");
+  });
+
+  it("must close the list when a press on the field began with it open, though the press took focus away", async () => {
+    const { user } = setUpTest();
+    renderBase(<AssigneePicker />);
+    await user.click(elements.combobox);
+
+    fireEvent.pointerDown(elements.combobox);
+    fireEvent.blur(elements.combobox);
+    fireEvent.click(elements.combobox, { detail: 1 });
+
+    expect(elements.combobox).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must keep a consumer's anchor name beside its own when it is given one", () => {
+    renderBase(<Combobox aria-label="Status" style={{ anchorName: "--tooltip-anchor" }} />);
+
+    expect(screen.getByRole("combobox", { name: "Status" }).style.getPropertyValue("anchor-name")).toContain(
+      "--tooltip-anchor"
+    );
+  });
+
   it("must reject the props the combobox pattern sets when they are given", () => {
     renderBase(
       <>

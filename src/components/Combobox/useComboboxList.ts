@@ -159,11 +159,12 @@ export interface ComboboxList {
   selectedValue: string | null;
 
   /**
-   * Closes the open list, or opens it on the selected option
+   * Closes the list if it was open, or opens it on the selected option
    *
+   * @param wasOpen whether the list was open when the user asked to toggle it
    * @param source what toggled it, which decides whether the active option shows the focus ring
    */
-  toggleList: (source: ActiveSource) => void;
+  toggleList: (wasOpen: boolean, source: ActiveSource) => void;
 
   /**
    * Moves the active option by type-ahead for a printable character, from the active option or else the selected one
@@ -261,8 +262,8 @@ export function useComboboxList({
     activate(options, indexes[opening], source);
   }
 
-  function toggleList(source: ActiveSource): void {
-    if (open) {
+  function toggleList(wasOpen: boolean, source: ActiveSource): void {
+    if (wasOpen) {
       close();
     } else {
       openList("selected", source);

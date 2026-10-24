@@ -103,7 +103,7 @@ export function ComboboxOption({
   const selected = combobox.selectedValue === value;
   const describedByIds = joinIds(hasContent(description) ? descriptionId : undefined, describedBy);
 
-  useComboboxOption({ active, children, labelId, leading, optionRef, selected, textValue, value });
+  useComboboxOption({ children, labelId, leading, optionRef, selected, textValue, value });
 
   function handleClick(event: MouseEvent<HTMLDivElement>): void {
     onClick?.(event);

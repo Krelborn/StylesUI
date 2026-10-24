@@ -68,7 +68,10 @@ function CountryPicker({ disabledCode, onSubmit, required = false, ...props }: C
 /**
  * An autocomplete whose parent holds the text and renders only the countries starting with it, as a server would
  */
-function ServerFilteredPicker({ onInputValueChange }: Pick<AutocompleteProps, "onInputValueChange">): JSX.Element {
+function ServerFilteredPicker({
+  defaultValue,
+  onInputValueChange,
+}: Pick<AutocompleteProps, "defaultValue" | "onInputValueChange">): JSX.Element {
   const [query, setQuery] = useState("");
   const results = countries.filter((country) => country.name.startsWith(query));
 
@@ -79,8 +82,33 @@ function ServerFilteredPicker({ onInputValueChange }: Pick<AutocompleteProps, "o
 
   return (
     <Field label="Country">
-      <Autocomplete filter={null} inputValue={query} onInputValueChange={handleInputValueChange}>
+      <Autocomplete
+        defaultValue={defaultValue}
+        filter={null}
+        inputValue={query}
+        name="country"
+        onInputValueChange={handleInputValueChange}
+      >
         {results.map((country) => (
+          <ComboboxOption key={country.code} value={country.code}>
+            {country.name}
+          </ComboboxOption>
+        ))}
+      </Autocomplete>
+    </Field>
+  );
+}
+
+/**
+ * An autocomplete whose parent holds the text and keeps only its first two characters
+ */
+function TwoCharacterPicker(): JSX.Element {
+  const [query, setQuery] = useState("");
+
+  return (
+    <Field label="Country">
+      <Autocomplete inputValue={query} onInputValueChange={(next) => setQuery(next.slice(0, 2))}>
+        {countries.map((country) => (
           <ComboboxOption key={country.code} value={country.code}>
             {country.name}
           </ComboboxOption>
@@ -440,6 +468,131 @@ describe("Autocomplete", () => {
     expect(elements.input).toBeRequired();
   });
 
+  it.each([
+    { key: "Enter", name: "Enter" },
+    { key: "ArrowDown", name: "Down Arrow" },
+    { key: "Escape", name: "Escape" },
+  ])("must leave $name to the input method when it is pressed while composing text", async ({ key }) => {
+    const { onValueChange, user } = setUpTest();
+    renderBase(<CountryPicker onValueChange={onValueChange} />);
+    await user.type(elements.input, "fr");
+
+    const notCancelled = fireEvent.keyDown(elements.input, { isComposing: true, key });
+
+    expect(notCancelled).toBe(true);
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(elements.activeOption).toBe(elements.option("France"));
+  });
+
+  it("must leave Enter to the input method when Safari sends it after the composition ends", async () => {
+    const { onValueChange, user } = setUpTest();
+    renderBase(<CountryPicker onValueChange={onValueChange} />);
+    await user.type(elements.input, "fr");
+
+    fireEvent.keyDown(elements.input, { key: "Enter", keyCode: 229 });
+
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
+
+  it("must keep the option a key makes active when the pointer made it active first", async () => {
+    const { user } = setUpTest();
+    renderBase(<CountryPicker />);
+    await user.click(elements.input);
+    await user.hover(elements.option("Jamaica"));
+
+    await user.type(elements.input, "J");
+
+    expect(elements.activeOption).toBe(elements.option("Jamaica"));
+    expect(elements.activeOption).toHaveAttribute("data-active", "keyboard");
+  });
+
+  it("must not announce a count when the choice is made before typing pauses", async () => {
+    const { user } = setUpTestWithFakeTimers();
+    renderBase(<CountryPicker />);
+    await user.type(elements.input, "jap");
+    await user.keyboard("{Enter}");
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(600);
+    });
+
+    expect(elements.liveRegion).toHaveTextContent("");
+  });
+
+  it("must show the selection's text again when focus leaves after its option stopped rendering", async () => {
+    const { user } = setUpTest();
+    renderBase(<ServerFilteredPicker defaultValue="fr" />);
+    await user.type(elements.input, "Ja");
+
+    await user.tab();
+
+    expect(elements.input).toHaveValue("France");
+  });
+
+  it("must filter by the text its parent holds when the parent changes what was typed", async () => {
+    const { user } = setUpTest();
+    renderBase(<TwoCharacterPicker />);
+
+    await user.type(elements.input, "Jam");
+
+    expect(elements.input).toHaveValue("Ja");
+    expect(elements.shownOptions).toEqual(["Jamaica", "Japan"]);
+  });
+
+  it("must not submit its form when Enter is pressed on text that matches no option", async () => {
+    const { onSubmit, user } = setUpTest();
+    renderBase(<CountryPicker onSubmit={onSubmit} required={true} />);
+    await user.type(elements.input, "zzz");
+
+    await user.keyboard("{Enter}");
+
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("must not open or commit when it is read-only", async () => {
+    const { onValueChange, user } = setUpTest();
+    renderBase(
+      <Field label="Country">
+        <Autocomplete defaultValue="jp" onValueChange={onValueChange} readOnly={true}>
+          <ComboboxOption value="jp">Japan</ComboboxOption>
+          <ComboboxOption value="fr">France</ComboboxOption>
+        </Autocomplete>
+      </Field>
+    );
+
+    await user.click(elements.input);
+    await user.keyboard("{ArrowDown}{Enter}{Escape}");
+
+    expect(elements.input).toHaveAttribute("aria-expanded", "false");
+    expect(onValueChange).not.toHaveBeenCalled();
+    expect(elements.input).toHaveValue("Japan");
+  });
+
+  it("must keep the typed text when focus leaves because the window lost it", async () => {
+    const { hasFocus, user } = setUpTest();
+    renderBase(<CountryPicker defaultValue="jp" />);
+    await user.clear(elements.input);
+    await user.type(elements.input, "fr");
+    hasFocus.mockReturnValue(false);
+
+    await user.tab();
+
+    expect(elements.input).toHaveValue("fr");
+  });
+
+  it("must submit its value with the form its form attribute names when it has one", () => {
+    renderBase(
+      <>
+        <form aria-label="Elsewhere" id="elsewhere" />
+        <Autocomplete aria-label="Country" defaultValue="jp" form="elsewhere" name="country">
+          <ComboboxOption value="jp">Japan</ComboboxOption>
+        </Autocomplete>
+      </>
+    );
+
+    expect(new FormData(screen.getByRole("form", { name: "Elsewhere" }) as HTMLFormElement).get("country")).toBe("jp");
+  });
+
   it("must reject the props the combobox pattern sets when they are given", () => {
     renderBase(
       <>
@@ -459,8 +612,13 @@ function setUpTest() {
   const onInputValueChange = vi.fn();
   const onSubmit = vi.fn();
   const onValueChange = vi.fn();
+  // jsdom's document never has focus, which reads as the window losing it
+  const hasFocus = vi.spyOn(document, "hasFocus").mockReturnValue(true);
+  onTestFinished(() => {
+    hasFocus.mockRestore();
+  });
 
-  return { onInputValueChange, onSubmit, onValueChange, user };
+  return { hasFocus, onInputValueChange, onSubmit, onValueChange, user };
 }
 
 function setUpTestWithFakeTimers() {

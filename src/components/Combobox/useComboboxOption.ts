@@ -1,16 +1,10 @@
 import type { ReactNode, RefObject } from "react";
 import { useLayoutEffect } from "react";
 
-import type { ActiveSource } from "./ComboboxContext";
 import { isOptionShown } from "./isOptionShown";
 import { useComboboxContext } from "./useComboboxContext";
 
 interface UseComboboxOptionOptions {
-  /**
-   * What made the option active, or undefined while it is not
-   */
-  active: ActiveSource | undefined;
-
   /**
    * The option's label
    */
@@ -54,7 +48,6 @@ interface UseComboboxOptionOptions {
  * @param options the option's state, content and element
  */
 export function useComboboxOption({
-  active,
   children,
   labelId,
   leading,
@@ -72,32 +65,25 @@ export function useComboboxOption({
     if (option !== null) {
       option.hidden = !isOptionShown(filter, query, optionText(option, labelId, textValue));
     }
-  });
+  }, [children, filter, labelId, optionRef, query, textValue]);
 
+  // Kept after the option unmounts, as a list filtered on a server drops it, until another value is selected
   useLayoutEffect(() => {
     const option = optionRef.current;
 
-    if (!selected || option === null) {
-      return undefined;
+    if (selected && option !== null) {
+      setSelectedContent({ label: children, leading, text: optionText(option, labelId, textValue), value });
     }
-
-    setSelectedContent({ label: children, leading, text: optionText(option, labelId, textValue), value });
-
-    return () => {
-      setSelectedContent((current) => (current?.value === value ? null : current));
-    };
   }, [children, labelId, leading, optionRef, selected, setSelectedContent, textValue, value]);
 
-  // The control's aria-activedescendant names this option while it is active, so it lets go as the option unmounts
-  useLayoutEffect(() => {
-    if (active === undefined) {
-      return undefined;
-    }
-
-    return () => {
+  // The control's aria-activedescendant may name this option, so it lets go as the option unmounts; only then, since a
+  // change of what made it active is not one
+  useLayoutEffect(
+    () => () => {
       setActive((current) => (current?.value === value ? null : current));
-    };
-  }, [active, setActive, value]);
+    },
+    [setActive, value]
+  );
 }
 
 /**

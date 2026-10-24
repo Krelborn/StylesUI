@@ -153,9 +153,10 @@ export function Autocomplete({
     query: text.query,
     value,
   });
-  const { announceCount, announcement } = useResultsAnnouncement(resultsLabel, list.countShown);
+  const { announceCount, announcement } = useResultsAnnouncement(resultsLabel, list.countShown, list.open);
   const shownText = text.shownText(list.selectedContent?.text);
   const anchorStyle: CSSProperties = { anchorName: anchorNameFor(list.listId) };
+  const readOnly = rest.readOnly === true;
 
   function handleChange(event: ChangeEvent<HTMLInputElement>): void {
     const typed = event.currentTarget.value;
@@ -167,20 +168,26 @@ export function Autocomplete({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
-    if (!event.defaultPrevented && handleAutocompleteKey(event, list, { commit: text.commit, shown: shownText })) {
+    const inputText = { commit: text.commit, editing: text.editing, shown: shownText };
+
+    if (!event.defaultPrevented && !readOnly && handleAutocompleteKey(event, list, inputText)) {
       event.preventDefault();
     }
   }
 
   function handleClick(event: MouseEvent<HTMLInputElement>): void {
-    if (!event.defaultPrevented && !list.open) {
+    if (!event.defaultPrevented && !readOnly && !list.open) {
       list.openList("none", "pointer");
     }
   }
 
-  function handleBlur(_event: FocusEvent<HTMLInputElement>): void {
+  function handleBlur(event: FocusEvent<HTMLInputElement>): void {
     list.close();
-    text.restore(list.selectedContent?.text);
+
+    // Switching to another window leaves the typing to come back to
+    if (event.currentTarget.ownerDocument.hasFocus()) {
+      text.restore(list.selectedContent?.text);
+    }
   }
 
   return (
@@ -219,6 +226,7 @@ export function Autocomplete({
         aria-labelledby={rest["aria-labelledby"]}
         disabled={fieldControl.disabled}
         emptyMessage={resultsLabel(0)}
+        form={rest.form}
         list={list}
         name={name}
         placement={placement}

@@ -32,7 +32,12 @@ interface AutocompleteText {
   edit: (text: string) => void;
 
   /**
-   * The text the options are filtered by: what the user typed, or empty while the input shows the selection
+   * Whether the input holds text typed since the last choice, rather than the selection's
+   */
+  editing: boolean;
+
+  /**
+   * The text the options are filtered by: the input's while the user is editing, or empty while it shows the selection
    */
   query: string;
 
@@ -84,5 +89,12 @@ export function useAutocompleteText({
     return inputValue ?? editingText ?? selectedText ?? "";
   }
 
-  return { commit, edit, query: editingText ?? "", restore, shownText };
+  return {
+    commit,
+    edit,
+    editing: editingText !== null,
+    query: editingText === null ? "" : (inputValue ?? editingText),
+    restore,
+    shownText,
+  };
 }

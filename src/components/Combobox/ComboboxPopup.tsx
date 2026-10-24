@@ -44,6 +44,11 @@ interface ComboboxPopupProps {
   emptyMessage?: string;
 
   /**
+   * The id of the form the value submits with, when not the one around the control
+   */
+  form: string | undefined;
+
+  /**
    * The list's state
    */
   list: ComboboxList;
@@ -69,6 +74,7 @@ export function ComboboxPopup({
   children,
   disabled,
   emptyMessage,
+  form,
   list,
   name,
   placement,
@@ -106,7 +112,9 @@ export function ComboboxPopup({
         </Box>
         {emptyMessage !== undefined && <Box className={styles.empty}>{emptyMessage}</Box>}
       </Overlay>
-      {name !== undefined && <input disabled={disabled} name={name} type="hidden" value={selectedValue ?? ""} />}
+      {name !== undefined && (
+        <input disabled={disabled} form={form} name={name} type="hidden" value={selectedValue ?? ""} />
+      )}
     </ComboboxContext.Provider>
   );
 }

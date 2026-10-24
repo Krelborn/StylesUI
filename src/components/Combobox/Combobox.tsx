@@ -1,9 +1,10 @@
 import { clsx } from "clsx";
-import type { FocusEvent, JSX, KeyboardEvent, MouseEvent, ReactNode } from "react";
+import type { CSSProperties, FocusEvent, JSX, KeyboardEvent, MouseEvent, PointerEvent, ReactNode } from "react";
+import { useState } from "react";
 
 import type { ControlSize } from "../../forms";
 import { useFieldControl } from "../../forms";
-import { anchorNameFor } from "../../overlays";
+import { anchorNameFor, mergeProps } from "../../overlays";
 import type { BoxProps } from "../Box";
 import { ChevronDownIcon } from "../Icon";
 import { TextControl } from "../TextControl";
@@ -93,25 +94,19 @@ export interface ComboboxProps
  * </Field>
  */
 export function Combobox({
-  "aria-label": label,
-  "aria-labelledby": labelledBy,
   children,
   className,
   defaultValue = null,
   name,
-  onBlur,
-  onClick,
-  onKeyDown,
-  onKeyUp,
   onValueChange,
   placeholder,
   placement = "bottom-start",
   size = "md",
-  style,
   value,
   ...rest
 }: ComboboxProps): JSX.Element {
   const fieldControl = useFieldControl(rest);
+  const [pressStartedOpen, setPressStartedOpen] = useState<boolean | null>(null);
   const list = useComboboxList({
     controlId: fieldControl.id,
     defaultValue,
@@ -120,10 +115,9 @@ export function Combobox({
     query: "",
     value,
   });
+  const anchorStyle: CSSProperties = { anchorName: anchorNameFor(list.listId) };
 
   function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>): void {
-    onKeyDown?.(event);
-
     if (!event.defaultPrevented && handleComboboxKey(event, list)) {
       event.preventDefault();
     }
@@ -131,59 +125,65 @@ export function Combobox({
 
   // The button's own Space click would reopen the list Space just closed
   function handleKeyUp(event: KeyboardEvent<HTMLButtonElement>): void {
-    onKeyUp?.(event);
-
     if (event.key === " ") {
       event.preventDefault();
     }
   }
 
+  // Safari moves focus off the button as a press starts, which closes the list before the click lands
+  function handlePointerDown(_event: PointerEvent<HTMLButtonElement>): void {
+    setPressStartedOpen(list.open);
+  }
+
   function handleClick(event: MouseEvent<HTMLButtonElement>): void {
-    onClick?.(event);
+    // A pointer's click counts its presses; one from the keyboard or assistive technology has none
+    const fromPointer = event.detail > 0;
+    const wasOpen = fromPointer ? (pressStartedOpen ?? list.open) : list.open;
+
+    setPressStartedOpen(null);
 
     if (!event.defaultPrevented) {
       // Safari does not focus a clicked button, and the list closes when focus leaves the field
       event.currentTarget.focus();
-      // A pointer's click counts its presses; one from assistive technology has none
-      list.toggleList(event.detail === 0 ? "keyboard" : "pointer");
+      list.toggleList(wasOpen, fromPointer ? "pointer" : "keyboard");
     }
   }
 
-  function handleBlur(event: FocusEvent<HTMLButtonElement>): void {
-    onBlur?.(event);
+  function handleBlur(_event: FocusEvent<HTMLButtonElement>): void {
     list.close();
   }
 
   return (
     <>
       <TextControl
-        {...rest}
+        {...mergeProps(rest, {
+          onBlur: handleBlur,
+          onClick: handleClick,
+          onKeyDown: handleKeyDown,
+          onKeyUp: handleKeyUp,
+          onPointerDown: handlePointerDown,
+          style: anchorStyle,
+        })}
         as="button"
         className={clsx(styles.field, className)}
         id={list.controlId}
-        onBlur={handleBlur}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onKeyUp={handleKeyUp}
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a native select cannot hold rich options
         role="combobox"
         size={size}
-        style={{ ...style, anchorName: anchorNameFor(list.listId) }}
         type="button"
         aria-activedescendant={list.activeDescendant}
         aria-controls={list.listId}
         aria-expanded={list.open}
         aria-haspopup="listbox"
-        aria-label={label}
-        aria-labelledby={labelledBy}
       >
         <ComboboxFieldValue placeholder={placeholder} selected={list.selectedContent} />
         <ChevronDownIcon className={styles.chevron} />
       </TextControl>
       <ComboboxPopup
-        aria-label={label}
-        aria-labelledby={labelledBy}
+        aria-label={rest["aria-label"]}
+        aria-labelledby={rest["aria-labelledby"]}
         disabled={fieldControl.disabled}
+        form={rest.form}
         list={list}
         name={name}
         placement={placement}

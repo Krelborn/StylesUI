@@ -23,7 +23,7 @@ Success: an assignee picker with avatars and an autocomplete over the world's co
 - **StylesUI filters unless told not to.** By default an `Autocomplete` hides each option whose text does not contain the typed text, ignoring case and accents. `filter` takes another test, or `null` to show every option the consumer renders, for a list filtered on a server; typing then makes no option active, since the options for the new text are still to come (changed while building). A hidden option is still mounted, so the selection and its label survive filtering.
 - **The count is announced.** An `Autocomplete` holds a polite live region that says how many options match, once typing pauses for 500ms, the type-ahead window (4.1.3). Its text comes from `resultsLabel`, which defaults to English ("No results", "1 result", "12 results"), as `NavBar`'s `menuLabel` does.
 - **A manual popover.** The list is a `popover="manual"` overlay, as `Tooltip` is, rather than `auto`. Focus stays in the control, so the control's own blur and Escape close the list, and an `auto` popover's light dismiss would close it on a click in the input that opened it. It renders in place in the DOM, positioned with anchor positioning under the control, so it keeps the theme around it. The list is always mounted, hidden while closed, so `aria-controls` always names an element and the selected option can show its label in the field.
-- **The field shows the selected option.** A closed `Combobox` shows the selected option's leading content and label, without its description, or the `placeholder` when nothing is selected. The selected option hands them to the field before the first paint. In server-rendered HTML the field shows the placeholder until the page hydrates.
+- **The field shows the selected option.** A closed `Combobox` shows the selected option's leading content and label, without its description, or the `placeholder` when nothing is selected. The selected option hands them to the field before the first paint, and they stay after it unmounts, as a list filtered on a server drops it, so an `Autocomplete`'s input still shows its text; a selection whose option has never rendered shows the placeholder, or no text (changed in review). In server-rendered HTML the field shows the placeholder until the page hydrates.
 - **Looks like the other fields.** Both controls take `TextControl`'s look and `size` (`sm`, `md` and `lg`), with a `ChevronDownIcon` at the inline end, which an `input` cannot draw as a background the way `Select` does and which forced colours keep (changed while building). `TextControl` gains `button` as an element it renders. The list is the menu surface at the `default` density, at least as wide as the field.
 - **The menu's highlight.** The active option takes the menu's highlight tokens, so `--sui-menu-highlight` restyles a combobox's list too (map criterion 5). Moved there by a key, it also draws the inset focus ring, as a menu item does under `:focus-visible`; under the pointer, only the tint. The selected option shows `CheckIcon` in the leading column, which a combobox's list always shows, so labels line up whether or not an option has its own icon.
 - **Listbox's internals move to `src/collections/`.** `optionId` and `renderedOptions`, which both lists need, move there from `src/components/Listbox/`, and `Listbox` imports them from there. Its behaviour does not change and its tests pass unchanged. `useListbox` stays Listbox's: a listbox holds focus itself, which a combobox's list does not.
@@ -161,8 +161,10 @@ export interface ComboboxOptionProps extends Omit<
 - **Typing:** changes the text, opens the list if it is closed, filters the options and makes the first match that is not disabled active. Emptying the text shows every option with none active.
 - **↓:** open the list with the first option active, or move to the next option. **↑:** open it with the last option active, or move to the previous one. Neither wraps.
 - **Alt+↓:** open the list without changing the active option. **Alt+↑:** commit the active option and close.
-- **Enter:** commit the active option, putting its text in the input, and close. With the list closed or no option active, Enter is left to the browser, so it submits a form.
+- **Enter:** commit the active option, putting its text in the input, and close. With no option active, Enter is left to the browser, so it submits a form, unless the input holds text typed since the last choice, which is not a value and so submits nothing (changed in review).
 - **Escape:** with the list open, close it and keep the text. With the list closed, clear the text and the selection.
+- **Keys that compose text in an input method**, such as Enter confirming a Japanese conversion: left to the input method (added in review).
+- **A read-only `Autocomplete`** opens no list and changes no value (added in review).
 - **← / →, Home / End:** move the caret in the input, as in any text input, and leave the list as it is.
 - **Tab / Shift+Tab:** close the list without committing, and move on.
 
@@ -174,7 +176,7 @@ export interface ComboboxOptionProps extends Omit<
 
 ### Closing and focus
 
-- Focus leaving the control, by Tab or by a click elsewhere, closes the list without committing. An `Autocomplete` then shows the selected option's text, or none.
+- Focus leaving the control, by Tab or by a click elsewhere, closes the list without committing. An `Autocomplete` then shows the selected option's text, or none, unless the window lost focus, which keeps the typed text to come back to (added in review).
 - Committing an option closes the list and leaves focus on the control.
 - An active option that unmounts or is filtered out stops being active, so `aria-activedescendant` never names a missing or hidden option, as in Listbox.
 - When no option matches the text, the list stays open and shows a muted line, the same text the live region says, in place of the options. The control's `aria-expanded` stays true.
@@ -272,7 +274,7 @@ A server-filtered list takes `filter={null}` and the typed text:
 
 ## Testing Strategy
 
-- **Unit (jsdom), one test file per control plus `ComboboxOption.test.tsx`:**
+- **Unit (jsdom), one test file per control, which test the options inside them, plus `containsText.test.ts` for the default filter:**
   - Roles, names and states: the `combobox` role on the button and the input, `aria-haspopup`, `aria-autocomplete`, `aria-expanded`, `aria-controls` and `aria-activedescendant`; the list as a `listbox` named by the control; options with `aria-selected` and `aria-disabled`, named by their label and described by their description.
   - Every key in the three key lists, with the open state, the active option, the value and focus asserted after each, in both writing directions where a key's meaning could change.
   - Filtering: the default test ignores case and accents, a custom `filter` replaces it, `null` shows every option, and a filtered-out active option stops being active. The live region says the count once typing pauses, from `resultsLabel` when given.
