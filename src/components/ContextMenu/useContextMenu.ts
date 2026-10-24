@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { RequiredAccessibleName } from "../../accessibility";
 import type { OpeningFocus } from "../../menus";
-import { closeWhenFocusLeaves, focusOnOpening, leaveMenuOnTab, watchRemovals } from "../../menus";
+import { closeWhenFocusLeaves, focusOnOpening, hasModifier, leaveMenuOnTab, watchRemovals } from "../../menus";
 import { mergeProps, syncPopover } from "../../overlays";
 import type { MenuOverlayProps } from "../Menu/Menu";
 // The Popover barrel would also bring Popover's stylesheet into every bundle that uses a context menu
@@ -24,9 +24,14 @@ export interface UseContextMenuOptions {
  */
 interface ContextMenuTargetProps {
   /**
-   * Opens the menu at the pointer
+   * Opens the menu at the pointer, or at the focused element when no pointer sent the event
    */
   onContextMenu: (event: MouseEvent<HTMLElement>) => void;
+
+  /**
+   * Opens the menu at the focused element on Shift+F10 or the ContextMenu key
+   */
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
 
   /**
    * Notes the pointer pressing in the region, which the menu holds while the press that opened it lasts
@@ -47,6 +52,11 @@ interface ContextMenuOverlayProps extends MenuOverlayProps {
    * Places the menu at the point it opened at rather than beside the region
    */
   "data-context-menu": "";
+
+  /**
+   * Keeps the browser's menu, and the region's, from opening over the menu
+   */
+  onContextMenu: (event: MouseEvent<HTMLElement>) => void;
 
   /**
    * Closes the menu when focus leaves it
@@ -125,7 +135,8 @@ interface Opening {
 
 /**
  * Connects a `Menu` to a region, such as a list of files or a canvas, so a right-click in the region opens the menu at
- * the pointer, with focus on the menu itself, and the next Down or Up moves to the first or last item. Choosing an
+ * the pointer, with focus on the menu itself, and the next Down or Up moves to the first or last item. Shift+F10 or the
+ * ContextMenu key opens it below the focused element, with focus on its first item. Choosing an
  * item, Escape, Tab or a click outside closes it, and focus goes back to the element that had it when it opened,
  * unless a click outside put it elsewhere. `target` tells which element the menu opened for, so one menu can serve
  * every row.
@@ -148,6 +159,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   const closeRequestedRef = useRef(false);
   const removalWatcherRef = useRef<(() => void) | null>(null);
   const lastPointerRef = useRef<number | null>(null);
+  const openedByKeyRef = useRef(false);
   const { anchorName, id: menuId } = popover.getOverlayProps();
 
   useEffect(() => () => removalWatcherRef.current?.(), []);
@@ -180,10 +192,45 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   function handleContextMenu(event: MouseEvent<HTMLElement>): void {
     event.preventDefault();
 
+    if (isFromNoPointer(event.nativeEvent)) {
+      // Windows browsers also send one for the key that has already opened the menu
+      if (!openedByKeyRef.current) {
+        openAtElement(event.currentTarget, event.target as Element);
+      }
+
+      return;
+    }
+
     // Where the menu opens while the button is still down, as on macOS and Linux, its release would light dismiss it
     const pressingPointer = event.buttons === 0 ? null : lastPointerRef.current;
 
     openAt(event.currentTarget, event.target as Element, event.clientX, event.clientY, "menu", pressingPointer);
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>): void {
+    const opensMenu = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
+
+    if (!opensMenu || event.defaultPrevented || hasModifier(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    openAtElement(event.currentTarget, event.target as Element);
+    openedByKeyRef.current = true;
+  }
+
+  /**
+   * Opens the menu below an element's start edge, as a menu from a button opens below it, moved into the window when
+   * that edge is off it
+   */
+  function openAtElement(region: HTMLElement, element: Element): void {
+    const view = region.ownerDocument.defaultView;
+    const bounds = element.getBoundingClientRect();
+    const rightToLeft = view?.getComputedStyle(element).direction === "rtl";
+    const x = clamp(rightToLeft ? bounds.right : bounds.left, view?.innerWidth ?? bounds.right);
+    const y = clamp(bounds.bottom, view?.innerHeight ?? bounds.bottom);
+
+    openAt(region, element, x, y, "first", null);
   }
 
   function handlePointerDown(event: PointerEvent<HTMLElement>): void {
@@ -202,6 +249,8 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     const menu = page.getElementById(menuId);
     const focused = page.activeElement;
     const bounds = region.getBoundingClientRect();
+
+    openedByKeyRef.current = false;
 
     // Reopening with focus in the menu keeps the element it first opened from
     if (focused instanceof HTMLElement && focused !== page.body && menu?.contains(focused) !== true) {
@@ -246,10 +295,19 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
       // Watching first, so the watcher sees the focus the opening moves in
       removalWatcherRef.current = watchRemovals(menu);
       focusOnOpening(menu, openingFocusRef.current);
-    } else if (returnsFocusRef.current) {
-      returnsFocusRef.current = false;
-      returnFocus(menu, returnFocusRef.current);
+    } else {
+      openedByKeyRef.current = false;
+
+      if (returnsFocusRef.current) {
+        returnsFocusRef.current = false;
+        returnFocus(menu, returnFocusRef.current);
+      }
     }
+  }
+
+  function handleMenuContextMenu(event: MouseEvent<HTMLElement>): void {
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   function handleMenuKeyDown(event: KeyboardEvent<HTMLElement>): void {
@@ -278,6 +336,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
       "data-context-menu": "" as const,
       onBeforeToggle: handleMenuBeforeToggle,
       onBlur: handleMenuBlur,
+      onContextMenu: handleMenuContextMenu,
       onKeyDown: handleMenuKeyDown,
       onToggle: handleMenuToggle,
       style: pointStyle(opening?.offsets),
@@ -291,12 +350,35 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   ): Omit<Props, keyof ContextMenuTargetProps> & ContextMenuTargetProps {
     return mergeProps(props, {
       onContextMenu: handleContextMenu,
+      onKeyDown: handleKeyDown,
       onPointerDown: handlePointerDown,
       style: { anchorName },
     });
   }
 
   return { close, getMenuProps, getTargetProps, open: popover.open, target: opening?.target ?? null };
+}
+
+/**
+ * Whether a `contextmenu` came from the keyboard or assistive technology rather than a pointer
+ *
+ * @param event the native event
+ * @returns true when the browser marks it with an empty pointer type; a browser that sends a plain mouse event, as
+ *   Safari does, marks none, so its events count as a pointer's
+ */
+function isFromNoPointer(event: Event): boolean {
+  return "pointerType" in event && event.pointerType === "";
+}
+
+/**
+ * Keeps a coordinate inside the window
+ *
+ * @param value the coordinate
+ * @param size the window's width or height
+ * @returns the coordinate, no less than 0 and no more than `size`
+ */
+function clamp(value: number, size: number): number {
+  return Math.min(Math.max(value, 0), size);
 }
 
 /**

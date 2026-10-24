@@ -186,6 +186,131 @@ describe("useContextMenu", () => {
     expect(screen.getByRole("button", { name: "After" })).toHaveFocus();
   });
 
+  it.each([
+    { key: "Shift+F10", keys: "{Shift>}{F10}{/Shift}" },
+    { key: "the ContextMenu key", keys: "{ContextMenu}" },
+  ])(
+    "must open below the focused element's start edge with focus on the first item when $key is pressed",
+    async ({ keys }) => {
+      const { user } = setUpTest();
+      render(<FileList />);
+      setRegionBounds({ height: 300, width: 400, x: 100, y: 50 });
+      setBounds(elements.row("notes.txt"), { height: 20, width: 200, x: 110, y: 80 });
+      focus(elements.row("notes.txt"));
+
+      await user.keyboard(keys);
+
+      expect(screen.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+      expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toBe(elements.menu);
+      expect(elements.menu.style.getPropertyValue("--_sui-context-menu-left")).toBe("10px");
+      expect(elements.menu.style.getPropertyValue("--_sui-context-menu-top")).toBe("50px");
+    }
+  );
+
+  it("must keep the browser from acting on the key when the ContextMenu key opens the menu", () => {
+    setUpTest();
+    render(<FileList />);
+
+    const notCancelled = fireEvent.keyDown(elements.row("notes.txt"), { key: "ContextMenu" });
+
+    expect(notCancelled).toBe(false);
+  });
+
+  it("must open below the focused element's end edge when the text runs right to left", async () => {
+    const { user } = setUpTest();
+    render(<FileList dir="rtl" />);
+    setRegionBounds({ height: 300, width: 400, x: 100, y: 50 });
+    setBounds(elements.row("notes.txt"), { height: 20, width: 200, x: 110, y: 80 });
+    focus(elements.row("notes.txt"));
+
+    await user.keyboard("{ContextMenu}");
+
+    expect(elements.menu.style.getPropertyValue("--_sui-context-menu-right")).toBe("190px");
+  });
+
+  it("must open at the window's edge when the focused element's edge is beyond it", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    setRegionBounds({ height: 3000, width: 400, x: 100, y: 50 });
+    setBounds(elements.row("notes.txt"), { height: 20, width: 200, x: 110, y: 2000 });
+    focus(elements.row("notes.txt"));
+
+    await user.keyboard("{ContextMenu}");
+
+    expect(elements.menu.style.getPropertyValue("--_sui-context-menu-top")).toBe(`${window.innerHeight - 50}px`);
+  });
+
+  it.each(["altKey", "ctrlKey", "metaKey"])(
+    "must leave the ContextMenu key alone when it is pressed with %s",
+    (modifier) => {
+      setUpTest();
+      render(<FileList />);
+
+      const notCancelled = fireEvent.keyDown(elements.row("notes.txt"), { key: "ContextMenu", [modifier]: true });
+
+      expect(notCancelled).toBe(true);
+      expect(elements.menu).not.toBeVisible();
+    }
+  );
+
+  it("must leave F10 alone when it is pressed without Shift", () => {
+    setUpTest();
+    render(<FileList />);
+
+    const notCancelled = fireEvent.keyDown(elements.row("notes.txt"), { key: "F10" });
+
+    expect(notCancelled).toBe(true);
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must open at the focused element with focus on the first item when a contextmenu comes with no pointer", () => {
+    setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+
+    const notCancelled = fireEvent(elements.row("notes.txt"), noPointerContextMenu());
+
+    expect(notCancelled).toBe(false);
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+    expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toBe(elements.menu);
+  });
+
+  it("must ignore a contextmenu with no pointer when a key has just opened the menu", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+
+    const notCancelled = fireEvent(elements.row("report.pdf"), noPointerContextMenu());
+
+    expect(notCancelled).toBe(false);
+    expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toBe(elements.menu);
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+  });
+
+  it("must keep the browser's menu and the region's from opening when the menu is right-clicked", async () => {
+    const { user } = setUpTest();
+    render(<FileList menuInRegion={true} />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+
+    const notCancelled = fireEvent.contextMenu(screen.getByRole("menuitem", { name: "Close" }));
+
+    expect(notCancelled).toBe(false);
+    expect(screen.getByRole("menuitem", { name: "Rename" })).toHaveFocus();
+  });
+
+  it("must return focus to the focused element when a menu a key opened closes", async () => {
+    const { user } = setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+    await user.keyboard("{ContextMenu}");
+
+    closeAsBrowser(elements.menu);
+
+    expect(elements.row("notes.txt")).toHaveFocus();
+  });
+
   it("must require a name for the menu when its props are got", () => {
     function UnnamedMenu(): JSX.Element {
       const contextMenu = useContextMenu();
@@ -199,29 +324,37 @@ describe("useContextMenu", () => {
 });
 
 interface FileListProps extends UseContextMenuOptions {
+  dir?: "ltr" | "rtl";
+  menuInRegion?: boolean;
   onRename?: (name: string) => void;
 }
 
-function FileList({ onRename, ...options }: FileListProps): JSX.Element {
+function FileList({ dir, menuInRegion = false, onRename, ...options }: FileListProps): JSX.Element {
   const contextMenu = useContextMenu(options);
   const name = contextMenu.target?.closest("[data-name]")?.getAttribute("data-name") ?? "file";
+  const menu = (
+    <Menu {...contextMenu.getMenuProps({ "aria-label": `Actions for ${name}` })}>
+      <MenuItem onClick={() => onRename?.(name)}>Rename</MenuItem>
+      <MenuItem onClick={contextMenu.close}>Close</MenuItem>
+    </Menu>
+  );
 
   return (
-    <>
+    <div dir={dir}>
       <Button variant="secondary">Before</Button>
-      <ul {...contextMenu.getTargetProps()} aria-label="Files" data-testid="region">
-        {["report.pdf", "notes.txt"].map((file) => (
-          <li key={file} tabIndex={-1} data-name={file}>
-            {file}
-          </li>
-        ))}
-      </ul>
+      <div {...contextMenu.getTargetProps()} data-testid="region">
+        <ul aria-label="Files">
+          {["report.pdf", "notes.txt"].map((file) => (
+            <li key={file} tabIndex={-1} data-name={file}>
+              {file}
+            </li>
+          ))}
+        </ul>
+        {menuInRegion && menu}
+      </div>
       <Button variant="secondary">After</Button>
-      <Menu {...contextMenu.getMenuProps({ "aria-label": `Actions for ${name}` })}>
-        <MenuItem onClick={() => onRename?.(name)}>Rename</MenuItem>
-        <MenuItem onClick={contextMenu.close}>Close</MenuItem>
-      </Menu>
-    </>
+      {!menuInRegion && menu}
+    </div>
   );
 }
 
@@ -253,10 +386,37 @@ function setUpTest() {
   const setPointerCapture = vi.fn();
   Object.defineProperty(HTMLElement.prototype, "setPointerCapture", { configurable: true, value: setPointerCapture });
 
+  // user-event sends its mouse's contextmenu with no pointer type, which a browser gives only the keyboard's, so it is
+  // sent again as a browser sends it
+  const markAsMouse = (event: Event): void => {
+    if (!(event instanceof PointerEvent) || event.pointerType !== "" || event.button !== 2) {
+      return;
+    }
+
+    event.stopImmediatePropagation();
+
+    const resent = new PointerEvent("contextmenu", {
+      bubbles: true,
+      button: event.button,
+      buttons: event.buttons,
+      cancelable: true,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      pointerId: event.pointerId,
+      pointerType: "mouse",
+    });
+
+    if (!(event.target as Element).dispatchEvent(resent)) {
+      event.preventDefault();
+    }
+  };
+  window.addEventListener("contextmenu", markAsMouse, true);
+
   onTestFinished(() => {
     show.mockRestore();
     hide.mockRestore();
     Reflect.deleteProperty(HTMLElement.prototype, "setPointerCapture");
+    window.removeEventListener("contextmenu", markAsMouse, true);
   });
 
   const rightClick = async (target: Element, coords = { clientX: 0, clientY: 0 }): Promise<void> => {
@@ -284,8 +444,34 @@ function closeAsBrowser(menu: HTMLElement): void {
   });
 }
 
-function setRegionBounds(bounds: { height: number; width: number; x: number; y: number }): void {
-  vi.spyOn(elements.region, "getBoundingClientRect").mockReturnValue(DOMRect.fromRect(bounds));
+interface Bounds {
+  height: number;
+  width: number;
+  x: number;
+  y: number;
+}
+
+function setBounds(element: Element, bounds: Bounds): void {
+  vi.spyOn(element, "getBoundingClientRect").mockReturnValue(DOMRect.fromRect(bounds));
+}
+
+function setRegionBounds(bounds: Bounds): void {
+  setBounds(elements.region, bounds);
+}
+
+function focus(element: HTMLElement): void {
+  act(() => {
+    element.focus();
+  });
+}
+
+/**
+ * A `contextmenu` as the keyboard or a screen reader sends it, which browsers mark with an empty pointer type
+ *
+ * @returns the event
+ */
+function noPointerContextMenu(): Event {
+  return new PointerEvent("contextmenu", { bubbles: true, cancelable: true, pointerType: "" });
 }
 
 const elements = {
