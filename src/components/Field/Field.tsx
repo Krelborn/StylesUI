@@ -80,14 +80,17 @@ export function Field<E extends FieldElement = "div">({
   const generatedId = useId();
   const descriptionId = `${generatedId}-description`;
   const errorId = `${generatedId}-error`;
+  const labelId = `${generatedId}-label`;
   const hasDescription = hasContent(description);
   const hasError = hasContent(error);
+  const hasLabel = hasContent(label);
   const describedBy = [hasDescription && descriptionId, hasError && errorId].filter(Boolean).join(" ");
   const fieldContext: FieldContextValue = {
     controlId: controlId ?? generatedId,
     describedBy: describedBy === "" ? undefined : describedBy,
     disabled,
     invalid: hasError,
+    labelId: hasLabel ? labelId : undefined,
     required,
   };
 
@@ -98,8 +101,8 @@ export function Field<E extends FieldElement = "div">({
       className={clsx(styles.field, className)}
       data-disabled={disabled ? "" : undefined}
     >
-      {hasContent(label) && (
-        <Box as="label" className={styles.label} htmlFor={fieldContext.controlId}>
+      {hasLabel && (
+        <Box as="label" className={styles.label} htmlFor={fieldContext.controlId} id={labelId}>
           {label}
           {required && <RequiredIndicator />}
         </Box>

@@ -168,9 +168,11 @@
 
 /*
  * The highlight tokens are never declared here, so an ancestor can set them. The tint follows focus, which the
- * pointer moves too; the ring shows only for keyboard focus.
+ * pointer moves too, or a combobox's active option; the ring shows only for keyboard focus, or an option a key made
+ * active.
  */
-.item:focus {
+.item:focus,
+.item[data-active] {
   --_sui-menu-ink: var(--sui-menu-on-highlight, var(--sui-color-text, #111827));
 
   outline: none;
@@ -186,7 +188,8 @@
   color: var(--_sui-menu-ink);
 }
 
-.item:focus-visible {
+.item:focus-visible,
+.item[data-active="keyboard"] {
   outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
   outline-offset: calc(var(--sui-focus-ring-width, 2px) * -1);
 }
@@ -220,7 +223,8 @@
  * ring too. It follows the danger rules and matches focus, so a disabled item is dimmed in every state.
  */
 .item[aria-disabled="true"],
-.item[aria-disabled="true"]:focus {
+.item[aria-disabled="true"]:focus,
+.item[aria-disabled="true"][data-active] {
   --_sui-menu-part-opacity: 0.5;
 
   color: color-mix(in srgb, var(--_sui-menu-ink) 50%, transparent);
@@ -362,8 +366,10 @@
 @media (forced-colors: active) {
   /* Left automatic, the browser draws a Canvas backplate behind the text that hides HighlightText */
   .item:focus,
+  .item[data-active],
   .item[data-tone="danger"]:focus,
   .item[aria-disabled="true"]:focus,
+  .item[aria-disabled="true"][data-active],
   .item[aria-expanded="true"] {
     /* Read by a check, a radio dot and a destructive item's icon, whose own rules outrank the one for every part */
     --_sui-menu-ink: HighlightText;
@@ -374,11 +380,14 @@
   }
 
   /* forced-color-adjust: none keeps the ring's and the parts' theme colours, so they take the highlight's text colour */
-  .item:focus-visible {
+  .item:focus-visible,
+  .item[data-active="keyboard"] {
     outline-color: HighlightText;
   }
 
-  .item:is(:focus, [aria-expanded="true"]) * {
+  .item:focus *,
+  .item[data-active] *,
+  .item[aria-expanded="true"] * {
     color: HighlightText;
   }
 
@@ -390,5 +399,13 @@
 
   .item[aria-disabled="true"]:not(:focus) * {
     color: GrayText;
+  }
+
+  /* A combobox's active option keeps the highlight's text, which the two rules above would grey when disabled */
+  .item[aria-disabled="true"][data-active],
+  .item[aria-disabled="true"][data-active] * {
+    --_sui-menu-part-opacity: 0.5;
+
+    color: HighlightText;
   }
 }

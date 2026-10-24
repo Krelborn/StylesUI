@@ -1,0 +1,128 @@
+/* A Combobox's button, which TextControl draws as a field */
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sui-space-2, 0.5rem);
+  min-inline-size: 0;
+  text-align: start;
+  cursor: default;
+}
+
+.placeholder,
+.fieldLabel {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.placeholder {
+  color: var(--sui-color-text-muted, #4b5563);
+}
+
+/* One line tall, so an avatar taller than the text reaches into the padding rather than growing the field */
+.fieldLeading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  block-size: 1lh;
+}
+
+.chevron {
+  flex: none;
+  transition: rotate 120ms ease;
+}
+
+[aria-expanded="true"] + .chevron,
+[aria-expanded="true"] > .chevron {
+  rotate: 180deg;
+}
+
+/* An Autocomplete's input with the chevron over its end, where the input leaves room for it */
+.inputFrame {
+  --_sui-combobox-chevron-inset: var(--sui-space-4, 1rem);
+
+  display: inline-grid;
+  align-items: center;
+}
+
+.inputFrame[data-size="sm"] {
+  --_sui-combobox-chevron-inset: var(--sui-space-3, 0.75rem);
+}
+
+.inputFrame[data-size="lg"] {
+  --_sui-combobox-chevron-inset: var(--sui-space-6, 1.5rem);
+}
+
+.inputFrame > * {
+  grid-area: 1 / 1;
+}
+
+.inputFrame .input {
+  padding-inline-end: calc(var(--_sui-combobox-chevron-inset) + 1em + var(--sui-space-2, 0.5rem));
+}
+
+.inputFrame .chevron {
+  justify-self: end;
+  margin-inline-end: var(--_sui-combobox-chevron-inset);
+  color: var(--sui-color-text, #111827);
+  pointer-events: none;
+}
+
+.inputFrame[data-disabled] .chevron {
+  opacity: 0.5;
+}
+
+/*
+ * At least as wide as the field, which an older browser without anchor-size() leaves to the menu surface. The listbox
+ * scrolls rather than the surface: the control's keys scroll it, which axe recognises only for a combobox's listbox.
+ */
+.popup:popover-open {
+  min-inline-size: max(12rem, anchor-size(width));
+  max-inline-size: min(max(20rem, anchor-size(width)), 100vw - var(--sui-space-2, 0.5rem) * 2);
+  overflow: hidden;
+}
+
+/* Every option's label starts after the column the selected option's check sits in */
+.listbox {
+  --_sui-menu-leading-column: calc(1rem + var(--sui-space-2, 0.5rem));
+
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 1px;
+  min-block-size: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* The menu surface's display would otherwise beat the browser's rule for an option the filter hides */
+.option[hidden] {
+  display: none;
+}
+
+.option .check {
+  color: var(--_sui-menu-ink);
+}
+
+/* Dimmed with a disabled option, as the menu surface dims its icons */
+.optionLeading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  opacity: var(--_sui-menu-part-opacity, 1);
+}
+
+/* Shown only while the list shows no option */
+.empty {
+  display: none;
+  align-items: center;
+  min-block-size: 2rem;
+  padding: var(--sui-space-1, 0.25rem) var(--sui-space-2, 0.5rem);
+  color: var(--sui-color-text-muted, #4b5563);
+}
+
+.listbox[data-empty] + .empty {
+  display: flex;
+}

@@ -161,6 +161,7 @@ function setUpTest({ field = {} }: { field?: Partial<FieldContextValue> } = {}) 
     describedBy: undefined,
     disabled: false,
     invalid: false,
+    labelId: undefined,
     required: false,
     ...field,
   };
