@@ -258,14 +258,13 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   }
 
   /**
-   * Whether an event in the region is the region's own: not from its menu, when the menu is rendered inside it, nor
-   * from a region inside it, which handles its own
+   * Whether an event in the region is the region's own: not from a menu inside it, such as its own or a row's dropdown,
+   * nor from a region inside it, which handles its own. A region that renders no marker counts every event as its own.
    */
   function isForRegion(event: SyntheticEvent<HTMLElement>): boolean {
-    const target = event.target as Element;
-    const menu = event.currentTarget.ownerDocument.getElementById(menuId);
+    const nearest = (event.target as Element).closest('[data-context-menu-region], [role="menu"]');
 
-    return menu?.contains(target) !== true && target.closest("[data-context-menu-region]") === event.currentTarget;
+    return nearest === null || nearest === event.currentTarget;
   }
 
   /**

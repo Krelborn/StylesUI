@@ -4,7 +4,7 @@ import type { JSX, ReactNode } from "react";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { Button } from "../Button";
-import { Menu, MenuItem } from "../Menu";
+import { Menu, MenuItem, useMenu } from "../Menu";
 
 import type { UseContextMenuOptions } from "./useContextMenu";
 import { useContextMenu } from "./useContextMenu";
@@ -806,6 +806,30 @@ describe("useContextMenu", () => {
     expect(elements.menu).toBeVisible();
   });
 
+  it("must leave keys and right-clicks in a row's own dropdown menu inside the region to it", () => {
+    setUpTest();
+    render(
+      <FileList>
+        <RowDropdown />
+      </FileList>
+    );
+    focus(screen.getByRole("menuitem", { name: "Edit" }));
+
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "Edit" }), { key: "ContextMenu" });
+    fireEvent.contextMenu(screen.getByRole("menuitem", { name: "Edit" }));
+
+    expect(screen.getByLabelText("Actions for file")).not.toBeVisible();
+  });
+
+  it("must open the menu when the region renders without its marker attribute", async () => {
+    const { rightClick } = setUpTest();
+    render(<FileList withoutMarker={true} />);
+
+    await rightClick(elements.row("notes.txt"));
+
+    expect(elements.menu).toBeVisible();
+  });
+
   it("must require a name for the menu when its props are got", () => {
     function UnnamedMenu(): JSX.Element {
       const contextMenu = useContextMenu();
@@ -823,9 +847,17 @@ interface FileListProps extends UseContextMenuOptions {
   dir?: "ltr" | "rtl";
   menuInRegion?: boolean;
   onRename?: (name: string) => void;
+  withoutMarker?: boolean;
 }
 
-function FileList({ children, dir, menuInRegion = false, onRename, ...options }: FileListProps): JSX.Element {
+function FileList({
+  children,
+  dir,
+  menuInRegion = false,
+  onRename,
+  withoutMarker = false,
+  ...options
+}: FileListProps): JSX.Element {
   const contextMenu = useContextMenu(options);
   const name = contextMenu.target?.closest("[data-name]")?.getAttribute("data-name") ?? "file";
   const menu = (
@@ -838,7 +870,11 @@ function FileList({ children, dir, menuInRegion = false, onRename, ...options }:
   return (
     <div dir={dir}>
       <Button variant="secondary">Before</Button>
-      <div {...contextMenu.getTargetProps()} data-testid="region">
+      <div
+        {...contextMenu.getTargetProps()}
+        data-context-menu-region={withoutMarker ? undefined : ""}
+        data-testid="region"
+      >
         <ul aria-label="Files">
           {["report.pdf", "notes.txt"].map((file) => (
             <li key={file} tabIndex={-1} data-name={file}>
@@ -852,6 +888,24 @@ function FileList({ children, dir, menuInRegion = false, onRename, ...options }:
       <Button variant="secondary">After</Button>
       {!menuInRegion && menu}
     </div>
+  );
+}
+
+/**
+ * A row's own dropdown menu, open, as a "More" button's would be
+ */
+function RowDropdown(): JSX.Element {
+  const menu = useMenu({ defaultOpen: true });
+
+  return (
+    <>
+      <Button {...menu.getTriggerProps()} variant="ghost">
+        More
+      </Button>
+      <Menu {...menu.getMenuProps()}>
+        <MenuItem>Edit</MenuItem>
+      </Menu>
+    </>
   );
 }
 
