@@ -98,7 +98,8 @@ export interface UseContextMenuResult {
 
   /**
    * Returns the props to spread on the region the menu opens in, merged with any given: where both set a handler, both
-   * run, the given one first, and `style` objects merge
+   * run, the given one first, and `style` objects merge. Give the region's own `style` here rather than after the
+   * spread, which would drop the anchor name the menu is placed by.
    */
   getTargetProps: <Props extends object>(
     props?: Props & Partial<ContextMenuTargetProps>

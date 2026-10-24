@@ -4,7 +4,9 @@ import { useState } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { focusRingContrast } from "../../test/colorContrast";
+import type { TrustedInput } from "../../test/trustedInput";
 import { trustedInput } from "../../test/trustedInput";
+import { Box } from "../Box";
 import { Button } from "../Button";
 import { Menu, MenuItem, MenuSeparator } from "../Menu";
 import { Stack } from "../Stack";
@@ -73,6 +75,142 @@ function FilteredFileList(): JSX.Element {
       </Menu>
     </Stack>
   );
+}
+
+/**
+ * Two shapes on a canvas, whose menu acts on the shape it opened for, or offers canvas actions when it opened on empty
+ * space
+ */
+function ShapeCanvas(): JSX.Element {
+  const [lastAction, setLastAction] = useState("none");
+  const contextMenu = useContextMenu();
+  const shape = contextMenu.target?.closest("[data-shape]")?.getAttribute("data-shape") ?? null;
+
+  return (
+    <Stack align="start" gap={3}>
+      <Box
+        {...contextMenu.getTargetProps({
+          style: {
+            blockSize: "12rem",
+            border: "var(--sui-border-width, 1px) solid var(--sui-color-border, #d1d5db)",
+            borderRadius: "var(--sui-radius-lg, 8px)",
+            inlineSize: "20rem",
+            position: "relative",
+          },
+        })}
+        aria-label="Canvas"
+        as="section"
+        data-testid="canvas"
+      >
+        <Button
+          onClick={() => setLastAction("Select circle")}
+          style={{ insetBlockStart: "2rem", insetInlineStart: "2rem", position: "absolute" }}
+          variant="secondary"
+          data-shape="circle"
+          data-testid="shape-circle"
+        >
+          Circle
+        </Button>
+        <Button
+          onClick={() => setLastAction("Select square")}
+          style={{ insetBlockStart: "6rem", insetInlineStart: "10rem", position: "absolute" }}
+          variant="secondary"
+          data-shape="square"
+          data-testid="shape-square"
+        >
+          Square
+        </Button>
+      </Box>
+      <Text>{`Last action: ${lastAction}`}</Text>
+      <Menu {...contextMenu.getMenuProps({ "aria-label": shape === null ? "Canvas actions" : `Actions for ${shape}` })}>
+        {shape === null ? (
+          <>
+            <MenuItem onClick={() => setLastAction("Add a shape")}>Add a shape</MenuItem>
+            <MenuItem onClick={() => setLastAction("Select all")}>Select all</MenuItem>
+          </>
+        ) : (
+          <>
+            <MenuItem onClick={() => setLastAction(`Bring ${shape} to front`)}>Bring to front</MenuItem>
+            <MenuItem onClick={() => setLastAction(`Duplicate ${shape}`)}>Duplicate</MenuItem>
+            <MenuSeparator />
+            <MenuItem onClick={() => setLastAction(`Delete ${shape}`)} tone="danger">
+              Delete
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+    </Stack>
+  );
+}
+
+/**
+ * A region filling the story's frame, so a right-click can land near each of the window's corners
+ */
+function FullFrameRegion(): JSX.Element {
+  const contextMenu = useContextMenu();
+
+  return (
+    <>
+      <Box
+        {...contextMenu.getTargetProps({
+          style: { blockSize: "100vh", inlineSize: "100%", padding: "var(--sui-space-4, 1rem)" },
+        })}
+        data-testid="frame-region"
+      >
+        <Text>Right-click near any corner</Text>
+      </Box>
+      <Menu {...contextMenu.getMenuProps({ "aria-label": "Actions" })}>
+        <MenuItem>Cut</MenuItem>
+        <MenuItem>Copy</MenuItem>
+        <MenuItem>Paste</MenuItem>
+      </Menu>
+    </>
+  );
+}
+
+/**
+ * Which of a menu's edges sit on the point it opened at
+ */
+interface Edges {
+  block: "bottom" | "top";
+  inline: "left" | "right";
+}
+
+/**
+ * Right-clicks 20px in from each corner of the region filling the frame, and in the middle of its top edge, and checks
+ * the menu has the edges on the point that leave it room: the start edge where there is room after the point
+ *
+ * @param input the trusted input
+ * @param region the region
+ * @param menu the menu
+ * @param startEdge the menu's start edge in the region's writing direction
+ */
+async function expectPlacedAtEachCorner(
+  input: TrustedInput,
+  region: HTMLElement,
+  menu: HTMLElement,
+  startEdge: Edges["inline"]
+): Promise<void> {
+  const bounds = region.getBoundingClientRect();
+  const points: { at: { x: number; y: number }; edges: Edges }[] = [
+    { at: { x: 20, y: 20 }, edges: { block: "top", inline: "left" } },
+    { at: { x: bounds.width - 20, y: 20 }, edges: { block: "top", inline: "right" } },
+    { at: { x: 20, y: bounds.height - 20 }, edges: { block: "bottom", inline: "left" } },
+    { at: { x: bounds.width - 20, y: bounds.height - 20 }, edges: { block: "bottom", inline: "right" } },
+    { at: { x: bounds.width / 2, y: 20 }, edges: { block: "top", inline: startEdge } },
+  ];
+
+  for (const { at, edges } of points) {
+    await input.contextClickByTestId("frame-region", at);
+    await waitFor(() => expect(menu).toHaveFocus());
+
+    const placed = menu.getBoundingClientRect();
+    await expect(Math.abs(placed[edges.inline] - (bounds.left + at.x))).toBeLessThanOrEqual(1);
+    await expect(Math.abs(placed[edges.block] - (bounds.top + at.y))).toBeLessThanOrEqual(1);
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(menu).not.toBeVisible());
+  }
 }
 
 const meta = {
@@ -272,5 +410,116 @@ export const TextField: Story = {
     await input.pressKey("Escape");
     await input.contextClickByTestId("file-notes.txt");
     await waitFor(() => expect(canvas.getByRole("menu", { name: "Actions for notes.txt" })).toHaveFocus());
+  },
+};
+
+/**
+ * The menu acts on the shape it opened for, and offers the canvas's own actions on empty space
+ */
+export const Canvas: Story = {
+  render: () => <ShapeCanvas />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.contextClickByTestId("canvas", { x: 12, y: 12 });
+    const canvasMenu = await canvas.findByRole("menu", { name: "Canvas actions" });
+    await waitFor(() => expect(canvasMenu).toHaveFocus());
+    await waitFor(() => expect(canvas.getByRole("menuitem", { name: "Add a shape" })).toBeVisible());
+    await input.pressKey("Escape");
+    await waitFor(() => expect(canvasMenu).not.toBeVisible());
+
+    await input.contextClickByTestId("shape-square");
+    await waitFor(() => expect(canvas.getByRole("menu", { name: "Actions for square" })).toHaveFocus());
+    await input.pressKey("ArrowDown");
+    await input.pressKey("ArrowDown");
+    await input.pressKey("Enter");
+    await expect(canvas.getByText("Last action: Duplicate square")).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: "Square" })).toHaveFocus();
+  },
+};
+
+/**
+ * The menu's start corner sits on the pointer, and against the window's edges it ends on the pointer on that axis
+ * instead
+ */
+export const Placement: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => <FullFrameRegion />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await expectPlacedAtEachCorner(
+      input,
+      canvas.getByTestId("frame-region"),
+      canvas.getByRole("menu", { hidden: true }),
+      "left"
+    );
+  },
+};
+
+/**
+ * In right-to-left text the menu's start corner is its top right, so it opens towards the left of the pointer, and
+ * against the window's left edge it flips to the right
+ */
+export const PlacementRightToLeft: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <Box dir="rtl">
+      <FullFrameRegion />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await expectPlacedAtEachCorner(
+      input,
+      canvas.getByTestId("frame-region"),
+      canvas.getByRole("menu", { hidden: true }),
+      "right"
+    );
+  },
+};
+
+/**
+ * In right-to-left text Shift+F10 opens the menu below the focused row's start edge, its right
+ */
+export const RightToLeft: Story = {
+  render: () => (
+    <Box dir="rtl">
+      <FileList />
+    </Box>
+  ),
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const row = canvas.getByRole("button", { name: "notes.txt" });
+    const menu = canvas.getByRole("menu", { hidden: true });
+
+    await input.pressKey("Shift");
+    await userEvent.tab();
+    await userEvent.tab();
+    await expect(row).toHaveFocus();
+    await input.pressKey("Shift+F10");
+
+    await waitFor(() => expect(canvas.getByRole("menuitem", { name: "Rename…" })).toHaveFocus());
+    await expect(Math.abs(menu.getBoundingClientRect().right - row.getBoundingClientRect().right)).toBeLessThanOrEqual(
+      1
+    );
   },
 };
