@@ -18,6 +18,7 @@ import { handleAutocompleteKey } from "./autocompleteKeys";
 import { containsText } from "./containsText";
 import { useAutocompleteText } from "./useAutocompleteText";
 import { useComboboxList } from "./useComboboxList";
+import { useComboboxSelection } from "./useComboboxSelection";
 import { useResultsAnnouncement } from "./useResultsAnnouncement";
 
 interface AutocompleteOwnProps {
@@ -143,18 +144,22 @@ export function Autocomplete({
   ...rest
 }: AutocompleteProps): JSX.Element {
   const fieldControl = useFieldControl(rest);
-  const text = useAutocompleteText({ defaultInputValue, inputValue, onInputValueChange });
+  const selection = useComboboxSelection({ defaultValue, onValueChange, value });
+  const text = useAutocompleteText({
+    defaultInputValue,
+    inputValue,
+    onInputValueChange,
+    selectedText: selection.selectedContent?.text,
+  });
   const list = useComboboxList({
     controlId: fieldControl.id,
-    defaultValue,
     filter,
     onCommit: text.commit,
-    onValueChange,
     query: text.query,
-    value,
+    selection,
   });
   const { announceCount, announcement } = useResultsAnnouncement(resultsLabel, list.countShown, list.open);
-  const shownText = text.shownText(list.selectedContent?.text);
+  const shownText = text.shown;
   const anchorStyle: CSSProperties = { anchorName: anchorNameFor(list.listId) };
   const readOnly = rest.readOnly === true;
 
@@ -186,7 +191,7 @@ export function Autocomplete({
 
     // Switching to another window leaves the typing to come back to
     if (event.currentTarget.ownerDocument.hasFocus()) {
-      text.restore(list.selectedContent?.text);
+      text.restore();
     }
   }
 

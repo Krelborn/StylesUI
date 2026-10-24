@@ -118,6 +118,31 @@ function TwoCharacterPicker(): JSX.Element {
   );
 }
 
+/**
+ * An autocomplete whose parent holds the text, starting from the given text
+ */
+function ControlledTextPicker({
+  defaultValue,
+  initialText,
+}: Pick<AutocompleteProps, "defaultValue"> & { initialText: string }): JSX.Element {
+  const [query, setQuery] = useState(initialText);
+
+  return (
+    <>
+      <Field label="Country">
+        <Autocomplete defaultValue={defaultValue} inputValue={query} onInputValueChange={setQuery}>
+          {countries.map((country) => (
+            <ComboboxOption key={country.code} value={country.code}>
+              {country.name}
+            </ComboboxOption>
+          ))}
+        </Autocomplete>
+      </Field>
+      <Button>After</Button>
+    </>
+  );
+}
+
 describe("Autocomplete", () => {
   it("must render a closed combobox input named by its field when it renders", () => {
     renderBase(<CountryPicker />);
@@ -575,6 +600,34 @@ describe("Autocomplete", () => {
     rerender(<CountryPicker filter={(textValue, inputValue) => textValue.startsWith(inputValue)} />);
 
     expect(elements.input).not.toHaveAttribute("aria-activedescendant");
+  });
+
+  it("must filter by text its parent gives before any typing when the list opens", async () => {
+    const { user } = setUpTest();
+    renderBase(<ControlledTextPicker initialText="Fra" />);
+
+    await user.click(elements.input);
+
+    expect(elements.shownOptions).toEqual(["France"]);
+  });
+
+  it("must show the selection's text again when focus leaves text its parent gave before any typing", async () => {
+    const { user } = setUpTest();
+    renderBase(<ControlledTextPicker defaultValue="jp" initialText="Fra" />);
+    await user.click(elements.input);
+
+    await user.tab();
+
+    expect(elements.input).toHaveValue("Japan");
+  });
+
+  it("must show every option when its parent shows the selection's text", async () => {
+    const { user } = setUpTest();
+    renderBase(<ControlledTextPicker defaultValue="jp" initialText="Japan" />);
+
+    await user.click(elements.input);
+
+    expect(elements.shownOptions).toEqual(countries.map((country) => country.name));
   });
 
   it("must not submit its form when Enter is pressed on text that matches no option", async () => {

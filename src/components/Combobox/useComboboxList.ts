@@ -17,7 +17,7 @@ import type {
   ComboboxFilter,
   SelectedContent,
 } from "./ComboboxContext";
-import { useComboboxSelection } from "./useComboboxSelection";
+import type { ComboboxSelection } from "./useComboboxSelection";
 
 /**
  * Which option is active as the list opens: the selected one (else the first), the first, the last, or none
@@ -31,11 +31,6 @@ interface UseComboboxListOptions {
   controlId: string | undefined;
 
   /**
-   * The value selected at first when uncontrolled
-   */
-  defaultValue: string | null;
-
-  /**
    * Whether an option shows for the typed text, or null to show every option
    */
   filter: ComboboxFilter | null;
@@ -46,19 +41,14 @@ interface UseComboboxListOptions {
   onCommit?: (text: string) => void;
 
   /**
-   * Called with the new selection
-   */
-  onValueChange: ((value: string | null) => void) | undefined;
-
-  /**
    * The text the options are filtered by; empty shows every option
    */
   query: string;
 
   /**
-   * The selected value when controlled, or undefined when uncontrolled
+   * The combobox's selection, from `useComboboxSelection`
    */
-  value: string | null | undefined;
+  selection: ComboboxSelection;
 }
 
 /**
@@ -183,17 +173,15 @@ const scrollOptions: NearestContainerScrollOptions = { block: "nearest", contain
 /**
  * Holds the state of a combobox's list, which `Combobox` and `Autocomplete` share
  *
- * @param options the selection, the filter and the callbacks
+ * @param options the control's id, the selection, the filter and its query, and the commit callback
  * @returns the list's state and actions
  */
 export function useComboboxList({
   controlId,
-  defaultValue,
   filter,
   onCommit,
-  onValueChange,
   query,
-  value,
+  selection,
 }: UseComboboxListOptions): ComboboxList {
   const baseId = useId();
   const listId = `${baseId}-list`;
@@ -203,11 +191,7 @@ export function useComboboxList({
   const firstMatchPending = useRef(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<ActiveOption | null>(null);
-  const { select, selectedContent, selectedValue, setSelectedContent } = useComboboxSelection({
-    defaultValue,
-    onValueChange,
-    value,
-  });
+  const { select, selectedContent, selectedValue, setSelectedContent } = selection;
 
   // Without a filter, the options for the query are still to come from the consumer
   const activateFirstMatch = useEffectEvent((options: RenderedOption[]) => {

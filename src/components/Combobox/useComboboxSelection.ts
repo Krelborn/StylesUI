@@ -23,7 +23,7 @@ interface UseComboboxSelectionOptions {
 /**
  * A combobox's selection and what its selected option shows
  */
-interface ComboboxSelection {
+export interface ComboboxSelection {
   /**
    * Selects a value, or none, reporting it unless it is already selected
    */

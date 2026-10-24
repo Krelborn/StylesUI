@@ -15,6 +15,7 @@ import type { ComboboxPlacement } from "./ComboboxPopup";
 import { ComboboxPopup } from "./ComboboxPopup";
 import { handleComboboxKey } from "./comboboxKeys";
 import { useComboboxList } from "./useComboboxList";
+import { useComboboxSelection } from "./useComboboxSelection";
 
 interface ComboboxOwnProps {
   /**
@@ -107,14 +108,8 @@ export function Combobox({
 }: ComboboxProps): JSX.Element {
   const fieldControl = useFieldControl(rest);
   const [pressStartedOpen, setPressStartedOpen] = useState<boolean | null>(null);
-  const list = useComboboxList({
-    controlId: fieldControl.id,
-    defaultValue,
-    filter: null,
-    onValueChange: ignoreNone(onValueChange),
-    query: "",
-    value,
-  });
+  const selection = useComboboxSelection({ defaultValue, onValueChange: ignoreNone(onValueChange), value });
+  const list = useComboboxList({ controlId: fieldControl.id, filter: null, query: "", selection });
   const anchorStyle: CSSProperties = { anchorName: anchorNameFor(list.listId) };
 
   function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>): void {
