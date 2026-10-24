@@ -60,6 +60,47 @@ const clickByTestId: BrowserCommand<[testId: string]> = async ({ iframe }, testI
 };
 
 /**
+ * Right-clicks an element in the story's frame with the real pointer, which opens a context menu
+ *
+ * @param context the command context, holding the frame the story runs in
+ * @param testId the element's `data-testid`
+ * @param position where to click, in pixels from the element's top-left corner; its middle when omitted
+ */
+const contextClickByTestId: BrowserCommand<[testId: string, position?: { x: number; y: number }]> = async (
+  { iframe },
+  testId,
+  position
+) => {
+  await iframe.getByTestId(testId).click({ button: "right", position });
+};
+
+/**
+ * Holds a finger on the middle of an element in the story's frame for 800ms, then lifts it, through the DevTools
+ * protocol, since Playwright's touchscreen can only tap
+ *
+ * @param context the command context, holding the page and the frame the story runs in
+ * @param testId the element's `data-testid`
+ */
+const longPressByTestId: BrowserCommand<[testId: string]> = async ({ iframe, page }, testId) => {
+  const box = await iframe.getByTestId(testId).boundingBox();
+
+  if (box === null) {
+    throw new StoryFrameError(`No element with data-testid "${testId}" to press`);
+  }
+
+  const session = await page.context().newCDPSession(page);
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+
+  try {
+    await session.send("Input.dispatchTouchEvent", { touchPoints: [point], type: "touchStart" });
+    await page.waitForTimeout(800);
+    await session.send("Input.dispatchTouchEvent", { touchPoints: [], type: "touchEnd" });
+  } finally {
+    await session.detach();
+  }
+};
+
+/**
  * Clicks the bottom-right corner of the story's frame with the real pointer, away from the top-left where stories
  * render
  *
@@ -236,9 +277,11 @@ export default defineConfig({
                 commands: {
                   clickByTestId,
                   clickPageCorner,
+                  contextClickByTestId,
                   emulateForcedColors,
                   holdPointerByTestId,
                   hoverByTestId,
+                  longPressByTestId,
                   movePointerOffPage,
                   pressKey,
                   releasePointer,

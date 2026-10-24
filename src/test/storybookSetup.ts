@@ -16,6 +16,12 @@ declare module "vitest/browser" {
     clickPageCorner: () => Promise<void>;
 
     /**
+     * Right-clicks the element with the given `data-testid` in the story's frame with the real pointer, at a point from
+     * its top-left corner or in its middle
+     */
+    contextClickByTestId: (testId: string, position?: { x: number; y: number }) => Promise<void>;
+
+    /**
      * Turns the browser's emulation of forced colours on or off
      */
     emulateForcedColors: (active: boolean) => Promise<void>;
@@ -34,6 +40,11 @@ declare module "vitest/browser" {
      * Moves the real pointer off the page
      */
     movePointerOffPage: () => Promise<void>;
+
+    /**
+     * Holds a real finger on the element with the given `data-testid` in the story's frame for 800ms, then lifts it
+     */
+    longPressByTestId: (testId: string) => Promise<void>;
 
     /**
      * Presses a key with the real keyboard
@@ -55,9 +66,11 @@ declare module "vitest/browser" {
 registerTrustedInput({
   clickByTestId: (testId) => commands.clickByTestId(testId),
   clickPageCorner: () => commands.clickPageCorner(),
+  contextClickByTestId: (testId, position) => commands.contextClickByTestId(testId, position),
   emulateForcedColors: (active) => commands.emulateForcedColors(active),
   holdPointerByTestId: (testId) => commands.holdPointerByTestId(testId),
   hoverByTestId: (testId) => commands.hoverByTestId(testId),
+  longPressByTestId: (testId) => commands.longPressByTestId(testId),
   pressKey: (key) => commands.pressKey(key),
   releasePointer: () => commands.releasePointer(),
   slidePointerByRole: (role, fromName, toName) => commands.slidePointerByRole(role, fromName, toName),

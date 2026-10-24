@@ -1,6 +1,11 @@
+export { closeWhenFocusLeaves } from "./closeWhenFocusLeaves";
 export { focusItem } from "./focusItem";
+export { focusOnOpening } from "./focusOnOpening";
+export type { OpeningFocus } from "./focusOnOpening";
 export { hasModifier } from "./hasModifier";
 export { itemText } from "./itemText";
+export { leaveMenuOnTab } from "./leaveMenuOnTab";
 export { graceTriangle, isInsideTriangle } from "./pointerIntent";
 export type { Point, Triangle } from "./pointerIntent";
 export { renderedItems } from "./renderedItems";
+export { watchRemovals } from "./watchRemovals";
