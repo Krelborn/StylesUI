@@ -1,7 +1,8 @@
 import type { CSSProperties, FocusEvent, KeyboardEvent, MouseEvent, ToggleEvent } from "react";
 import { useEffect, useId, useRef } from "react";
 
-import { hasModifier, renderedItems } from "../../menus";
+import type { OpeningFocus } from "../../menus";
+import { closeWhenFocusLeaves, focusOnOpening, hasModifier, leaveMenuOnTab, watchRemovals } from "../../menus";
 import type { OverlayPlacement } from "../../overlays";
 import { mergeProps, syncPopover } from "../../overlays";
 // The Popover barrel would also bring Popover's stylesheet into every bundle that uses a menu
@@ -114,11 +115,6 @@ export interface UseMenuResult {
   open: boolean;
 }
 
-/**
- * Where focus goes as a menu opens: its first or last item, or the menu itself
- */
-type OpeningFocus = "first" | "last" | "menu";
-
 const triggerKeyFocus: Partial<Record<string, OpeningFocus>> = { ArrowDown: "first", ArrowUp: "last" };
 
 /**
@@ -221,46 +217,11 @@ export function useMenu({
   }
 
   function handleMenuKeyDown(event: KeyboardEvent<HTMLElement>): void {
-    const trigger = event.currentTarget.ownerDocument.getElementById(triggerId);
-
-    if (event.key !== "Tab" || trigger === null || event.defaultPrevented || hasModifier(event)) {
-      return;
-    }
-
-    // Tab then moves on from the trigger, as though the menu were not there; Shift+Tab stops on the trigger itself
-    if (event.shiftKey) {
-      event.preventDefault();
-    }
-
-    trigger.focus();
-    popover.close();
+    leaveMenuOnTab(event, event.currentTarget.ownerDocument.getElementById(triggerId), popover.close);
   }
 
   function handleMenuBlur(event: FocusEvent<HTMLElement>): void {
-    const menu = event.currentTarget;
-
-    if (!menu.matches(":popover-open")) {
-      return;
-    }
-
-    if (event.relatedTarget === null) {
-      // Focus is between elements, or lost with an item that was removed, so wait to see where it lands
-      setTimeout(() => {
-        closeUnlessFocusStays(menu, menu.ownerDocument.activeElement);
-      }, 0);
-    } else {
-      closeUnlessFocusStays(menu, event.relatedTarget);
-    }
-  }
-
-  function closeUnlessFocusStays(menu: HTMLElement, focused: Element | null): void {
-    const stays = focused !== null && (menu.contains(focused) || focused.id === triggerId);
-
-    // Hidden as a light dismiss would, not through close(), which takes focus lost to the page for a press inside the
-    // menu and returns it to the trigger
-    if (!stays && menu.matches(":popover-open")) {
-      syncPopover(menu, false);
-    }
+    closeWhenFocusLeaves(event.currentTarget, event.relatedTarget, (focused) => focused.id === triggerId);
   }
 
   function getMenuProps<Props extends object>(
@@ -292,76 +253,6 @@ export function useMenu({
   }
 
   return { close: popover.close, getMenuProps, getTriggerProps, open: popover.open };
-}
-
-/**
- * Moves focus into a menu that has just opened
- *
- * @param menu the menu element
- * @param openingFocus where focus goes; a menu with no items takes it itself
- */
-function focusOnOpening(menu: HTMLElement, openingFocus: OpeningFocus): void {
-  const items = renderedItems(menu);
-  const targets: Record<OpeningFocus, HTMLElement | undefined> = { first: items.at(0), last: items.at(-1), menu };
-
-  (targets[openingFocus] ?? menu).focus();
-}
-
-/**
- * Keeps focus inside a menu when the focused item is removed from it or from one of its submenus, by moving focus to
- * the innermost menu that held the item and is still open
- *
- * @param menu the open menu
- * @returns a function that stops watching, to call when the menu closes
- */
-function watchRemovals(menu: HTMLElement): () => void {
-  let focusedElement: Element | null = null;
-  let focusedMenus: HTMLElement[] = [];
-
-  function noteFocusedMenus(event: Event): void {
-    focusedElement = event.target instanceof Element ? event.target : null;
-    focusedMenus = focusedElement === null ? [] : menusAround(focusedElement, menu);
-  }
-
-  const watcher = new MutationObserver(() => {
-    const focused = menu.ownerDocument.activeElement;
-    const focusLost = focused === null || focused === menu.ownerDocument.body;
-    // Focus taken away on purpose, as by blur(), leaves the element in the menu
-    const focusedWasRemoved = focusedElement !== null && !menu.contains(focusedElement);
-
-    if (focusLost && focusedWasRemoved && menu.matches(":popover-open")) {
-      const stillOpen = focusedMenus.find((candidate) => candidate.isConnected && candidate.matches(":popover-open"));
-
-      (stillOpen ?? menu).focus();
-    }
-  });
-
-  menu.addEventListener("focusin", noteFocusedMenus);
-  watcher.observe(menu, { childList: true, subtree: true });
-
-  return () => {
-    menu.removeEventListener("focusin", noteFocusedMenus);
-    watcher.disconnect();
-  };
-}
-
-/**
- * Lists the menus around an element, innermost first
- *
- * @param element the element to start from, which may be a menu itself
- * @param root the outermost menu, the last listed
- * @returns the menus from the element's own out to `root`
- */
-function menusAround(element: Element, root: HTMLElement): HTMLElement[] {
-  const menus: HTMLElement[] = [];
-  let candidate = element.closest<HTMLElement>('[role="menu"]');
-
-  while (candidate !== null && root.contains(candidate)) {
-    menus.push(candidate);
-    candidate = candidate.parentElement?.closest<HTMLElement>('[role="menu"]') ?? null;
-  }
-
-  return menus;
 }
 
 /**
