@@ -330,6 +330,8 @@ A server-filtered list takes `filter={null}` and the typed text:
 
 ## Open Questions
 
-1. **Two components or one.** `Combobox` (select-only) and `Autocomplete` (editable), as above, or one `Combobox` with an `editable` switch? Two are recommended: each types its props from the element it renders, and react-docgen can document them. Other libraries use other names, such as Select and Combobox, but `Select` is taken by the native control.
-2. **Tab while the list is open.** Close without committing, as above, or commit the active option first, as the APG's select-only example does? Not committing is recommended, so passing over an option never chooses it.
-3. **Typing makes the first match active.** As above, so Enter right after typing chooses the best match, or nothing active until ↓, as the APG's example without automatic selection does? The first is recommended: it is quicker, and a screen reader announces the match as it changes.
+Resolved in review on 2026-10-24, each as recommended:
+
+- **Two components or one:** two, `Combobox` (select-only) and `Autocomplete` (editable), so each types its props from the element it renders and react-docgen can document them. `Select` is taken by the native control.
+- **Tab while the list is open:** closes it without committing, unlike the APG's select-only example, so passing over an option never chooses it.
+- **Typing makes the first match active:** yes, so Enter right after typing chooses the best match, and a screen reader announces the match as it changes.
