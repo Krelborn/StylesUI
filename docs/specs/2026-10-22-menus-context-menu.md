@@ -141,6 +141,7 @@ const file = files.find(({ id }) => id === contextMenu.target?.closest("[data-id
   - `KeyboardInteraction`: Shift+F10 and the ContextMenu key with real input open on the focused row with focus on the first item; Escape and Tab return focus to the row; `focusRingContrast >= 3` on a focused item.
   - `PointerInteraction`: a real right-click (a new `contextClickByTestId` command) opens at the pointer with focus on the menu; a click outside closes it and leaves focus where it landed; a right-click on the text field leaves the event unprevented.
   - `Placement`: right-clicks near each corner of the frame open the menu flipped to fit, in both writing directions.
+- **Long-press in Chromium:** a `LongPress` story holds a real touch through the DevTools protocol (a `longPressByTestId` command, added while building), so the menu staying open after the finger lifts and the ending tap doing nothing are tested in a browser.
 - **By hand:** a long-press on iOS Safari and Android Chrome, including the callout and text selection; and the file list in VoiceOver on macOS (VO+Shift+M) and iOS, and NVDA with Chrome (Shift+F10 and the Applications key), recorded in the pull request.
 
 ## Boundaries

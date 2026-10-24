@@ -396,6 +396,210 @@ describe("useContextMenu", () => {
     expect(elements.menu).toBeVisible();
   });
 
+  it("must open the menu at the touch with focus on the menu when a touch is held for 500ms", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+    setRegionBounds({ height: 300, width: 400, x: 100, y: 50 });
+
+    touchDown(elements.row("notes.txt"), { clientX: 130, clientY: 90 });
+    hold(500);
+
+    expect(screen.getByRole("menu", { name: "Actions for notes.txt" })).toHaveFocus();
+    expect(elements.menu.style.getPropertyValue("--_sui-context-menu-left")).toBe("30px");
+    expect(elements.menu.style.getPropertyValue("--_sui-context-menu-top")).toBe("40px");
+  });
+
+  it("must keep the menu closed when a touch is held for less than 500ms", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+
+    touchDown(elements.row("notes.txt"));
+    hold(499);
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must hold the touch on the menu when a long-press opens it, so lifting the finger lands on the menu", () => {
+    const { hold, setPointerCapture, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+
+    touchDown(elements.row("notes.txt"));
+    hold(500);
+
+    expect(setPointerCapture.mock.contexts).toEqual([elements.menu]);
+    expect(setPointerCapture).toHaveBeenCalledWith(touchId);
+  });
+
+  it("must open the menu when a held touch moves no more than 10px", () => {
+    const { hold, touchDown, touchMove } = setUpTestWithTouch();
+    render(<FileList />);
+
+    touchDown(elements.row("notes.txt"), { clientX: 130, clientY: 90 });
+    touchMove(elements.row("notes.txt"), { clientX: 136, clientY: 98 });
+    hold(500);
+
+    expect(elements.menu).toBeVisible();
+  });
+
+  it("must keep the menu closed when a held touch moves more than 10px", () => {
+    const { hold, touchDown, touchMove } = setUpTestWithTouch();
+    render(<FileList />);
+
+    touchDown(elements.row("notes.txt"), { clientX: 130, clientY: 90 });
+    touchMove(elements.row("notes.txt"), { clientX: 137, clientY: 98 });
+    hold(500);
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it.each(["pointerUp", "pointerCancel"] as const)(
+    "must keep the menu closed when the touch ends with %s before 500ms",
+    (ending) => {
+      const { hold, touchDown, touchEnd } = setUpTestWithTouch();
+      render(<FileList />);
+
+      touchDown(elements.row("notes.txt"));
+      hold(300);
+      touchEnd(elements.row("notes.txt"), ending);
+      hold(200);
+
+      expect(elements.menu).not.toBeVisible();
+    }
+  );
+
+  it("must keep the menu closed when a second finger touches before 500ms", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+
+    touchDown(elements.row("notes.txt"));
+    hold(300);
+    touchDown(elements.row("report.pdf"), { pointerId: touchId + 1 });
+    hold(500);
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must open the menu again for a later touch when an earlier one was lifted", () => {
+    const { hold, touchDown, touchEnd } = setUpTestWithTouch();
+    render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+    touchEnd(elements.row("notes.txt"), "pointerUp");
+
+    touchDown(elements.row("report.pdf"));
+    hold(500);
+
+    expect(screen.getByRole("menu", { name: "Actions for report.pdf" })).toBeVisible();
+  });
+
+  it("must ignore the platform's own contextmenu when it comes after a long-press has opened the menu", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+    setRegionBounds({ height: 300, width: 400, x: 100, y: 50 });
+    touchDown(elements.row("notes.txt"), { clientX: 130, clientY: 90 });
+    hold(500);
+
+    const notCancelled = fireEvent(elements.row("notes.txt"), touchContextMenu({ clientX: 160, clientY: 90 }));
+
+    expect(notCancelled).toBe(false);
+    expect(elements.menu.style.getPropertyValue("--_sui-context-menu-left")).toBe("30px");
+  });
+
+  it("must not open the menu again when the platform's own contextmenu has opened it before the long-press", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+    hold(400);
+    fireEvent(elements.row("notes.txt"), touchContextMenu());
+    closeAsBrowser(elements.menu);
+
+    hold(100);
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must keep the touch from ending in mouse events and a click when a long-press has opened the menu", () => {
+    const { hold, touchDown, touchEnd } = setUpTestWithTouch();
+    render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+    hold(500);
+    touchEnd(elements.row("notes.txt"), "pointerUp");
+
+    const notCancelled = fireEvent.touchEnd(elements.row("notes.txt"));
+
+    expect(notCancelled).toBe(false);
+  });
+
+  it("must let a touch end as usual when it was lifted before a long-press", () => {
+    const { touchDown, touchEnd } = setUpTestWithTouch();
+    render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+    touchEnd(elements.row("notes.txt"), "pointerUp");
+
+    const notCancelled = fireEvent.touchEnd(elements.row("notes.txt"));
+
+    expect(notCancelled).toBe(true);
+  });
+
+  it.each([
+    { after: "the touch that opened the menu has ended", end: () => fireEvent.touchEnd(elements.row("notes.txt")) },
+    {
+      after: "the touch that opened the menu was cancelled",
+      end: () => fireEvent.touchCancel(elements.row("notes.txt")),
+    },
+  ])("must let later touches end as usual when $after", ({ end }) => {
+    const { hold, touchDown, touchEnd } = setUpTestWithTouch();
+    render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+    hold(500);
+    touchEnd(elements.row("notes.txt"), "pointerUp");
+    end();
+
+    const notCancelled = fireEvent.touchEnd(elements.row("report.pdf"));
+
+    expect(notCancelled).toBe(true);
+  });
+
+  it("must stop text selection starting while a touch is held", () => {
+    const { touchDown } = setUpTestWithTouch();
+    render(<FileList />);
+
+    touchDown(elements.row("notes.txt"));
+    const notCancelled = fireEvent(
+      elements.row("notes.txt"),
+      new Event("selectstart", { bubbles: true, cancelable: true })
+    );
+
+    expect(notCancelled).toBe(false);
+  });
+
+  it("must let text selection start when the touch has been lifted", () => {
+    const { touchDown, touchEnd } = setUpTestWithTouch();
+    render(<FileList />);
+    touchDown(elements.row("notes.txt"));
+    touchEnd(elements.row("notes.txt"), "pointerUp");
+
+    const notCancelled = fireEvent(
+      elements.row("notes.txt"),
+      new Event("selectstart", { bubbles: true, cancelable: true })
+    );
+
+    expect(notCancelled).toBe(true);
+  });
+
+  it("must leave a long-press to a text input in the region", () => {
+    const { hold, touchDown } = setUpTestWithTouch();
+    render(
+      <FileList>
+        <input aria-label="Field" />
+      </FileList>
+    );
+
+    touchDown(screen.getByLabelText("Field"));
+    hold(500);
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
   it("must require a name for the menu when its props are got", () => {
     function UnnamedMenu(): JSX.Element {
       const contextMenu = useContextMenu();
@@ -517,6 +721,57 @@ function toggleEvent(type: "beforetoggle" | "toggle", newState: "closed" | "open
   return Object.assign(new Event(type, { cancelable: type === "beforetoggle" && newState === "open" }), {
     newState,
     oldState: newState === "open" ? "closed" : "open",
+  });
+}
+
+const touchId = 7;
+
+/**
+ * Sets up a test with fake timers and a finger to press with
+ *
+ * @returns what `setUpTest` returns, and helpers to touch, move, lift and hold
+ */
+function setUpTestWithTouch() {
+  const setup = setUpTest();
+  vi.useFakeTimers();
+
+  onTestFinished(() => {
+    vi.useRealTimers();
+  });
+
+  const touchDown = (target: Element, { clientX = 0, clientY = 0, pointerId = touchId } = {}): void => {
+    fireEvent.pointerDown(target, { clientX, clientY, pointerId, pointerType: "touch" });
+  };
+  const touchMove = (target: Element, { clientX = 0, clientY = 0 } = {}): void => {
+    fireEvent.pointerMove(target, { clientX, clientY, pointerId: touchId, pointerType: "touch" });
+  };
+  const touchEnd = (target: Element, ending: "pointerCancel" | "pointerUp"): void => {
+    fireEvent[ending](target, { pointerId: touchId, pointerType: "touch" });
+  };
+  const hold = (milliseconds: number): void => {
+    act(() => {
+      vi.advanceTimersByTime(milliseconds);
+    });
+  };
+
+  return { ...setup, hold, touchDown, touchEnd, touchMove };
+}
+
+/**
+ * A `contextmenu` as Android sends it for a long-press
+ *
+ * @param point where the touch is
+ * @returns the event
+ */
+function touchContextMenu({ clientX = 0, clientY = 0 } = {}): Event {
+  return new PointerEvent("contextmenu", {
+    bubbles: true,
+    buttons: 1,
+    cancelable: true,
+    clientX,
+    clientY,
+    pointerId: touchId,
+    pointerType: "touch",
   });
 }
 

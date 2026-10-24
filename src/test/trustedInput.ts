@@ -38,6 +38,12 @@ export interface TrustedInput {
   hoverByTestId: (testId: string) => Promise<void>;
 
   /**
+   * Holds a finger on the element with the given `data-testid` in the story's frame for 800ms, long enough for a
+   * long-press, then lifts it
+   */
+  longPressByTestId: (testId: string) => Promise<void>;
+
+  /**
    * Presses a key, named as Playwright names it, such as "Escape". The key goes to whatever has focus in the story's
    * frame.
    */

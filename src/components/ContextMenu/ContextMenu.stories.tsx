@@ -16,8 +16,8 @@ import { useContextMenu } from "./useContextMenu";
 const files = ["report.pdf", "notes.txt", "budget.xlsx"];
 
 /**
- * A list of files whose rows share one menu of actions, which acts on the row it opened for and reports the last
- * action chosen
+ * A list of files whose rows open when clicked and share one menu of actions, which acts on the row it opened for, and
+ * which reports the last action
  */
 function FileList(): JSX.Element {
   const [lastAction, setLastAction] = useState("none");
@@ -29,7 +29,7 @@ function FileList(): JSX.Element {
       <Stack {...contextMenu.getTargetProps()} as="ul" gap={1} aria-label="Files" data-testid="files">
         {files.map((name) => (
           <li key={name} data-name={name}>
-            <Button variant="ghost" data-testid={`file-${name}`}>
+            <Button onClick={() => setLastAction(`Open ${name}`)} variant="ghost" data-testid={`file-${name}`}>
               {name}
             </Button>
           </li>
@@ -211,6 +211,31 @@ export const PointerInteraction: Story = {
     await input.clickPageCorner();
     await waitFor(() => expect(menu).not.toBeVisible());
     await expect(canvas.getByRole("button", { name: "notes.txt" })).not.toHaveFocus();
+  },
+};
+
+/**
+ * Holding a finger on a row for half a second opens the menu at the touch, with focus on the menu. Lifting the finger
+ * leaves it open, and the tap that ends the press doesn't open the row.
+ */
+export const LongPress: Story = {
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    await input.longPressByTestId("file-notes.txt");
+
+    const menu = await canvas.findByRole("menu", { name: "Actions for notes.txt" });
+    await waitFor(() => expect(menu).toHaveFocus());
+    await expect(canvas.getByText("Last action: none")).toBeInTheDocument();
+
+    await input.pressKey("Escape");
+    await waitFor(() => expect(menu).not.toBeVisible());
+    await input.clickByTestId("file-notes.txt");
+    await expect(canvas.getByText("Last action: Open notes.txt")).toBeInTheDocument();
   },
 };
 

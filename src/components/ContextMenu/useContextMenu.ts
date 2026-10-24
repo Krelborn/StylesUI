@@ -9,6 +9,8 @@ import type { MenuOverlayProps } from "../Menu/Menu";
 // The Popover barrel would also bring Popover's stylesheet into every bundle that uses a context menu
 import { usePopover } from "../Popover/usePopover";
 
+import { watchLongPress } from "./watchLongPress";
+
 /**
  * Options for `useContextMenu`
  */
@@ -34,12 +36,13 @@ interface ContextMenuTargetProps {
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
 
   /**
-   * Notes the pointer pressing in the region, which the menu holds while the press that opened it lasts
+   * Notes the pointer pressing in the region, which the menu holds while the press that opened it lasts, and opens the
+   * menu on a touch held in place
    */
   onPointerDown: (event: PointerEvent<HTMLElement>) => void;
 
   /**
-   * Names the region as the menu's anchor
+   * Names the region as the menu's anchor, and stops iOS showing its callout on a held link or image
    */
   style: CSSProperties;
 }
@@ -136,7 +139,8 @@ interface Opening {
 /**
  * Connects a `Menu` to a region, such as a list of files or a canvas, so a right-click in the region opens the menu at
  * the pointer, with focus on the menu itself, and the next Down or Up moves to the first or last item. Shift+F10 or the
- * ContextMenu key opens it below the focused element, with focus on its first item. Choosing an
+ * ContextMenu key opens it below the focused element, with focus on its first item, and a touch held for half a second
+ * opens it at the touch, as a right-click does. Choosing an
  * item, Escape, Tab or a click outside closes it, and focus goes back to the element that had it when it opened,
  * unless a click outside put it elsewhere. `target` tells which element the menu opened for, so one menu can serve
  * every row.
@@ -160,9 +164,17 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   const removalWatcherRef = useRef<(() => void) | null>(null);
   const lastPointerRef = useRef<number | null>(null);
   const openedByKeyRef = useRef(false);
+  const stopLongPressRef = useRef<(() => void) | null>(null);
+  const longPressOpenedRef = useRef(false);
   const { anchorName, id: menuId } = popover.getOverlayProps();
 
-  useEffect(() => () => removalWatcherRef.current?.(), []);
+  useEffect(
+    () => () => {
+      removalWatcherRef.current?.();
+      endLongPress();
+    },
+    []
+  );
 
   // Shown once the menu has rendered with the new point, so it never appears at the last one
   useEffect(() => {
@@ -190,20 +202,20 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   }, [menuId, opening]);
 
   function handleContextMenu(event: MouseEvent<HTMLElement>): void {
-    const fromNoPointer = isFromNoPointer(event.nativeEvent);
-
-    // Shift with a right-click is the way back to the browser's menu, as Firefox makes it
-    if (event.defaultPrevented || isEditable(event.target) || (event.shiftKey && !fromNoPointer)) {
+    if (isLeftToBrowser(event)) {
       return;
     }
 
     event.preventDefault();
 
-    if (fromNoPointer) {
-      // Windows browsers also send one for the key that has already opened the menu
-      if (!openedByKeyRef.current) {
-        openAtElement(event.currentTarget, event.target as Element);
-      }
+    if (repeatsOpening(event.nativeEvent)) {
+      return;
+    }
+
+    endLongPress();
+
+    if (isFromNoPointer(event.nativeEvent)) {
+      openAtElement(event.currentTarget, event.target as Element);
 
       return;
     }
@@ -212,6 +224,16 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     const pressingPointer = event.buttons === 0 ? null : lastPointerRef.current;
 
     openAt(event.currentTarget, event.target as Element, event.clientX, event.clientY, "menu", pressingPointer);
+  }
+
+  /**
+   * Whether a `contextmenu` is a platform's own for a gesture the hook has already opened the menu for: Android's for a
+   * long-press, which may come before or after the hook's, or a Windows browser's for the key
+   */
+  function repeatsOpening(event: Event): boolean {
+    const pointerType = (event as Partial<globalThis.PointerEvent>).pointerType;
+
+    return (pointerType === "touch" && longPressOpenedRef.current) || (pointerType === "" && openedByKeyRef.current);
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>): void {
@@ -240,8 +262,33 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
     openAt(region, element, x, y, "first", null);
   }
 
+  function endLongPress(): void {
+    stopLongPressRef.current?.();
+    stopLongPressRef.current = null;
+  }
+
   function handlePointerDown(event: PointerEvent<HTMLElement>): void {
     lastPointerRef.current = event.pointerId;
+
+    // A second finger is the first press's to cancel
+    if (event.pointerType !== "touch" || stopLongPressRef.current !== null || isEditable(event.target)) {
+      return;
+    }
+
+    const region = event.currentTarget;
+    const target = event.target as Element;
+    const { clientX, clientY, pointerId } = event;
+
+    longPressOpenedRef.current = false;
+    stopLongPressRef.current = watchLongPress({ clientX, clientY, pointerId }, region.ownerDocument, {
+      onEnd: () => {
+        stopLongPressRef.current = null;
+      },
+      onLongPress: () => {
+        longPressOpenedRef.current = true;
+        openAt(region, target, clientX, clientY, "menu", pointerId);
+      },
+    });
   }
 
   function openAt(
@@ -359,11 +406,22 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
       onContextMenu: handleContextMenu,
       onKeyDown: handleKeyDown,
       onPointerDown: handlePointerDown,
-      style: { anchorName },
+      style: { anchorName, WebkitTouchCallout: "none" },
     });
   }
 
   return { close, getMenuProps, getTargetProps, open: popover.open, target: opening?.target ?? null };
+}
+
+/**
+ * Whether a `contextmenu` should open the browser's own menu rather than the region's
+ *
+ * @param event the event the region received
+ * @returns true for one from an editable element, one a region inside this one has handled, and a right-click with
+ *   Shift held, the way back to the browser's menu that Firefox makes it
+ */
+function isLeftToBrowser(event: MouseEvent<HTMLElement>): boolean {
+  return event.defaultPrevented || isEditable(event.target) || (event.shiftKey && !isFromNoPointer(event.nativeEvent));
 }
 
 /**

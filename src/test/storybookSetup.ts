@@ -42,6 +42,11 @@ declare module "vitest/browser" {
     movePointerOffPage: () => Promise<void>;
 
     /**
+     * Holds a real finger on the element with the given `data-testid` in the story's frame for 800ms, then lifts it
+     */
+    longPressByTestId: (testId: string) => Promise<void>;
+
+    /**
      * Presses a key with the real keyboard
      */
     pressKey: (key: string) => Promise<void>;
@@ -65,6 +70,7 @@ registerTrustedInput({
   emulateForcedColors: (active) => commands.emulateForcedColors(active),
   holdPointerByTestId: (testId) => commands.holdPointerByTestId(testId),
   hoverByTestId: (testId) => commands.hoverByTestId(testId),
+  longPressByTestId: (testId) => commands.longPressByTestId(testId),
   pressKey: (key) => commands.pressKey(key),
   releasePointer: () => commands.releasePointer(),
   slidePointerByRole: (role, fromName, toName) => commands.slidePointerByRole(role, fromName, toName),
