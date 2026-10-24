@@ -213,5 +213,7 @@ Follow `docs/standards/` and the compound components (`Tabs`, `Accordion`). An e
 
 ## Open Questions
 
-- **[Issue #65](https://github.com/Krelborn/StylesUI/issues/65).** After Tab closes a `useMenu` menu, `usePopover` leaves its close request set, so a later click outside sends focus back to the trigger. The menubar's Tab path would inherit the bug. The proposal is to fix it first, in its own small pull request. It's an ask-first change to `usePopover`.
-- **Focus on a pointer opening.** This spec leaves focus on the bar item (see Decisions). `useMenu` puts it on the menu itself. Is the difference acceptable?
+Resolved in review on 2026-10-24:
+
+- **[Issue #65](https://github.com/Krelborn/StylesUI/issues/65):** `usePopover` leaves its close request set after Tab closes a menu, which the menubar's Tab path would inherit. It is fixed first, in its own pull request, before the menubar is built.
+- **Focus on a pointer opening:** it stays on the bar item, unlike `useMenu`'s (see Decisions).
