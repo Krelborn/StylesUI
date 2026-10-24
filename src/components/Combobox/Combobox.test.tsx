@@ -601,6 +601,24 @@ describe("Combobox", () => {
     expect(callbackRef.mock.lastCall?.[0]).toHaveAttribute("data-value", "closed");
   });
 
+  it("must run the cleanup a consumer's callback ref returns when the option unmounts", () => {
+    const { render } = setUpTest();
+    const cleanup = vi.fn();
+    const callbackRef = vi.fn(() => cleanup);
+    const { rerender } = render(
+      <Combobox aria-label="Status">
+        <ComboboxOption ref={callbackRef} value="open">
+          Open
+        </ComboboxOption>
+      </Combobox>
+    );
+
+    rerender(<Combobox aria-label="Status" />);
+
+    expect(cleanup).toHaveBeenCalled();
+    expect(callbackRef).not.toHaveBeenCalledWith(null);
+  });
+
   it("must keep a consumer's anchor name beside its own when it is given one", () => {
     renderBase(<Combobox aria-label="Status" style={{ anchorName: "--tooltip-anchor" }} />);
 

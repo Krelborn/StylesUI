@@ -566,6 +566,17 @@ describe("Autocomplete", () => {
     expect(shadow.getAllByRole("option").map((option) => option.textContent)).toEqual(["France", "French Guiana"]);
   });
 
+  it("must stop naming an option as active when a new filter from the parent hides it", async () => {
+    const { render, user } = setUpTest();
+    const { rerender } = render(<CountryPicker />);
+    await user.type(elements.input, "an");
+    expect(elements.activeOption).toBe(elements.option("France"));
+
+    rerender(<CountryPicker filter={(textValue, inputValue) => textValue.startsWith(inputValue)} />);
+
+    expect(elements.input).not.toHaveAttribute("aria-activedescendant");
+  });
+
   it("must not submit its form when Enter is pressed on text that matches no option", async () => {
     const { onSubmit, user } = setUpTest();
     renderBase(<CountryPicker onSubmit={onSubmit} required={true} />);
@@ -645,7 +656,13 @@ function setUpTest() {
     hasFocus.mockRestore();
   });
 
-  return { hasFocus, onInputValueChange, onSubmit, onValueChange, user };
+  const render = (ui: JSX.Element) => {
+    const { rerender } = renderBase(ui);
+
+    return { rerender };
+  };
+
+  return { hasFocus, onInputValueChange, onSubmit, onValueChange, render, user };
 }
 
 function setUpTestWithFakeTimers() {

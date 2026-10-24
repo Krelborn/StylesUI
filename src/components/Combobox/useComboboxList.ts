@@ -210,19 +210,30 @@ export function useComboboxList({
   });
 
   // Without a filter, the options for the query are still to come from the consumer
-  const activateFirstMatch = useEffectEvent(() => {
-    const first = filter === null || query === "" ? undefined : shownOptions().find((option) => !option.disabled);
+  const activateFirstMatch = useEffectEvent((options: RenderedOption[]) => {
+    const first = filter === null || query === "" ? undefined : options.find((option) => !option.disabled);
 
     setActive(first === undefined ? null : { source: "keyboard", value: first.value });
   });
 
+  // A change to the filter or the query that the parent makes on its own can hide the active option
+  const releaseHiddenActive = useEffectEvent((options: RenderedOption[]) => {
+    if (active !== null && !options.some((option) => option.value === active.value)) {
+      setActive(null);
+    }
+  });
+
   // After every render, once each option has shown or hidden itself for the filter
   useLayoutEffect(() => {
-    listRef.current?.toggleAttribute("data-empty", shownOptions().length === 0);
+    const options = shownOptions();
+
+    listRef.current?.toggleAttribute("data-empty", options.length === 0);
 
     if (firstMatchPending.current) {
       firstMatchPending.current = false;
-      activateFirstMatch();
+      activateFirstMatch(options);
+    } else {
+      releaseHiddenActive(options);
     }
   });
 

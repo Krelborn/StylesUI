@@ -109,11 +109,11 @@ export function ComboboxOption({
   // The consumer's ref gets the option too
   function attachOption(option: HTMLDivElement): () => void {
     optionRef.current = option;
-    assignRef(ref, option);
+    const detachConsumerRef = attachRef(ref, option);
 
     return () => {
       optionRef.current = null;
-      assignRef(ref, null);
+      detachConsumerRef();
     };
   }
 
@@ -178,15 +178,26 @@ function joinIds(...ids: (string | undefined)[]): string | undefined {
 }
 
 /**
- * Hands an element to a ref of any kind
+ * Hands an element to a ref of any kind, as React does
  *
  * @param ref the ref, if any
- * @param element the element, or null as it detaches
+ * @param element the element
+ * @returns a function that detaches it: the cleanup a callback ref returned, or else one that sets the ref to null
  */
-function assignRef<T>(ref: Ref<T> | undefined, element: T | null): void {
+function attachRef<T>(ref: Ref<T> | undefined, element: T): () => void {
   if (typeof ref === "function") {
-    ref(element);
-  } else if (ref !== null && ref !== undefined) {
-    ref.current = element;
+    const cleanup = ref(element);
+
+    return typeof cleanup === "function" ? cleanup : () => ref(null);
   }
+
+  if (ref === null || ref === undefined) {
+    return () => {};
+  }
+
+  ref.current = element;
+
+  return () => {
+    ref.current = null;
+  };
 }
