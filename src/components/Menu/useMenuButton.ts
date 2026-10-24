@@ -182,22 +182,25 @@ export function useMenuButton({
 
   function handleTriggerKeyDown(event: KeyboardEvent<HTMLElement>): void {
     const openingFocus = triggerKeyFocus[event.key];
+    const menu = event.currentTarget.ownerDocument.getElementById(menuId);
 
-    if (openingFocus === undefined || event.defaultPrevented || hasModifier(event)) {
+    if (openingFocus === undefined || menu === null || event.defaultPrevented || hasModifier(event)) {
       return;
     }
 
     event.preventDefault();
-    show(event.currentTarget, openingFocus);
+    showMenu(menu, openingFocus);
   }
 
   function show(trigger: HTMLElement, openingFocus: MenuButtonOpeningFocus): void {
     const menu = trigger.ownerDocument.getElementById(menuId);
 
-    if (menu === null) {
-      return;
+    if (menu !== null) {
+      showMenu(menu, openingFocus);
     }
+  }
 
+  function showMenu(menu: HTMLElement, openingFocus: MenuButtonOpeningFocus): void {
     if (menu.matches(":popover-open")) {
       moveFocusIn(menu, openingFocus);
     } else {

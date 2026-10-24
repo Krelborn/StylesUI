@@ -19,7 +19,7 @@ Content sites are not users of this module: their headers are navigation, which 
 - **A pointer opening leaves focus on the bar item.** A click on a bar item opens its menu with focus on the item, not on the menu itself as `useMenu` puts it. In a bar, the item is where ← and → act. Like `useMenu`'s rule, it leaves no item highlighted under a pointer still on the bar, and the next ↓ or ↑ goes to the first or last item.
 - **Hover only moves an open menu.** While one of the bar's menus is open, a mouse or pen moving onto another bar item opens that item's menu at once, as desktop menubars and the editor example do. With no menu open, hovering a bar item opens nothing. The capability map's menubar scope sets this as the one exception to "open nothing but a submenu on hover". A click opened the first menu, so nothing appears as the pointer passes over a closed bar.
 - **→ and ← in a menu cross the bar.** In a bar's menu, the key pointing the way the text runs opens a submenu from a submenu item, as in any menu. Anywhere else in the bar's menus, at any depth, it closes every menu and moves to the next bar item. The key pointing back closes a submenu, as in any menu, and in the bar's own menu moves to the previous bar item. Either way the new item's menu opens with focus on the bar item, as in the decision above.
-- **Built on what `useMenu` has.** Each bar item and its menu use the same machinery as `useMenu`: `usePopover`'s open state and focus return, and the shared logic in `src/menus/` for focus on opening, removal watching, Tab and focus leaving. Where the menubar needs something `useMenu` keeps to itself, such as an opening that leaves focus on the trigger, that code moves to `src/menus/`, as the context menu's did, and `useMenu`'s tests and stories pass unchanged. `useMenu` gets no new public option.
+- **Built on what `useMenu` has.** Each bar item and its menu use the same machinery as `useMenu`: `usePopover`'s open state and focus return, and the shared logic in `src/menus/` for focus on opening, removal watching, Tab and focus leaving. The menubar needs an opening that leaves focus on the trigger, which `useMenu` keeps to itself, so `useMenu`'s body moved into an internal hook, `useMenuButton`, beside it in `src/components/Menu/`, which both use (changed while building: `src/menus/` holds only logic without React). `useMenu`'s tests and stories pass unchanged, and it gets no new public option.
 - **Compact.** Every menu in the bar takes the `compact` density, and its submenus inherit it. `MenubarMenu` has no `density` prop.
 - **No bar surface.** The bar has no background, border or padding of its own. It sits in whatever header or toolbar the app draws, as the story shows. Bar items look like ghost buttons and share the menu items' highlight tokens.
 - **Named.** `Menubar` requires `aria-label` or `aria-labelledby` through `RequiredAccessibleName`, as the pattern asks for and as `TabList` and `NavBar` do. Each menu is named by its bar item, as `useMenu` names a menu by its trigger.
@@ -116,7 +116,7 @@ fallow audit --format json --quiet --explain --gate-marker agent   # before ever
 ```
 src/components/Menubar/            ← Menubar, MenubarMenu, MenubarContext.ts, useMenubarContext.ts,
                                      Menubar.module.css, tests, stories, index.ts
-src/menus/                         ← anything the bar shares with useMenu, moved out of useMenu
+src/components/Menu/useMenuButton.ts ← useMenu's body, as an internal hook both use
 src/index.ts                       ← Menubar, MenubarMenu and their props types
 .oxlintrc.json                     ← jsx-a11y entries for Menubar and MenubarMenu
 docs/design/concepts.md, AGENTS.md ← a Menubars paragraph and the architecture entry
@@ -164,7 +164,7 @@ Follow `docs/standards/` and the compound components (`Tabs`, `Accordion`). An e
   - Closing: choosing an item returns focus to its bar item unless `onClick` moved it, and Escape, Tab, Shift+Tab, a click outside and focus leaving each close the menu.
   - `MenubarMenu` outside a `Menubar` throws `MissingContextError`.
   - Type-level rules through `// @ts-expect-error`: `Menubar` without `aria-label` or `aria-labelledby`, `role` and `tabIndex` on `Menubar`, and `MenubarMenu` without `label`.
-  - `useMenu`'s tests pass unchanged after any shared code moves.
+  - `useMenu`'s tests pass unchanged after its body moves into `useMenuButton`.
 - **Stories (Chromium, all four projects), `Menubar.stories.tsx` with `a11y.test: "error"`:** the editor menubar in an app header, right-to-left, and:
   - `KeyboardInteraction`: with real input, Tab lands on the first bar item. ← and → move and wrap, ↓ opens on the first item, → in the menu opens the next bar item's menu with focus on the bar item, ← goes back, Escape returns to the bar item, and Tab leaves the bar. It asserts `focusRingContrast >= 3` on a focused bar item and a focused menu item.
   - `PointerInteraction`: a real click opens a menu, and hovering another bar item opens that item's menu and closes the first. Hovering with no menu open opens nothing, and a click outside closes the menu and leaves focus where it landed.

@@ -13,7 +13,7 @@ import { Box } from "../Box";
 import styles from "./Menubar.module.css";
 import { MenubarContext } from "./MenubarContext";
 import { menubarItems } from "./menubarItems";
-import { openMenubarItem } from "./openMenubarItem";
+import { findOpenMenubarItem } from "./findOpenMenubarItem";
 
 /**
  * Props for `Menubar`: a required `aria-label` or `aria-labelledby` and every other `div` prop except those the
@@ -100,7 +100,7 @@ export function Menubar({ className, onKeyDown, ...rest }: MenubarProps): JSX.El
 
     // Checked before focus moves, which closes the open menu
     if (target !== null) {
-      moveFocus(items[target], openMenubarItem(event.currentTarget) !== undefined);
+      moveFocus(items[target], findOpenMenubarItem(event.currentTarget) !== undefined);
     }
   }
 

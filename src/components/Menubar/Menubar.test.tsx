@@ -25,6 +25,21 @@ describe("Menubar", () => {
     expect(elements.bar("File")).toHaveAttribute("aria-controls", elements.menu("File").id);
   });
 
+  it("must name the bar by the element aria-labelledby points at when it is given", () => {
+    render(
+      <>
+        <h2 id="toolbar-heading">Document tools</h2>
+        <Menubar aria-labelledby="toolbar-heading">
+          <MenubarMenu label="File">
+            <MenuItem>New</MenuItem>
+          </MenubarMenu>
+        </Menubar>
+      </>
+    );
+
+    expect(screen.getByRole("menubar", { name: "Document tools" })).toBeInTheDocument();
+  });
+
   it("must make every menu in the bar compact, its submenus included, when it renders", () => {
     render(<Editor />);
 
@@ -117,31 +132,86 @@ describe("Menubar", () => {
     expect(elements.bar("File")).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("must open the next bar item's menu with focus on it when an arrow key moves along the bar from an item whose menu is open", async () => {
+  it.each([
+    { from: "File", key: "{ArrowRight}", to: "Edit" },
+    { from: "File", key: "{End}", to: "Help" },
+    { from: "Help", key: "{Home}", to: "File" },
+    { from: "File", key: "v", to: "View" },
+  ])(
+    "must open $to's menu with focus on it when $key moves along the bar from $from while its menu is open",
+    async ({ from, key, to }) => {
+      const { user } = setUpTest();
+      render(<Editor />);
+      await user.click(elements.bar(from));
+      await waitFor(() => expect(elements.bar(from)).toHaveAttribute("aria-expanded", "true"));
+
+      await user.keyboard(key);
+
+      await waitFor(() => expect(elements.bar(to)).toHaveAttribute("aria-expanded", "true"));
+      expect(elements.bar(to)).toHaveFocus();
+      expect(elements.bar(from)).toHaveAttribute("aria-expanded", "false");
+    }
+  );
+
+  it.each([
+    { key: "{Enter}", to: "Undo" },
+    { key: " ", to: "Undo" },
+    { key: "{ArrowDown}", to: "Undo" },
+    { key: "{ArrowUp}", to: "Redo" },
+  ])(
+    "must go into the open menu on $to rather than close it when $key is pressed on its bar item",
+    async ({ key, to }) => {
+      const { user } = setUpTest();
+      render(<Editor />);
+      await openOnFirstItem(user, "File");
+      await user.keyboard("{ArrowRight}");
+      await waitFor(() => expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "true"));
+
+      await user.keyboard(key);
+
+      await waitFor(() => expect(elements.item(to)).toHaveFocus());
+      expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "true");
+    }
+  );
+
+  it("must close the menu and leave focus on its bar item when Escape is pressed on the bar item", async () => {
     const { user } = setUpTest();
     render(<Editor />);
     await user.click(elements.bar("File"));
     await waitFor(() => expect(elements.bar("File")).toHaveAttribute("aria-expanded", "true"));
 
+    await user.keyboard("{Escape}");
+    dismissTopmostAsBrowser();
+
+    await waitFor(() => expect(elements.bar("File")).toHaveAttribute("aria-expanded", "false"));
+    expect(elements.bar("File")).toHaveFocus();
+  });
+
+  it("must open the next bar item's menu when Right Arrow is pressed with focus on the menu itself", async () => {
+    const { user } = setUpTest();
+    render(<Editor />);
+    await openOnFirstItem(user, "File");
+    elements.menu("File").focus();
+
     await user.keyboard("{ArrowRight}");
 
     await waitFor(() => expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "true"));
     expect(elements.bar("Edit")).toHaveFocus();
-    expect(elements.bar("File")).toHaveAttribute("aria-expanded", "false");
   });
 
-  it("must go into the open menu rather than close it when Enter is pressed on its bar item", async () => {
-    const { user } = setUpTest();
-    render(<Editor />);
-    await openOnFirstItem(user, "File");
-    await user.keyboard("{ArrowRight}");
-    await waitFor(() => expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "true"));
+  it.each(["{Alt>}{ArrowRight}{/Alt}", "{Control>}{ArrowRight}{/Control}", "{Meta>}{ArrowRight}{/Meta}"])(
+    "must leave the menu open with focus where it is when %s is pressed in it",
+    async (key) => {
+      const { user } = setUpTest();
+      render(<Editor />);
+      await openOnFirstItem(user, "File");
 
-    await user.keyboard("{Enter}");
+      await user.keyboard(key);
 
-    await waitFor(() => expect(elements.item("Undo")).toHaveFocus());
-    expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "true");
-  });
+      expect(elements.item("New")).toHaveFocus();
+      expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "false");
+    }
+  );
 
   it.each([
     { dir: "ltr" as const, key: "{ArrowRight}", to: "Edit" },
@@ -191,6 +261,32 @@ describe("Menubar", () => {
     expect(elements.menu("File")).not.toBeVisible();
   });
 
+  it("must open the next bar item's menu when Left Arrow is pressed in a submenu in right-to-left text", async () => {
+    const { user } = setUpTest();
+    render(<Editor dir="rtl" />);
+    await openOnFirstItem(user, "File");
+    await user.keyboard("{ArrowDown}{ArrowLeft}");
+    await waitFor(() => expect(elements.item("Report.md")).toHaveFocus());
+
+    await user.keyboard("{ArrowLeft}");
+
+    await waitFor(() => expect(elements.bar("Edit")).toHaveAttribute("aria-expanded", "true"));
+    expect(elements.menu("File")).not.toBeVisible();
+  });
+
+  it("must close only the submenu when Right Arrow is pressed in it in right-to-left text", async () => {
+    const { user } = setUpTest();
+    render(<Editor dir="rtl" />);
+    await openOnFirstItem(user, "File");
+    await user.keyboard("{ArrowDown}{ArrowLeft}");
+    await waitFor(() => expect(elements.item("Report.md")).toHaveFocus());
+
+    await user.keyboard("{ArrowRight}");
+
+    await waitFor(() => expect(elements.item("Open recent")).toHaveFocus());
+    expect(elements.menu("File")).toBeVisible();
+  });
+
   it("must close only the submenu when Left Arrow is pressed in it", async () => {
     const { user } = setUpTest();
     render(<Editor />);
@@ -237,6 +333,19 @@ describe("Menubar", () => {
     await waitFor(() => expect(elements.bar("View")).toHaveAttribute("aria-expanded", "true"));
     expect(elements.bar("View")).toHaveFocus();
     expect(elements.bar("File")).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must open another bar item's menu with focus on it when a pen moves onto it while a menu is open", async () => {
+    const { user } = setUpTest();
+    render(<Editor />);
+    await user.click(elements.bar("File"));
+    await waitFor(() => expect(elements.bar("File")).toHaveAttribute("aria-expanded", "true"));
+
+    // userEvent's pointer moves are a mouse's
+    fireEvent.pointerMove(elements.bar("View"), { pointerType: "pen" });
+
+    await waitFor(() => expect(elements.bar("View")).toHaveAttribute("aria-expanded", "true"));
+    expect(elements.bar("View")).toHaveFocus();
   });
 
   it("must open nothing when the pointer moves onto a bar item while no menu is open", async () => {
@@ -329,6 +438,30 @@ describe("Menubar", () => {
 
     expect(screen.getByRole("button", { name: "Share" })).toHaveFocus();
     expect(elements.menu("File")).not.toBeVisible();
+  });
+
+  it("must close the menu and move before the bar when Shift+Tab is pressed on a bar item whose menu is open", async () => {
+    const { user } = setUpTest();
+    render(<Editor />);
+    await user.click(elements.bar("File"));
+    await waitFor(() => expect(elements.bar("File")).toHaveAttribute("aria-expanded", "true"));
+
+    await user.tab({ shift: true });
+
+    expect(screen.getByRole("button", { name: "Back" })).toHaveFocus();
+    expect(elements.menu("File")).not.toBeVisible();
+  });
+
+  it("must close the menu and leave focus off the bar when a click lands outside it", async () => {
+    const { user } = setUpTest();
+    render(<Editor />);
+    await user.click(elements.bar("File"));
+    await waitFor(() => expect(elements.bar("File")).toHaveAttribute("aria-expanded", "true"));
+
+    await user.click(document.body);
+
+    await waitFor(() => expect(elements.bar("File")).toHaveAttribute("aria-expanded", "false"));
+    expect(elements.bar("File")).not.toHaveFocus();
   });
 
   it("must close the menu and leave focus on the page when focus leaves its bar item for the page", async () => {

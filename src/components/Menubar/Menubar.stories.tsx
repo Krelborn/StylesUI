@@ -86,6 +86,12 @@ function Editor({ dir, style }: EditorProps): JSX.Element {
             <MenuItem onClick={() => setLastCommand("Bold")}>Bold</MenuItem>
             <MenuItem onClick={() => setLastCommand("Italic")}>Italic</MenuItem>
           </MenubarMenu>
+          <MenubarMenu label="Tools">
+            <MenuItem onClick={() => setLastCommand("Word count")}>Word count</MenuItem>
+          </MenubarMenu>
+          <MenubarMenu label="Window">
+            <MenuItem onClick={() => setLastCommand("Minimise")}>Minimise</MenuItem>
+          </MenubarMenu>
           <MenubarMenu label="Help">
             <MenuItem onClick={() => setLastCommand("Shortcuts")}>Keyboard shortcuts</MenuItem>
           </MenubarMenu>
@@ -149,58 +155,57 @@ export const Default: Story = {
  */
 export const KeyboardInteraction: Story = {
   play: async ({ canvas }) => {
-    // After a trusted click in an earlier story, focus from userEvent.tab() only matches :focus-visible once a trusted
-    // key has been pressed
-    await trustedInput()?.pressKey("Shift");
-    const bar = (name: string): HTMLElement => canvas.getByRole("menuitem", { name });
-    const item = (name: string): HTMLElement => canvas.getByRole("menuitem", { hidden: true, name });
-    // A closed menu's name can't be computed by role, so it is found by the bar item that labels it
-    const menu = (name: string): HTMLElement => canvas.getByLabelText(name, { selector: '[role="menu"]' });
-
-    await userEvent.tab();
-    await userEvent.tab();
-    await expect(bar("File")).toHaveFocus();
-    await expect(focusRingContrast(bar("File"))).toBeGreaterThanOrEqual(3);
-    await expect(textContrast(bar("File"))).toBeGreaterThanOrEqual(4.5);
-
-    await userEvent.keyboard("{ArrowRight}");
-    await expect(bar("Edit")).toHaveFocus();
-    await userEvent.keyboard("{ArrowLeft}{ArrowLeft}");
-    await expect(bar("Help")).toHaveFocus();
-    await userEvent.keyboard("{Home}");
-    await expect(bar("File")).toHaveFocus();
-    await userEvent.keyboard("{End}");
-    await expect(bar("Help")).toHaveFocus();
-    await userEvent.keyboard("e");
-    await expect(bar("Edit")).toHaveFocus();
-    await expect(menu("Edit")).not.toBeVisible();
-
-    await userEvent.keyboard("{ArrowDown}");
-    await waitFor(() => expect(item("Undo")).toHaveFocus());
-    await expect(focusRingContrast(item("Undo"))).toBeGreaterThanOrEqual(3);
-
-    await userEvent.keyboard("{ArrowRight}");
-    await waitFor(() => expect(menu("View")).toBeVisible());
-    await expect(bar("View")).toHaveFocus();
-    await expect(bar("View")).toHaveAttribute("aria-expanded", "true");
-    await waitFor(() => expect(menu("Edit")).not.toBeVisible());
-
-    await userEvent.keyboard("{ArrowRight}");
-    await waitFor(() => expect(menu("Insert")).toBeVisible());
-    await expect(bar("Insert")).toHaveFocus();
-    await userEvent.keyboard("{Enter}");
-    await waitFor(() => expect(item("Image")).toHaveFocus());
-    await expect(menu("Insert")).toBeVisible();
-
-    await userEvent.keyboard("{ArrowLeft}");
-    await waitFor(() => expect(menu("View")).toBeVisible());
-    await expect(bar("View")).toHaveFocus();
-
     const input = trustedInput();
 
     if (input === null) {
       return;
     }
+
+    const bar = (name: string): HTMLElement => canvas.getByRole("menuitem", { name });
+    const item = (name: string): HTMLElement => canvas.getByRole("menuitem", { hidden: true, name });
+    // A closed menu's name can't be computed by role, so it is found by the bar item that labels it
+    const menu = (name: string): HTMLElement => canvas.getByLabelText(name, { selector: '[role="menu"]' });
+
+    canvas.getByRole("button", { name: "Back" }).focus();
+    await input.pressKey("Tab");
+    await expect(bar("File")).toHaveFocus();
+    await expect(bar("File").matches(":focus-visible")).toBe(true);
+    await expect(focusRingContrast(bar("File"))).toBeGreaterThanOrEqual(3);
+    await expect(textContrast(bar("File"))).toBeGreaterThanOrEqual(4.5);
+
+    await input.pressKey("ArrowRight");
+    await expect(bar("Edit")).toHaveFocus();
+    await input.pressKey("ArrowLeft");
+    await input.pressKey("ArrowLeft");
+    await expect(bar("Help")).toHaveFocus();
+    await input.pressKey("Home");
+    await expect(bar("File")).toHaveFocus();
+    await input.pressKey("End");
+    await expect(bar("Help")).toHaveFocus();
+    await input.pressKey("e");
+    await expect(bar("Edit")).toHaveFocus();
+    await expect(menu("Edit")).not.toBeVisible();
+
+    await input.pressKey("ArrowDown");
+    await waitFor(() => expect(item("Undo")).toHaveFocus());
+    await expect(focusRingContrast(item("Undo"))).toBeGreaterThanOrEqual(3);
+
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(menu("View")).toBeVisible());
+    await expect(bar("View")).toHaveFocus();
+    await expect(bar("View")).toHaveAttribute("aria-expanded", "true");
+    await waitFor(() => expect(menu("Edit")).not.toBeVisible());
+
+    await input.pressKey("ArrowRight");
+    await waitFor(() => expect(menu("Insert")).toBeVisible());
+    await expect(bar("Insert")).toHaveFocus();
+    await input.pressKey("Enter");
+    await waitFor(() => expect(item("Image")).toHaveFocus());
+    await expect(menu("Insert")).toBeVisible();
+
+    await input.pressKey("ArrowLeft");
+    await waitFor(() => expect(menu("View")).toBeVisible());
+    await expect(bar("View")).toHaveFocus();
 
     await input.pressKey("Escape");
     await waitFor(() => expect(menu("View")).not.toBeVisible());
@@ -319,6 +324,9 @@ export const Narrow: Story = {
 
     const frame = canvas.getByTestId("editor").getBoundingClientRect();
     await expect(frame.width).toBeCloseTo(320, 0);
+    await expect(bar("Help").getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      bar("File").getBoundingClientRect().bottom
+    );
 
     for (const item of canvas.getAllByRole("menuitem")) {
       await expect(item.getBoundingClientRect().right, String(item.textContent)).toBeLessThanOrEqual(frame.right);

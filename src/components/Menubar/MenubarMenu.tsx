@@ -9,7 +9,7 @@ import { useMenuButton } from "../Menu/useMenuButton";
 
 import styles from "./Menubar.module.css";
 import { menubarItems } from "./menubarItems";
-import { openMenubarItem } from "./openMenubarItem";
+import { findOpenMenubarItem } from "./findOpenMenubarItem";
 import { useMenubarContext } from "./useMenubarContext";
 
 /**
@@ -96,7 +96,7 @@ export function MenubarMenu({ children, label }: MenubarMenuProps): JSX.Element 
   function handleItemPointerMove(event: PointerEvent<HTMLElement>): void {
     const item = event.currentTarget;
     const bar = item.closest('[role="menubar"]');
-    const openItem = bar === null ? undefined : openMenubarItem(bar);
+    const openItem = bar === null ? undefined : findOpenMenubarItem(bar);
 
     // Focus follows the pointer along the bar while one of its menus is open, opening this item's menu instead
     if (event.pointerType !== "touch" && openItem !== undefined && openItem !== item) {
