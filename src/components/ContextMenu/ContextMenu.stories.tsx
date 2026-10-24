@@ -9,6 +9,7 @@ import { Button } from "../Button";
 import { Menu, MenuItem, MenuSeparator } from "../Menu";
 import { Stack } from "../Stack";
 import { Text } from "../Text";
+import { TextInput } from "../TextInput";
 
 import { useContextMenu } from "./useContextMenu";
 
@@ -42,6 +43,33 @@ function FileList(): JSX.Element {
         <MenuItem onClick={() => setLastAction(`Delete ${file}`)} tone="danger">
           Delete…
         </MenuItem>
+      </Menu>
+    </Stack>
+  );
+}
+
+/**
+ * A list of files with a filter field above them, both inside the region, so the field keeps the browser's own menu
+ */
+function FilteredFileList(): JSX.Element {
+  const contextMenu = useContextMenu();
+  const file = contextMenu.target?.closest("[data-name]")?.getAttribute("data-name") ?? "file";
+
+  return (
+    <Stack {...contextMenu.getTargetProps()} align="start" gap={3}>
+      <TextInput aria-label="Filter files" data-testid="filter" />
+      <Stack as="ul" gap={1} aria-label="Files">
+        {files.map((name) => (
+          <li key={name} data-name={name}>
+            <Button variant="ghost" data-testid={`file-${name}`}>
+              {name}
+            </Button>
+          </li>
+        ))}
+      </Stack>
+      <Menu {...contextMenu.getMenuProps({ "aria-label": `Actions for ${file}` })}>
+        <MenuItem>Rename…</MenuItem>
+        <MenuItem>Duplicate</MenuItem>
       </Menu>
     </Stack>
   );
@@ -183,5 +211,41 @@ export const PointerInteraction: Story = {
     await input.clickPageCorner();
     await waitFor(() => expect(menu).not.toBeVisible());
     await expect(canvas.getByRole("button", { name: "notes.txt" })).not.toHaveFocus();
+  },
+};
+
+/**
+ * A text field inside the region keeps the browser's own menu, with cut, copy, paste and spelling, while the rows
+ * around it open the region's
+ */
+export const TextField: Story = {
+  render: () => <FilteredFileList />,
+  play: async ({ canvas }) => {
+    const input = trustedInput();
+
+    if (input === null) {
+      return;
+    }
+
+    const menu = canvas.getByRole("menu", { hidden: true });
+    let fieldMenuPrevented: boolean | null = null;
+    const noteField = (event: Event): void => {
+      if (event.target === canvas.getByRole("textbox", { name: "Filter files" })) {
+        fieldMenuPrevented = event.defaultPrevented;
+      }
+    };
+    window.addEventListener("contextmenu", noteField);
+
+    try {
+      await input.contextClickByTestId("filter");
+      await waitFor(() => expect(fieldMenuPrevented).toBe(false));
+      await expect(menu).not.toBeVisible();
+    } finally {
+      window.removeEventListener("contextmenu", noteField);
+    }
+
+    await input.pressKey("Escape");
+    await input.contextClickByTestId("file-notes.txt");
+    await waitFor(() => expect(canvas.getByRole("menu", { name: "Actions for notes.txt" })).toHaveFocus());
   },
 };

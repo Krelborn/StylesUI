@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { Button } from "../Button";
@@ -311,6 +311,91 @@ describe("useContextMenu", () => {
     expect(elements.row("notes.txt")).toHaveFocus();
   });
 
+  it.each([
+    { field: "a text input", ui: <input aria-label="Field" /> },
+    { field: "a search input", ui: <input aria-label="Field" type="search" /> },
+    { field: "a textarea", ui: <textarea aria-label="Field" /> },
+    {
+      field: "a select",
+      ui: (
+        <select aria-label="Field">
+          <option>One</option>
+        </select>
+      ),
+    },
+    { field: "an editable element", ui: <p aria-label="Field" contentEditable={true} /> },
+  ])("must leave the browser's own menu to $field in the region when it is right-clicked", ({ ui }) => {
+    setUpTest();
+    render(<FileList>{ui}</FileList>);
+
+    const notCancelled = fireEvent.contextMenu(screen.getByLabelText("Field"));
+
+    expect(notCancelled).toBe(true);
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must leave Shift+F10 to a text input in the region when it is pressed there", () => {
+    setUpTest();
+    render(
+      <FileList>
+        <input aria-label="Field" />
+      </FileList>
+    );
+
+    const notCancelled = fireEvent.keyDown(screen.getByLabelText("Field"), { key: "F10", shiftKey: true });
+
+    expect(notCancelled).toBe(true);
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must open the menu when a checkbox in the region is right-clicked", () => {
+    setUpTest();
+    render(
+      <FileList>
+        <input aria-label="Field" type="checkbox" />
+      </FileList>
+    );
+
+    const notCancelled = fireEvent.contextMenu(screen.getByLabelText("Field"));
+
+    expect(notCancelled).toBe(false);
+    expect(elements.menu).toBeVisible();
+  });
+
+  it("must leave a right-click alone when a region inside this one has already handled it", () => {
+    setUpTest();
+    render(
+      <FileList>
+        <div data-testid="inner" onContextMenu={(event) => event.preventDefault()} />
+      </FileList>
+    );
+
+    fireEvent.contextMenu(screen.getByTestId("inner"));
+
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must leave the browser's own menu to a right-click made with Shift held", () => {
+    setUpTest();
+    render(<FileList />);
+
+    const notCancelled = fireEvent.contextMenu(elements.row("notes.txt"), { shiftKey: true });
+
+    expect(notCancelled).toBe(true);
+    expect(elements.menu).not.toBeVisible();
+  });
+
+  it("must open the menu when a contextmenu with no pointer comes with Shift held, as Shift+F10's may", () => {
+    setUpTest();
+    render(<FileList />);
+    focus(elements.row("notes.txt"));
+
+    const notCancelled = fireEvent(elements.row("notes.txt"), noPointerContextMenu({ shiftKey: true }));
+
+    expect(notCancelled).toBe(false);
+    expect(elements.menu).toBeVisible();
+  });
+
   it("must require a name for the menu when its props are got", () => {
     function UnnamedMenu(): JSX.Element {
       const contextMenu = useContextMenu();
@@ -324,12 +409,13 @@ describe("useContextMenu", () => {
 });
 
 interface FileListProps extends UseContextMenuOptions {
+  children?: ReactNode;
   dir?: "ltr" | "rtl";
   menuInRegion?: boolean;
   onRename?: (name: string) => void;
 }
 
-function FileList({ dir, menuInRegion = false, onRename, ...options }: FileListProps): JSX.Element {
+function FileList({ children, dir, menuInRegion = false, onRename, ...options }: FileListProps): JSX.Element {
   const contextMenu = useContextMenu(options);
   const name = contextMenu.target?.closest("[data-name]")?.getAttribute("data-name") ?? "file";
   const menu = (
@@ -350,6 +436,7 @@ function FileList({ dir, menuInRegion = false, onRename, ...options }: FileListP
             </li>
           ))}
         </ul>
+        {children}
         {menuInRegion && menu}
       </div>
       <Button variant="secondary">After</Button>
@@ -468,10 +555,11 @@ function focus(element: HTMLElement): void {
 /**
  * A `contextmenu` as the keyboard or a screen reader sends it, which browsers mark with an empty pointer type
  *
+ * @param options whether Shift was held, as some browsers mark Shift+F10's
  * @returns the event
  */
-function noPointerContextMenu(): Event {
-  return new PointerEvent("contextmenu", { bubbles: true, cancelable: true, pointerType: "" });
+function noPointerContextMenu({ shiftKey = false } = {}): Event {
+  return new PointerEvent("contextmenu", { bubbles: true, cancelable: true, pointerType: "", shiftKey });
 }
 
 const elements = {

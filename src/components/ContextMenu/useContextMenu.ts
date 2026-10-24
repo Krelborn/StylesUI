@@ -190,9 +190,16 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   }, [menuId, opening]);
 
   function handleContextMenu(event: MouseEvent<HTMLElement>): void {
+    const fromNoPointer = isFromNoPointer(event.nativeEvent);
+
+    // Shift with a right-click is the way back to the browser's menu, as Firefox makes it
+    if (event.defaultPrevented || isEditable(event.target) || (event.shiftKey && !fromNoPointer)) {
+      return;
+    }
+
     event.preventDefault();
 
-    if (isFromNoPointer(event.nativeEvent)) {
+    if (fromNoPointer) {
       // Windows browsers also send one for the key that has already opened the menu
       if (!openedByKeyRef.current) {
         openAtElement(event.currentTarget, event.target as Element);
@@ -210,7 +217,7 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
   function handleKeyDown(event: KeyboardEvent<HTMLElement>): void {
     const opensMenu = event.key === "ContextMenu" || (event.key === "F10" && event.shiftKey);
 
-    if (!opensMenu || event.defaultPrevented || hasModifier(event)) {
+    if (!opensMenu || event.defaultPrevented || hasModifier(event) || isEditable(event.target)) {
       return;
     }
 
@@ -368,6 +375,41 @@ export function useContextMenu({ onOpenChange }: UseContextMenuOptions = {}): Us
  */
 function isFromNoPointer(event: Event): boolean {
   return "pointerType" in event && event.pointerType === "";
+}
+
+const nonTextInputTypes = new Set([
+  "button",
+  "checkbox",
+  "color",
+  "file",
+  "hidden",
+  "image",
+  "radio",
+  "range",
+  "reset",
+  "submit",
+]);
+
+/**
+ * Whether an event comes from an element whose own context menu, with cut, copy, paste and spelling, the browser
+ * should keep
+ *
+ * @param target the event's target
+ * @returns true for a text input, a `textarea`, a `select`, and anything editable
+ */
+function isEditable(target: EventTarget | null): boolean {
+  // Not instanceof: a region rendered into a frame gets the frame's elements, which aren't this window's
+  const element = target as Element | null;
+
+  switch (element?.tagName) {
+    case "INPUT":
+      return !nonTextInputTypes.has((element as HTMLInputElement).type);
+    case "SELECT":
+    case "TEXTAREA":
+      return true;
+    default:
+      return (element?.closest('[contenteditable]:not([contenteditable="false"])') ?? null) !== null;
+  }
 }
 
 /**
