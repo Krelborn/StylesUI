@@ -163,8 +163,10 @@ export function usePopover({
       returnsFocus.current =
         popover.contains(popover.ownerDocument.activeElement) ||
         (closeRequested.current && isFocusLost(popover.ownerDocument));
-      closeRequested.current = false;
     }
+
+    // Also on opening, since a close() made after the browser had already hidden the popover requested nothing of it
+    closeRequested.current = false;
 
     if (controlled && !open && event.newState === "open") {
       event.preventDefault();
