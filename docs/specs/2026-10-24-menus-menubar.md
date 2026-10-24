@@ -215,5 +215,5 @@ Follow `docs/standards/` and the compound components (`Tabs`, `Accordion`). An e
 
 Resolved in review on 2026-10-24:
 
-- **[Issue #65](https://github.com/Krelborn/StylesUI/issues/65):** `usePopover` leaves its close request set after Tab closes a menu, which the menubar's Tab path would inherit. It is fixed first, in its own pull request, before the menubar is built.
+- **[Issue #65](https://github.com/Krelborn/StylesUI/issues/65):** a `close()` made after the browser has already hidden a popover leaves `usePopover`'s close request set, so a later click outside sends focus back to the trigger. `useMenu`'s Tab doesn't hit it, but a menubar moving between its menus would. It is fixed first, in its own pull request, before the menubar is built.
 - **Focus on a pointer opening:** it stays on the bar item, unlike `useMenu`'s (see Decisions).
