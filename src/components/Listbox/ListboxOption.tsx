@@ -2,11 +2,11 @@ import { clsx } from "clsx";
 import type { JSX, MouseEvent } from "react";
 import { useEffectEvent, useLayoutEffect } from "react";
 
+import { optionId } from "../../collections";
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Listbox.module.css";
-import { optionId } from "./optionId";
 import { useListboxContext } from "./useListboxContext";
 
 /**

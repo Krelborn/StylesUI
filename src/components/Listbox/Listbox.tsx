@@ -2,12 +2,12 @@ import { clsx } from "clsx";
 import type { FocusEvent, JSX, KeyboardEvent, PointerEvent, ReactNode } from "react";
 
 import type { RequiredAccessibleName } from "../../accessibility";
+import { optionId } from "../../collections";
 import type { BoxProps } from "../Box";
 import { Box } from "../Box";
 
 import styles from "./Listbox.module.css";
 import { ListboxContext } from "./ListboxContext";
-import { optionId } from "./optionId";
 import { useListbox } from "./useListbox";
 
 interface ListboxOwnProps {

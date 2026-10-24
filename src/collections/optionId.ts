@@ -1,4 +1,4 @@
-import { idSegment } from "../../accessibility";
+import { idSegment } from "../accessibility";
 
 /**
  * Builds the id of the option for a value
