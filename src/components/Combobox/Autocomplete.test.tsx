@@ -1,4 +1,4 @@
-import { act, fireEvent, render as renderBase, screen } from "@testing-library/react";
+import { act, fireEvent, render as renderBase, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX } from "react";
 import { useState } from "react";
@@ -537,6 +537,33 @@ describe("Autocomplete", () => {
 
     expect(elements.input).toHaveValue("Ja");
     expect(elements.shownOptions).toEqual(["Jamaica", "Japan"]);
+  });
+
+  it("must make the first match for its parent's text active when the parent changes what was typed", async () => {
+    const { user } = setUpTest();
+    renderBase(<TwoCharacterPicker />);
+
+    await user.type(elements.input, "Jax");
+
+    expect(elements.input).toHaveValue("Ja");
+    expect(elements.activeOption).toBe(elements.option("Jamaica"));
+  });
+
+  it("must read its options' labels in their own shadow root when it renders inside one", () => {
+    const host = document.createElement("div");
+    const container = document.createElement("div");
+    document.body.append(host);
+    host.attachShadow({ mode: "open" }).append(container);
+    onTestFinished(() => {
+      host.remove();
+    });
+    renderBase(<CountryPicker />, { container });
+    const shadow = within(container);
+
+    // user-event cannot focus an element in a shadow root
+    fireEvent.change(shadow.getByRole("combobox", { name: "Country" }), { target: { value: "fr" } });
+
+    expect(shadow.getAllByRole("option").map((option) => option.textContent)).toEqual(["France", "French Guiana"]);
   });
 
   it("must not submit its form when Enter is pressed on text that matches no option", async () => {

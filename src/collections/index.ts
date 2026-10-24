@@ -1,5 +1,5 @@
 export { optionId } from "./optionId";
-export { renderedOptions } from "./renderedOptions";
+export { optionTextValue, renderedOptions } from "./renderedOptions";
 export type { RenderedOption } from "./renderedOptions";
 export { targetIndexForKey } from "./targetIndexForKey";
 export type { WritingDirection } from "./targetIndexForKey";

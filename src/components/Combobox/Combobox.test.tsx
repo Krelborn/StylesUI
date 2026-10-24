@@ -1,7 +1,7 @@
 import { fireEvent, render as renderBase, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { JSX } from "react";
-import { useState } from "react";
+import { createRef, useState } from "react";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { MissingContextError } from "../../errors";
@@ -581,6 +581,24 @@ describe("Combobox", () => {
     fireEvent.click(elements.combobox, { detail: 1 });
 
     expect(elements.combobox).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("must hand an option's element to the consumer's refs when it is given them", () => {
+    const objectRef = createRef<HTMLDivElement>();
+    const callbackRef = vi.fn();
+    renderBase(
+      <Combobox aria-label="Status">
+        <ComboboxOption ref={objectRef} value="open">
+          Open
+        </ComboboxOption>
+        <ComboboxOption ref={callbackRef} value="closed">
+          Closed
+        </ComboboxOption>
+      </Combobox>
+    );
+
+    expect(objectRef.current).toHaveAttribute("data-value", "open");
+    expect(callbackRef.mock.lastCall?.[0]).toHaveAttribute("data-value", "closed");
   });
 
   it("must keep a consumer's anchor name beside its own when it is given one", () => {

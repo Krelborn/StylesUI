@@ -163,7 +163,7 @@ export function Autocomplete({
 
     text.edit(typed);
     list.openList("none", "keyboard");
-    list.matchFirst(typed);
+    list.matchFirst();
     announceCount();
   }
 

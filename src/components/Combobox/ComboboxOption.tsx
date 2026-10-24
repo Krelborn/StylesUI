@@ -1,5 +1,5 @@
 import { clsx } from "clsx";
-import type { JSX, MouseEvent, PointerEvent, ReactNode } from "react";
+import type { JSX, MouseEvent, PointerEvent, ReactNode, Ref } from "react";
 import { useId, useRef } from "react";
 
 import { optionId } from "../../collections";
@@ -91,6 +91,7 @@ export function ComboboxOption({
   leading,
   onClick,
   onPointerMove,
+  ref,
   textValue,
   value,
   ...rest
@@ -103,7 +104,18 @@ export function ComboboxOption({
   const selected = combobox.selectedValue === value;
   const describedByIds = joinIds(hasContent(description) ? descriptionId : undefined, describedBy);
 
-  useComboboxOption({ children, labelId, leading, optionRef, selected, textValue, value });
+  useComboboxOption({ children, leading, optionRef, selected, textValue, value });
+
+  // The consumer's ref gets the option too
+  function attachOption(option: HTMLDivElement): () => void {
+    optionRef.current = option;
+    assignRef(ref, option);
+
+    return () => {
+      optionRef.current = null;
+      assignRef(ref, null);
+    };
+  }
 
   function handleClick(event: MouseEvent<HTMLDivElement>): void {
     onClick?.(event);
@@ -129,7 +141,7 @@ export function ComboboxOption({
       id={optionId(combobox.baseId, value)}
       onClick={handleClick}
       onPointerMove={handlePointerMove}
-      ref={optionRef}
+      ref={attachOption}
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- an option element cannot hold rich content
       role="option"
       aria-describedby={describedByIds}
@@ -163,4 +175,18 @@ function joinIds(...ids: (string | undefined)[]): string | undefined {
   const joined = ids.filter(Boolean).join(" ");
 
   return joined === "" ? undefined : joined;
+}
+
+/**
+ * Hands an element to a ref of any kind
+ *
+ * @param ref the ref, if any
+ * @param element the element, or null as it detaches
+ */
+function assignRef<T>(ref: Ref<T> | undefined, element: T | null): void {
+  if (typeof ref === "function") {
+    ref(element);
+  } else if (ref !== null && ref !== undefined) {
+    ref.current = element;
+  }
 }

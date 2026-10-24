@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState } from "react";
 
 import type { RenderedOption, TypeAheadQuery } from "../../collections";
 import {
@@ -17,7 +17,7 @@ import type {
   ComboboxFilter,
   SelectedContent,
 } from "./ComboboxContext";
-import { isOptionShown } from "./isOptionShown";
+import { useComboboxSelection } from "./useComboboxSelection";
 
 /**
  * Which option is active as the list opens: the selected one (else the first), the first, the last, or none
@@ -116,12 +116,11 @@ export interface ComboboxList {
   attachList: (listbox: HTMLDivElement | null) => void;
 
   /**
-   * Makes the first option the filter shows for the text, and that is not disabled, active; with no filter or no text,
+   * Makes the first option the filter shows, and that is not disabled, active once the next render has filtered the
+   * options by the query it brings, which a parent controlling the text may have changed; with no filter or no query,
    * makes none active
-   *
-   * @param text the text typed, which the options are filtered by from the next render
    */
-  matchFirst: (text: string) => void;
+  matchFirst: () => void;
 
   /**
    * Moves the active option for an arrow key, Home or End, without wrapping
@@ -201,15 +200,30 @@ export function useComboboxList({
   const listRef = useRef<HTMLDivElement>(null);
   const typeAheadQuery = useRef<TypeAheadQuery | null>(null);
   const scrollPending = useRef(false);
+  const firstMatchPending = useRef(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<ActiveOption | null>(null);
-  const [uncontrolledValue, setUncontrolledValue] = useState(defaultValue);
-  const [selectedContent, setSelectedContent] = useState<SelectedContent | null>(null);
-  const selectedValue = value === undefined ? uncontrolledValue : value;
+  const { select, selectedContent, selectedValue, setSelectedContent } = useComboboxSelection({
+    defaultValue,
+    onValueChange,
+    value,
+  });
+
+  // Without a filter, the options for the query are still to come from the consumer
+  const activateFirstMatch = useEffectEvent(() => {
+    const first = filter === null || query === "" ? undefined : shownOptions().find((option) => !option.disabled);
+
+    setActive(first === undefined ? null : { source: "keyboard", value: first.value });
+  });
 
   // After every render, once each option has shown or hidden itself for the filter
   useLayoutEffect(() => {
     listRef.current?.toggleAttribute("data-empty", shownOptions().length === 0);
+
+    if (firstMatchPending.current) {
+      firstMatchPending.current = false;
+      activateFirstMatch();
+    }
   });
 
   // After the list has shown, which an effect of its own does
@@ -224,9 +238,11 @@ export function useComboboxList({
     scrollPending.current = false;
 
     if (scrolls) {
-      listRef.current?.ownerDocument.getElementById(optionId(baseId, active.value))?.scrollIntoView(scrollOptions);
+      shownOptions()
+        .find((option) => option.value === active.value)
+        ?.element.scrollIntoView(scrollOptions);
     }
-  }, [active, baseId, open]);
+  }, [active, open]);
 
   function shownOptions(): RenderedOption[] {
     return listRef.current === null ? [] : renderedOptions(listRef.current);
@@ -273,18 +289,6 @@ export function useComboboxList({
   function close(): void {
     setOpen(false);
     setActive(null);
-  }
-
-  function select(nextValue: string | null): void {
-    if (nextValue === selectedValue) {
-      return;
-    }
-
-    if (value === undefined) {
-      setUncontrolledValue(nextValue);
-    }
-
-    onValueChange?.(nextValue);
   }
 
   function commit(optionValue: string): void {
@@ -349,23 +353,8 @@ export function useComboboxList({
     return shownOptions().length;
   }
 
-  function matchFirst(text: string): void {
-    // Without a filter, the options for the text are still to come from the consumer
-    if (text === "" || filter === null) {
-      setActive(null);
-
-      return;
-    }
-
-    const options = Array.from(listRef.current?.querySelectorAll<HTMLElement>('[role="option"]') ?? []);
-    const first = options.find(
-      (option) =>
-        option.getAttribute("aria-disabled") !== "true" &&
-        option.closest("[inert]") === null &&
-        isOptionShown(filter, text, optionText(option))
-    );
-
-    setActive(first === undefined ? null : { source: "keyboard", value: first.dataset.value ?? "" });
+  function matchFirst(): void {
+    firstMatchPending.current = true;
   }
 
   function attachList(listbox: HTMLDivElement | null): void {
@@ -402,21 +391,9 @@ export function useComboboxList({
     open,
     openList,
     select,
-    selectedContent: selectedContent?.value === selectedValue ? selectedContent : null,
+    selectedContent,
     selectedValue,
     toggleList,
     typeAhead,
   };
-}
-
-/**
- * Reads an option's text, whether or not the filter hides it
- *
- * @param option the option element
- * @returns its `textValue`, else its label's text
- */
-function optionText(option: HTMLElement): string {
-  const label = option.ownerDocument.getElementById(option.getAttribute("aria-labelledby") ?? "");
-
-  return option.dataset.textValue ?? label?.textContent ?? "";
 }

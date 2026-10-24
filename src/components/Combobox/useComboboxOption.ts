@@ -1,6 +1,8 @@
 import type { ReactNode, RefObject } from "react";
 import { useLayoutEffect } from "react";
 
+import { optionTextValue } from "../../collections";
+
 import { isOptionShown } from "./isOptionShown";
 import { useComboboxContext } from "./useComboboxContext";
 
@@ -9,11 +11,6 @@ interface UseComboboxOptionOptions {
    * The option's label
    */
   children: ReactNode;
-
-  /**
-   * The id of the element holding the label
-   */
-  labelId: string;
 
   /**
    * The option's leading content
@@ -49,7 +46,6 @@ interface UseComboboxOptionOptions {
  */
 export function useComboboxOption({
   children,
-  labelId,
   leading,
   optionRef,
   selected,
@@ -63,18 +59,18 @@ export function useComboboxOption({
     const option = optionRef.current;
 
     if (option !== null) {
-      option.hidden = !isOptionShown(filter, query, optionText(option, labelId, textValue));
+      option.hidden = !isOptionShown(filter, query, optionTextValue(option));
     }
-  }, [children, filter, labelId, optionRef, query, textValue]);
+  }, [children, filter, optionRef, query, textValue]);
 
   // Kept after the option unmounts, as a list filtered on a server drops it, until another value is selected
   useLayoutEffect(() => {
     const option = optionRef.current;
 
     if (selected && option !== null) {
-      setSelectedContent({ label: children, leading, text: optionText(option, labelId, textValue), value });
+      setSelectedContent({ label: children, leading, text: optionTextValue(option), value });
     }
-  }, [children, labelId, leading, optionRef, selected, setSelectedContent, textValue, value]);
+  }, [children, leading, optionRef, selected, setSelectedContent, textValue, value]);
 
   // The control's aria-activedescendant may name this option, so it lets go as the option unmounts; only then, since a
   // change of what made it active is not one
@@ -84,16 +80,4 @@ export function useComboboxOption({
     },
     [setActive, value]
   );
-}
-
-/**
- * Reads an option's text
- *
- * @param option the option element
- * @param labelId the id of its label
- * @param textValue the text the consumer gave, if any
- * @returns the given text, else the label's
- */
-function optionText(option: HTMLElement, labelId: string, textValue: string | undefined): string {
-  return textValue ?? option.ownerDocument.getElementById(labelId)?.textContent ?? "";
 }
