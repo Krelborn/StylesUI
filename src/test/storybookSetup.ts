@@ -16,6 +16,12 @@ declare module "vitest/browser" {
     clickPageCorner: () => Promise<void>;
 
     /**
+     * Right-clicks the element with the given `data-testid` in the story's frame with the real pointer, at a point from
+     * its top-left corner or in its middle
+     */
+    contextClickByTestId: (testId: string, position?: { x: number; y: number }) => Promise<void>;
+
+    /**
      * Turns the browser's emulation of forced colours on or off
      */
     emulateForcedColors: (active: boolean) => Promise<void>;
@@ -55,6 +61,7 @@ declare module "vitest/browser" {
 registerTrustedInput({
   clickByTestId: (testId) => commands.clickByTestId(testId),
   clickPageCorner: () => commands.clickPageCorner(),
+  contextClickByTestId: (testId, position) => commands.contextClickByTestId(testId, position),
   emulateForcedColors: (active) => commands.emulateForcedColors(active),
   holdPointerByTestId: (testId) => commands.holdPointerByTestId(testId),
   hoverByTestId: (testId) => commands.hoverByTestId(testId),

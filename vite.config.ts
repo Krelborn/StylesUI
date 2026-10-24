@@ -60,6 +60,21 @@ const clickByTestId: BrowserCommand<[testId: string]> = async ({ iframe }, testI
 };
 
 /**
+ * Right-clicks an element in the story's frame with the real pointer, which opens a context menu
+ *
+ * @param context the command context, holding the frame the story runs in
+ * @param testId the element's `data-testid`
+ * @param position where to click, in pixels from the element's top-left corner; its middle when omitted
+ */
+const contextClickByTestId: BrowserCommand<[testId: string, position?: { x: number; y: number }]> = async (
+  { iframe },
+  testId,
+  position
+) => {
+  await iframe.getByTestId(testId).click({ button: "right", position });
+};
+
+/**
  * Clicks the bottom-right corner of the story's frame with the real pointer, away from the top-left where stories
  * render
  *
@@ -236,6 +251,7 @@ export default defineConfig({
                 commands: {
                   clickByTestId,
                   clickPageCorner,
+                  contextClickByTestId,
                   emulateForcedColors,
                   holdPointerByTestId,
                   hoverByTestId,

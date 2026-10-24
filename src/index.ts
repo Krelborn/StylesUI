@@ -22,6 +22,8 @@ export { Cluster } from "./components/Cluster";
 export type { ClusterProps } from "./components/Cluster";
 export { Code } from "./components/Code";
 export type { CodeProps } from "./components/Code";
+export { useContextMenu } from "./components/ContextMenu";
+export type { UseContextMenuOptions, UseContextMenuResult } from "./components/ContextMenu";
 export { Counter } from "./components/Counter";
 export type { CounterProps } from "./components/Counter";
 export { Cover } from "./components/Cover";

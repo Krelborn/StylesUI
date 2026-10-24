@@ -15,6 +15,12 @@ export interface TrustedInput {
   clickPageCorner: () => Promise<void>;
 
   /**
+   * Right-clicks the element with the given `data-testid` in the story's frame, at a point in pixels from its top-left
+   * corner, or in its middle when none is given
+   */
+  contextClickByTestId: (testId: string, position?: { x: number; y: number }) => Promise<void>;
+
+  /**
    * Turns the browser's emulation of forced colours, as Windows High Contrast applies them, on or off. Each story starts
    * with it off.
    */

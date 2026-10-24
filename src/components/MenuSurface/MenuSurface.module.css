@@ -51,6 +51,51 @@
   max-block-size: stretch;
 }
 
+/*
+ * A context menu's start corner sits on the point it opened at, given by useContextMenu as distances from the region's
+ * edges, and ends on it on an axis without room. After the placement fallbacks above, which these tie with, so these win.
+ */
+.menu[data-context-menu]:popover-open {
+  position-area: none;
+  margin: 0;
+  inset: auto;
+  top: calc(anchor(top) + var(--_sui-context-menu-top, 0px));
+  left: calc(anchor(left) + var(--_sui-context-menu-left, 0px));
+  position-try-fallbacks:
+    --sui-context-menu-up-right, --sui-context-menu-down-left, --sui-context-menu-up-left, --sui-menu-shrink;
+}
+
+.menu[data-context-menu]:popover-open:dir(rtl) {
+  left: auto;
+  right: calc(anchor(right) + var(--_sui-context-menu-right, 0px));
+  position-try-fallbacks:
+    --sui-context-menu-up-left, --sui-context-menu-down-right, --sui-context-menu-up-right, --sui-menu-shrink;
+}
+
+@position-try --sui-context-menu-down-right {
+  inset: auto;
+  top: calc(anchor(top) + var(--_sui-context-menu-top, 0px));
+  left: calc(anchor(left) + var(--_sui-context-menu-left, 0px));
+}
+
+@position-try --sui-context-menu-down-left {
+  inset: auto;
+  top: calc(anchor(top) + var(--_sui-context-menu-top, 0px));
+  right: calc(anchor(right) + var(--_sui-context-menu-right, 0px));
+}
+
+@position-try --sui-context-menu-up-right {
+  inset: auto;
+  bottom: calc(anchor(bottom) + var(--_sui-context-menu-bottom, 0px));
+  left: calc(anchor(left) + var(--_sui-context-menu-left, 0px));
+}
+
+@position-try --sui-context-menu-up-left {
+  inset: auto;
+  bottom: calc(anchor(bottom) + var(--_sui-context-menu-bottom, 0px));
+  right: calc(anchor(right) + var(--_sui-context-menu-right, 0px));
+}
+
 /* Inside the edge, as Listbox's, so nothing around the menu can cover it */
 .menu:focus-visible {
   outline: var(--sui-focus-ring-width, 2px) solid var(--sui-color-focus-ring, #3b82f6);
@@ -86,6 +131,11 @@
 
   .menu[data-placement="end"]:dir(rtl) {
     translate: var(--sui-popover-offset, 4px) 0;
+  }
+
+  /* Opens at the pointer, with no trigger to come from */
+  .menu[data-context-menu] {
+    translate: none;
   }
 }
 
