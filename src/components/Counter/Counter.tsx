@@ -63,8 +63,9 @@ export function Counter({
     return null;
   }
 
-  const overMax = max !== undefined && count > max;
-  const shownCount = overMax ? max : count;
+  const limit = max === undefined ? undefined : Math.max(1, max);
+  const overMax = limit !== undefined && count > limit;
+  const shownCount = overMax ? limit : count;
 
   return (
     <Badge {...rest} className={clsx(styles.counter, className)} tone={tone} variant={variant}>

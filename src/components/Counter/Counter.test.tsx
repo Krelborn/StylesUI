@@ -99,3 +99,11 @@ describe("Counter", () => {
     );
   });
 });
+
+describe("Counter max below 1", () => {
+  it.each([0, -2])("must treat a max of %s as 1", (max) => {
+    render(<Counter count={5} max={max} />);
+
+    expect(screen.getByText("1+")).toBeInTheDocument();
+  });
+});
