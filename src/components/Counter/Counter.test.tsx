@@ -34,6 +34,12 @@ describe("Counter", () => {
     expect(screen.getByText("99")).toBeInTheDocument();
   });
 
+  it.each([0, -2])("must treat a max of %s as 1", (max) => {
+    render(<Counter count={5} max={max} />);
+
+    expect(screen.getByText("1+")).toBeInTheDocument();
+  });
+
   it("must add a plus after the count when it is capped", () => {
     render(<Counter capped={true} count={30} />);
 
@@ -97,13 +103,5 @@ describe("Counter", () => {
       // @ts-expect-error the count is the content, so children are not accepted
       <Counter count={3}>three</Counter>
     );
-  });
-});
-
-describe("Counter max below 1", () => {
-  it.each([0, -2])("must treat a max of %s as 1", (max) => {
-    render(<Counter count={5} max={max} />);
-
-    expect(screen.getByText("1+")).toBeInTheDocument();
   });
 });
