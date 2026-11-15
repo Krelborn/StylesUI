@@ -79,7 +79,7 @@ Playful's buttons lift on hover and press down when clicked. When the OS asks fo
 
 Themes and palettes use CSS `light-dark()`, which needs Chrome 123, Safari 17.5 or Firefox 120.
 
-`Tooltip` and `Popover` use the Popover API and CSS anchor positioning, which need Chrome/Edge 129, Firefox 147 or Safari 26. `NavBar` collapses with a container style query, which needs Firefox 151; Firefox 147 to 150 show its wide layout at every width. With Vite, the CSS target below leaves their anchor positioning styles unchanged.
+`Tooltip`, `Popover`, the menus (`useMenu`, `useContextMenu` and `Menubar`), `Combobox` and `Autocomplete` use the Popover API and CSS anchor positioning, which need Chrome/Edge 129, Firefox 147 or Safari 26. `NavBar` anchors its wide layout's panels too, and collapses with a container style query, which needs Firefox 151; Firefox 147 to 150 show its wide layout at every width. With Vite, the CSS target below leaves their anchor positioning styles unchanged.
 
 ### Bundler CSS target
 
@@ -115,7 +115,7 @@ A Husky pre-commit hook runs lint-staged, which lints (`oxlint --fix`) and forma
 
 Create `src/components/<Name>/` with `<Name>.tsx`, `<Name>.module.css`, `<Name>.test.tsx`, `<Name>.stories.tsx` and an `index.ts`, then export it from `src/index.ts`. Build on `Box` where possible. JSDoc on the component, its props and each story becomes the component's Docs page in Storybook.
 
-Form components share code in `src/forms/`: the `ControlSize` type, the `FieldContext` and `RadioGroupContext` contexts (each in its own module), the `useFieldControl` hook that merges a `Field`'s state into a control's props, the `useRadioGroupItem` hook that gives `Radio` and `Segment` their `RadioGroup`'s name and selection, and `hasContent`. Only `ControlSize` is exported from the package. `TextControl` (behind `TextInput`, `Textarea` and `Select`), `ChoiceControl` (behind `Checkbox`, `Switch` and `Radio`) and `RequiredIndicator` are internal components: they are not exported from `src/index.ts` and have no stories or tests of their own, since the public components built on them cover them. `TextControl` and `ChoiceControl` own the one CSS module their wrappers share, so those wrappers have none.
+Form components share code in `src/forms/`: the `ControlSize` type, the `FieldContext` and `RadioGroupContext` contexts (each in its own module), the `useFieldControl` hook that merges a `Field`'s state into a control's props, the `useRadioGroupItem` hook that gives `Radio` and `Segment` their `RadioGroup`'s name and selection, and `hasContent`. Only `ControlSize` is exported from the package. `TextControl` (behind `TextInput`, `Textarea`, `Select`, `Combobox` and `Autocomplete`), `ChoiceControl` (behind `Checkbox`, `Switch` and `Radio`) and `RequiredIndicator` are internal components: they are not exported from `src/index.ts` and have no stories or tests of their own, since the public components built on them cover them. `TextControl` and `ChoiceControl` own the one CSS module their wrappers share, so those wrappers have none.
 
 Tree-shaking relies on the build preserving one output module per source module and on `"sideEffects": ["**/*.css"]` in `package.json`. Avoid top-level side effects in component modules.
 
