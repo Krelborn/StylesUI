@@ -25,6 +25,7 @@ type Story = StoryObj<typeof meta>;
  * width of a viewport narrower than its column
  */
 export const Default: Story = {
+  globals: { viewport: { isRotated: false, value: "mobile2" } },
   render: (args) => (
     <PageLayout {...args}>
       <Center as="header">
